@@ -1,19 +1,16 @@
 package jplotter.renderers;
 
-import java.awt.Font;
+import java.util.LinkedList;
 
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
-import jplotter.globjects.CharacterAtlas;
 import jplotter.globjects.Shader;
-import jplotter.globjects.VertexArray;
+import jplotter.globjects.Text;
 import jplotter.util.GLUtils;
 
 public class TextRenderer implements Renderer {
@@ -28,7 +25,7 @@ public class TextRenderer implements Renderer {
 			+ NL + "uniform mat3 modelMX;"
 			+ NL + "out vec2 tex_Coords;"
 			+ NL + "void main() {"
-			+ NL + "   gl_Position = projMX*viewMX*vec4(modelMX*vec3(in_position,0),1);"
+			+ NL + "   gl_Position = projMX*viewMX*vec4(modelMX*vec3(in_position,1),1);"
 			+ NL + "   tex_Coords = in_texcoords;"
 			+ NL + "}"
 			+ NL
@@ -48,26 +45,21 @@ public class TextRenderer implements Renderer {
 			+ NL + "}"
 			;
 	
-	
-	CharacterAtlas atlas;
-	VertexArray va;
-	VertexArray vertexArray;
 	Shader shader;
 	float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
 	Matrix3f modelMX;
 	Matrix4f viewMX;
-	Vector4f color;
+	LinkedList<Text> textsToRender = new LinkedList<>();
+	
+	float[] viewmxarray = new float[16];
+	float[] modelmxarray = new float[9];
 	
 	
 	@Override
 	public void glInit() {
-		atlas = new CharacterAtlas(12, Font.PLAIN, true);
-		String s = "sweet";
-		va = atlas.createVAforString(s);
 		shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
-		modelMX = new Matrix3f(new Vector3f(1, 0, 0),new Vector3f(0,1,0), new Vector3f(0, 0, 1));
+		modelMX = new Matrix3f();
 		viewMX = new Matrix4f();
-		color = new Vector4f();
 	}
 
 	@Override
@@ -79,26 +71,30 @@ public class TextRenderer implements Renderer {
 		
 		shader.bind();
 		{
-			va.bindAndEnableAttributes(0,1);
 			int loc;
 			// set texture in shader
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
-			GL13.glBindTexture(GL11.GL_TEXTURE_2D, atlas.getTexID());
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
-			GL20.glUniform1i(loc, 0);
-			// set projection matrix in shader
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-			GL20.glUniformMatrix4fv(loc, false, orthoMX);
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
-			GL20.glUniformMatrix4fv(loc, false, viewMX.get(new float[16]));
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
-			GL20.glUniformMatrix3fv(loc, false, modelMX.get(new float[9]));
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
-			GL20.glUniform4f(loc, color.x, color.y, color.z, color.w);
-			// draw things
-			GL11.glDrawElements(GL11.GL_TRIANGLES, va.getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
+			for(Text txt: textsToRender){
+				txt.bindVertexArray();
+				GL13.glBindTexture(GL11.GL_TEXTURE_2D, txt.getTextureID());
+				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
+				GL20.glUniform1i(loc, 0);
+				// set projection matrix in shader
+				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+				GL20.glUniformMatrix4fv(loc, false, orthoMX);
+				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
+				GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
+				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
+				modelMX.setColumn(2, txt.getOrigin().x, txt.getOrigin().y, 0);
+				GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
+				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
+				GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), 1.0f);
+				// draw things
+				GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
+				txt.releaseVertexArray();
+			}
 			// done
-			va.unbindAndDisableAttributes(0,1);
+			GL13.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		}
 		shader.unbind();
 		
@@ -108,9 +104,29 @@ public class TextRenderer implements Renderer {
 
 	@Override
 	public void close() {
-		atlas.close();
-		va.close();
 		shader.close();
+		for(Text txt: textsToRender){
+			txt.close();
+		}
 	}
 
+	public LinkedList<Text> getTextsToRender() {
+		return textsToRender;
+	}
+	
+	public void addText(Text txt){
+		textsToRender.add(txt);
+	}
+	
+	public boolean removeText(Text txt){
+		return textsToRender.remove(txt);
+	}
+	
+	public void deleteAllTexts(){
+		for(Text txt: textsToRender){
+			txt.close();
+		}
+		textsToRender.clear();
+	}
+	
 }

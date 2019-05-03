@@ -155,24 +155,27 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			setRenderTargets(0, w, h, GL11.GL_BACK);
 			GL11.glClearColor( 0.0f, 0.0f, 1.0f, 1.0f );
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
-			shader.bind();
-			{
-				vertexArray.bindAndEnableAttributes(0);
-				int loc;
-				// set texture in shader
-				GL13.glActiveTexture(GL13.GL_TEXTURE0);
-				GL13.glBindTexture(GL11.GL_TEXTURE_2D, fbo.getMainColorTexId());
-				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
-				GL20.glUniform1i(loc, 0);
-				// set projection matrix in shader
-				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-				GL20.glUniformMatrix4fv(loc, false, orthoMX);
-				// draw things
-				GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
-				// done
-				vertexArray.unbindAndDisableAttributes(0);
-			}
-			shader.unbind();
+//			shader.bind();
+//			{
+//				vertexArray.bindAndEnableAttributes(0);
+//				int loc;
+//				// set texture in shader
+//				GL13.glActiveTexture(GL13.GL_TEXTURE0);
+//				GL13.glBindTexture(GL11.GL_TEXTURE_2D, fbo.getMainColorTexId());
+//				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
+//				GL20.glUniform1i(loc, 0);
+//				// set projection matrix in shader
+//				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+//				GL20.glUniformMatrix4fv(loc, false, orthoMX);
+//				// draw things
+//				GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
+//				// done
+//				vertexArray.unbindAndDisableAttributes(0);
+//			}
+//			shader.unbind();
+			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fbo.getFBOid());
+			GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 		}
 		this.swapBuffers();
 	}

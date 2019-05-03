@@ -75,7 +75,7 @@ public class Text implements AutoCloseable {
 	}
 	
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		va.close();
 	}
 	
