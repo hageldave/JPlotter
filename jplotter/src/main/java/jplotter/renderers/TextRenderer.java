@@ -5,6 +5,7 @@ import java.awt.Font;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -43,7 +44,7 @@ public class TextRenderer implements Renderer {
 			+ NL + "void main() {"
 			+ NL + "   vec4 texColor = texture(tex, tex_Coords);"
 			+ NL + "   frag_color = fragColorToUse*texColor;"
-			+ NL + "   pick_color = pickColorToUse;"
+			+ NL + "   pick_color = vec4(pickColorToUse,1);"
 			+ NL + "}"
 			;
 	
@@ -55,7 +56,7 @@ public class TextRenderer implements Renderer {
 	float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
 	Matrix3f modelMX;
 	Matrix4f viewMX;
-	Vector3f color;
+	Vector4f color;
 	
 	
 	@Override
@@ -66,7 +67,7 @@ public class TextRenderer implements Renderer {
 		shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
 		modelMX = new Matrix3f(new Vector3f(1, 0, 0),new Vector3f(0,1,0), new Vector3f(0, 0, 1));
 		viewMX = new Matrix4f();
-		color = new Vector3f();
+		color = new Vector4f();
 	}
 
 	@Override
@@ -92,8 +93,8 @@ public class TextRenderer implements Renderer {
 			GL20.glUniformMatrix4fv(loc, false, viewMX.get(new float[16]));
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
 			GL20.glUniformMatrix3fv(loc, false, modelMX.get(new float[9]));
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "colorToSet");
-			GL20.glUniform3f(loc, color.x, color.y, color.z);
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
+			GL20.glUniform4f(loc, color.x, color.y, color.z, color.w);
 			// draw things
 			GL11.glDrawElements(GL11.GL_TRIANGLES, va.getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
 			// done
