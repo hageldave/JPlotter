@@ -1,6 +1,7 @@
 package jplotter;
 
 import java.awt.AWTException;
+import java.awt.Color;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.lang.reflect.Field;
@@ -53,12 +54,14 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			+ NL + "}"
 			;
 	
-	FBO fbo=null;
-	Shader shader=null;
-	VertexArray vertexArray=null;
-	float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
-	
-	PlatformGLCanvas platformcanvas;
+	protected FBO fbo=null;
+	protected Shader shader=null;
+	protected VertexArray vertexArray=null;
+	protected float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
+	protected PlatformGLCanvas platformcanvas;
+	protected boolean useBitBlit = true;
+	protected Color fboClearColor = Color.darkGray;
+	protected Color screenClearColor = Color.BLACK;
 	
 	public FBOCanvas(GLData data){
 		super(data);
@@ -147,35 +150,44 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				setFBO(new FBO(w, h));
 			}
 			// offscreen
-			setRenderTargetsColorOnly(w,h);
-			GL11.glClearColor( 1.0f, 0.0f, 0.0f, 1.0f );
+			setRenderTargetsPickingOnly(w,h);
+			GL11.glClearColor(0, 0, 0, 0);
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
+			setRenderTargetsColorOnly(w, h);
+			GL11.glClearColor( fboClearColor.getRed()/255f, fboClearColor.getGreen()/255f, fboClearColor.getBlue()/255f, fboClearColor.getAlpha()/255f );
+			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
+			setRenderTargetsColorAndPicking(w, h);
 			paintToFBO(w, h);
 			// onscreen
 			setRenderTargets(0, w, h, GL11.GL_BACK);
-			GL11.glClearColor( 0.0f, 0.0f, 1.0f, 1.0f );
+			GL11.glClearColor( screenClearColor.getRed()/255f, screenClearColor.getGreen()/255f, screenClearColor.getBlue()/255f, screenClearColor.getAlpha()/255f );
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
-//			shader.bind();
-//			{
-//				vertexArray.bindAndEnableAttributes(0);
-//				int loc;
-//				// set texture in shader
-//				GL13.glActiveTexture(GL13.GL_TEXTURE0);
-//				GL13.glBindTexture(GL11.GL_TEXTURE_2D, fbo.getMainColorTexId());
-//				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
-//				GL20.glUniform1i(loc, 0);
-//				// set projection matrix in shader
-//				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-//				GL20.glUniformMatrix4fv(loc, false, orthoMX);
-//				// draw things
-//				GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
-//				// done
-//				vertexArray.unbindAndDisableAttributes(0);
-//			}
-//			shader.unbind();
-			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fbo.getFBOid());
-			GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
-			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
+			if(useBitBlit){
+				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fbo.getFBOid());
+				GL30.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
+				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
+			} else {
+				shader.bind();
+				{
+					vertexArray.bindAndEnableAttributes(0);
+					int loc;
+					// set texture in shader
+					GL13.glActiveTexture(GL13.GL_TEXTURE0);
+					GL13.glBindTexture(GL11.GL_TEXTURE_2D, fbo.getMainColorTexId());
+					loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
+					GL20.glUniform1i(loc, 0);
+					// set projection matrix in shader
+					loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+					GL20.glUniformMatrix4fv(loc, false, orthoMX);
+					// draw things
+					GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
+					// done
+					vertexArray.unbindAndDisableAttributes(0);
+				}
+				shader.unbind();
+			}
+			
 		}
 		this.swapBuffers();
 	}

@@ -9,7 +9,9 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
+import jplotter.globjects.DynamicText;
 import jplotter.globjects.Shader;
+import jplotter.globjects.StaticText;
 import jplotter.globjects.Text;
 import jplotter.util.GLUtils;
 
@@ -36,12 +38,12 @@ public class TextRenderer implements Renderer {
 			+ NL + "layout(location = 1) out vec4 pick_color;"
 			+ NL + "uniform sampler2D tex;"
 			+ NL + "uniform vec4 fragColorToUse;"
-			+ NL + "uniform vec3 pickColorToUse;"
+			+ NL + "uniform vec4 pickColorToUse;"
 			+ NL + "in vec2 tex_Coords;"
 			+ NL + "void main() {"
 			+ NL + "   vec4 texColor = texture(tex, tex_Coords);"
 			+ NL + "   frag_color = fragColorToUse*texColor;"
-			+ NL + "   pick_color = vec4(pickColorToUse,1);"
+			+ NL + "   pick_color = pickColorToUse;"
 			+ NL + "}"
 			;
 	
@@ -60,6 +62,7 @@ public class TextRenderer implements Renderer {
 		shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
 		modelMX = new Matrix3f();
 		viewMX = new Matrix4f();
+		textsToRender.forEach(Text::initGL);
 	}
 
 	@Override
@@ -69,12 +72,17 @@ public class TextRenderer implements Renderer {
 		GL11.glEnable(GL12.GL_BLEND);
 		GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA);
 		
-		shader.bind();
-		{
+		
+		if(!textsToRender.isEmpty()){
+			shader.bind();
 			int loc;
 			// set texture in shader
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
 			for(Text txt: textsToRender){
+				txt.initGL();
+				if(txt instanceof DynamicText){
+					((DynamicText) txt).updateVA();
+				}
 				txt.bindVertexArray();
 				GL13.glBindTexture(GL11.GL_TEXTURE_2D, txt.getTextureID());
 				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
@@ -88,15 +96,17 @@ public class TextRenderer implements Renderer {
 				modelMX.setColumn(2, txt.getOrigin().x, txt.getOrigin().y, 0);
 				GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
 				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
-				GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), 1.0f);
+				GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), txt.getColorA());
+				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
+				GL20.glUniform4f(loc, txt.getPickColorR(), txt.getPickColorG(), txt.getPickColorB(), txt.getPickColorA());
 				// draw things
 				GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
 				txt.releaseVertexArray();
 			}
 			// done
 			GL13.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+			shader.unbind();
 		}
-		shader.unbind();
 		
 		GL11.glDisable(GL12.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -118,7 +128,7 @@ public class TextRenderer implements Renderer {
 		textsToRender.add(txt);
 	}
 	
-	public boolean removeText(Text txt){
+	public boolean removeText(StaticText txt){
 		return textsToRender.remove(txt);
 	}
 	
@@ -127,6 +137,11 @@ public class TextRenderer implements Renderer {
 			txt.close();
 		}
 		textsToRender.clear();
+	}
+	
+	@Override
+	public boolean drawsPicking() {
+		return true;
 	}
 	
 }

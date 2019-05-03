@@ -141,7 +141,7 @@ public class GLUtils {
 	/**
 	 * performs glReadPixels for pixel at specified position
 	 * @param attachment one of GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1, GL30.GL_DEPTH_ATTACHMENT
-	 * @return color in integer packed 8bit per channel ABGR format (red on least significant 8 bytes)
+	 * @return color in integer packed 8bit per channel ARGB format (blue on least significant 8 bytes)
 	 */
 	public static int fetchPixel(int fboID, int attachment, int x, int y){
 		int pixel = 0;
@@ -149,7 +149,7 @@ public class GLUtils {
 		{
 			GL11.glReadBuffer(attachment);
 			int[] rgba_bytes = new int[1];
-			GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, rgba_bytes);
+			GL11.glReadPixels(x, y, 1, 1, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, rgba_bytes);
 			pixel = rgba_bytes[0];
 		}
 		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
