@@ -1,0 +1,181 @@
+package jplotter.globjects;
+
+import java.awt.Color;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.Objects;
+
+import hageldave.imagingkit.core.Pixel;
+import jplotter.util.Pair;
+
+public class Lines implements AutoCloseable {
+
+	VertexArray va;
+	
+	protected ArrayList<Pair<Point2D,Point2D>> segments = new ArrayList<>();
+	
+	protected ArrayList<Pair<Color,Color>> colors = new ArrayList<>();
+	
+	protected float thickness;
+	
+	protected int pickColor;
+	
+	protected boolean isDirty;
+	
+	
+	public Lines setDirty() {
+		this.isDirty = true;
+		return this;
+	}
+	
+	public boolean isDirty() {
+		return isDirty;
+	}
+	
+	public int numSegments() {
+		return segments.size();
+	}
+	
+	public Lines addSegment(Point2D p1, Point2D p2, Color c1, Color c2){
+		segments.add(Pair.of(p1,p2));
+		colors.add(Pair.of(c1,c2));
+		setDirty();
+		return this;
+	}
+	
+	public Lines addSegment(Point2D p1, Point2D p2, Color c){
+		return addSegment(p1, p2, c, c);
+	}
+	
+	public boolean removeSegment(Pair<Point2D,Point2D> segment){
+		int idx = segments.indexOf(segment);
+		if(idx >= 0){
+			segments.remove(idx);
+			colors.remove(idx);
+			setDirty();
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean removeSegment(Point2D p1, Point2D p2){
+		return removeSegment(Pair.of(p1, p2));
+	}
+	
+	public void removeAllSegments() {
+		this.segments.clear();
+		this.colors.clear();
+		setDirty();
+	}
+	
+	public ArrayList<Pair<Point2D, Point2D>> getSegments() {
+		return new ArrayList<>(segments);
+	}
+	
+	public ArrayList<Pair<Color, Color>> getColors() {
+		return new ArrayList<>(colors);
+	}
+	
+	public Lines setThickness(float thickness) {
+		this.thickness = thickness;
+		return this;
+	}
+	
+	public float getThickness() {
+		return thickness;
+	}
+	
+	public Lines setPickColor(int pickColor) {
+		this.pickColor = pickColor;
+		// can only use opaque colors cause transparent colors will not work on overlaps
+		if(pickColor != 0)
+			this.pickColor = pickColor | 0xff000000;
+		return this;
+	}
+
+	public int getPickColor() {
+		return pickColor;
+	}
+	
+	public float getPickColorR() {
+		return Pixel.r(pickColor)/255f;
+	}
+
+
+	public float getPickColorG() {
+		return Pixel.g(pickColor)/255f;
+	}
+
+
+	public float getPickColorB() {
+		return Pixel.b(pickColor)/255f;
+	}
+
+	@Override
+	public void close(){
+		if(Objects.nonNull(va)){
+			va.close();
+			va = null;
+		}
+	}
+	
+	public void initGL(){
+		if(Objects.isNull(va)){
+			va = new VertexArray(2);
+			updateVA();
+		}
+	}
+	
+	public void updateVA(){
+		if(Objects.nonNull(va)){
+			float[] segmentCoordBuffer = new float[segments.size()*2*2];
+			float[] colorBuffer = new float[segments.size()*2*4];
+			for(int i=0; i<segments.size(); i++){
+				Pair<Point2D, Point2D> seg = segments.get(i);
+				Pair<Color, Color> colorpair = colors.get(i);
+				segmentCoordBuffer[i*4+0] = (float) seg.first.getX();
+				segmentCoordBuffer[i*4+1] = (float) seg.first.getY();
+				segmentCoordBuffer[i*4+2] = (float) seg.second.getX();
+				segmentCoordBuffer[i*4+3] = (float) seg.second.getY();
+				
+				colorBuffer[i*8+0] = colorpair.first.getRed()/255f;
+				colorBuffer[i*8+1] = colorpair.first.getGreen()/255f;
+				colorBuffer[i*8+2] = colorpair.first.getBlue()/255f;
+				colorBuffer[i*8+3] = colorpair.first.getAlpha()/255f;
+				colorBuffer[i*8+4] = colorpair.second.getRed()/255f;
+				colorBuffer[i*8+5] = colorpair.second.getGreen()/255f;
+				colorBuffer[i*8+6] = colorpair.second.getBlue()/255f;
+				colorBuffer[i*8+7] = colorpair.second.getAlpha()/255f;
+			}
+			va.setBuffer(0, 2, segmentCoordBuffer);
+			va.setBuffer(1, 4, colorBuffer);
+			isDirty = false;
+		}
+	}
+	
+	
+	/**
+	 * returns null unless {@link #initGL()} was called
+	 * @return
+	 */
+	public VertexArray getVertexArray() {
+		return va;
+	}
+
+
+	/**
+	 * {@link NullPointerException} unless {@link #initGL()} was called
+	 */
+	public void bindVertexArray() {
+		va.bindAndEnableAttributes(0,1);
+	}
+
+
+	/**
+	 * {@link NullPointerException} unless {@link #initGL()} was called
+	 */
+	public void releaseVertexArray() {
+		va.unbindAndDisableAttributes(0,1);
+	}
+	
+}

@@ -106,10 +106,6 @@ public abstract class Text implements AutoCloseable {
 	public float getPickColorB() {
 		return Pixel.b(pickColor)/255f;
 	}
-	
-	public float getPickColorA() {
-		return Pixel.a(pickColor)/255f;
-	}
 
 	public Dimension getTextSize() {
 		return textSize;
