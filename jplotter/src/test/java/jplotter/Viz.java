@@ -14,6 +14,7 @@ import java.awt.geom.Point2D;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.joml.Math;
 import org.lwjgl.opengl.awt.GLData;
 
 import jplotter.FBOCanvas;
@@ -89,13 +90,24 @@ public class Viz {
 		}.setOrigin(40, 200).setPickColor(0xc0ffee));
 		
 		Lines lines = new Lines();
-		for(int i=-100; i<100; i++){
-			int j = i+1;
-			double x1 = (i+100)*2;
-			double y1 = Math.exp(i*0.1)/(Math.exp(i*0.1)+1)*100+10;
-			double x2 = (j+100)*2;
-			double y2 = Math.exp(j*0.1)/(Math.exp(j*0.1)+1)*100+10;
-			lines.addSegment(new Point2D.Double(x1,y1), new Point2D.Double(x2,y2), Color.MAGENTA);
+		{
+			double[] xarr = new double[200];
+			double[] yarr = new double[200];
+			double[] alpha = new double[200];
+			for(int i=0; i<200; i++){
+				int j = i-100;
+				xarr[i] = (i)*2;
+				yarr[i] = Math.exp(j*0.1)/(Math.exp(j*0.1)+1)*100+10;
+				alpha[i] = (Math.sqrt(199)-Math.sqrt(i))/Math.sqrt(199);
+			}
+			for(int i=0; i<200-1; i++){
+				lines.addSegment(
+						new Point2D.Double(xarr[i], yarr[i]), 
+						new Point2D.Double(xarr[i+1], yarr[i+1]), 
+						new Color(255, 0, 255, (int)(alpha[i]*255)),
+						new Color(255, 0, 255, (int)(alpha[i+1]*255))
+				);
+			}
 		}
 		lnsr.addLines(lines);
 		
