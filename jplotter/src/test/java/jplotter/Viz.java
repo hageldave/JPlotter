@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -17,7 +16,6 @@ import javax.swing.SwingUtilities;
 import org.joml.Math;
 import org.lwjgl.opengl.awt.GLData;
 
-import jplotter.FBOCanvas;
 import jplotter.globjects.CharacterAtlas;
 import jplotter.globjects.DynamicText;
 import jplotter.globjects.Lines;

@@ -19,13 +19,51 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
 			+ NL + "layout(location = 1) in vec4 in_color;"
-			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform mat4 viewMX;"
 			+ NL + "uniform mat3 modelMX;"
-			+ NL + "out vec4 color;"
+			+ NL + "out vec4 vcolor;"
 			+ NL + "void main() {"
-			+ NL + "   gl_Position = projMX*viewMX*vec4(modelMX*vec3(in_position,1),1);"
-			+ NL + "   color = in_color;"
+			+ NL + "   gl_Position = viewMX*vec4(modelMX*vec3(in_position,1),1);"
+			+ NL + "   vcolor = in_color;"
+			+ NL + "}"
+			+ NL
+			;
+	static final String geometryShaderSrc = ""
+			+ "" + "#version 330"
+			+ NL + "layout(lines) in;"
+			+ NL + "layout(triangle_strip,max_vertices=4) out;"
+			+ NL + "uniform mat4 projMX;"
+			+ NL + "uniform float linewidth;"
+			+ NL + "in vec4 vcolor[];"
+			+ NL + "out vec4 gcolor;"
+			+ NL + "void main() {"
+			+ NL + "   vec2 p1 = gl_in[0].gl_Position.xy;"
+			+ NL + "   vec2 p2 = gl_in[1].gl_Position.xy;"
+			+ NL + "   vec2 dir = p1-p2;"
+			+ NL + "   vec2 miterDir = normalize(vec2(dir.y, -dir.x))*0.5*linewidth;"
+			+ NL + "   vec2 p;"
+			
+			+ NL + "   p = p1+miterDir;"
+			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
+			+ NL + "   gcolor = vcolor[0];"
+			+ NL + "   EmitVertex();"
+			
+			+ NL + "   p = p1-miterDir;"
+			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
+			+ NL + "   gcolor = vcolor[0];"
+			+ NL + "   EmitVertex();"
+			
+			+ NL + "   p = p2+miterDir;"
+			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
+			+ NL + "   gcolor = vcolor[1];"
+			+ NL + "   EmitVertex();"
+			
+			+ NL + "   p = p2-miterDir;"
+			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
+			+ NL + "   gcolor = vcolor[1];"
+			+ NL + "   EmitVertex();"
+			
+			+ NL + "   EndPrimitive();"
 			+ NL + "}"
 			+ NL
 			;
@@ -34,11 +72,13 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 0) out vec4 frag_color;"
 			+ NL + "layout(location = 1) out vec4 pick_color;"
 			+ NL + "uniform vec4 pickColorToUse;"
-			+ NL + "in vec4 color;"
+			+ NL + "in vec4 gcolor;"
+			+ NL + "in vec2 param;"
 			+ NL + "void main() {"
-			+ NL + "   frag_color = color;"
+			+ NL + "   frag_color = gcolor;"
 			+ NL + "   pick_color = pickColorToUse;"
 			+ NL + "}"
+			+ NL
 			;
 	
 	float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
@@ -51,7 +91,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	
 	@Override
 	public void glInit() {
-		shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+		shader = new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc);
 		modelMX = new Matrix3f();
 		viewMX = new Matrix4f();
 		itemsToRender.forEach(Lines::initGL);
@@ -68,7 +108,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@Override
 	protected void renderItem(Lines lines) {
 		int loc;
-		GL11.glLineWidth(lines.getThickness());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidth");
+		GL20.glUniform1f(loc, lines.getThickness());
 		// set projection matrix in shader
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);

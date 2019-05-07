@@ -16,7 +16,7 @@ public class Lines implements Renderable {
 	
 	protected ArrayList<Pair<Color,Color>> colors = new ArrayList<>();
 	
-	protected float thickness;
+	protected float thickness = 1;
 	
 	protected int pickColor;
 	
@@ -45,6 +45,14 @@ public class Lines implements Renderable {
 	
 	public Lines addSegment(Point2D p1, Point2D p2, Color c){
 		return addSegment(p1, p2, c, c);
+	}
+	
+	public Lines addSegment(double x1, double y1, double x2, double y2, int c1, int c2){
+		return addSegment(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2), new Color(c1, true), new Color(c2, true));
+	}
+	
+	public Lines addSegment(double x1, double y1, double x2, double y2, int c){
+		return addSegment(x1, y1, x2, y2, c, c);
 	}
 	
 	public boolean removeSegment(Pair<Point2D,Point2D> segment){
