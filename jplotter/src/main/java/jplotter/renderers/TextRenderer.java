@@ -10,7 +10,6 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
-import jplotter.globjects.DynamicText;
 import jplotter.globjects.Shader;
 import jplotter.globjects.Text;
 import jplotter.util.GLUtils;
@@ -80,8 +79,8 @@ public class TextRenderer implements Renderer {
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
 			for(Text txt: textsToRender){
 				txt.initGL();
-				if(txt instanceof DynamicText){
-					((DynamicText) txt).updateVA();
+				if(txt.isDirty()){
+					txt.updateGL();
 				}
 				txt.bindVertexArray();
 				GL13.glBindTexture(GL11.GL_TEXTURE_2D, txt.getTextureID());

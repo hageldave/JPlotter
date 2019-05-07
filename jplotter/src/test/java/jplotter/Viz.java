@@ -82,9 +82,9 @@ public class Viz {
 		txtr.addText(new StaticText("Whatup", 18, Font.PLAIN, false).setOrigin(40,32));
 		txtr.addText(new DynamicText(Long.toString(System.currentTimeMillis()).toCharArray(), 22, Font.ITALIC, true){
 			@Override
-			public void updateVA() {
+			public void updateGL() {
 				setTextFromString(Long.toString(System.currentTimeMillis()));
-				super.updateVA();
+				super.updateGL();
 			}
 		}.setOrigin(40, 200).setPickColor(0xc0ffee));
 		

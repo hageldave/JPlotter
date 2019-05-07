@@ -78,7 +78,7 @@ public class LinesRenderer implements Renderer {
 			for(Lines lines: linesToRender){
 				lines.initGL();
 				if(lines.isDirty()){
-					lines.updateVA();
+					lines.updateGL();
 				}
 				GL11.glLineWidth(lines.getThickness());
 				// set projection matrix in shader

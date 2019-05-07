@@ -6,7 +6,7 @@ import java.awt.Point;
 
 import hageldave.imagingkit.core.Pixel;
 
-public abstract class Text implements AutoCloseable {
+public abstract class Text implements Renderable {
 
 	protected final Dimension textSize;
 	protected final int fontsize; 
@@ -25,10 +25,6 @@ public abstract class Text implements AutoCloseable {
 		this.color = new Color(128,128,128);
 		this.origin = new Point(0, 0);
 	}
-	
-	
-	@Override
-	public abstract void close();
 
 
 	public int getStyle() {
