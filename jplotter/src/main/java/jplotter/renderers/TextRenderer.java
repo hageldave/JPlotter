@@ -14,7 +14,7 @@ import jplotter.globjects.Shader;
 import jplotter.globjects.Text;
 import jplotter.util.GLUtils;
 
-public class TextRenderer implements Renderer {
+public class TextRenderer extends GenericRenderer<Text> {
 
 	private static final char NL = '\n';
 	static final String vertexShaderSrc = ""
@@ -46,7 +46,6 @@ public class TextRenderer implements Renderer {
 			+ NL + "}"
 			;
 	
-	Shader shader;
 	float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
 	Matrix3f modelMX;
 	Matrix4f viewMX;
@@ -63,83 +62,60 @@ public class TextRenderer implements Renderer {
 		viewMX = new Matrix4f();
 		textsToRender.forEach(Text::initGL);
 	}
-
+	
 	@Override
-	public void render(int w, int h) {
+	protected void renderStart(int w, int h) {
 		orthoMX = GLUtils.orthoMX(0, w, 0, h);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL12.GL_BLEND);
 		GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA);
-		
-		
-		if(!textsToRender.isEmpty()){
-			shader.bind();
-			int loc;
-			// set texture in shader
-			GL13.glActiveTexture(GL13.GL_TEXTURE0);
-			for(Text txt: textsToRender){
-				txt.initGL();
-				if(txt.isDirty()){
-					txt.updateGL();
-				}
-				txt.bindVertexArray();
-				GL13.glBindTexture(GL11.GL_TEXTURE_2D, txt.getTextureID());
-				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
-				GL20.glUniform1i(loc, 0);
-				// set projection matrix in shader
-				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-				GL20.glUniformMatrix4fv(loc, false, orthoMX);
-				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
-				GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
-				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
-				modelMX.setColumn(2, txt.getOrigin().x, txt.getOrigin().y, 0);
-				GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
-				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
-				GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), txt.getColorA());
-				loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
-				GL20.glUniform4f(loc, txt.getPickColorR(), txt.getPickColorG(), txt.getPickColorB(), 1f);
-				// draw things
-				GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
-				txt.releaseVertexArray();
-			}
-			// done
-			GL13.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-			shader.unbind();
-		}
-		
+		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+	}
+
+	@Override
+	protected void renderItem(Text txt) {
+		int loc;
+		txt.bindVertexArray();
+		GL13.glBindTexture(GL11.GL_TEXTURE_2D, txt.getTextureID());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
+		GL20.glUniform1i(loc, 0);
+		// set projection matrix in shader
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+		GL20.glUniformMatrix4fv(loc, false, orthoMX);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
+		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
+		modelMX.setColumn(2, txt.getOrigin().x, txt.getOrigin().y, 0);
+		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
+		GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), txt.getColorA());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
+		GL20.glUniform4f(loc, txt.getPickColorR(), txt.getPickColorG(), txt.getPickColorB(), 1f);
+		// draw things
+		GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
+		txt.releaseVertexArray();
+	}
+	
+	@Override
+	protected void renderEnd() {
+		GL13.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		GL11.glDisable(GL12.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		
 	}
 
 	@Override
 	public void close() {
 		if(Objects.nonNull(shader))
 			shader.close();
-		deleteAllTexts();
-	}
-
-	public LinkedList<Text> getTextsToRender() {
-		return textsToRender;
-	}
-	
-	public void addText(Text txt){
-		textsToRender.add(txt);
-	}
-	
-	public boolean removeText(Text txt){
-		return textsToRender.remove(txt);
-	}
-	
-	public void deleteAllTexts(){
-		for(Text txt: textsToRender){
-			txt.close();
-		}
-		textsToRender.clear();
+		deleteAllItems();
 	}
 	
 	@Override
 	public boolean drawsPicking() {
 		return true;
 	}
+
+
 	
 }

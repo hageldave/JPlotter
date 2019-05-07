@@ -78,9 +78,9 @@ public class Viz {
 			}
 		});
 		
-		txtr.addText(new StaticText("hello", 12, Font.BOLD, false).setOrigin(40,50));
-		txtr.addText(new StaticText("Whatup", 18, Font.PLAIN, false).setOrigin(40,32));
-		txtr.addText(new DynamicText(Long.toString(System.currentTimeMillis()).toCharArray(), 22, Font.ITALIC, true){
+		txtr.addItemToRender(new StaticText("hello", 12, Font.BOLD, false).setOrigin(40,50));
+		txtr.addItemToRender(new StaticText("Whatup", 18, Font.PLAIN, false).setOrigin(40,32));
+		txtr.addItemToRender(new DynamicText(Long.toString(System.currentTimeMillis()).toCharArray(), 22, Font.ITALIC, true){
 			@Override
 			public void updateGL() {
 				setTextFromString(Long.toString(System.currentTimeMillis()));
@@ -97,7 +97,7 @@ public class Viz {
 			double y2 = Math.exp(j*0.1)/(Math.exp(j*0.1)+1)*100+10;
 			lines.addSegment(new Point2D.Double(x1,y1), new Point2D.Double(x2,y2), Color.MAGENTA);
 		}
-		lnsr.addLines(lines);
+		lnsr.addItemToRender(lines);
 		
 		
 
