@@ -79,13 +79,13 @@ public class Viz {
 			}
 		});
 		
-		txtr.addText(new StaticText("hello", 12, Font.BOLD, false).setOrigin(40,50));
-		txtr.addText(new StaticText("Whatup", 18, Font.PLAIN, false).setOrigin(40,32));
-		txtr.addText(new DynamicText(Long.toString(System.currentTimeMillis()).toCharArray(), 22, Font.ITALIC, true){
+		txtr.addItemToRender(new StaticText("hello", 12, Font.BOLD, false).setOrigin(40,50));
+		txtr.addItemToRender(new StaticText("Whatup", 18, Font.PLAIN, false).setOrigin(40,32));
+		txtr.addItemToRender(new DynamicText(Long.toString(System.currentTimeMillis()).toCharArray(), 22, Font.ITALIC, true){
 			@Override
-			public void updateVA() {
+			public void updateGL() {
 				setTextFromString(Long.toString(System.currentTimeMillis()));
-				super.updateVA();
+				super.updateGL();
 			}
 		}.setOrigin(40, 200).setPickColor(0xc0ffee));
 		
@@ -109,7 +109,7 @@ public class Viz {
 				);
 			}
 		}
-		lnsr.addLines(lines);
+		lnsr.addItemToRender(lines);
 		
 		
 

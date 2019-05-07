@@ -64,5 +64,13 @@ public class StaticText extends Text {
 			va = null;
 		}
 	}
+
+	@Override
+	public void updateGL() { /* nothing to do (static text) */ }
+
+	@Override
+	public boolean isDirty() {
+		return false;
+	}
 	
 }

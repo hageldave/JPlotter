@@ -26,7 +26,7 @@ public class DynamicText extends Text {
 			va = CharacterAtlas.get(fontsize, style, antialiased).createVAforString(getTextString());
 	}
 	
-	public void updateVA(){
+	public void updateGL(){
 		if(Objects.nonNull(va)){
 			float[] texcoords = CharacterAtlas.vaTexCoordsForChars(text);
 			va.setBuffer(1, 2, texcoords);
@@ -60,6 +60,12 @@ public class DynamicText extends Text {
 	public DynamicText setPickColor(int pickColor) {
 		super.setPickColor(pickColor);
 		return this;
+	}
+	
+	@Override
+	public boolean isDirty() {
+		// TODO: detect if actually dirty
+		return true;
 	}
 
 }

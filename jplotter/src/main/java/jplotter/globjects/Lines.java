@@ -8,7 +8,7 @@ import java.util.Objects;
 import hageldave.imagingkit.core.Pixel;
 import jplotter.util.Pair;
 
-public class Lines implements AutoCloseable {
+public class Lines implements Renderable {
 
 	VertexArray va;
 	
@@ -122,11 +122,11 @@ public class Lines implements AutoCloseable {
 	public void initGL(){
 		if(Objects.isNull(va)){
 			va = new VertexArray(2);
-			updateVA();
+			updateGL();
 		}
 	}
 	
-	public void updateVA(){
+	public void updateGL(){
 		if(Objects.nonNull(va)){
 			float[] segmentCoordBuffer = new float[segments.size()*2*2];
 			float[] colorBuffer = new float[segments.size()*2*4];
