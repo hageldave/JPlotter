@@ -20,6 +20,7 @@ import jplotter.globjects.CharacterAtlas;
 import jplotter.globjects.DynamicText;
 import jplotter.globjects.Lines;
 import jplotter.globjects.StaticText;
+import jplotter.renderers.CoordSysRenderer;
 import jplotter.renderers.LinesRenderer;
 import jplotter.renderers.QuadWithFrag;
 import jplotter.renderers.TextRenderer;
@@ -38,6 +39,7 @@ public class Viz {
 		QuadWithFrag qwf = new QuadWithFrag();
 		TextRenderer txtr = new TextRenderer();
 		LinesRenderer lnsr = new LinesRenderer();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
 		FBOCanvas canvas;
 		frame.getContentPane().add(canvas = new FBOCanvas(data) {
 			private static final long serialVersionUID = 1L;
@@ -46,8 +48,9 @@ public class Viz {
 			}
 			public void paintToFBO(int w, int h) {
 //				qwf.render(w,h);
-				txtr.render(w, h);
-				lnsr.render(w, h);
+//				txtr.render(w, h);
+//				lnsr.render(w, h);
+				coordsys.render(w, h);
 			}
 			@Override
 			public void initGL() {
@@ -55,6 +58,7 @@ public class Viz {
 				qwf.glInit();
 				txtr.glInit();
 				lnsr.glInit();
+				coordsys.glInit();
 			}
 		}, BorderLayout.CENTER);
 		
