@@ -52,9 +52,14 @@ public class CoordSysCanvas extends FBOCanvas {
 	PointeredPoint2D coordsysframeLT = new PointeredPoint2D(coordsysframeLB.x, coordsysframeRT.y);
 	PointeredPoint2D coordsysframeRB = new PointeredPoint2D(coordsysframeRT.x, coordsysframeLB.y);
 	
-	Matrix3f scaleMX = new Matrix3f();
-	Matrix3f transMX = new Matrix3f();
-	Matrix3f viewMX = new Matrix3f();
+	Matrix3f coordSysScaleMX = new Matrix3f();
+	Matrix3f coordSysTransMX = new Matrix3f();
+	/** 
+	 * The transform that corresponds to this coordinate systems {@link #coordinateArea}
+	 * = {@link #coordSysScaleMX} * {@link #coordSysTransMX}
+	 * which is passed to the content renderers
+	 */
+	Matrix3f coordSysViewMX = new Matrix3f();
 
 
 	public CoordSysCanvas(GLData data) {
@@ -212,9 +217,9 @@ public class CoordSysCanvas extends FBOCanvas {
 			GL11.glViewport(viewportX,viewPortY,viewPortW,viewPortH);
 			double scaleX = viewPortW/coordinateArea.getWidth();
 			double scaleY = viewPortH/coordinateArea.getHeight();
-			scaleMX.set((float)scaleX,0,0,  0,(float)scaleY,0,  0,0,1);
-			transMX.set(1,0,0,  0,1,0, -(float)coordinateArea.getX(),-(float)coordinateArea.getY(),1);
-			content.setViewMX(scaleMX.mul(transMX,viewMX));
+			coordSysScaleMX.set((float)scaleX,0,0,  0,(float)scaleY,0,  0,0,1);
+			coordSysTransMX.set(1,0,0,  0,1,0, -(float)coordinateArea.getX(),-(float)coordinateArea.getY(),1);
+			content.setViewMX(coordSysScaleMX.mul(coordSysTransMX,coordSysViewMX));
 			content.render(viewPortW, viewPortH);
 			GL11.glViewport(0, 0, w, h);
 		}
