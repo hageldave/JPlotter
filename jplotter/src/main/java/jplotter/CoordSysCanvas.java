@@ -70,8 +70,14 @@ public class CoordSysCanvas extends FBOCanvas {
 		minX = 3.3;
 		maxX = 4.2;
 		double diff = maxX-minX;
-		double orderOfMagnitude = Math.log10(diff);
+		double orderOfMagnitude = Math.floor(Math.log10(diff));
+		double[] goodIncrements = new double[]{1, 5, 2, 2.5, 4, 3, 1.5, 6, 8};
+		int numtickstoplace = 5;
 		
+		
+		for(int i = 0; i < goodIncrements.length; i++){
+			
+		}
 	}
 	
 	
@@ -105,4 +111,18 @@ public class CoordSysCanvas extends FBOCanvas {
 		super.close();
 	}
 
+	
+	public static void main(String[] args) {
+		double start =  Math.random() * Math.pow(10, (Math.random()*8)-3);
+		double range =  Math.random() * Math.pow(10, (Math.random()*8)-3);
+		start = 0.1582;
+		range = 0.0447;
+		double end = start+range;
+		double oom = Math.log10(range);
+		int oomi = (int)Math.floor(oom);
+		int starti = (int)Math.floor(start * Math.pow(10, -oomi));
+		int endi = (int)Math.ceil(end * Math.pow(10, -oomi));
+		System.out.println(oomi);
+	}
+	
 }
