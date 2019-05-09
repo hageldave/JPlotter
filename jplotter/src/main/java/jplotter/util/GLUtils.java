@@ -1,5 +1,7 @@
 package jplotter.util;
 
+import java.util.Objects;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
@@ -99,7 +101,7 @@ public class GLUtils {
 		}
 	}
 	
-	public static float[] orthoMX(float left, float right, float bottom, float top) {
+	public static float[] orthoMX(float[] buffer, float left, float right, float bottom, float top) {
 //		detail::tmat4x4<valType> Result(1);
 //		Result[0][0] = valType(2) / (right - left);
 //		Result[1][1] = valType(2) / (top - bottom);
@@ -107,27 +109,31 @@ public class GLUtils {
 //		Result[3][0] = - (right + left) / (right - left);
 //		Result[3][1] = - (top + bottom) / (top - bottom);
 //		return Result;
-		return new float[] {
-			2.0f / (right - left),
-			0,
-			0,
-			0,
+		if(Objects.isNull(buffer)){
+			buffer = new float[16];
+		}
+		int i=0;
+		
+		buffer[i++]= 2.0f / (right - left);
+		buffer[i++]= 0;
+		buffer[i++]= 0;
+		buffer[i++]= 0;
 			
-			0,
-			2.0f / (top - bottom),
-			0,
-			0,
+		buffer[i++]= 0;
+		buffer[i++]= 2.0f / (top - bottom);
+		buffer[i++]= 0;
+		buffer[i++]= 0;
 			
-			0,
-			0,
-			- 1,
-			0,
+		buffer[i++]= 0;
+		buffer[i++]= 0;
+		buffer[i++]= -1;
+		buffer[i++]= 0;
 			
-			- (right + left) / (right - left),
-			- (top + bottom) / (top - bottom),
-			0,
-			1
-		};
+		buffer[i++]= -(right + left) / (right - left);
+		buffer[i++]= -(top + bottom) / (top - bottom);
+		buffer[i++]= 0;
+		buffer[i++]= 1;
+		return buffer;
 	}
 	
 	public static float[] mx3fromRowMajor(

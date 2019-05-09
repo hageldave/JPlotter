@@ -3,13 +3,19 @@ package jplotter.renderers;
 import java.util.LinkedList;
 import java.util.Objects;
 
+import org.joml.Matrix3fc;
+import org.joml.Matrix4f;
+
 import jplotter.globjects.Renderable;
 import jplotter.globjects.Shader;
+import jplotter.util.GLUtils;
 
 public abstract class GenericRenderer<T extends Renderable> implements Renderer {
 	
 	protected LinkedList<T> itemsToRender = new LinkedList<>();
 	protected Shader shader;
+	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
+	protected Matrix4f viewMX = new Matrix4f();
 	
 	@Override
 	public void render(int w, int h) {
@@ -21,6 +27,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer 
 			// bind shader
 			shader.bind();
 			// prepare for rendering (e.g. en/disable depth or blending and such)
+			orthoMX = GLUtils.orthoMX(orthoMX, 0, w, 0, h);
 			renderStart(w,h);
 			// render every item
 			for(T item: itemsToRender){
@@ -65,5 +72,8 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer 
 		return itemsToRender;
 	}
 	
+	public void setViewMX(Matrix3fc m){
+		this.viewMX.set(m);
+	}
 	
 }

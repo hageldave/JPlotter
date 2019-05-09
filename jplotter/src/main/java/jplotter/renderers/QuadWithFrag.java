@@ -23,7 +23,7 @@ public class QuadWithFrag implements Renderer {
 			0,1,
 			1,1,
 	};
-	private static final float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
+	private static final float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	private static final char NL = '\n';
 	public static final String vertexShaderSrc = ""
 			+ "" + "#version 330"

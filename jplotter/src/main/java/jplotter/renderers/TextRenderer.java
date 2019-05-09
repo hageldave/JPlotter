@@ -4,7 +4,6 @@ import java.util.LinkedList;
 import java.util.Objects;
 
 import org.joml.Matrix3f;
-import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -12,7 +11,6 @@ import org.lwjgl.opengl.GL20;
 
 import jplotter.globjects.Shader;
 import jplotter.globjects.Text;
-import jplotter.util.GLUtils;
 
 public class TextRenderer extends GenericRenderer<Text> {
 
@@ -46,9 +44,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "}"
 			;
 	
-	float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
-	Matrix3f modelMX;
-	Matrix4f viewMX;
+	protected Matrix3f modelMX;
 	LinkedList<Text> textsToRender = new LinkedList<>();
 	
 	float[] viewmxarray = new float[16];
@@ -59,13 +55,11 @@ public class TextRenderer extends GenericRenderer<Text> {
 	public void glInit() {
 		shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
 		modelMX = new Matrix3f();
-		viewMX = new Matrix4f();
 		textsToRender.forEach(Text::initGL);
 	}
 	
 	@Override
 	protected void renderStart(int w, int h) {
-		orthoMX = GLUtils.orthoMX(0, w, 0, h);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL12.GL_BLEND);
 		GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA);

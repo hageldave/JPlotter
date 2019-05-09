@@ -57,7 +57,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected FBO fbo=null;
 	protected Shader shader=null;
 	protected VertexArray vertexArray=null;
-	protected float[] orthoMX = GLUtils.orthoMX(0, 1, 0, 1);
+	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	protected PlatformGLCanvas platformcanvas;
 	protected boolean useBitBlit = true;
 	protected Color fboClearColor = Color.darkGray;
