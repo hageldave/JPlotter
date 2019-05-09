@@ -19,8 +19,8 @@ public class Viz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
-		CoordSysCanvas canvas;
-		frame.getContentPane().add(canvas = new CoordSysCanvas(), BorderLayout.CENTER);
+		CoordSysCanvas canvas = new CoordSysCanvas();
+		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		
 		frame.addWindowListener(new WindowAdapter() {
 			@Override

@@ -7,6 +7,11 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Locale;
 
+import org.joml.Math;
+import org.joml.Matrix3f;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.awt.GLData;
+
 import jplotter.globjects.Lines;
 import jplotter.globjects.StaticText;
 import jplotter.renderers.LinesRenderer;
@@ -24,6 +29,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	Rectangle2D coordinateArea;
 	PointeredPoint2D coordWindowOrigin = new PointeredPoint2D(100, 50);
 
+	LinesRenderer content = new LinesRenderer();
+
 	Lines axes = new Lines();
 	Lines ticks = new Lines();
 	Lines guides = new Lines();
@@ -36,7 +43,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	int viewportwidth=0;
 	int viewportheight=0;
 	boolean isDirty = true;
-	
+
 	Color tickColor = Color.DARK_GRAY;
 	Color guideColor = Color.LIGHT_GRAY;
 
@@ -46,9 +53,10 @@ public class CoordSysCanvas extends FBOCanvas {
 	PointeredPoint2D coordsysframeRB = new PointeredPoint2D(coordsysframeRT.x, coordsysframeLB.y);
 
 
-	public CoordSysCanvas() {
+	public CoordSysCanvas(GLData data) {
+		super(data);
 		this.fboClearColor = Color.WHITE;
-		coordinateArea = new Rectangle2D.Double(20.5, 500, 0.9, 10000);
+		coordinateArea = new Rectangle2D.Double(-1,-1,10,3);
 		xticklocations = new double[5][1];
 		yticklocations = new double[5][1];
 
@@ -60,6 +68,26 @@ public class CoordSysCanvas extends FBOCanvas {
 		linesR.addItemToRender(guides);
 		linesR.addItemToRender(ticks);
 		linesR.addItemToRender(axes);
+		setupTestContent();
+	}
+	
+	public CoordSysCanvas() {
+		this(new GLData());
+	}
+
+	void setupTestContent(){
+		Lines testcontent = new Lines();
+		double scaling = 0.1;
+		for(int i = 0; i < 100; i++){
+			double x1 = i*scaling;
+			double x2 = (i+1)*scaling;
+			double y1 = Math.sin(x1);
+			double y2 = Math.sin(x2);
+			testcontent.addSegment(x1, y1, x2, y2, 0xffff00ff);
+			testcontent.addSegment(i, i, i+1, i+1, 0xff00ff00);
+		}
+		testcontent.setThickness(2f);
+		content.addItemToRender(testcontent);
 	}
 
 	protected void setupTicksAndGuides() {
@@ -156,6 +184,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		super.initGL();
 		linesR.glInit();
 		textR.glInit();
+		content.glInit();
 	}
 
 	@Override
@@ -166,6 +195,28 @@ public class CoordSysCanvas extends FBOCanvas {
 			axes.setDirty();
 			setupTicksAndGuides();
 		}
+		linesR.addItemToRender(guides);
+		linesR.addItemToRender(ticks);
+		linesR.removeItemToRender(axes);
+		linesR.render(w, h);
+		// draw into the coord system
+		{
+			int viewportX = (int)coordsysframeLB.getX();
+			int viewPortY = (int)coordsysframeLB.getY();
+			int viewPortW = (int)coordsysframeLB.distance(coordsysframeRB);
+			int viewPortH = (int)coordsysframeLB.distance(coordsysframeLT);
+			GL11.glViewport(viewportX,viewPortY,viewPortW,viewPortH);
+			double scaleX = viewPortW/coordinateArea.getWidth();
+			double scaleY = viewPortH/coordinateArea.getHeight();
+			Matrix3f S = new Matrix3f((float)scaleX,0,0, 0,(float)scaleY,0 ,0,0,1);
+			Matrix3f T = new Matrix3f(1,0,0, 0,1,0, -(float)coordinateArea.getX(), -(float)coordinateArea.getY(), 1);
+			content.setViewMX(S.mul(T));
+			content.render(viewPortW, viewPortH);
+			GL11.glViewport(0, 0, w, h);
+		}
+		linesR.removeItemToRender(guides);
+		linesR.removeItemToRender(ticks);
+		linesR.addItemToRender(axes);
 		linesR.render(w, h);
 		textR.render(w, h);
 	}

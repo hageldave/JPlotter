@@ -158,5 +158,4 @@ public abstract class Text implements Renderable {
 	}
 	
 	
-	
 }

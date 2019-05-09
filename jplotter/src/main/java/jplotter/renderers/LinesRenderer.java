@@ -2,7 +2,9 @@ package jplotter.renderers;
 
 import java.util.Objects;
 
+import org.joml.Matrix3d;
 import org.joml.Matrix3f;
+import org.joml.Matrix3fc;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -116,7 +118,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
 		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
-		modelMX.setColumn(2, 0, 0, 0);
 		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
 		GL20.glUniform4f(loc, lines.getPickColorR(), lines.getPickColorG(), lines.getPickColorB(), 1f);
@@ -143,6 +144,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@Override
 	public boolean drawsPicking() {
 		return true;
+	}
+	
+	public void setViewMX(Matrix3fc m){
+		this.viewMX.set(m);
 	}
 	
 }

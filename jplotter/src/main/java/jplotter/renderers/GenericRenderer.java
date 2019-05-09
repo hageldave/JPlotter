@@ -46,7 +46,8 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer 
 
 
 	public GenericRenderer<T> addItemToRender(T item){
-		itemsToRender.add(item);
+		if(!itemsToRender.contains(item))
+			itemsToRender.add(item);
 		return this;
 	}
 	
