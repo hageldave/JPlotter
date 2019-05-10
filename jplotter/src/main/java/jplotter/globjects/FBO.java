@@ -15,6 +15,7 @@ public class FBO implements AutoCloseable {
 	public final int width;
 	public final int height;
 	public final boolean isMultisampled;
+	public final int numMultisamples;
 
 	int fboid;
 	int colortexid;
@@ -27,14 +28,15 @@ public class FBO implements AutoCloseable {
 		this.isMultisampled = multisampling;
 		this.fboid = GL30.glGenFramebuffers();
 		if(multisampling){
-			int numSamples = GLUtils.canMultisample4X() ? 4:2;
-			this.colortexid = GLUtils.create2DTextureMultisample(width, height, GL11.GL_RGBA8, numSamples);
-			this.pickingtexid = GLUtils.create2DTextureMultisample(width, height, GL11.GL_RGBA8, numSamples);
-			this.depthtexid = GLUtils.create2DTextureMultisample(width, height, GL11.GL_DEPTH_COMPONENT, numSamples);
+			this.numMultisamples = GLUtils.canMultisample4X() ? 4:2;
+			this.colortexid = GLUtils.create2DTextureMultisample(width, height, GL11.GL_RGBA8, numMultisamples);
+			this.pickingtexid = GLUtils.create2DTextureMultisample(width, height, GL11.GL_RGBA8, numMultisamples);
+			this.depthtexid = GLUtils.create2DTextureMultisample(width, height, GL11.GL_DEPTH_COMPONENT, numMultisamples);
 		} else {
+			this.numMultisamples = 0;
 			this.colortexid = GLUtils.create2DTexture(width, height, GL11.GL_RGBA8, GL11.GL_RGBA, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
 			this.pickingtexid = GLUtils.create2DTexture(width, height, GL11.GL_RGBA8, GL11.GL_RGBA, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
-			this.depthtexid = GLUtils.create2DTexture(width, height, GL11.GL_DEPTH_COMPONENT, GL11.GL_DEPTH_COMPONENT, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
+			this.depthtexid = GLUtils.create2DTexture(width, height, GL11.GL_DEPTH_COMPONENT, GL11.GL_DEPTH_COMPONENT, GL11.GL_NEAREST, GL12.GL_CLAMP_TO_EDGE);
 		}
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fboid);
 		{
