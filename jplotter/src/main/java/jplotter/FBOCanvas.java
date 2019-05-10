@@ -55,6 +55,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			;
 	
 	protected FBO fbo=null;
+	protected FBO fboMS=null;
 	protected Shader shader=null;
 	protected VertexArray vertexArray=null;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
@@ -147,7 +148,10 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		int w,h;
 		if((w=getWidth()) >0 && (h=getHeight()) >0){
 			if(fbo == null || w!=fbo.width || h!=fbo.height){
-				setFBO(new FBO(w, h));
+				setFBO(new FBO(w, h, false));
+				if(GLUtils.canMultisample2X()){
+					setFBO_MS(new FBO(w, h, true));
+				}
 			}
 			// offscreen
 			setRenderTargetsPickingOnly(w,h);
@@ -158,6 +162,31 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			setRenderTargetsColorAndPicking(w, h);
 			paintToFBO(w, h);
+			
+			if(Objects.nonNull(fboMS)){
+				// transfer from multisampled fbo to normal fbo
+				GL11.glClearColor(0, 0, 0, 0);
+				GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, fbo.getFBOid());
+				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fboMS.getFBOid());
+				
+				GL30.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
+				GL30.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+				GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
+				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				
+				GL30.glReadBuffer(GL30.GL_COLOR_ATTACHMENT1);
+				GL30.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT1);
+				GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
+				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				
+				GL30.glReadBuffer(GL30.GL_DEPTH_ATTACHMENT);
+				GL30.glDrawBuffer(GL30.GL_DEPTH_ATTACHMENT);
+				GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
+				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				
+				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
+			}
+			
 			// onscreen
 			setRenderTargets(0, w, h, GL11.GL_BACK);
 			GL11.glClearColor( screenClearColor.getRed()/255f, screenClearColor.getGreen()/255f, screenClearColor.getBlue()/255f, screenClearColor.getAlpha()/255f );
@@ -216,7 +245,14 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		this.fbo = fbo;
 	}
 	
-	protected void setRenderTargets(int fboID, int width, int height, int... drawBuffers){
+	private void setFBO_MS(FBO fboMS){
+		if(Objects.nonNull(this.fboMS)){
+			this.fboMS.close();
+		}
+		this.fboMS = fboMS;
+	}
+	
+	protected static void setRenderTargets(int fboID, int width, int height, int... drawBuffers){
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fboID);
 		if(drawBuffers.length > 1){
 			GL30.glDrawBuffers(drawBuffers);
@@ -227,15 +263,18 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	}
 	
 	protected void setRenderTargetsColorAndPicking(int width, int height) {
-		setRenderTargets(this.fbo.getFBOid(), width, height, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
+		int fboIDToUse = Objects.nonNull(this.fboMS) ? this.fboMS.getFBOid() : this.fbo.getFBOid();
+		setRenderTargets(fboIDToUse, width, height, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
 	}
 	
 	protected void setRenderTargetsColorOnly(int width, int height) {
-		setRenderTargets(this.fbo.getFBOid(), width, height, GL30.GL_COLOR_ATTACHMENT0);
+		int fboIDToUse = Objects.nonNull(this.fboMS) ? this.fboMS.getFBOid() : this.fbo.getFBOid();
+		setRenderTargets(fboIDToUse, width, height, GL30.GL_COLOR_ATTACHMENT0);
 	}
 	
 	protected void setRenderTargetsPickingOnly(int width, int height) {
-		setRenderTargets(this.fbo.getFBOid(), width, height, GL30.GL_COLOR_ATTACHMENT1);
+		int fboIDToUse = Objects.nonNull(this.fboMS) ? this.fboMS.getFBOid() : this.fbo.getFBOid();
+		setRenderTargets(fboIDToUse, width, height, GL30.GL_COLOR_ATTACHMENT1);
 	}
 
 }

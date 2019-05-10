@@ -96,6 +96,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			testcontent.addSegment(i, i, i+1, i+1, 0xff00ff00);
 		}
 		testcontent.setThickness(2f);
+		testcontent.setPickColor(0xffbabe);
 		content.addItemToRender(testcontent);
 	}
 

@@ -36,6 +36,23 @@ public class GLUtils {
 		return texid;
 	}
 	
+	public static int create2DTextureMultisample(int width, int height, int internalformat, int numSamples) {
+		int texid = GL11.glGenTextures();
+		GL11.glBindTexture(GL32.GL_TEXTURE_2D_MULTISAMPLE, texid);
+		{
+			GL32.glTexImage2DMultisample(
+					GL32.GL_TEXTURE_2D_MULTISAMPLE, 
+					numSamples, 
+					internalformat, 
+					width, 
+					height, 
+					true
+			);
+		}
+		GL11.glBindTexture(GL32.GL_TEXTURE_2D_MULTISAMPLE, 0);
+		return texid;
+	}
+	
 	public static int create2DTexture(Img img, int filter, int wrap) {
 		int format=GL11.GL_RGBA, internalformat=GL11.GL_RGBA8;
 		int texid = GL11.glGenTextures();
@@ -181,6 +198,20 @@ public class GLUtils {
 			super(cause);
 		}
 		
+	}
+	
+	public static boolean canMultisample2X(){
+		return 
+				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 2
+				&&
+				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 2;
+	}
+	
+	public static boolean canMultisample4X(){
+		return 
+				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 4
+				&&
+				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 4;
 	}
 	
 }
