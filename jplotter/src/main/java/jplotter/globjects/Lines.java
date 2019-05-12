@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import hageldave.imagingkit.core.Pixel;
 import jplotter.util.Pair;
+import jplotter.util.Utils;
 
 public class Lines implements Renderable {
 
@@ -137,7 +138,7 @@ public class Lines implements Renderable {
 	public void updateGL(){
 		if(Objects.nonNull(va)){
 			float[] segmentCoordBuffer = new float[segments.size()*2*2];
-			float[] colorBuffer = new float[segments.size()*2*4];
+			int[] colorBuffer = new int[segments.size()*2];
 			for(int i=0; i<segments.size(); i++){
 				Pair<Point2D, Point2D> seg = segments.get(i);
 				Pair<Color, Color> colorpair = colors.get(i);
@@ -146,17 +147,11 @@ public class Lines implements Renderable {
 				segmentCoordBuffer[i*4+2] = (float) seg.second.getX();
 				segmentCoordBuffer[i*4+3] = (float) seg.second.getY();
 				
-				colorBuffer[i*8+0] = colorpair.first.getRed()/255f;
-				colorBuffer[i*8+1] = colorpair.first.getGreen()/255f;
-				colorBuffer[i*8+2] = colorpair.first.getBlue()/255f;
-				colorBuffer[i*8+3] = colorpair.first.getAlpha()/255f;
-				colorBuffer[i*8+4] = colorpair.second.getRed()/255f;
-				colorBuffer[i*8+5] = colorpair.second.getGreen()/255f;
-				colorBuffer[i*8+6] = colorpair.second.getBlue()/255f;
-				colorBuffer[i*8+7] = colorpair.second.getAlpha()/255f;
+				colorBuffer[i*2+0] = colorpair.first.getRGB();
+				colorBuffer[i*2+1] = colorpair.second.getRGB();
 			}
 			va.setBuffer(0, 2, segmentCoordBuffer);
-			va.setBuffer(1, 4, colorBuffer);
+			va.setBuffer(1, 1, false, colorBuffer);
 			isDirty = false;
 		}
 	}

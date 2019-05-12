@@ -1,9 +1,23 @@
 package jplotter.globjects;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL11.GL_DOUBLE;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_INT;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
+import static org.lwjgl.opengl.GL15.glBufferData;
+import static org.lwjgl.opengl.GL15.glDeleteBuffers;
+import static org.lwjgl.opengl.GL15.glGenBuffers;
+import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
+import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+import static org.lwjgl.opengl.GL30.glVertexAttribIPointer;
 
 public class VertexArray implements AutoCloseable {
 
@@ -38,6 +52,27 @@ public class VertexArray implements AutoCloseable {
 				glBufferData(GL_ARRAY_BUFFER, buffercontent, GL_STATIC_DRAW);
 				// put vbo into va
 				glVertexAttribPointer(i, dim, GL_FLOAT, false, 0, 0);
+			}
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+		glBindVertexArray(0);
+		dims[i] = dim;
+		numValues[i] = buffercontent.length;
+		return this;
+	}
+	
+	public VertexArray setBuffer(int i, int dim, boolean signed, int ... buffercontent){
+		glBindVertexArray(va);
+		{
+			if(vbos[i] == 0){
+				vbos[i] = glGenBuffers();
+			}
+			glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
+			{
+				// put vertices into vbo
+				glBufferData(GL_ARRAY_BUFFER, buffercontent, GL_STATIC_DRAW);
+				// put vbo into va
+				glVertexAttribIPointer(i, 1, signed ? GL_INT:GL_UNSIGNED_INT, 0, 0);
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
