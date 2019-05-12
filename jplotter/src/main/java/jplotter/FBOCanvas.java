@@ -32,7 +32,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	private static final long serialVersionUID = 1L;
 
 	private static final char NL = '\n';
-	private static final String vertexShaderSrc = ""
+	private static final String blitVertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
 			+ NL + "uniform mat4 projMX;"
@@ -43,8 +43,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			+ NL + "}"
 			+ NL
 			;
-
-	private static final String fragmentShaderSrc = ""
+	private static final String blitFragmentShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) out vec4 frag_color;"
 			+ NL + "layout(location = 1) out vec4 frag_pick;"
@@ -58,7 +57,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			+ NL + "   ivec2 screen_Coords = ivec2(int(scaled.x),int(scaled.y));"
 			+ NL + "   float blitFactor = 1.0f/numSamples;"
 			+ NL + "   vec4 color = vec4(0,0,0,0);"
-			+ NL + "   vec4 depth = vec4(0,0,0,0);"
 			+ NL + "   for(int s=0; s<numSamples; s++){"
 			+ NL + "      color = color + texelFetch(colorTex, screen_Coords, s)*blitFactor;"
 			+ NL + "   }"
@@ -68,9 +66,36 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			+ NL + "}"
 			;
 
+	private static final String fillVertexShaderSrc = ""
+			+ "" + "#version 330"
+			+ NL + "layout(location = 0) in vec2 in_position;"
+			+ NL + "uniform mat4 projMX;"
+			+ NL + "out vec2 tex_Coords;"
+			+ NL + "void main() {"
+			+ NL + "   gl_Position = projMX*vec4(in_position,0,1);"
+			+ NL + "   tex_Coords = in_position;"
+			+ NL + "}"
+			+ NL
+			;
+	private static final String fillFragmentShaderSrc = ""
+			+ "" + "#version 330"
+			+ NL + "layout(location = 0) out vec4 frag_color;"
+			+ NL + "layout(location = 1) out vec4 frag_pick;"
+			+ NL + "uniform vec4 colorFill;"
+			+ NL + "uniform vec4 pickFill;"
+			+ NL + "in vec2 tex_Coords;"
+			+ NL + "void main() {"
+			+ NL + "   frag_color = colorFill;"
+			+ NL + "   frag_pick  = pickFill;"
+			+ NL + "}"
+			;
+
+
+
 	protected FBO fbo=null;
 	protected FBO fboMS=null;
-	protected Shader shader=null;
+	protected Shader blitShader=null;
+	protected Shader fillShader=null;
 	protected VertexArray vertexArray=null;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	protected PlatformGLCanvas platformcanvas;
@@ -102,7 +127,8 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	@Override
 	public void initGL() {
 		CapabilitiesCreator.create();
-		this.shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+		this.blitShader = new Shader(blitVertexShaderSrc, blitFragmentShaderSrc);
+		this.fillShader = new Shader(fillVertexShaderSrc, fillFragmentShaderSrc);
 		this.vertexArray = new VertexArray(1);
 		this.vertexArray.setBuffer(0, 2, new float[]{
 				0,0,
@@ -168,50 +194,64 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				}
 			}
 			// offscreen
-			setRenderTargetsPickingOnly(w,h);
 			GL11.glClearColor(0, 0, 0, 0);
-			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
-			setRenderTargetsColorOnly(w, h);
-			GL11.glClearColor( fboClearColor.getRed()/255f, fboClearColor.getGreen()/255f, fboClearColor.getBlue()/255f, fboClearColor.getAlpha()/255f );
-			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			setRenderTargetsColorAndPicking(w, h);
+			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
+			/* we need to first draw a viewport filling quad that fills the buffer with the clear color
+			 * in order to resolve issue #4
+			 */
+			{
+				fillShader.bind();
+				int loc;
+				loc = GL20.glGetUniformLocation(fillShader.getShaderProgID(), "colorFill");
+				GL20.glUniform4f(loc, fboClearColor.getRed()/255f, fboClearColor.getGreen()/255f, fboClearColor.getBlue()/255f, fboClearColor.getAlpha()/255f);
+				loc = GL20.glGetUniformLocation(fillShader.getShaderProgID(), "pickFill");
+				GL20.glUniform4f(loc, 0,0,0,0);
+				loc = GL20.glGetUniformLocation(fillShader.getShaderProgID(), "projMX");
+				GL20.glUniformMatrix4fv(loc, false, orthoMX);
+				vertexArray.bindAndEnableAttributes(0);
+				GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
+				vertexArray.unbindAndDisableAttributes(0);
+				fillShader.unbind();
+			}
+			// now draw the other stuff to the fbo
 			paintToFBO(w, h);
 
+			/* if we're using a multisampled FBO manually (=with a shader) blit to normal FBO
+			 * we need to do this manually because the picking colors are not to be anti aliased
+			 */
 			if(Objects.nonNull(fboMS)){
 				setRenderTargets(fbo.getFBOid(), w,h, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
-				GL11.glClearColor(0, 0, 0, 0);
 				GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
-				shader.bind();
 				{
+					blitShader.bind();
 					vertexArray.bindAndEnableAttributes(0);
 					int loc;
 					// set texture in shader
 					GL13.glActiveTexture(GL13.GL_TEXTURE0);
 					GL13.glBindTexture(GL32.GL_TEXTURE_2D_MULTISAMPLE, fboMS.getMainColorTexId());
-					loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "colorTex");
+					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "colorTex");
 					GL20.glUniform1i(loc, 0);
 
 					GL13.glActiveTexture(GL13.GL_TEXTURE1);
 					GL13.glBindTexture(GL32.GL_TEXTURE_2D_MULTISAMPLE, fboMS.getPickingColorTexId());
-					loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickTex");
+					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "pickTex");
 					GL20.glUniform1i(loc, 1);
 
-					loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "screensize");
+					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "screensize");
 					GL20.glUniform2f(loc, w, h);
 
-					loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "numSamples");
+					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "numSamples");
 					GL20.glUniform1i(loc, fboMS.numMultisamples);
 
-					// set projection matrix in shader
-					loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "projMX");
 					GL20.glUniformMatrix4fv(loc, false, orthoMX);
 
-					// draw things
 					GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
 					// done
 					vertexArray.unbindAndDisableAttributes(0);
+					blitShader.unbind();
 				}
-				shader.unbind();
 			}
 
 			// onscreen
@@ -235,9 +275,10 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	@Override
 	public void close() {
 		setFBO(null);
-		if(Objects.nonNull(shader)){
-			shader.close();
-			shader = null;
+		setFBO_MS(null);
+		if(Objects.nonNull(blitShader)){
+			blitShader.close();
+			blitShader = null;
 		}
 		if(Objects.nonNull(vertexArray)){
 			vertexArray.close();
