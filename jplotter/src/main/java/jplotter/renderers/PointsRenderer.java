@@ -2,6 +2,7 @@ package jplotter.renderers;
 
 import java.util.Objects;
 
+import org.joml.Matrix3fc;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL20;
@@ -11,7 +12,7 @@ import jplotter.globjects.Points;
 import jplotter.globjects.Shader;
 
 public class PointsRenderer extends GenericRenderer<Points> {
-	
+
 	private static final char NL = '\n';
 	static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
@@ -21,6 +22,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "layout(location = 3) in uvec2 in_colors;"
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform mat4 viewMX;"
+			+ NL + "uniform mat2 modelMX;"
+			+ NL + "uniform float globalScaling;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
@@ -28,20 +31,20 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
-			
+
 			+ NL + "mat2 rotationMatrix(float angle){"
 			+ NL + "   float s = sin(angle), c = cos(angle);"
 			+ NL + "   return mat2(c,s,-s,c);"
 			+ NL + "}"
-			
+
 			+ NL + "mat2 scalingMatrix(float s){"
 			+ NL + "   return mat2(s,0,0,s);"
 			+ NL + "}"
-			
+
 			+ NL + "void main() {"
 			+ NL + "   mat2 rotMX = rotationMatrix(in_rotAndScale.x);"
 			+ NL + "   mat2 scaleMX = scalingMatrix(in_rotAndScale.y);"
-			+ NL + "   gl_Position = projMX*viewMX*vec4((scaleMX*rotMX*in_position)+in_pointpos, 1,1);"
+			+ NL + "   gl_Position = projMX*viewMX*vec4(globalScaling*(modelMX*scaleMX*rotMX*in_position)+in_pointpos, 1,1);"
 			+ NL + "   vColor = unpackARGB(in_colors.x);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
@@ -59,8 +62,10 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "}"
 			+ NL
 			;
-	
+
 	float[] viewmxarray = new float[16];
+	float[] modelmxarray = new float[]{1,0,0,1};
+	float glyphScaling = 1f;
 
 	@Override
 	public void glInit() {
@@ -92,9 +97,17 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
 		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
+		GL20.glUniformMatrix2fv(loc, false, modelmxarray);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "globalScaling");
+		GL20.glUniform1f(loc, this.glyphScaling * item.getGlyph().pixelSize() * item.getGlobalScaling());
 		// draw things
 		item.bindVertexArray();
-		GL31.glDrawElementsInstanced(item.getGlyph().primitiveType(), item.getGlyph().numVertices(), GL11.GL_UNSIGNED_INT, 0, item.numPoints());
+		if(item.getGlyph().useElementsDrawCall()){
+			GL31.glDrawElementsInstanced(item.getGlyph().primitiveType(), item.getGlyph().numVertices(), GL11.GL_UNSIGNED_INT, 0, item.numPoints());
+		} else {
+			GL31.glDrawArraysInstanced(item.getGlyph().primitiveType(), 0, item.getGlyph().numVertices(), item.numPoints());
+		}
 		item.releaseVertexArray();
 	}
 
@@ -102,6 +115,14 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	protected void renderEnd() {
 		GL11.glDisable(GL12.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+	}
+	
+	@Override
+	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx) {
+		super.setViewMX(viewmx, scalemx, transmx);
+		this.modelmxarray[0] = 1f/scalemx.m00();
+		this.modelmxarray[1] = this.modelmxarray[2] = 0;
+		this.modelmxarray[3] = 1f/scalemx.m11();
 	}
 
 }

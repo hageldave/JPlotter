@@ -72,8 +72,8 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer 
 		return itemsToRender;
 	}
 	
-	public void setViewMX(Matrix3fc m){
-		this.viewMX.set(m);
+	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx){
+		this.viewMX.set(viewmx);
 	}
 	
 }

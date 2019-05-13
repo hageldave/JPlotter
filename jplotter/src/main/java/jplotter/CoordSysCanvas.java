@@ -7,7 +7,6 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Locale;
 
-import org.joml.Math;
 import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.awt.GLData;
@@ -103,9 +102,15 @@ public class CoordSysCanvas extends FBOCanvas {
 		testcontent.setPickColor(0xffbabe);
 		content1.addItemToRender(testcontent);
 		
-		Points testContent2 = new Points(DefaultGlyph.SQUARE);
-		testContent2.addPoint(0, 0).addPoint(2, 3).addPoint(1,1).addPoint(2, 2).addPoint(1, 2).addPoint(2, 1).addPoint(3, 1);
-		content2.addItemToRender(testContent2);
+		Points circlepoints = new Points(DefaultGlyph.CIRCLE_F);
+		Points squarepoints = new Points(DefaultGlyph.SQUARE_F);
+		Color color1 = new Color(0xffe41a1c);
+		Color color2 = new Color(0xff377eb8);
+		for(int i = 0; i < 100; i++){
+			circlepoints.addPoint(Math.random(), Math.random(), color1);
+			squarepoints.addPoint(Math.random(), Math.random(), color2);
+		}
+		content2.addItemToRender(circlepoints).addItemToRender(squarepoints);
 	}
 
 	protected void setupTicksAndGuides() {
@@ -229,9 +234,9 @@ public class CoordSysCanvas extends FBOCanvas {
 			double scaleY = viewPortH/coordinateArea.getHeight();
 			coordSysScaleMX.set((float)scaleX,0,0,  0,(float)scaleY,0,  0,0,1);
 			coordSysTransMX.set(1,0,0,  0,1,0, -(float)coordinateArea.getX(),-(float)coordinateArea.getY(),1);
-			content1.setViewMX(coordSysScaleMX.mul(coordSysTransMX,coordSysViewMX));
+			content1.setViewMX(coordSysScaleMX.mul(coordSysTransMX,coordSysViewMX), coordSysScaleMX, coordSysTransMX);
 			content1.render(viewPortW, viewPortH);
-			content2.setViewMX(coordSysViewMX);
+			content2.setViewMX(coordSysViewMX, coordSysScaleMX, coordSysTransMX);
 			content2.render(viewPortW, viewPortH);
 			GL11.glViewport(0, 0, w, h);
 		}

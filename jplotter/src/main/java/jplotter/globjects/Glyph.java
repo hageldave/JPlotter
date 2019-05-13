@@ -7,5 +7,8 @@ public interface Glyph {
 	public int numVertices();
 	
 	public int primitiveType();
+
+	public int pixelSize();
 	
+	public boolean useElementsDrawCall();
 }
