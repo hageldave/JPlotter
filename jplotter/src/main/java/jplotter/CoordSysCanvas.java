@@ -12,9 +12,12 @@ import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.awt.GLData;
 
+import jplotter.globjects.DefaultGlyph;
 import jplotter.globjects.Lines;
+import jplotter.globjects.Points;
 import jplotter.globjects.StaticText;
 import jplotter.renderers.LinesRenderer;
+import jplotter.renderers.PointsRenderer;
 import jplotter.renderers.TextRenderer;
 import jplotter.util.ExtendedWilkinson;
 import jplotter.util.PointeredPoint2D;
@@ -29,7 +32,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	Rectangle2D coordinateArea;
 	PointeredPoint2D coordWindowOrigin = new PointeredPoint2D(100, 50);
 
-	LinesRenderer content = new LinesRenderer();
+	LinesRenderer content1 = new LinesRenderer();
+	PointsRenderer content2 = new PointsRenderer();
 
 	Lines axes = new Lines();
 	Lines ticks = new Lines();
@@ -97,7 +101,11 @@ public class CoordSysCanvas extends FBOCanvas {
 		}
 		testcontent.setThickness(2f);
 		testcontent.setPickColor(0xffbabe);
-		content.addItemToRender(testcontent);
+		content1.addItemToRender(testcontent);
+		
+		Points testContent2 = new Points(DefaultGlyph.SQUARE);
+		testContent2.addPoint(0, 0).addPoint(2, 3).addPoint(1,1).addPoint(2, 2).addPoint(1, 2).addPoint(2, 1).addPoint(3, 1);
+		content2.addItemToRender(testContent2);
 	}
 
 	protected void setupTicksAndGuides() {
@@ -194,7 +202,8 @@ public class CoordSysCanvas extends FBOCanvas {
 		super.initGL();
 		linesR.glInit();
 		textR.glInit();
-		content.glInit();
+		content1.glInit();
+		content2.glInit();
 	}
 
 	@Override
@@ -220,8 +229,10 @@ public class CoordSysCanvas extends FBOCanvas {
 			double scaleY = viewPortH/coordinateArea.getHeight();
 			coordSysScaleMX.set((float)scaleX,0,0,  0,(float)scaleY,0,  0,0,1);
 			coordSysTransMX.set(1,0,0,  0,1,0, -(float)coordinateArea.getX(),-(float)coordinateArea.getY(),1);
-			content.setViewMX(coordSysScaleMX.mul(coordSysTransMX,coordSysViewMX));
-			content.render(viewPortW, viewPortH);
+			content1.setViewMX(coordSysScaleMX.mul(coordSysTransMX,coordSysViewMX));
+			content1.render(viewPortW, viewPortH);
+			content2.setViewMX(coordSysViewMX);
+			content2.render(viewPortW, viewPortH);
 			GL11.glViewport(0, 0, w, h);
 		}
 		linesR.removeItemToRender(guides);
@@ -236,6 +247,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	public void close() {
 		textR.close();
 		linesR.close();
+		content1.close();
+		content2.close();
 		super.close();
 	}
 

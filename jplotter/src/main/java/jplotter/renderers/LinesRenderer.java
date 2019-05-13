@@ -20,11 +20,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "uniform mat4 viewMX;"
 			+ NL + "uniform mat3 modelMX;"
 			+ NL + "out vec4 vcolor;"
-			+ NL + ""
+
 			+ NL + "vec4 unpackARGB(uint c) {"
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
 			+ NL + "void main() {"
 			+ NL + "   gl_Position = viewMX*vec4(modelMX*vec3(in_position,1),1);"
 			+ NL + "   vcolor = unpackARGB(in_color);"
@@ -76,7 +77,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 1) out vec4 pick_color;"
 			+ NL + "uniform vec4 pickColorToUse;"
 			+ NL + "in vec4 gcolor;"
-			+ NL + "in vec2 param;"
 			+ NL + "void main() {"
 			+ NL + "   frag_color = gcolor;"
 			+ NL + "   pick_color = pickColorToUse;"
@@ -127,7 +127,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 	@Override
 	protected void renderEnd() {
-		GL11.glLineWidth(1f);
 		GL11.glDisable(GL12.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 	}

@@ -7,7 +7,6 @@ import java.util.Objects;
 
 import hageldave.imagingkit.core.Pixel;
 import jplotter.util.Pair;
-import jplotter.util.Utils;
 
 public class Lines implements Renderable {
 
