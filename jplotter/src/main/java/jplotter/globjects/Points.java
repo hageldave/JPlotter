@@ -13,13 +13,13 @@ public class Points implements Renderable {
 	boolean isDirty;
 	float globalScaling = 1f;
 	float globalAlphaMultiplier = 1f;
-	
+
 	ArrayList<PointDetails> points = new ArrayList<>();
-	
+
 	public Points(Glyph glyph) {
 		this.glyph = glyph;
 	}
-	
+
 	@Override
 	public void close() {
 		removeAllPoints();
@@ -30,93 +30,97 @@ public class Points implements Renderable {
 
 	@Override
 	public void initGL() {
-		va = new VertexArray(5);
-		glyph.fillVertexArray(va);
-		updateGL();
+		if(Objects.isNull(va)){
+			va = new VertexArray(5);
+			glyph.fillVertexArray(va);
+			updateGL();
+		}
 	}
 
 	@Override
 	public void updateGL() {
-		int numPoints = points.size();
-		float[] position = new float[numPoints*2];
-		float[] rotAndScale = new float[numPoints*2];
-		int[] colors = new int[numPoints*2];
-		for(int i=0; i<numPoints; i++){
-			PointDetails pd = points.get(i);
-			position[i*2+0] = pd.px;
-			position[i*2+1] = pd.py;
-			rotAndScale[i*2+0] = pd.rot;
-			rotAndScale[i*2+1] = pd.scale;
-			colors[i*2+0] = pd.color;
-			colors[i*2+1] = pd.pickColor;
+		if(Objects.nonNull(va)){
+			int numPoints = points.size();
+			float[] position = new float[numPoints*2];
+			float[] rotAndScale = new float[numPoints*2];
+			int[] colors = new int[numPoints*2];
+			for(int i=0; i<numPoints; i++){
+				PointDetails pd = points.get(i);
+				position[i*2+0] = pd.px;
+				position[i*2+1] = pd.py;
+				rotAndScale[i*2+0] = pd.rot;
+				rotAndScale[i*2+1] = pd.scale;
+				colors[i*2+0] = pd.color;
+				colors[i*2+1] = pd.pickColor;
+			}
+			va.setBuffer(1, 2, position);
+			va.setBuffer(2, 2, rotAndScale);
+			va.setBuffer(3, 2, false, colors);
+			isDirty = false;
 		}
-		va.setBuffer(1, 2, position);
-		va.setBuffer(2, 2, rotAndScale);
-		va.setBuffer(3, 2, false, colors);
-		isDirty = false;
 	}
 
 	@Override
 	public boolean isDirty() {
 		return isDirty;
 	}
-	
+
 	public void setDirty() {
 		this.isDirty = true;
 	}
-	
-	
+
+
 	public Points addPoint(double px, double py, double rot, double scale, int color, int pick){
 		this.points.add(new PointDetails((float)px, (float)py, (float)rot, (float)scale, color, pick));
 		setDirty();
 		return this;
 	}
-	
+
 	public Points addPoint(double px, double py, double rot, double scale, int color){
 		return addPoint(px, py, rot, scale, color, 0);
 	}
-	
+
 	public Points addPoint(double px, double py, double rot, double scale, Color color){
 		return addPoint(px, py, rot, scale, color.getRGB(), 0);
 	}
-	
+
 	public Points addPoint(double px, double py, Color color){
 		return addPoint(px, py, 0, 1, color.getRGB(), 0);
 	}
-	
+
 	public Points addPoint(double px, double py){
 		return addPoint(px, py, 0, 1, 0xff555555, 0);
 	}
-	
+
 	public void removeAllPoints(){
 		this.points.clear();
 		setDirty();
 	}
-	
+
 	public int numPoints(){
 		return points.size();
 	}
-	
+
 	public void setGlobalScaling(float globalScaling) {
 		this.globalScaling = globalScaling;
 	}
-	
+
 	public float getGlobalScaling() {
 		return globalScaling;
 	}
-	
+
 	public void setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
 		this.globalAlphaMultiplier = globalAlphaMultiplier;
 	}
-	
+
 	public float getGlobalAlphaMultiplier() {
 		return globalAlphaMultiplier;
 	}
-	
+
 	public Glyph getGlyph() {
 		return glyph;
 	}
-	
+
 	public static class PointDetails {
 		public final float px;
 		public final float py;
@@ -162,5 +166,5 @@ public class Points implements Renderable {
 	public void releaseVertexArray() {
 		va.unbindAndDisableAttributes(0,1,2,3);
 	}
-	
+
 }

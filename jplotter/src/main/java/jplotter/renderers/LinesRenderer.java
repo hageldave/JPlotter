@@ -85,7 +85,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			;
 	
 	
-	protected Matrix3f modelMX;
+	protected Matrix3f modelMX = new Matrix3f();
 	
 	float[] viewmxarray = new float[16];
 	float[] modelmxarray = new float[9];
@@ -93,9 +93,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	
 	@Override
 	public void glInit() {
-		shader = new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc);
-		modelMX = new Matrix3f();
-		itemsToRender.forEach(Lines::initGL);
+		if(Objects.isNull(shader)){
+			shader = new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc);
+			itemsToRender.forEach(Lines::initGL);
+		}
 	}
 	
 	@Override

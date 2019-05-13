@@ -44,7 +44,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "}"
 			;
 	
-	protected Matrix3f modelMX;
+	protected Matrix3f modelMX  = new Matrix3f();
 	LinkedList<Text> textsToRender = new LinkedList<>();
 	
 	float[] viewmxarray = new float[16];
@@ -53,9 +53,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 	
 	@Override
 	public void glInit() {
-		shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
-		modelMX = new Matrix3f();
-		textsToRender.forEach(Text::initGL);
+		if(Objects.isNull(shader)){
+			shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+			textsToRender.forEach(Text::initGL);
+		}
 	}
 	
 	@Override

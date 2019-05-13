@@ -69,7 +69,10 @@ public class PointsRenderer extends GenericRenderer<Points> {
 
 	@Override
 	public void glInit() {
-		this.shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+		if(Objects.isNull(shader)){
+			this.shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+			itemsToRender.forEach(Points::initGL);
+		}
 	}
 
 	@Override
