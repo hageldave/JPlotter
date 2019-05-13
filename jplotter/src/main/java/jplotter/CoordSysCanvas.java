@@ -28,7 +28,7 @@ public class CoordSysCanvas extends FBOCanvas {
 
 	LinesRenderer linesR = new LinesRenderer();
 	TextRenderer textR = new TextRenderer();
-	Rectangle2D coordinateArea;
+	Rectangle2D coordinateArea = new Rectangle2D.Double(-1,-1,2,2);
 	PointeredPoint2D coordWindowOrigin = new PointeredPoint2D(100, 50);
 
 	Renderer content=null;
@@ -67,10 +67,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	public CoordSysCanvas(GLData data) {
 		super(data);
 		this.fboClearColor = Color.WHITE;
-		coordinateArea = new Rectangle2D.Double(-1,-1,10,3);
 		xticklocations = new double[5][1];
 		yticklocations = new double[5][1];
-
 		axes.addSegment(coordsysframeLB, coordsysframeRB, Color.BLACK);
 		axes.addSegment(coordsysframeLB, coordsysframeLT, Color.BLACK);
 		axes.addSegment(coordsysframeLT, coordsysframeRT, Color.GRAY);
@@ -194,6 +192,9 @@ public class CoordSysCanvas extends FBOCanvas {
 			coordsysframeRT.setLocation(w-50, h-50);
 			axes.setDirty();
 			setupTicksAndGuides();
+			viewportwidth = w;
+			viewportheight = h;
+			isDirty = false;
 		}
 		linesR.addItemToRender(guides);
 		linesR.addItemToRender(ticks);
@@ -222,6 +223,10 @@ public class CoordSysCanvas extends FBOCanvas {
 		linesR.addItemToRender(axes);
 		linesR.render(w, h);
 		textR.render(w, h);
+	}
+	
+	public void setCoordinateArea(double minX, double minY, double maxX, double maxY){
+		this.coordinateArea = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 	}
 
 

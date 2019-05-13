@@ -27,7 +27,7 @@ public class Viz {
 		CoordSysCanvas canvas = new CoordSysCanvas();
 		CompleteRenderer content = new CompleteRenderer();
 		canvas.setContent(content);
-
+		
 		// setup content
 		{
 			Lines testcontent = new Lines();
@@ -43,7 +43,7 @@ public class Viz {
 			testcontent.setThickness(2f);
 			testcontent.setPickColor(0xffbabe);
 			content.lines.addItemToRender(testcontent);
-
+			
 			Points circlepoints = new Points(DefaultGlyph.TRIANGLE_F);
 			Points quiver = new Points(DefaultGlyph.ARROW);
 			Color color1 = new Color(0xffe41a1c);
@@ -56,7 +56,7 @@ public class Viz {
 			}
 			content.points.addItemToRender(circlepoints).addItemToRender(quiver);
 		}
-
+		
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -65,7 +65,7 @@ public class Viz {
 				CharacterAtlas.clearAndCloseAtlasCollection();
 			}
 		});
-
+		
 		canvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {

@@ -72,7 +72,7 @@ public class VertexArray implements AutoCloseable {
 				// put vertices into vbo
 				glBufferData(GL_ARRAY_BUFFER, buffercontent, GL_STATIC_DRAW);
 				// put vbo into va
-				glVertexAttribIPointer(i, 1, signed ? GL_INT:GL_UNSIGNED_INT, 0, 0);
+				glVertexAttribIPointer(i, dim, signed ? GL_INT:GL_UNSIGNED_INT, 0, 0);
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
