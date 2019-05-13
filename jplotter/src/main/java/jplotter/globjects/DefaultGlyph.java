@@ -5,10 +5,14 @@ import java.util.function.Consumer;
 import org.lwjgl.opengl.GL11;
 
 public enum DefaultGlyph implements Glyph {
-	CIRCLE(DefaultGlyph::mkCircle, 20, GL11.GL_LINE_LOOP, 8, true),
-	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true),
+	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false),
 	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false),
 	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false),
+	TRIANGLE(DefaultGlyph::mkTriangle, 3, GL11.GL_LINE_LOOP, 7, false),
+	TRIANGLE_F(DefaultGlyph::mkTriangle, 3, GL11.GL_TRIANGLES, 7, false),
+	CIRCLE(DefaultGlyph::mkCircle, 20, GL11.GL_LINE_LOOP, 8, true),
+	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true),
+	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false),
 	;
 	
 	private Consumer<VertexArray> vertexGenerator;
@@ -79,11 +83,23 @@ public enum DefaultGlyph implements Glyph {
 	}
 	
 	static void mkSquare(VertexArray va){
-		va.setBuffer(0, 2, -.5f,-.5f,  .5f,-.5f,  .5f,.5f, -.5f,.5f);
+		va.setBuffer(0, 2,   -.5f,-.5f,  .5f,-.5f,  .5f,.5f, -.5f,.5f);
 	}
 	
 	static void mkSquareF(VertexArray va){
-		va.setBuffer(0, 2, -.5f,-.5f,  .5f,-.5f,  -.5f,.5f, .5f,.5f);
+		va.setBuffer(0, 2,   -.5f,-.5f,  .5f,-.5f,  -.5f,.5f, .5f,.5f);
+	}
+	
+	static void mkArrow(VertexArray va){
+		va.setBuffer(0, 2,  -.5f,0f,  .5f,0f,  .1f,-.2f, .5,0, .1f,.2f, .5f,0f);
+	}
+	
+	static void mkCross(VertexArray va){
+		va.setBuffer(0, 2,  -.5f,-.5f,  .5f,.5f,  .5f,-.5f,  -.5f,.5f);
+	}
+	
+	static void mkTriangle(VertexArray va){
+		va.setBuffer(0, 2,  -.5,-.5,  .5,-.5, 0,.5);
 	}
 	
 }

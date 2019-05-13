@@ -102,15 +102,17 @@ public class CoordSysCanvas extends FBOCanvas {
 		testcontent.setPickColor(0xffbabe);
 		content1.addItemToRender(testcontent);
 		
-		Points circlepoints = new Points(DefaultGlyph.CIRCLE_F);
-		Points squarepoints = new Points(DefaultGlyph.SQUARE_F);
+		Points circlepoints = new Points(DefaultGlyph.TRIANGLE_F);
+		Points quiver = new Points(DefaultGlyph.ARROW);
 		Color color1 = new Color(0xffe41a1c);
 		Color color2 = new Color(0xff377eb8);
 		for(int i = 0; i < 100; i++){
 			circlepoints.addPoint(Math.random(), Math.random(), color1);
-			squarepoints.addPoint(Math.random(), Math.random(), color2);
+			double x = Math.random();
+			double y = Math.random();
+			quiver.addPoint(x,y, Math.atan2(-y, -x), Math.sqrt(x*x+y*y), color2);
 		}
-		content2.addItemToRender(circlepoints).addItemToRender(squarepoints);
+		content2.addItemToRender(circlepoints).addItemToRender(quiver);
 	}
 
 	protected void setupTicksAndGuides() {
