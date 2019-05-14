@@ -3,13 +3,69 @@ package jplotter.util;
 import static java.lang.Math.*;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Implementation of the extended Wilkinson Algorithm for Tick label positioning.
  * See <a href="http://vis.stanford.edu/papers/tick-labels">vis.stanford.edu/papers/tick-labels</a> for details.
  * @author hageldave
  */
-public class ExtendedWilkinson {
+public class ExtendedWilkinson implements TickMarkGenerator {
+	
+	protected double[] Q = new double[]{1, 5, 2, 2.5, 4, 3, 1.5, 6, 8};
+	protected double[] w = new double[]{0.2, 0.25, 0.5, 0.05};
+	
+	protected String[] labelsForTicks(double[] ticks){
+		String str1 = String.format(Locale.US, "%.4g", ticks[0]);
+		String str2 = String.format(Locale.US, "%.4g", ticks[ticks.length-1]);
+		String[] labels = new String[ticks.length];
+		if(str1.contains("e") || str2.contains("e")){
+			for(int i=0; i<ticks.length; i++){
+				String l = String.format(Locale.US, "%.4e", ticks[i]);
+				String[] Esplit = l.split("e", -2);
+				String[] dotsplit = Esplit[0].split("\\.",-2);
+				dotsplit[1] = ('#'+dotsplit[1])
+						.replaceAll("0", " ")
+						.trim()
+						.replaceAll(" ", "0")
+						.replaceAll("#", "");
+				dotsplit[1] = dotsplit[1].isEmpty() ? "0":dotsplit[1];
+				l = dotsplit[0]+'.'+dotsplit[1]+'e'+Esplit[1];
+				labels[i] = l;
+			}
+		} else {
+			for(int i=0; i<ticks.length; i++){
+				String l = String.format(Locale.US, "%.4f", ticks[i]);
+				if(l.contains(".")){
+					String[] dotsplit = l.split("\\.",-2);
+					dotsplit[1] = ('#'+dotsplit[1])
+							.replaceAll("0", " ")
+							.trim()
+							.replaceAll(" ", "0")
+							.replaceAll("#", "");
+					if(dotsplit[1].isEmpty()){
+						l = dotsplit[0];
+					} else {
+						l = dotsplit[0]+'.'+dotsplit[1];
+					}
+				}
+				labels[i] = l;
+			}
+		}
+		return labels;
+	}
+
+	@Override
+	public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks,
+			boolean verticalAxis) {
+		double[] ticks = getTicks(min, max, desiredNumTicks, this.Q, this.w);
+		String[] labelsForTicks = labelsForTicks(ticks);
+		return new Pair<double[], String[]>(ticks, labelsForTicks);
+	}
+	
+	
+	/* STATIC DOWN HERE */
+	
 
 	static double coverage(double dmin, double dmax, double lmin, double lmax){
 		return 1 - 0.5 * (pow(dmax - lmax,2) + pow(dmin - lmin,2)) / pow(0.1 * (dmax - dmin), 2);
@@ -132,9 +188,7 @@ public class ExtendedWilkinson {
 		return result;
 	}
 	
-	public static double[] getTicks(double dmin, double dmax, int m){
-		double[] Q = new double[]{1, 5, 2, 2.5, 4, 3, 1.5, 6, 8};
-		double[] w = new double[]{0.2, 0.25, 0.5, 0.05};
+	public static double[] getTicks(double dmin, double dmax, int m, double[] Q, double[] w){
 		double[] l = ext_wilk(dmin, dmax, m, 1, Q, w);
 		double lmin  = l[0];
 //		double lmax  = l[1];
@@ -150,20 +204,5 @@ public class ExtendedWilkinson {
 		}
 		return ticks;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 }
