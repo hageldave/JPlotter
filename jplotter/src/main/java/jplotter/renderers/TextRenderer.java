@@ -80,6 +80,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
 		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
+		float sin = (float)org.joml.Math.sin(txt.getAngle());
+		float cos = (float)org.joml.Math.cos(txt.getAngle());
+		modelMX.setColumn(0, cos, sin, 0);
+		modelMX.setColumn(1,-sin, cos, 0);
 		modelMX.setColumn(2, txt.getOrigin().x, txt.getOrigin().y, 0);
 		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");

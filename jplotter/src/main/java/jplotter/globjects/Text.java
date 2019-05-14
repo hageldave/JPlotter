@@ -16,6 +16,7 @@ public abstract class Text implements Renderable {
 	protected int pickColor;
 	protected Point origin;
 	protected VertexArray va=null;
+	protected float angle=0;
 	
 	public Text(int fontsize, int style, boolean antialiased, Dimension textSize) {
 		this.textSize = textSize;
@@ -121,6 +122,14 @@ public abstract class Text implements Renderable {
 
 	public Text setOrigin(int x, int y) {
 		return this.setOrigin(new Point(x, y));
+	}
+	
+	public float getAngle() {
+		return angle;
+	}
+	
+	public void setAngle(float angle) {
+		this.angle = angle;
 	}
 	
 	/**

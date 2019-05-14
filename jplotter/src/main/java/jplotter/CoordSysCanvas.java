@@ -63,6 +63,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	 */
 	Matrix3f coordSysViewMX = new Matrix3f();
 
+	String xAxisLabel = null;
+	String yAxisLabel = null;
 
 	public CoordSysCanvas(GLData data) {
 		super(data);
@@ -87,7 +89,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.content = content;
 	}
 
-	protected void setupTicksAndGuides() {
+	protected void setupTicksGuidesAndLabels() {
 		this.xticks = ExtendedWilkinson.getTicks(coordinateArea.getMinX(), coordinateArea.getMaxX(), 5);
 		this.yticks = ExtendedWilkinson.getTicks(coordinateArea.getMinY(), coordinateArea.getMaxY(), 5);
 		String[] xticklabels = labelsForTicks(xticks);
@@ -131,9 +133,16 @@ public class CoordSysCanvas extends FBOCanvas {
 			// guide
 			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, xAxisWidth, 0), guideColor);
 		}
-
+		// axis labels
+		StaticText labelX = new StaticText(getxAxisLabel(), 12, Font.PLAIN, true);
+		StaticText labelY = new StaticText(getyAxisLabel(), 12, Font.PLAIN, true);
+		labelY.setAngle(-(float)Math.PI/2);
+		labelX.setOrigin(	(int)(coordsysframeLT.getX() + xAxisWidth/2 - labelX.getTextSize().width/2) , 
+							(int)(coordsysframeLT.getY() + 4) );
+		labelY.setOrigin((int)(coordsysframeRB.getX() + 4), (int)(coordsysframeRB.getY() + yAxisHeight/2 - labelY.getTextSize().width/2));
+		textR.addItemToRender(labelX);
+		textR.addItemToRender(labelY);
 	}
-
 
 	protected String[] labelsForTicks(double[] ticks){
 		String str1 = String.format(Locale.US, "%.4g", ticks[0]);
@@ -174,6 +183,24 @@ public class CoordSysCanvas extends FBOCanvas {
 		}
 		return labels;
 	}
+	
+	public String getxAxisLabel() {
+		return xAxisLabel == null ? "X":xAxisLabel;
+	}
+	
+	public String getyAxisLabel() {
+		return yAxisLabel == null ? "Y":yAxisLabel;
+	}
+	
+	public void setxAxisLabel(String xAxisLabel) {
+		this.xAxisLabel = xAxisLabel;
+		isDirty = true;
+	}
+	
+	public void setyAxisLabel(String yAxisLabel) {
+		this.yAxisLabel = yAxisLabel;
+		isDirty = true;
+	}
 
 
 	@Override
@@ -191,7 +218,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			// update axes
 			coordsysframeRT.setLocation(w-50, h-50);
 			axes.setDirty();
-			setupTicksAndGuides();
+			setupTicksGuidesAndLabels();
 			viewportwidth = w;
 			viewportheight = h;
 			isDirty = false;
