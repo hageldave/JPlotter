@@ -106,21 +106,11 @@ public class StatLogViz {
 				System.out.println(Integer.toHexString(pixel));
 			}
 		});
-
-		Runnable renderLoop = new Runnable() {
-			public void run() {
-				if (!(canvas.isValid()))
-					return;
-				canvas.render();
-				SwingUtilities.invokeLater(this);
-			}
-		};
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);
 			frame.transferFocus();
 		});
-		SwingUtilities.invokeLater(renderLoop);
 	}
 
 }

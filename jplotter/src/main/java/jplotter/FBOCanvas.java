@@ -2,6 +2,7 @@ package jplotter;
 
 import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.lang.reflect.Field;
@@ -324,5 +325,20 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		int fboIDToUse = Objects.nonNull(this.fboMS) ? this.fboMS.getFBOid() : this.fbo.getFBOid();
 		setRenderTargets(fboIDToUse, width, height, GL30.GL_COLOR_ATTACHMENT1);
 	}
-
+	
+	@Override
+	public void repaint() {
+		if (this.isValid())
+			render();
+	}
+	
+	@Override
+	public void paint(Graphics g) {
+		// don't modify the graphics object
+	}
+	@Override
+	public void paintAll(Graphics g) {
+		// don't modify the graphics object
+	}
+	
 }

@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>org.lwjglx</groupId>
 			<artifactId>lwjgl3-awt</artifactId>
-			<version>0.1.1</version>
+			<version>0.1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.hageldave.imagingkit</groupId>

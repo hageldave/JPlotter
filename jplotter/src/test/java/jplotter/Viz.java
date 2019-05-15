@@ -15,6 +15,7 @@ import jplotter.globjects.CharacterAtlas;
 import jplotter.globjects.DefaultGlyph;
 import jplotter.globjects.Lines;
 import jplotter.globjects.Points;
+import jplotter.globjects.Triangles;
 import jplotter.renderers.CompleteRenderer;
 
 public class Viz {
@@ -30,8 +31,10 @@ public class Viz {
 		
 		// setup content
 		{
+			Triangles tris = new Triangles();
 			Lines testcontent = new Lines();
 			double scaling = 0.1;
+			Color triColor = new Color(0x886633aa,true);
 			for(int i = 0; i < 100; i++){
 				double x1 = i*scaling;
 				double x2 = (i+1)*scaling;
@@ -39,10 +42,12 @@ public class Viz {
 				double y2 = Math.sin(x2);
 				testcontent.addSegment(x1, y1, x2, y2, 0xffff00ff);
 				testcontent.addSegment(i, i, i+1, i+1, 0xff00ff00);
+				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0, triColor);
 			}
 			testcontent.setThickness(2f);
 			testcontent.setPickColor(0xffbabe);
 			content.lines.addItemToRender(testcontent);
+			content.triangles.addItemToRender(tris);
 			
 			Points circlepoints = new Points(DefaultGlyph.TRIANGLE_F);
 			Points quiver = new Points(DefaultGlyph.ARROW);
@@ -56,7 +61,7 @@ public class Viz {
 			}
 			content.points.addItemToRender(circlepoints).addItemToRender(quiver);
 		}
-		
+		canvas.setCoordinateArea(0, 0, 2, 1);
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -73,21 +78,11 @@ public class Viz {
 				System.out.println(Integer.toHexString(pixel));
 			}
 		});
-
-		Runnable renderLoop = new Runnable() {
-			public void run() {
-				if (!(canvas.isValid()))
-					return;
-				canvas.render();
-				SwingUtilities.invokeLater(this);
-			}
-		};
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);
 			frame.transferFocus();
 		});
-		SwingUtilities.invokeLater(renderLoop);
 	}
 
 }

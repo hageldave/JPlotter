@@ -5,8 +5,6 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import org.lwjgl.opengl.GL33;
-
 public class Triangles implements Renderable {
 
 	VertexArray va;
@@ -18,6 +16,10 @@ public class Triangles implements Renderable {
 		// nothing to do
 	}
 	
+	public int numTriangles() {
+		return triangles.size();
+	}
+	
 	public Triangles addTriangle(
 			double x0, double y0, int c0, 
 			double x1, double y1, int c1, 
@@ -25,6 +27,7 @@ public class Triangles implements Renderable {
 			int pick
 	){
 		this.triangles.add(new TriangleDetails((float)x0, (float)y0, c0, (float)x1, (float)y1, c1, (float)x2, (float)y2, c2, pick));
+		setDirty();
 		return this;
 	}
 	
@@ -86,36 +89,36 @@ public class Triangles implements Renderable {
 	}
 	
 	public Triangles addQuad(
-			double x0, double y0,
-			double x1, double y1,
-			double x2, double y2,
-			double x3, double y3,
+			double xBL, double yBL,
+			double xTL, double yTL,
+			double xTR, double yTR,
+			double xBR, double yBR,
 			Color color, int pickColor
 	){
 		return this
-				.addTriangle(x0, y0, x1, y1, x2, y2, color, pickColor)
-				.addTriangle(x3, y3, x2, y2, x1, y1, color, pickColor);
+				.addTriangle(xBL, yBL, xTL, yTL, xTR, yTR, color, pickColor)
+				.addTriangle(xBL, yBL, xTR, yTR, xBR, yBR, color, pickColor);
 	}
 	
 	public Triangles addQuad(
-			double x0, double y0,
-			double x1, double y1,
-			double x2, double y2,
-			double x3, double y3,
+			double xBL, double yBL,
+			double xTL, double yTL,
+			double xTR, double yTR,
+			double xBR, double yBR,
 			Color color
 	){
-		return this.addQuad(x0, y0, x1, y1, x2, y2, x3, y3, color, 0);
+		return this.addQuad(xBL, yBL, xTL, yTL, xTR, yTR, xBR, yBR, color, 0);
 	}
 	
 	public Triangles addQuad(
-			double x0, double y0,
-			double x1, double y1,
-			double x2, double y2,
-			double x3, double y3
+			double xBL, double yBL,
+			double xTL, double yTL,
+			double xTR, double yTR,
+			double xBR, double yBR
 	){
 		return this
-				.addTriangle(x0, y0, x1, y1, x2, y2)
-				.addTriangle(x3, y3, x2, y2, x1, y1);
+				.addTriangle(xBL, yBL, xTL, yTL, xTR, yTR)
+				.addTriangle(xBL, yBL, xTR, yTR, xBR, yBR);
 	}
 	
 	public Triangles addQuad(Point2D p0, Point2D p1, Point2D p2, Point2D p3, Color color){
@@ -153,6 +156,12 @@ public class Triangles implements Renderable {
 		return this;
 	}
 	
+	public Triangles removeAllTriangles() {
+		triangles.clear();
+		setDirty();
+		return this;
+	}
+	
 
 	@Override
 	public void close() {
@@ -164,7 +173,8 @@ public class Triangles implements Renderable {
 	@Override
 	public void initGL() {
 		if(Objects.isNull(va)){
-			va = new VertexArray(3);
+			va = new VertexArray(2);
+			updateGL();
 		}
 	}
 
@@ -173,8 +183,7 @@ public class Triangles implements Renderable {
 		if(Objects.nonNull(va)){
 			final int numTris = triangles.size();
 			float[] vertices = new float[numTris*2*3];
-			int[] vColors = new int[numTris*3];
-			int[] pickColor = new int[numTris];
+			int[] vColors = new int[numTris*2*3];
 			for(int i=0; i<numTris; i++){
 				TriangleDetails tri = triangles.get(i);
 
@@ -185,15 +194,15 @@ public class Triangles implements Renderable {
 				vertices[i*6+4] = tri.x2;
 				vertices[i*6+5] = tri.y2;
 
-				vColors[i*3+0] = tri.c0;
-				vColors[i*3+1] = tri.c1;
-				vColors[i*3+2] = tri.c2;
-
-				pickColor[i] = tri.pick;
+				vColors[i*6+0] = tri.c0;
+				vColors[i*6+1] = tri.pick;
+				vColors[i*6+2] = tri.c1;
+				vColors[i*6+3] = tri.pick;
+				vColors[i*6+4] = tri.c2;
+				vColors[i*6+5] = tri.pick;
 			}
 			va.setBuffer(0, 2, vertices);
-			va.setBuffer(1, 1, false, vColors);
-			va.setBuffer(2, 1, false, pickColor);
+			va.setBuffer(1, 2, false, vColors);
 			isDirty = false;
 		}
 	}
@@ -203,8 +212,9 @@ public class Triangles implements Renderable {
 		return isDirty;
 	}
 	
-	public void setDirty() {
+	public Triangles setDirty() {
 		this.isDirty = true;
+		return this;
 	}
 
 	static class TriangleDetails {
@@ -244,8 +254,7 @@ public class Triangles implements Renderable {
 	 * {@link NullPointerException} unless {@link #initGL()} was called
 	 */
 	public void bindVertexArray() {
-		va.bindAndEnableAttributes(0,1,2);
-		GL33.glVertexAttribDivisor(2,1);
+		va.bindAndEnableAttributes(0,1);
 	}
 
 
@@ -253,7 +262,7 @@ public class Triangles implements Renderable {
 	 * {@link NullPointerException} unless {@link #initGL()} was called
 	 */
 	public void releaseVertexArray() {
-		va.unbindAndDisableAttributes(0,1,2,3);
+		va.unbindAndDisableAttributes(0,1);
 	}
 	
 }
