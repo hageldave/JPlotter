@@ -40,7 +40,7 @@ public class Points implements Renderable {
 	@Override
 	public void updateGL() {
 		if(Objects.nonNull(va)){
-			int numPoints = points.size();
+			final int numPoints = points.size();
 			float[] position = new float[numPoints*2];
 			float[] rotAndScale = new float[numPoints*2];
 			int[] colors = new int[numPoints*2];
