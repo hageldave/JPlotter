@@ -2,8 +2,6 @@ package jplotter;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -19,6 +17,8 @@ import org.joml.Math;
 import jplotter.globjects.CharacterAtlas;
 import jplotter.globjects.DefaultGlyph;
 import jplotter.globjects.Points;
+import jplotter.interaction.CoordSysPanning;
+import jplotter.interaction.CoordSysScrollZoom;
 import jplotter.renderers.CompleteRenderer;
 
 public class StatLogViz {
@@ -99,13 +99,8 @@ public class StatLogViz {
 			}
 		});
 
-		canvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				int pixel = canvas.getPixel(e.getX(), e.getY(), SwingUtilities.isRightMouseButton(e));
-				System.out.println(Integer.toHexString(pixel));
-			}
-		});
+		new CoordSysPanning(canvas).register();
+		new CoordSysScrollZoom(canvas).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

@@ -8,6 +8,8 @@ import java.awt.event.ComponentEvent;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
+import javax.swing.SwingUtilities;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -328,8 +330,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	
 	@Override
 	public void repaint() {
-		if (this.isValid())
-			render();
+		SwingUtilities.invokeLater(()->render());
 	}
 	
 	@Override
@@ -338,6 +339,11 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	}
 	@Override
 	public void paintAll(Graphics g) {
+		// don't modify the graphics object
+	}
+	
+	@Override
+	public void update(Graphics g) {
 		// don't modify the graphics object
 	}
 	

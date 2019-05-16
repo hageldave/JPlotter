@@ -16,6 +16,8 @@ import jplotter.globjects.DefaultGlyph;
 import jplotter.globjects.Lines;
 import jplotter.globjects.Points;
 import jplotter.globjects.Triangles;
+import jplotter.interaction.CoordSysPanning;
+import jplotter.interaction.CoordSysScrollZoom;
 import jplotter.renderers.CompleteRenderer;
 
 public class Viz {
@@ -78,6 +80,8 @@ public class Viz {
 				System.out.println(Integer.toHexString(pixel));
 			}
 		});
+		new CoordSysPanning(canvas).register();
+		new CoordSysScrollZoom(canvas).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

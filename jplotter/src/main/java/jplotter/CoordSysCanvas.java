@@ -50,7 +50,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	boolean isDirty = true;
 
 	Color tickColor = Color.DARK_GRAY;
-	Color guideColor = Color.LIGHT_GRAY;
+	Color guideColor = new Color(0xdddddd);
 
 	PointeredPoint2D coordsysframeLB = coordWindowOrigin;
 	PointeredPoint2D coordsysframeRT = Utils.copy(coordWindowOrigin);
@@ -87,9 +87,14 @@ public class CoordSysCanvas extends FBOCanvas {
 	public CoordSysCanvas() {
 		this(new GLData());
 	}
+	
+	public void setDirty() {
+		this.isDirty = true;
+	}
 
 	public void setContent(Renderer content) {
 		this.content = content;
+		setDirty();
 	}
 
 	protected void setupTicksGuidesAndLabels() {
@@ -167,12 +172,12 @@ public class CoordSysCanvas extends FBOCanvas {
 	
 	public void setxAxisLabel(String xAxisLabel) {
 		this.xAxisLabel = xAxisLabel;
-		isDirty = true;
+		setDirty();
 	}
 	
 	public void setyAxisLabel(String yAxisLabel) {
 		this.yAxisLabel = yAxisLabel;
-		isDirty = true;
+		setDirty();
 	}
 
 	
@@ -182,6 +187,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	
 	public void setTickMarkGenerator(TickMarkGenerator tickMarkGenerator) {
 		this.tickMarkGenerator = tickMarkGenerator;
+		setDirty();
 	}
 
 	@Override
@@ -235,6 +241,20 @@ public class CoordSysCanvas extends FBOCanvas {
 	
 	public void setCoordinateArea(double minX, double minY, double maxX, double maxY){
 		this.coordinateArea = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+		setDirty();
+	}
+	
+	public Rectangle2D getCoordinateArea() {
+		return coordinateArea;
+	}
+	
+	public Rectangle2D getCoordSysFrame() {
+		return new Rectangle2D.Double(
+				coordsysframeLB.getX(), 
+				coordsysframeLB.getY(), 
+				coordsysframeLB.distance(coordsysframeRB), 
+				coordsysframeLB.distance(coordsysframeLT)
+		);
 	}
 
 
