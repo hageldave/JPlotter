@@ -23,7 +23,7 @@ public class DynamicText extends Text {
 	@Override
 	public void initGL() {
 		if(Objects.isNull(va))
-			va = CharacterAtlas.get(fontsize, style, antialiased).createVAforString(getTextString());
+			va = CharacterAtlas.get(fontsize, style, antialiased).createVAforString(getTextString(), null);
 	}
 	
 	public void updateGL(){

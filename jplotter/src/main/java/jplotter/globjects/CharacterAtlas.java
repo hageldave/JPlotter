@@ -105,53 +105,15 @@ public class CharacterAtlas implements AutoCloseable {
 		return texID;
 	}
 
-	public VertexArray createVAforString(String s){
-//		float[] vertices = new float[s.length()*2*4];
-//		float[] texCoords = new float[s.length()*2*4];
-//		int[] indices = new int[s.length()*3*2];
-//		for(int i = 0; i < s.length(); i++){
-//			// bot left
-//			vertices[i*2*4+0] = i*charWidth;
-//			vertices[i*2*4+1] = 0.0f;
-//			// top left
-//			vertices[i*2*4+2] = i*charWidth;
-//			vertices[i*2*4+3] = charHeigth;
-//			// bot right
-//			vertices[i*2*4+4] = (i+1)*charWidth;
-//			vertices[i*2*4+5] = 0.0f;
-//			// top right
-//			vertices[i*2*4+6] = (i+1)*charWidth;
-//			vertices[i*2*4+7] = charHeigth;
-//
-//			// y is flipped due to texture coordinates being upside down
-//			// tex bot left
-//			texCoords[i*2*4+0] = getTexCoordXForChar(s.charAt(i));
-//			texCoords[i*2*4+1] = 1.0f;
-//			// tex top left
-//			texCoords[i*2*4+2] = getTexCoordXForChar(s.charAt(i));
-//			texCoords[i*2*4+3] = 0.0f;
-//			// tex bot right
-//			texCoords[i*2*4+4] = getTexCoordXForChar(s.charAt(i))+charTexWidth;
-//			texCoords[i*2*4+5] = 1.0f;
-//			// tex top right
-//			texCoords[i*2*4+6] = getTexCoordXForChar(s.charAt(i))+charTexWidth;
-//			texCoords[i*2*4+7] = 0.0f;
-//
-//			// triangle 1
-//			indices[i*2*3+0] = i*4+0;
-//			indices[i*2*3+1] = i*4+1;
-//			indices[i*2*3+2] = i*4+2;
-//			// triangle 2
-//			indices[i*2*3+3] = i*4+2;
-//			indices[i*2*3+4] = i*4+1;
-//			indices[i*2*3+5] = i*4+3;
-//		}
-		
+	public VertexArray createVAforString(String s, VertexArray va){
+		if(Objects.isNull(va)){
+			va = new VertexArray(2);
+		} else if(va.numAttributes < 2){
+			throw new IllegalArgumentException("provided vertex array does not have enough attributes, need at least 2 but got " + va.numAttributes);
+		}
 		float[] vertices = vaVerticesForStringLength(s.length());
 		float[] texCoords = vaTexCoordsForChars(s.toCharArray());
 		int[] indices = vaIndicesForStringLength(s.length());
-		
-		VertexArray va = new VertexArray(2);
 		va.setBuffer(0, 2, vertices);
 		va.setBuffer(1, 2, texCoords);
 		va.setIndices(indices);

@@ -2,10 +2,31 @@ package jplotter.globjects;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Point;
 
 import hageldave.imagingkit.core.Pixel;
+import jplotter.renderers.TextRenderer;
 
+/**
+ * Abstract class for {@link Renderable}s representing text that can be rendered using the
+ * {@link TextRenderer}.
+ * A text object describes a line of characters together with the following attributes:
+ * <ul>
+ * <li>fontsize (e.g. 12 pts.)</li>
+ * <li>font style (e.g. Font{@link Font#BOLD})</li>
+ * <li>color</li>
+ * <li>origin - the bottom left corner of the rectangle enclosing the text</li>
+ * <li>angle - the rotation of the text (around origin)</li>
+ * <li>antialiasing - whether the font texture is antialiased or not</li>
+ * <li>picking color - the picking color with which the text is rendered into the (invisible) picking color attachment
+ * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
+ * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values).
+ * </li>
+ * </ul>
+ * 
+ * @author hageldave
+ */
 public abstract class Text implements Renderable {
 
 	protected final Dimension textSize;

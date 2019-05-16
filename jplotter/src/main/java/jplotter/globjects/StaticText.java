@@ -15,7 +15,7 @@ public class StaticText extends Text {
 	
 	public void initGL(){
 		if(Objects.isNull(va))
-			va = CharacterAtlas.get(fontsize, style, antialiased).createVAforString(textstr);
+			va = CharacterAtlas.get(fontsize, style, antialiased).createVAforString(textstr, null);
 		
 	}
 	
