@@ -1,6 +1,6 @@
 package jplotter;
 
-import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.*;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Target;
@@ -25,6 +25,6 @@ public final class Annotations {
 	 * @author hageldave
 	 */
 	@Documented
-	@Target(METHOD)
+	@Target({METHOD,CONSTRUCTOR})
 	public @interface GLContextRequired {}
 }
