@@ -293,6 +293,10 @@ public class CharacterAtlas implements AutoCloseable {
 	}
 
 
+	/**
+	 * Deletes the texture associated with this atlas and removes this atlas from
+	 * the {@link #ATLAS_COLLECTION}.
+	 */
 	@Override
 	@GLContextRequired
 	public void close() {
@@ -303,6 +307,11 @@ public class CharacterAtlas implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * Closes and removes all {@link CharacterAtlas} instances contained in the
+	 * static {@link #ATLAS_COLLECTION}. This disposes of all GL textures associated
+	 * with CharacterAtlases.
+	 */
 	@GLContextRequired
 	public static void clearAndCloseAtlasCollection(){
 		LinkedList<GenericKey> keys = new LinkedList<>(ATLAS_COLLECTION.keySet());
