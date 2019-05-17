@@ -262,7 +262,7 @@ public class Triangles implements Renderable {
 	 * {@link NullPointerException} unless {@link #initGL()} was called
 	 */
 	public void releaseVertexArray() {
-		va.unbindAndDisableAttributes(0,1);
+		va.releaseAndDisableAttributes(0,1);
 	}
 	
 }

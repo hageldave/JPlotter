@@ -19,6 +19,16 @@ import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import static org.lwjgl.opengl.GL30.glVertexAttribIPointer;
 
+import jplotter.Annotations.GLContextRequired;
+
+/**
+ * The VertexArray class encapsulates a GL vertex array object together with 
+ * its corresponding GL vertex buffer objects.
+ * A VertexArray is created with a fixed number of attributes and cannot
+ * be extended afterwards.
+ * 
+ * @author hageldave
+ */
 public class VertexArray implements AutoCloseable {
 
 	int va; // vertex array object
@@ -30,6 +40,11 @@ public class VertexArray implements AutoCloseable {
 	int numAttributes;
 	int numIndices;
 
+	/**
+	 * Creates a VertexArray with n attributes.
+	 * @param n number of attributes
+	 */
+	@GLContextRequired
 	public VertexArray(int n) {
 		this.numAttributes = n;
 		this.va = glGenVertexArrays();
@@ -40,6 +55,14 @@ public class VertexArray implements AutoCloseable {
 		glBindVertexArray(0);
 	}
 	
+	/**
+	 * Sets the GL_ARRAY_BUFFER of the ith vertex attribute.
+	 * @param i index of attribute
+	 * @param dim dimension of a single vertex
+	 * @param buffercontent the values of the vertices
+	 * @return this for chaining
+	 */
+	@GLContextRequired
 	public VertexArray setBuffer(int i, int dim, float ... buffercontent){
 		glBindVertexArray(va);
 		{
@@ -61,6 +84,47 @@ public class VertexArray implements AutoCloseable {
 		return this;
 	}
 	
+	/**
+	 * Sets the GL_ARRAY_BUFFER of the ith vertex attribute.
+	 * @param i index of attribute
+	 * @param dim dimension of a single vertex
+	 * @param buffercontent the values of the vertices
+	 * @return this for chaining
+	 */
+	@GLContextRequired
+	public VertexArray setBuffer(int i, int dim, double ... buffercontent){
+		glBindVertexArray(va);
+		{
+			if(vbos[i] == 0){
+				vbos[i] = glGenBuffers();
+			}
+			glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
+			{
+				// put vertices into vbo
+				glBufferData(GL_ARRAY_BUFFER, buffercontent, GL_STATIC_DRAW);
+				// put vbo into va
+				glVertexAttribPointer(i, dim, GL_DOUBLE, false, 0, 0);
+			}
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+		glBindVertexArray(0);
+		dims[i] = dim;
+		numValues[i] = buffercontent.length;
+		return this;
+	}
+
+	/**
+	 * Sets the GL_ARRAY_BUFFER of the ith vertex attribute. The
+	 * attribute maps to an int, uint, ivec or uvec in GLSL
+	 * depending on  dimensionality and whether the data is
+	 * signed or unsigned.
+	 * @param i index of attribute
+	 * @param dim dimension of a single vertex
+	 * @param signed when true values are interpreted as unsigned integers
+	 * @param buffercontent the values of the vertices
+	 * @return this for chaining
+	 */
+	@GLContextRequired
 	public VertexArray setBuffer(int i, int dim, boolean signed, int ... buffercontent){
 		glBindVertexArray(va);
 		{
@@ -82,27 +146,13 @@ public class VertexArray implements AutoCloseable {
 		return this;
 	}
 	
-	public VertexArray setBuffer(int i, int dim, double ... buffercontent){
-		glBindVertexArray(va);
-		{
-			if(vbos[i] == 0){
-				vbos[i] = glGenBuffers();
-			}
-			glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
-			{
-				// put vertices into vbo
-				glBufferData(GL_ARRAY_BUFFER, buffercontent, GL_STATIC_DRAW);
-				// put vbo into va
-				glVertexAttribPointer(i, dim, GL_DOUBLE, false, 0, 0);
-			}
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
-		glBindVertexArray(0);
-		dims[i] = dim;
-		numValues[i] = buffercontent.length;
-		return this;
-	}
-	
+	/**
+	 * Sets the GL_ELEMENT_ARRAY_BUFFER of this vertex array, i.e. the vertex indices
+	 * that describe which vertices form a GL primitive.
+	 * @param indices the vertex indices
+	 * @return this for chaining
+	 */
+	@GLContextRequired
 	public VertexArray setIndices(int... indices){
 		if(ibo == 0){
 			ibo = glGenBuffers();
@@ -114,6 +164,13 @@ public class VertexArray implements AutoCloseable {
 		return this;
 	}
 
+	/**
+	 * Binds this vertex array and enables the specified vertex attributes.
+	 * If this VA has an element array buffer (indexed VA) then this buffer
+	 * is also bound.
+	 * @param is indices of attributes to enable
+	 */
+	@GLContextRequired
 	public void bindAndEnableAttributes(int ... is) {
 		glBindVertexArray(va);
 		for(int i: is){
@@ -124,7 +181,13 @@ public class VertexArray implements AutoCloseable {
 		}
 	}
 	
-	public void unbindAndDisableAttributes(int ... is){
+	/**
+	 * Releases this vertex array ({@code glBindVertexArray(0)}) and enables the specified vertex attributes.
+	 * If this VA has en element array buffer (indexed VA) then this buffer is released as well.
+	 * @param is indices of attributes to enable
+	 */
+	@GLContextRequired
+	public void releaseAndDisableAttributes(int ... is){
 		for(int i: is){
 			glDisableVertexAttribArray(i);
 		}
@@ -134,11 +197,19 @@ public class VertexArray implements AutoCloseable {
 		}
 	}
 	
+	/**
+	 * @return number of indices
+	 */
 	public int getNumIndices() {
 		return numIndices;
 	}
 	
+	/**
+	 * Disposes of this {@link VertexArray} GL resources, i.e.
+	 * deletes GL buffer and vertex array objects.
+	 */
 	@Override
+	@GLContextRequired
 	public void close() {
 		for(int i = 0; i < vbos.length; i++){
 			glDeleteBuffers(vbos[i]);

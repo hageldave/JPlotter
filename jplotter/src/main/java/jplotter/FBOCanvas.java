@@ -214,7 +214,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				GL20.glUniformMatrix4fv(loc, false, orthoMX);
 				vertexArray.bindAndEnableAttributes(0);
 				GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
-				vertexArray.unbindAndDisableAttributes(0);
+				vertexArray.releaseAndDisableAttributes(0);
 				fillShader.release();
 			}
 			// now draw the other stuff to the fbo
@@ -252,7 +252,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 
 					GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
 					// done
-					vertexArray.unbindAndDisableAttributes(0);
+					vertexArray.releaseAndDisableAttributes(0);
 					blitShader.release();
 				}
 			}
