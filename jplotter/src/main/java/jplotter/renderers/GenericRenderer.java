@@ -39,7 +39,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 			}
 			// clean up after renering (e.g. en/disable depth or blending and such)
 			renderEnd();
-			shader.unbind();
+			shader.release();
 		}
 	}
 	
