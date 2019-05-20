@@ -4,14 +4,30 @@ import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
 
+/**
+ * The default implementations of various {@link Glyph}s such as a
+ * {@link #CROSS}, {@link #CIRCLE}, {@link #SQUARE} and {@link #TRIANGLE} glyph.
+ * Apart from these there is an {@link #ARROW} glyph that can be used for
+ * vector field visualizations.
+ * 
+ * @author hageldave
+ */
 public enum DefaultGlyph implements Glyph {
+	/** a cross glyph, two diagonal lines */
 	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false),
+	/** a square glyph */
 	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false),
+	/** a filled square glyph */
 	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false),
+	/** a triangle glyph */
 	TRIANGLE(DefaultGlyph::mkTriangle, 3, GL11.GL_LINE_LOOP, 7, false),
+	/** a filled triangle glyph */
 	TRIANGLE_F(DefaultGlyph::mkTriangle, 3, GL11.GL_TRIANGLES, 7, false),
+	/** a circle glyph  (20 line segments) */
 	CIRCLE(DefaultGlyph::mkCircle, 20, GL11.GL_LINE_LOOP, 8, true),
+	/** a filled circle glyph (20 line segments) */
 	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true),
+	/** an arrow glyph, pointing to the right */
 	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false),
 	;
 	
@@ -66,6 +82,7 @@ public enum DefaultGlyph implements Glyph {
 		va.setBuffer(0, 2, verts);
 		va.setIndices(indices);
 	}
+	
 	static void mkCircleWithCenter(VertexArray va){
 		final int numVerts = 22;
 		float[] verts = new float[numVerts*2];
