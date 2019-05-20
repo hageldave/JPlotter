@@ -7,6 +7,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.lang.reflect.Field;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingUtilities;
 
@@ -19,6 +20,8 @@ import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
 import org.lwjgl.opengl.awt.PlatformGLCanvas;
 
+import jplotter.Annotations.GLContextRequired;
+import jplotter.globjects.CharacterAtlas;
 import jplotter.globjects.FBO;
 import jplotter.globjects.Shader;
 import jplotter.globjects.VertexArray;
@@ -33,6 +36,9 @@ import jplotter.util.Utils;
  */
 public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	private static final long serialVersionUID = 1L;
+	
+	public static final AtomicInteger ATOMIC_COUNTER = new AtomicInteger(0);
+	public static int CURRENTLY_ACTIVE_CANVAS = 0;
 
 	private static final char NL = '\n';
 	private static final String blitVertexShaderSrc = ""
@@ -105,9 +111,11 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected boolean useBitBlit = false;
 	protected Color fboClearColor = Color.darkGray;
 	protected Color screenClearColor = Color.BLACK;
+	public final int canvasID;
 
 	public FBOCanvas(GLData data){
 		super(data);
+		this.canvasID = ATOMIC_COUNTER.incrementAndGet();
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -118,12 +126,25 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 
 	public FBOCanvas() {
 		super();
+		this.canvasID = ATOMIC_COUNTER.incrementAndGet();
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
 				render();
 			}
 		});
+	}
+	
+	@Override
+	protected void beforeRender() {
+		CURRENTLY_ACTIVE_CANVAS = this.canvasID;
+		super.beforeRender();
+	}
+	
+	@Override
+	protected void afterRender() {
+		super.afterRender();
+		CURRENTLY_ACTIVE_CANVAS = 0;
 	}
 
 
@@ -276,7 +297,9 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 
 
 	@Override
+	@GLContextRequired
 	public void close() {
+		CharacterAtlas.clearAndCloseAtlasCollection();
 		setFBO(null);
 		setFBO_MS(null);
 		if(Objects.nonNull(blitShader)){

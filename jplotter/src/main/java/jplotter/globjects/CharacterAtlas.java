@@ -17,6 +17,7 @@ import org.lwjgl.opengl.GL15;
 
 import hageldave.imagingkit.core.Img;
 import jplotter.Annotations.GLContextRequired;
+import jplotter.FBOCanvas;
 import jplotter.util.GLUtils;
 import jplotter.util.GenericKey;
 
@@ -54,7 +55,7 @@ public class CharacterAtlas implements AutoCloseable {
 
 	protected static final Img FONTMETRIC_IMG = new Img(32, 32);
 
-	protected static final HashMap<GenericKey, CharacterAtlas> ATLAS_COLLECTION = new HashMap<>();
+	protected static final HashMap<Integer, HashMap<GenericKey, CharacterAtlas>> ATLAS_COLLECTION = new HashMap<>();
 
 	Font font;
 	int charWidth;
@@ -97,11 +98,22 @@ public class CharacterAtlas implements AutoCloseable {
 	 */
 	@GLContextRequired
 	public static CharacterAtlas get(int fontSize, int style, boolean antialiased){
-		GenericKey key = new GenericKey(fontSize, style, antialiased);
-		if(!ATLAS_COLLECTION.containsKey(key)){
-			ATLAS_COLLECTION.put(key, new CharacterAtlas(fontSize, style, antialiased));
+		int canvasID = FBOCanvas.CURRENTLY_ACTIVE_CANVAS;
+		if(canvasID == 0){
+			throw new IllegalStateException(
+					"No active FBOCanvas, the FBOCanvas.CURRENTLY_ACTIVE_CANVAS field was 0. " +
+					"This indicates that there is likely no active GL context to execute GL methods in."
+			);
 		}
-		return ATLAS_COLLECTION.get(key);
+		if(!ATLAS_COLLECTION.containsKey(canvasID)){
+			ATLAS_COLLECTION.put(canvasID, new HashMap<>());
+		}
+		HashMap<GenericKey, CharacterAtlas> contextCollection = ATLAS_COLLECTION.get(canvasID);
+		GenericKey key = new GenericKey(fontSize, style, antialiased);
+		if(!contextCollection.containsKey(key)){
+			contextCollection.put(key, new CharacterAtlas(fontSize, style, antialiased));
+		}
+		return contextCollection.get(key);
 	}
 
 	/**
@@ -314,10 +326,20 @@ public class CharacterAtlas implements AutoCloseable {
 	 */
 	@GLContextRequired
 	public static void clearAndCloseAtlasCollection(){
-		LinkedList<GenericKey> keys = new LinkedList<>(ATLAS_COLLECTION.keySet());
+		int canvasID = FBOCanvas.CURRENTLY_ACTIVE_CANVAS;
+		if(canvasID == 0){
+			return;
+		}
+		HashMap<GenericKey, CharacterAtlas> contextCollection = ATLAS_COLLECTION.get(canvasID);
+		if(contextCollection==null){
+			return;
+		}
+		ATLAS_COLLECTION.remove(canvasID);
+		
+		LinkedList<GenericKey> keys = new LinkedList<>(contextCollection.keySet());
 		while(!keys.isEmpty()){
 			GenericKey key = keys.removeFirst();
-			CharacterAtlas atlas = ATLAS_COLLECTION.get(key);
+			CharacterAtlas atlas = contextCollection.get(key);
 			if(Objects.nonNull(atlas))
 				atlas.close();
 		}

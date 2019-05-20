@@ -11,7 +11,6 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import jplotter.globjects.CharacterAtlas;
 import jplotter.globjects.DefaultGlyph;
 import jplotter.globjects.Lines;
 import jplotter.globjects.Points;
@@ -68,8 +67,7 @@ public class Viz {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				canvas.close();
-				CharacterAtlas.clearAndCloseAtlasCollection();
+				canvas.runInContext(()->canvas.close());
 			}
 		});
 		

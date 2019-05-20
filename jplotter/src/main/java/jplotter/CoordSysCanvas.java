@@ -157,7 +157,9 @@ public class CoordSysCanvas extends FBOCanvas {
 		labelY.setAngle(-(float)Math.PI/2);
 		labelX.setOrigin(	(int)(coordsysframeLT.getX() + xAxisWidth/2 - labelX.getTextSize().width/2) , 
 							(int)(coordsysframeLT.getY() + 4) );
-		labelY.setOrigin((int)(coordsysframeRB.getX() + 4), (int)(coordsysframeRB.getY() + yAxisHeight/2 - labelY.getTextSize().width/2));
+		labelY.setOrigin(
+				(int)(coordsysframeRB.getX() + 4), 
+				(int)(coordsysframeRT.getY() - yAxisHeight/2 + labelY.getTextSize().width/2));
 		textR.addItemToRender(labelX);
 		textR.addItemToRender(labelY);
 	}

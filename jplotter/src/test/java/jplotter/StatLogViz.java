@@ -94,8 +94,7 @@ public class StatLogViz {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				canvas.close();
-				CharacterAtlas.clearAndCloseAtlasCollection();
+				canvas.runInContext(()->canvas.close());
 			}
 		});
 
