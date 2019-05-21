@@ -12,7 +12,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.awt.GLData;
 
 import jplotter.globjects.Lines;
-import jplotter.globjects.StaticText;
+import jplotter.globjects.Text;
 import jplotter.renderers.AdaptableView;
 import jplotter.renderers.LinesRenderer;
 import jplotter.renderers.Renderer;
@@ -125,7 +125,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			Point2D onaxis = new Point2D.Double(x,coordWindowOrigin.getY());
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4), tickColor);
 			// label
-			StaticText label = new StaticText(xticklabels[i], 10, Font.PLAIN, true);
+			Text label = new Text(xticklabels[i], 10, Font.PLAIN, true);
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(
 					(int)(onaxis.getX()-textSize.getWidth()/2.0), 
@@ -142,7 +142,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			Point2D onaxis = new Point2D.Double(coordWindowOrigin.getX(),y);
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4,0), tickColor);
 			// label
-			StaticText label = new StaticText(yticklabels[i], 10, Font.PLAIN, true);
+			Text label = new Text(yticklabels[i], 10, Font.PLAIN, true);
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(
 					(int)(onaxis.getX()-7-textSize.getWidth()), 
@@ -152,8 +152,8 @@ public class CoordSysCanvas extends FBOCanvas {
 			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, xAxisWidth, 0), guideColor);
 		}
 		// axis labels
-		StaticText labelX = new StaticText(getxAxisLabel(), 12, Font.PLAIN, true);
-		StaticText labelY = new StaticText(getyAxisLabel(), 12, Font.PLAIN, true);
+		Text labelX = new Text(getxAxisLabel(), 12, Font.PLAIN, true);
+		Text labelY = new Text(getyAxisLabel(), 12, Font.PLAIN, true);
 		labelY.setAngle(-(float)Math.PI/2);
 		labelX.setOrigin(	(int)(coordsysframeLT.getX() + xAxisWidth/2 - labelX.getTextSize().width/2) , 
 							(int)(coordsysframeLT.getY() + 4) );

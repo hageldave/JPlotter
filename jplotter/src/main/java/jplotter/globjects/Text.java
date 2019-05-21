@@ -4,8 +4,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.util.Objects;
 
 import hageldave.imagingkit.core.Pixel;
+import jplotter.Annotations.GLContextRequired;
 import jplotter.renderers.TextRenderer;
 
 /**
@@ -27,9 +29,9 @@ import jplotter.renderers.TextRenderer;
  * 
  * @author hageldave
  */
-public abstract class Text implements Renderable {
+public class Text implements Renderable {
 
-	protected final Dimension textSize;
+	protected Dimension textSize;
 	protected final int fontsize; 
 	protected final int style;
 	protected final boolean antialiased;
@@ -38,9 +40,12 @@ public abstract class Text implements Renderable {
 	protected Point origin;
 	protected VertexArray va=null;
 	protected float angle=0;
+	protected String txtStr;
+	protected boolean isDirty=true;
 	
-	public Text(int fontsize, int style, boolean antialiased, Dimension textSize) {
-		this.textSize = textSize;
+	public Text(String textstr, int fontsize, int style, boolean antialiased) {
+		this.txtStr = textstr;
+		this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style, antialiased).getBounds().getSize();
 		this.fontsize = fontsize;
 		this.style = style;
 		this.antialiased = antialiased;
@@ -156,11 +161,54 @@ public abstract class Text implements Renderable {
 	/**
 	 * initiaizes gl datastructures, especially the vertex array {@link #va}.
 	 */
-	public abstract void initGL();
+	@Override
+	@GLContextRequired
+	public void initGL(){
+		if(Objects.isNull(va)){
+			va = new VertexArray(2);
+			updateGL();
+		}
+	}
 	
-	public abstract int getTextureID();
+	@Override
+	@GLContextRequired
+	public void updateGL() {
+		if(Objects.nonNull(va)){
+			CharacterAtlas.get(fontsize, style, antialiased).createVAforString(txtStr, va);
+			isDirty = false;
+		}
+	}
 	
-	public abstract String getTextString();
+	@Override
+	public void close() {
+		if(Objects.nonNull(va)){
+			va.close();
+			va = null;
+		}
+	}
+	
+	@Override
+	public boolean isDirty() {
+		return isDirty;
+	}
+	
+	public void setDirty() {
+		this.isDirty = true;
+	}
+	
+	@GLContextRequired
+	public int getTextureID(){
+		return CharacterAtlas.get(fontsize, style, antialiased).getTexID();
+	}
+	
+	public String getTextString(){
+		return txtStr;
+	}
+	
+	public void setTextString(String txtStr) {
+		this.txtStr = txtStr;
+		setDirty();
+	}
 
 
 	/**
