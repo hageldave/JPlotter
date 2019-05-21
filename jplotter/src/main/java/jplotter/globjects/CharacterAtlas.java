@@ -104,6 +104,7 @@ public class CharacterAtlas implements AutoCloseable {
 	 * or bitwise union BOLD|ITALIC.
 	 * @param antialiased whether the characters of the texture are antialiased or not.
 	 * @return matching {@link CharacterAtlas}.
+	 * @throws IllegalStateException when no {@link FBOCanvas} is currently active
 	 */
 	@GLContextRequired
 	public static CharacterAtlas get(int fontSize, int style, boolean antialiased){
@@ -316,6 +317,8 @@ public class CharacterAtlas implements AutoCloseable {
 	/**
 	 * Deletes the texture associated with this atlas and removes this atlas from
 	 * the {@link #ATLAS_COLLECTION}.
+	 * @throws IllegalStateException when no {@link FBOCanvas} is currently active or
+	 * the active FBOCanvas does not own this atlas.
 	 */
 	@Override
 	@GLContextRequired
@@ -337,8 +340,9 @@ public class CharacterAtlas implements AutoCloseable {
 
 	/**
 	 * Closes and removes all {@link CharacterAtlas} instances contained in the
-	 * static {@link #ATLAS_COLLECTION}. This disposes of all GL textures associated
-	 * with CharacterAtlases.
+	 * static {@link #ATLAS_COLLECTION} that are owned by the currently active
+	 * {@link FBOCanvas}. 
+	 * This disposes of all GL textures associated with these CharacterAtlases.
 	 */
 	@GLContextRequired
 	public static void clearAndCloseAtlasCollection(){

@@ -7,6 +7,7 @@ import java.awt.Point;
 import java.util.Objects;
 
 import hageldave.imagingkit.core.Pixel;
+import jplotter.FBOCanvas;
 import jplotter.Annotations.GLContextRequired;
 import jplotter.renderers.TextRenderer;
 
@@ -31,10 +32,10 @@ import jplotter.renderers.TextRenderer;
  */
 public class Text implements Renderable {
 
+	public final int fontsize; 
+	public final int style;
+	public final boolean antialiased;
 	protected Dimension textSize;
-	protected final int fontsize; 
-	protected final int style;
-	protected final boolean antialiased;
 	protected Color color;
 	protected int pickColor;
 	protected Point origin;
@@ -43,6 +44,14 @@ public class Text implements Renderable {
 	protected String txtStr;
 	protected boolean isDirty=true;
 	
+	/**
+	 * Creates a new Text object with the specified string and font configuration.
+	 * @param textstr the text to be displayed
+	 * @param fontsize point size of the font
+	 * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
+	 * or bitwise union BOLD|ITALIC.
+	 * @param antialiased whether the characters of the {@link CharacterAtlas} texture are antialiased or not.
+	 */
 	public Text(String textstr, int fontsize, int style, boolean antialiased) {
 		this.txtStr = textstr;
 		this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style, antialiased).getBounds().getSize();
@@ -53,57 +62,71 @@ public class Text implements Renderable {
 		this.origin = new Point(0, 0);
 	}
 
-
-	public int getStyle() {
-		return style;
-	}
-
-
-	public int getFontsize() {
-		return fontsize;
-	}
-
-
-	public boolean isAntialiased() {
-		return antialiased;
-	}
-
-
+	/**
+	 * Sets the color of this text
+	 * @param color to set
+	 * @return this for chaining
+	 */
 	public Text setColor(Color color) {
 		this.color = color;
 		return this;
 	}
 
-
+	/**
+	 * Sets the color of this text in integer packed ARGB format.
+	 * e.g. 0xff00ff00 for opaque green.
+	 * @param argb to set
+	 * @return this for chaining
+	 */
 	public Text setColor(int argb) {
 		return this.setColor(new Color(argb, true));
 	}
 
-
+	/**
+	 * @return this text's color
+	 */
 	public Color getColor() {
 		return color;
 	}
 
-
+	/**
+	 * @return normalized red channel of this text's color (in [0,1])
+	 */
 	public float getColorR() {
 		return color.getRed()/255f;
 	}
 
-
+	/**
+	 * @return normalized green channel of this text's color (in [0,1])
+	 */
 	public float getColorG() {
 		return color.getGreen()/255f;
 	}
 
-
+	/**
+	 * @return normalized blue channel of this text's color (in [0,1])
+	 */
 	public float getColorB() {
 		return color.getBlue()/255f;
 	}
 
-
+	/**
+	 * @return normalized alpha channel of this text's color (in [0,1])
+	 */
 	public float getColorA() {
 		return color.getAlpha()/255f;
 	}
 	
+	/**
+	 * Sets the picking color of this {@link Text} object. 
+	 * The picking color is the color with which quads of the individual characters are rendered into the
+	 * (invisible) picking color attachment of an {@link FBO}. 
+	 * This color may serve as an identifier of the object that can be queried from a location of the
+	 * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values).
+	 * @param pickColor opaque integer packed RGB value, 0 or one in [0xff000001..0xffffffff]. 
+	 * When a transparent color is specified its alpha channel will be set to 0xff to make it opaque.
+	 * @return this for chaining
+	 */
 	public Text setPickColor(int pickColor) {
 		this.pickColor = pickColor;
 		// can only use opaque colors cause transparent colors will not work on overlaps
@@ -112,54 +135,90 @@ public class Text implements Renderable {
 		return this;
 	}
 
+	/**
+	 * @return the picking color of this {@link Text} object
+	 */
 	public int getPickColor() {
 		return pickColor;
 	}
 	
+	/**
+	 * @return the normalized red channel of the picking color (in [0,1])
+	 */
 	public float getPickColorR() {
 		return Pixel.r(pickColor)/255f;
 	}
 
-
+	/**
+	 * @return the normalized green channel of the picking color (in [0,1])
+	 */
 	public float getPickColorG() {
 		return Pixel.g(pickColor)/255f;
 	}
 
-
+	/**
+	 * @return the normalized blue channel of the picking color (in [0,1])
+	 */
 	public float getPickColorB() {
 		return Pixel.b(pickColor)/255f;
 	}
 
+	/**
+	 * @return the dimensions in pixels of this text object
+	 */
 	public Dimension getTextSize() {
 		return textSize;
 	}
 
-
+	/**
+	 * @return the origin of this text object, i.e. the bottom left corner of the rectangle enclosing the text,
+	 * the text's location so to say
+	 */
 	public Point getOrigin() {
 		return origin;
 	}
 
-
+	/**
+	 * Sets the origin of this text object, i.e. the bottom left corner of the rectangle enclosing the text,
+	 * the text's location so to say
+	 * @param origin to set
+	 * @return this for chaining
+	 */
 	public Text setOrigin(Point origin) {
 		this.origin = origin;
 		return this;
 	}
 
-
+	/**
+	 * Sets the origin of this text object, i.e. the bottom left corner of the rectangle enclosing the text,
+	 * the text's location so to say
+	 * @param x coordinate of origin
+	 * @param y coordinate of origin
+	 * @return this for chaining
+	 */
 	public Text setOrigin(int x, int y) {
 		return this.setOrigin(new Point(x, y));
 	}
 	
+	/**
+	 * @return the rotation angle in radian by which this text object is rotated around its origin.
+	 */
 	public float getAngle() {
 		return angle;
 	}
 	
+	/**
+	 * Sets the rotation angle in radian by which this text object is rotated around its origin.
+	 * @param angle rotation angle
+	 */
 	public void setAngle(float angle) {
 		this.angle = angle;
 	}
 	
 	/**
-	 * initiaizes gl datastructures, especially the vertex array {@link #va}.
+	 * Allocates GL resources, i.e. creates the vertex array and fills
+	 * it according to the contents of this {@link Text} object.
+	 * If the vertex array has already been created, nothing happens.
 	 */
 	@Override
 	@GLContextRequired
@@ -170,6 +229,12 @@ public class Text implements Renderable {
 		}
 	}
 	
+	/**
+	 * Updates the vertex array to be in sync with this text object.
+	 * This sets the {@link #isDirty()} state to false.
+	 * if {@link #initGL()} has not been called yet or this object has
+	 * already been closed, nothing happens
+	 */
 	@Override
 	@GLContextRequired
 	public void updateGL() {
@@ -179,7 +244,12 @@ public class Text implements Renderable {
 		}
 	}
 	
+	/**
+	 * disposes of the GL resources of this text object,
+	 * i.e deletes the vertex array.
+	 */
 	@Override
+	@GLContextRequired
 	public void close() {
 		if(Objects.nonNull(va)){
 			va.close();
@@ -187,33 +257,62 @@ public class Text implements Renderable {
 		}
 	}
 	
+	
 	@Override
 	public boolean isDirty() {
 		return isDirty;
 	}
 	
-	public void setDirty() {
+	/**
+	 * Sets the {@link #isDirty()} state of this renderable to true.
+	 * This indicates that an {@link #updateGL()} call is necessary to sync GL resources.
+	 * @return this for chaining
+	 */
+	public Text setDirty() {
 		this.isDirty = true;
+		return this;
 	}
 	
+	/**
+	 * Returns the GL object name of the texture of the character atlas this text's font
+	 * corresponds to.
+	 * @return the texture id to use for texturing this text object
+	 * @throws IllegalStateException when no {@link FBOCanvas} is currently active
+	 */
 	@GLContextRequired
 	public int getTextureID(){
 		return CharacterAtlas.get(fontsize, style, antialiased).getTexID();
 	}
 	
+	/**
+	 * @return the String this text object displays
+	 */
 	public String getTextString(){
 		return txtStr;
 	}
 	
+	/**
+	 * Sets the string of this text.
+	 * Only characters that are ASCII printable (more precisely ASCII characters [32..126]) will be
+	 * displayed, other characters are mapped to whitespace for rendering.
+	 * This set the {@link #isDirty()} state of this {@link Renderable} to true.
+	 * @param txtStr the text string this object should display.
+	 */
 	public void setTextString(String txtStr) {
 		this.txtStr = txtStr;
+		this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontsize, style, antialiased).getBounds().getSize();
 		setDirty();
 	}
 
 
 	/**
-	 * returns null unless {@link #initGL()} was called
-	 * @return
+	 * Returns the vertex array of this text object.
+	 * The vertex array's first attribute contains the 2D vertices for the quads
+	 * that will be textured according to the character of this text object.
+	 * The second attribute contains the texture coordinates for the vertices in
+	 * the first attribute.
+	 * @return the vertex array associated with this text object or null if
+	 * {@link #initGL()} was not yet called.
 	 */
 	public VertexArray getVertexArray() {
 		return va;
@@ -221,16 +320,21 @@ public class Text implements Renderable {
 
 
 	/**
-	 * {@link NullPointerException} unless {@link #initGL()} was called
+	 * Binds this object's vertex array and enables the corresponding attributes 
+	 * (first and second attribute).
+	 * @throws NullPointerException unless {@link #initGL()} was called
 	 */
+	@GLContextRequired
 	public void bindVertexArray() {
 		va.bindAndEnableAttributes(0,1);
 	}
 
 
 	/**
-	 * {@link NullPointerException} unless {@link #initGL()} was called
+	 * Releases this objects vertex array and disables the corresponding attributes
+	 * @throws NullPointerException unless {@link #initGL()} was called
 	 */
+	@GLContextRequired
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1);
 	}
