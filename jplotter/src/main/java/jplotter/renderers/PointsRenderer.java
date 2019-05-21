@@ -104,15 +104,15 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
 		GL20.glUniformMatrix2fv(loc, false, modelmxarray);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "globalScaling");
-		GL20.glUniform1f(loc, this.glyphScaling * item.getGlyph().pixelSize() * item.getGlobalScaling());
+		GL20.glUniform1f(loc, this.glyphScaling * item.glyph.pixelSize() * item.getGlobalScaling());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
-		GL20.glUniform1f(loc, this.glyphScaling * item.getGlyph().pixelSize() * item.getGlobalAlphaMultiplier());
+		GL20.glUniform1f(loc, this.glyphScaling * item.glyph.pixelSize() * item.getGlobalAlphaMultiplier());
 		// draw things
 		item.bindVertexArray();
-		if(item.getGlyph().useElementsDrawCall()){
-			GL31.glDrawElementsInstanced(item.getGlyph().primitiveType(), item.getGlyph().numVertices(), GL11.GL_UNSIGNED_INT, 0, item.numPoints());
+		if(item.glyph.useElementsDrawCall()){
+			GL31.glDrawElementsInstanced(item.glyph.primitiveType(), item.glyph.numVertices(), GL11.GL_UNSIGNED_INT, 0, item.numPoints());
 		} else {
-			GL31.glDrawArraysInstanced(item.getGlyph().primitiveType(), 0, item.getGlyph().numVertices(), item.numPoints());
+			GL31.glDrawArraysInstanced(item.glyph.primitiveType(), 0, item.glyph.numVertices(), item.numPoints());
 		}
 		item.releaseVertexArray();
 	}

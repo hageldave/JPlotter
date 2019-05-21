@@ -291,12 +291,12 @@ public class Lines implements Renderable {
 
 
 	/**
-	 * The vertex array of this lines object.
+	 * Returns the vertex array of this lines object.
 	 * The vertex array's first attribute contains the 2D point pairs of
 	 * the line segments, the second attribute contains integer packed RGB
 	 * value pairs for the line segments.
 	 * @return the vertex array associated with this lines object or null if
-	 * {@link #initGL()} was not yet called.
+	 * {@link #initGL()} was not yet called or this object was already closed.
 	 */
 	public VertexArray getVertexArray() {
 		return va;
