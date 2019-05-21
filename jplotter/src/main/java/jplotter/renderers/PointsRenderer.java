@@ -56,8 +56,9 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "layout(location = 1) out vec4 pick_color;"
 			+ NL + "in vec4 vColor;"
 			+ NL + "in vec4 vPickColor;"
+			+ NL + "uniform float alphaMultiplier;"
 			+ NL + "void main() {"
-			+ NL + "   frag_color = vColor;"
+			+ NL + "   frag_color = vec4(vColor.rgb, vColor.a*alphaMultiplier);"
 			+ NL + "   pick_color = vPickColor;"
 			+ NL + "}"
 			+ NL
@@ -104,6 +105,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		GL20.glUniformMatrix2fv(loc, false, modelmxarray);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "globalScaling");
 		GL20.glUniform1f(loc, this.glyphScaling * item.getGlyph().pixelSize() * item.getGlobalScaling());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
+		GL20.glUniform1f(loc, this.glyphScaling * item.getGlyph().pixelSize() * item.getGlobalAlphaMultiplier());
 		// draw things
 		item.bindVertexArray();
 		if(item.getGlyph().useElementsDrawCall()){

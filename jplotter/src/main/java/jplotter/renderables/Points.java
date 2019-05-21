@@ -6,15 +6,34 @@ import java.util.Objects;
 
 import org.lwjgl.opengl.GL33;
 
+import jplotter.globjects.FBO;
 import jplotter.globjects.VertexArray;
 
+/**
+ * The Points class is a collection of 2D points that are to be represented
+ * using the same {@link Glyph} (the graphical representation of a point).
+ * A point instance in this collection has the following attributes.
+ * <ul>
+ * <li>position - the 2D location of the point</li>
+ * <li>scaling - the scaling of the glyph it is represented with</li>
+ * <li>rotation - the rotation of the glyph it is represented with</li>
+ * <li>color - the color with wich the glyph it is renered</li>
+ * <li>picking color - the picking color with which the glyph is rendered into the (invisible) picking color attachment
+ * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
+ * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values).
+ * </li>
+ * </ul>
+ * Appart from that 
+ * 
+ * @author hageldave
+ */
 public class Points implements Renderable {
 
-	final Glyph glyph;
-	VertexArray va;
-	boolean isDirty;
-	float globalScaling = 1f;
-	float globalAlphaMultiplier = 1f;
+	public final Glyph glyph;
+	protected VertexArray va;
+	protected boolean isDirty;
+	protected float globalScaling = 1f;
+	protected float globalAlphaMultiplier = 1f;
 
 	ArrayList<PointDetails> points = new ArrayList<>();
 

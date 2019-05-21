@@ -51,6 +51,7 @@ public class Viz {
 			content.triangles.addItemToRender(tris);
 			
 			Points circlepoints = new Points(DefaultGlyph.TRIANGLE_F);
+			circlepoints.setGlobalAlphaMultiplier(0.2f);
 			Points quiver = new Points(DefaultGlyph.ARROW);
 			Color color1 = new Color(0xffe41a1c);
 			Color color2 = new Color(0xff377eb8);
