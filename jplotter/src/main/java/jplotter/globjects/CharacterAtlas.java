@@ -57,16 +57,25 @@ public class CharacterAtlas implements AutoCloseable {
 
 	protected static final HashMap<Integer, HashMap<GenericKey, CharacterAtlas>> ATLAS_COLLECTION = new HashMap<>();
 
-	Font font;
-	int charWidth;
-	int charHeigth;
-	int texID;
-	final int fontSize;
-	final int style;
-	final boolean antialiased;
-
+	public final Font font;
+	public final int charWidth;
+	public final int charHeigth;
+	public final int fontSize;
+	public final int style;
+	public final boolean antialiased;
+	public final int owningCanvasID;
+	protected int texID;
+	
 	@GLContextRequired
 	protected CharacterAtlas(int fontSize, int style, boolean antialiased) {
+		int canvasID = FBOCanvas.CURRENTLY_ACTIVE_CANVAS;
+		if(canvasID == 0){
+			throw new IllegalStateException(
+					"No active FBOCanvas, the FBOCanvas.CURRENTLY_ACTIVE_CANVAS field was 0. " +
+					"This indicates that there is likely no active GL context to execute GL methods in."
+			);
+		}
+		this.owningCanvasID = canvasID;
 		this.fontSize = fontSize;
 		this.style = style;
 		this.antialiased = antialiased;
@@ -187,9 +196,8 @@ public class CharacterAtlas implements AutoCloseable {
 	}
 
 	/**
-	 * GL name of the texture corresponding to this atlas which contains
+	 * @return GL name of the texture corresponding to this atlas which contains
 	 * the rendered characters.
-	 * @return
 	 */
 	public int getTexID() {
 		return texID;
@@ -313,9 +321,17 @@ public class CharacterAtlas implements AutoCloseable {
 	@GLContextRequired
 	public void close() {
 		if(texID != 0){
+			int canvasID = FBOCanvas.CURRENTLY_ACTIVE_CANVAS;
+			if(canvasID != this.owningCanvasID){
+				throw new IllegalStateException(
+						"The currently active canvas does not own this atlas and cannot close it though. " +
+						"Currently active canvas:" + canvasID + " Owning canvas:" + this.owningCanvasID
+				);
+			}
 			GL11.glDeleteTextures(texID);
 			texID = 0;
-			ATLAS_COLLECTION.remove(new GenericKey(fontSize, style, antialiased));
+			HashMap<GenericKey, CharacterAtlas> contextCollection = ATLAS_COLLECTION.get(this.owningCanvasID);
+			contextCollection.remove(new GenericKey(fontSize, style, antialiased));
 		}
 	}
 
@@ -334,8 +350,6 @@ public class CharacterAtlas implements AutoCloseable {
 		if(contextCollection==null){
 			return;
 		}
-		ATLAS_COLLECTION.remove(canvasID);
-		
 		LinkedList<GenericKey> keys = new LinkedList<>(contextCollection.keySet());
 		while(!keys.isEmpty()){
 			GenericKey key = keys.removeFirst();
@@ -343,6 +357,7 @@ public class CharacterAtlas implements AutoCloseable {
 			if(Objects.nonNull(atlas))
 				atlas.close();
 		}
+		ATLAS_COLLECTION.remove(canvasID);
 	}
 
 }

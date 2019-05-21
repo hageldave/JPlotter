@@ -110,7 +110,7 @@ public class Lines implements Renderable {
 	 * @param y1 y coordinate of start point
 	 * @param x2 x coordinate of end point
 	 * @param y2 y coordinate of end point
-	 * @param c1 integer packed ARGB color value of line (e.g. 0xff00ff00 = opaque green)
+	 * @param c integer packed ARGB color value of line (e.g. 0xff00ff00 = opaque green)
 	 * @return this for chaining
 	 */
 	public Lines addSegment(double x1, double y1, double x2, double y2, int c){
