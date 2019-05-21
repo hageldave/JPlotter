@@ -11,8 +11,8 @@ import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.awt.GLData;
 
-import jplotter.globjects.Lines;
-import jplotter.globjects.Text;
+import jplotter.renderables.Lines;
+import jplotter.renderables.Text;
 import jplotter.renderers.AdaptableView;
 import jplotter.renderers.LinesRenderer;
 import jplotter.renderers.Renderer;

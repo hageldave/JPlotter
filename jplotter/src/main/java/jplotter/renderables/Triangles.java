@@ -1,9 +1,11 @@
-package jplotter.globjects;
+package jplotter.renderables;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Objects;
+
+import jplotter.globjects.VertexArray;
 
 public class Triangles implements Renderable {
 

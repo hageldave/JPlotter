@@ -1,6 +1,7 @@
-package jplotter.globjects;
+package jplotter.renderables;
 
 import jplotter.Annotations.GLContextRequired;
+import jplotter.globjects.VertexArray;
 import jplotter.renderers.GenericRenderer;
 import jplotter.renderers.Renderer;
 

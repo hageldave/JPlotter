@@ -7,8 +7,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL20;
 
-import jplotter.globjects.Lines;
 import jplotter.globjects.Shader;
+import jplotter.renderables.Lines;
 
 public class LinesRenderer extends GenericRenderer<Lines> {
 

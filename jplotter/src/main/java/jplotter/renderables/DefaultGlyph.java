@@ -1,8 +1,10 @@
-package jplotter.globjects;
+package jplotter.renderables;
 
 import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
+
+import jplotter.globjects.VertexArray;
 
 /**
  * The default implementations of various {@link Glyph}s such as a

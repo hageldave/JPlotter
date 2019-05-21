@@ -10,7 +10,7 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
 import jplotter.globjects.Shader;
-import jplotter.globjects.Text;
+import jplotter.renderables.Text;
 
 public class TextRenderer extends GenericRenderer<Text> {
 

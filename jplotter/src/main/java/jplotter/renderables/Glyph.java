@@ -1,8 +1,9 @@
-package jplotter.globjects;
+package jplotter.renderables;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
 
+import jplotter.globjects.VertexArray;
 import jplotter.renderers.PointsRenderer;
 
 /**

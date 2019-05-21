@@ -8,8 +8,8 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL31;
 
-import jplotter.globjects.Points;
 import jplotter.globjects.Shader;
+import jplotter.renderables.Points;
 
 public class PointsRenderer extends GenericRenderer<Points> {
 

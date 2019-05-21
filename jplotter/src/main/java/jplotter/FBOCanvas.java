@@ -21,10 +21,10 @@ import org.lwjgl.opengl.awt.GLData;
 import org.lwjgl.opengl.awt.PlatformGLCanvas;
 
 import jplotter.Annotations.GLContextRequired;
-import jplotter.globjects.CharacterAtlas;
 import jplotter.globjects.FBO;
 import jplotter.globjects.Shader;
 import jplotter.globjects.VertexArray;
+import jplotter.renderables.CharacterAtlas;
 import jplotter.util.CapabilitiesCreator;
 import jplotter.util.GLUtils;
 import jplotter.util.Utils;

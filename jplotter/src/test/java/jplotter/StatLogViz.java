@@ -14,11 +14,11 @@ import javax.swing.SwingUtilities;
 
 import org.joml.Math;
 
-import jplotter.globjects.CharacterAtlas;
-import jplotter.globjects.DefaultGlyph;
-import jplotter.globjects.Points;
 import jplotter.interaction.CoordSysPanning;
 import jplotter.interaction.CoordSysScrollZoom;
+import jplotter.renderables.CharacterAtlas;
+import jplotter.renderables.DefaultGlyph;
+import jplotter.renderables.Points;
 import jplotter.renderers.CompleteRenderer;
 
 public class StatLogViz {

@@ -1,4 +1,4 @@
-package jplotter.globjects;
+package jplotter.renderables;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -17,6 +17,7 @@ import org.lwjgl.opengl.GL15;
 
 import hageldave.imagingkit.core.Img;
 import jplotter.Annotations.GLContextRequired;
+import jplotter.globjects.VertexArray;
 import jplotter.FBOCanvas;
 import jplotter.util.GLUtils;
 import jplotter.util.GenericKey;

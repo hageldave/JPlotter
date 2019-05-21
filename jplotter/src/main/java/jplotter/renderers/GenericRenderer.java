@@ -6,8 +6,8 @@ import java.util.Objects;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4f;
 
-import jplotter.globjects.Renderable;
 import jplotter.globjects.Shader;
+import jplotter.renderables.Renderable;
 import jplotter.util.GLUtils;
 
 public abstract class GenericRenderer<T extends Renderable> implements Renderer, AdaptableView {

@@ -1,4 +1,4 @@
-package jplotter.globjects;
+package jplotter.renderables;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
@@ -7,6 +7,8 @@ import java.util.Objects;
 
 import hageldave.imagingkit.core.Pixel;
 import jplotter.Annotations.GLContextRequired;
+import jplotter.globjects.FBO;
+import jplotter.globjects.VertexArray;
 import jplotter.util.Pair;
 
 /**

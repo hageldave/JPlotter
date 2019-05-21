@@ -11,12 +11,12 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import jplotter.globjects.DefaultGlyph;
-import jplotter.globjects.Lines;
-import jplotter.globjects.Points;
-import jplotter.globjects.Triangles;
 import jplotter.interaction.CoordSysPanning;
 import jplotter.interaction.CoordSysScrollZoom;
+import jplotter.renderables.DefaultGlyph;
+import jplotter.renderables.Lines;
+import jplotter.renderables.Points;
+import jplotter.renderables.Triangles;
 import jplotter.renderers.CompleteRenderer;
 
 public class Viz {

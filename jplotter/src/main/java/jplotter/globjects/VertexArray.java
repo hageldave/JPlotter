@@ -37,7 +37,7 @@ public class VertexArray implements AutoCloseable {
 	// for debugging
 	int dims[];
 	int numValues[];
-	int numAttributes;
+	public final int numAttributes;
 	int numIndices;
 
 	/**

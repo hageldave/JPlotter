@@ -1,10 +1,12 @@
-package jplotter.globjects;
+package jplotter.renderables;
 
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL33;
+
+import jplotter.globjects.VertexArray;
 
 public class Points implements Renderable {
 

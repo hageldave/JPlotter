@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL20;
 
 import jplotter.globjects.Shader;
-import jplotter.globjects.Triangles;
+import jplotter.renderables.Triangles;
 
 public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	

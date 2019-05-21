@@ -15,9 +15,9 @@ import java.util.Scanner;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import jplotter.globjects.CharacterAtlas;
-import jplotter.globjects.DefaultGlyph;
-import jplotter.globjects.Points;
+import jplotter.renderables.CharacterAtlas;
+import jplotter.renderables.DefaultGlyph;
+import jplotter.renderables.Points;
 import jplotter.renderers.CompleteRenderer;
 
 public class IrisViz {
