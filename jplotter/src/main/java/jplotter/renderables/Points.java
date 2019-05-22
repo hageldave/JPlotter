@@ -62,6 +62,7 @@ public class Points implements Renderable {
 	/**
 	 * Allocates GL resources, i.e. creates the vertex array
 	 * and fills it according to the contents and glyph of this points object.
+	 * when already initialized, nothing happens.
 	 */
 	@Override
 	@GLContextRequired

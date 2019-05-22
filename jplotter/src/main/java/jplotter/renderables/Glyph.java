@@ -55,6 +55,7 @@ public interface Glyph {
 	 * {@link GL31#glDrawArraysInstanced(int, int, int, int)}.<br>
 	 * Of course an elements draw call can only be used if the VertexArray 
 	 * has indices, i.e. the ELEMENT_ARRAY_BUFFER is set.
+	 * A {@link Glyph} implementation has to guarantee for that.
 	 */
 	public boolean useElementsDrawCall();
 }

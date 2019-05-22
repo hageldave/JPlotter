@@ -306,7 +306,7 @@ public class Lines implements Renderable {
 	/**
 	 * Binds this object's vertex array and enables the corresponding attributes 
 	 * (first and second attribute).
-	 * @throws NullPointerException unless {@link #initGL()} was called
+	 * @throws NullPointerException unless {@link #initGL()} was called (and this has not yet been closed)
 	 */
 	@GLContextRequired
 	public void bindVertexArray() {
@@ -316,7 +316,7 @@ public class Lines implements Renderable {
 
 	/**
 	 * Releases this objects vertex array and disables the corresponding attributes
-	 * @throws NullPointerException unless {@link #initGL()} was called
+	 * @throws NullPointerException unless {@link #initGL()} was called (and this has not yet been closed)
 	 */
 	@GLContextRequired
 	public void releaseVertexArray() {
