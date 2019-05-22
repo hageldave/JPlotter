@@ -10,6 +10,7 @@ import jplotter.globjects.Shader;
 import jplotter.renderables.Renderable;
 import jplotter.util.GLUtils;
 
+
 public abstract class GenericRenderer<T extends Renderable> implements Renderer, AdaptableView {
 	
 	protected LinkedList<T> itemsToRender = new LinkedList<>();
