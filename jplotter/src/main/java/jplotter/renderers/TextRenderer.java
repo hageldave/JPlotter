@@ -1,21 +1,34 @@
 package jplotter.renderers;
 
-import java.util.LinkedList;
 import java.util.Objects;
 
 import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
+import jplotter.Annotations.GLContextRequired;
 import jplotter.globjects.Shader;
+import jplotter.renderables.CharacterAtlas;
+import jplotter.renderables.Renderable;
 import jplotter.renderables.Text;
 
+/**
+ * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
+ * for {@link Text}.
+ * It draws the vertex arrays of its Text objects and uses the texture of the
+ * {@link CharacterAtlas} corresponding to the Text's font to texture
+ * the drawn quads in order to display text.
+ * <br>
+ * Its fragment shader draws the picking color into the second render buffer
+ * alongside the 'visible' color that is drawn into the first render buffer.
+ * 
+ * @author hageldave
+ */
 public class TextRenderer extends GenericRenderer<Text> {
 
-	private static final char NL = '\n';
-	static final String vertexShaderSrc = ""
+	protected static final char NL = '\n';
+	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
 			+ NL + "layout(location = 1) in vec2 in_texcoords;"
@@ -29,7 +42,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "}"
 			+ NL
 			;
-	static final String fragmentShaderSrc = ""
+	protected static final String fragmentShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) out vec4 frag_color;"
 			+ NL + "layout(location = 1) out vec4 pick_color;"
@@ -45,29 +58,43 @@ public class TextRenderer extends GenericRenderer<Text> {
 			;
 	
 	protected Matrix3f modelMX  = new Matrix3f();
-	LinkedList<Text> textsToRender = new LinkedList<>();
-	
-	float[] viewmxarray = new float[16];
-	float[] modelmxarray = new float[9];
+	protected float[] viewmxarray = new float[16];
+	protected float[] modelmxarray = new float[9];
 	
 	
+	/**
+	 * Creates the shader if not already created and 
+	 * calls {@link Renderable#initGL()} for all items 
+	 * already contained in this renderer.
+	 * Items that are added later on will be initialized during rendering.
+	 */
 	@Override
+	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shader)){
 			shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
-			textsToRender.forEach(Text::initGL);
+			itemsToRender.forEach(Renderable::initGL);
 		}
 	}
 	
+	/**
+	 * Disables {@link GL11#GL_DEPTH_TEST},
+	 * enables {@link GL11#GL_BLEND}
+	 * ,sets {@link GL11#GL_SRC_ALPHA}, {@link GL11#GL_ONE_MINUS_SRC_ALPHA}
+	 * as blend function
+	 * and activates the 0th texture unit {@link GL13#GL_TEXTURE0}.
+	 */
 	@Override
+	@GLContextRequired
 	protected void renderStart(int w, int h) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glEnable(GL12.GL_BLEND);
-		GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 	}
 
 	@Override
+	@GLContextRequired
 	protected void renderItem(Text txt) {
 		int loc;
 		txt.bindVertexArray();
@@ -95,15 +122,27 @@ public class TextRenderer extends GenericRenderer<Text> {
 		txt.releaseVertexArray();
 	}
 	
+	/**
+	 * disables {@link GL11#GL_BLEND},
+	 * enables {@link GL11#GL_DEPTH_TEST},
+	 * releases still bound texture.
+	 */
 	@Override
+	@GLContextRequired
 	protected void renderEnd() {
 		GL13.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-		GL11.glDisable(GL12.GL_BLEND);
+		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		
 	}
 
+	/**
+	 * Disposes of GL resources, i.e. closes the shader.
+	 * It also deletes (closes) all {@link Text}s contained in this
+	 * renderer.
+	 */
 	@Override
+	@GLContextRequired
 	public void close() {
 		if(Objects.nonNull(shader))
 			shader.close();
@@ -115,6 +154,4 @@ public class TextRenderer extends GenericRenderer<Text> {
 		return true;
 	}
 
-
-	
 }

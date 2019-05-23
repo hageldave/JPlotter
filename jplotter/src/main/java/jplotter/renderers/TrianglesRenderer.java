@@ -3,16 +3,26 @@ package jplotter.renderers;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL20;
 
+import jplotter.Annotations.GLContextRequired;
 import jplotter.globjects.Shader;
+import jplotter.renderables.Renderable;
 import jplotter.renderables.Triangles;
 
+/**
+ * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
+ * for {@link Triangles}.
+ * <br>
+ * Its fragment shader draws the picking color into the second render buffer
+ * alongside the 'visible' color that is drawn into the first render buffer.
+ * 
+ * @author hageldave
+ */
 public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	
-	private static final char NL = '\n';
-	static final String vertexShaderSrc = ""
+	protected static final char NL = '\n';
+	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
 			+ NL + "layout(location = 1) in uvec2 in_colors;"
@@ -33,7 +43,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "}"
 			+ NL
 			;
-	static final String fragmentShaderSrc = ""
+	protected static final String fragmentShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) out vec4 frag_color;"
 			+ NL + "layout(location = 1) out vec4 pick_color;"
@@ -46,16 +56,30 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL
 			;
 	
-	float[] viewmxarray = new float[16];
+	protected float[] viewmxarray = new float[16];
 
+	/**
+	 * Creates the shader if not already created and 
+	 * calls {@link Renderable#initGL()} for all items 
+	 * already contained in this renderer.
+	 * Items that are added later on will be initialized during rendering.
+	 */
 	@Override
+	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shader)){
 			shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+			itemsToRender.forEach(Renderable::initGL);
 		}
 	}
 
+	/** 
+	 * Disposes of GL resources, i.e. closes the shader.
+	 * It also deletes (closes) all {@link Triangles} contained in this
+	 * renderer.
+	 */
 	@Override
+	@GLContextRequired
 	public void close() {
 		if(Objects.nonNull(shader)){
 			shader.close();
@@ -63,14 +87,22 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		deleteAllItems();
 	}
 
+	/**
+	 * Disables {@link GL11#GL_DEPTH_TEST},
+	 * enables {@link GL11#GL_BLEND}
+	 * and sets {@link GL11#GL_SRC_ALPHA}, {@link GL11#GL_ONE_MINUS_SRC_ALPHA}
+	 * as blend function.
+	 */
 	@Override
+	@GLContextRequired
 	protected void renderStart(int w, int h) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glEnable(GL12.GL_BLEND);
-		GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	@Override
+	@GLContextRequired
 	protected void renderItem(Triangles item) {
 		if(item.numTriangles() < 1){
 			return;
@@ -87,9 +119,14 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		item.releaseVertexArray();
 	}
 
+	/**
+	 * disables {@link GL11#GL_BLEND},
+	 * enables {@link GL11#GL_DEPTH_TEST}
+	 */
 	@Override
+	@GLContextRequired
 	protected void renderEnd() {
-		GL11.glDisable(GL12.GL_BLEND);
+		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 	}
 
