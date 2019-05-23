@@ -19,6 +19,8 @@ import jplotter.renderables.Points;
 import jplotter.renderables.Triangles;
 import jplotter.renderers.CompleteRenderer;
 
+import static jplotter.renderers.CompleteRenderer.*;
+
 public class Viz {
 
 	public static void main(String[] args) {
@@ -28,6 +30,7 @@ public class Viz {
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
 		CoordSysCanvas canvas = new CoordSysCanvas();
 		CompleteRenderer content = new CompleteRenderer();
+		content.setRenderOrder(PNT, LIN, TRI, TXT);
 		canvas.setContent(content);
 		
 		// setup content
