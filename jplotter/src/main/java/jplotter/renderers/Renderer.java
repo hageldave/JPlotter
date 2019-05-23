@@ -1,5 +1,6 @@
 package jplotter.renderers;
 
+import jplotter.Annotations.GLContextRequired;
 import jplotter.globjects.FBO;
 import jplotter.globjects.Shader;
 import jplotter.renderables.Renderable;
@@ -22,6 +23,7 @@ public interface Renderer extends AutoCloseable {
 	 * such as a {@link Shader} or the resources of
 	 * {@link Renderable}s it's using.
 	 */
+	@GLContextRequired
 	public void glInit();
 	
 	/**
@@ -29,11 +31,13 @@ public interface Renderer extends AutoCloseable {
 	 * @param w width of the current viewport in pixels
 	 * @param h height of the current viewport in pixels
 	 */
+	@GLContextRequired
 	public void render(int w, int h);
 	
 	/**
 	 * Disposes of any GL resources belonging to this object.
 	 */
+	@GLContextRequired
 	public void close();
 	
 	/**

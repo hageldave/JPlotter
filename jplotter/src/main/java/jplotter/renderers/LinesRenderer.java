@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL20;
 
+import jplotter.Annotations.GLContextRequired;
 import jplotter.globjects.Shader;
 import jplotter.renderables.Lines;
 
@@ -92,6 +93,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	
 	
 	@Override
+	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shader)){
 			shader = new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc);
@@ -100,6 +102,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	}
 	
 	@Override
+	@GLContextRequired
 	protected void renderStart(int w, int h) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL12.GL_BLEND);
@@ -107,6 +110,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	}
 
 	@Override
+	@GLContextRequired
 	protected void renderItem(Lines lines) {
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidth");
@@ -127,12 +131,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	}
 
 	@Override
+	@GLContextRequired
 	protected void renderEnd() {
 		GL11.glDisable(GL12.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 	}
 
 	@Override
+	@GLContextRequired
 	public void close() {
 		if(Objects.nonNull(shader))
 			shader.close();
