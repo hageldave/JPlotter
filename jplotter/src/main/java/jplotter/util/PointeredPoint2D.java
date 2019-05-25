@@ -2,21 +2,45 @@ package jplotter.util;
 
 import java.awt.geom.Point2D;
 
+/**
+ * The PointeredPoint2D class is an implementation of the {@link Point2D}
+ * class that uses two double arrays of size 1 to store its x and y coordinate.
+ * This allows for referencing the x or y coordinate elsewhere 
+ * (kind of as a pointer to the value) e.g. in another PointeredPoint2D
+ * so that 2 points can share a coordinate for example points on the same axis.
+ * 
+ * @author hageldave
+ */
 public class PointeredPoint2D extends Point2D {
 	
+	/** 'pointer' to x coordinate */
 	public final double[] x;
+	/** 'pointer' to y coordinate */
 	public final double[] y;
 	
+	/**
+	 * Creates point at (0,0)
+	 */
 	public PointeredPoint2D() {
 		x = new double[1];
 		y = new double[1];
 	}
 	
+	/**
+	 * Creates point at (x,y)
+	 * @param x
+	 * @param y
+	 */
 	public PointeredPoint2D(double x, double y) {
 		this();
 		setLocation(x, y);
 	}
 	
+	/**
+	 * Creates point using the specified arrays as pointers for this point's coordinates
+	 * @param xptr
+	 * @param yptr
+	 */
 	public PointeredPoint2D(double[] xptr, double[] yptr){
 		x = xptr;
 		y = yptr;

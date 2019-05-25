@@ -215,7 +215,11 @@ public class GLUtils {
 		return pixel;
 	}
 	
-	
+	/**
+	 * {@link RuntimeException} class for GL related errors.
+	 * 
+	 * @author hageldave
+	 */
 	public static class GLRuntimeException extends RuntimeException {
 		private static final long serialVersionUID = 1L;
 
@@ -237,20 +241,28 @@ public class GLUtils {
 		
 	}
 	
+	/**
+	 * @return true if GL_MAX_COLOR_TEXTURE_SAMPLES and GL_MAX_DEPTH_TEXTURE_SAMPLES
+	 * are greater or equal 2.
+	 */
 	@GLContextRequired
 	public static boolean canMultisample2X(){
 		return 
 				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 2
 				&&
-				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 2;
+				GL11.glGetInteger(GL32.GL_MAX_DEPTH_TEXTURE_SAMPLES) >= 2;
 	}
 	
+	/**
+	 * @return true if GL_MAX_COLOR_TEXTURE_SAMPLES and GL_MAX_DEPTH_TEXTURE_SAMPLES
+	 * are greater or equal 4.
+	 */
 	@GLContextRequired
 	public static boolean canMultisample4X(){
 		return 
 				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 4
 				&&
-				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 4;
+				GL11.glGetInteger(GL32.GL_MAX_DEPTH_TEXTURE_SAMPLES) >= 4;
 	}
 	
 }
