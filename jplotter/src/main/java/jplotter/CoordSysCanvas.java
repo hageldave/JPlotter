@@ -242,6 +242,10 @@ public class CoordSysCanvas extends FBOCanvas {
 	}
 	
 	public void setCoordinateArea(double minX, double minY, double maxX, double maxY){
+		if(maxX-minX < 1e-9 || maxY-minY < 1e-9){
+			System.err.printf("hitting coordinate area precision limit, x-range:%e, y-range:%e%n", maxX-minX, maxY-minY);
+			return;
+		}
 		this.coordinateArea = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 		setDirty();
 	}
