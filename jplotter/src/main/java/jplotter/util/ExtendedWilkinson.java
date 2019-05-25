@@ -28,16 +28,21 @@ import java.util.Locale;
  * @author hageldave
  */
 public class ExtendedWilkinson implements TickMarkGenerator {
-	
+
 	/** Set preference decreasing ordered set of nice increments */
 	protected double[] Q = new double[]{1, 5, 2, 2.5, 4, 3, 1.5, 6, 8};
 	/** weights for simplicity, coverage, density and legibility */
 	protected double[] w = new double[]{0.2, 0.25, 0.5, 0.05};
-	
+
 	/**
+	 * Uses either decimal or scientific notation for the labels and strips unnecessary
+	 * trailing zeros.
+	 * If one of the specified tick values is formatted in scientific notation by the
+	 * {@link String#format(String, Object...)} '%g' option, all values will use scientific
+	 * notation, otherwise decimal is used.
 	 * 
-	 * @param ticks
-	 * @return
+	 * @param ticks to be labeled
+	 * @return String[] of labels corresponding to specified tick values
 	 */
 	protected String[] labelsForTicks(double[] ticks){
 		String str1 = String.format(Locale.US, "%g", ticks[0]);
@@ -79,6 +84,7 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 		return labels;
 	}
 
+
 	@Override
 	public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks,
 			boolean verticalAxis) {
@@ -86,15 +92,15 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 		String[] labelsForTicks = labelsForTicks(ticks);
 		return new Pair<double[], String[]>(ticks, labelsForTicks);
 	}
-	
-	
+
+
 	/* STATIC DOWN HERE */
-	
+
 
 	static double coverage(double dmin, double dmax, double lmin, double lmax){
 		return 1 - 0.5 * (pow(dmax - lmax,2) + pow(dmin - lmin,2)) / pow(0.1 * (dmax - dmin), 2);
 	}
-	
+
 	static double coverage_max(double dmin, double dmax, double span){
 		double drange = dmax - dmin;
 		if(span > drange){
@@ -102,20 +108,20 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 		}
 		return 1;
 	}
-	
+
 	static double density(double k, double m, double dmin, double dmax, double lmin, double lmax){
 		double r = (k - 1) / (lmax - lmin);
 		double rt = (m - 1) / (max(lmax, dmax) - min(lmin, dmin));
 		return 2 - max(r / rt, rt / r);
 	}
-	
+
 	static double density_max(double k, double m){
 		if(k >= m){
-	        return 2 - (k - 1.0) / (m - 1.0);
+			return 2 - (k - 1.0) / (m - 1.0);
 		}
-	    return 1;
+		return 1;
 	}
-	
+
 	static double simplicity(double q, double[] Q, double j, double lmin, double lmax, double lstep){
 		double eps = 1e-10;
 		int n = Q.length;
@@ -126,31 +132,31 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 		} else {
 			v = 0;
 		}
-	    return (n - i) / (n - 1.0) + v - j;
+		return (n - i) / (n - 1.0) + v - j;
 	}
-	
+
 	static double simplicity_max(double q, double[] Q, int j){
 		int n = Q.length;
 		int i = Arrays.binarySearch(Q, q) + 1;
 		int v = 1;
 		return (n - i) / (n - 1.0) + v - j;
 	}
-	
+
 	static double legibility(double lmin, double lmax, double lstep){
 		return 1;
 	}
-	
+
 	static double score(double[] weights, double simplicity, double coverage, double density, double legibility){
 		return weights[0] * simplicity + weights[1] * coverage + weights[2] * density + weights[3] * legibility;
 	}
-	
+
 	static double[] ext_wilk(double dmin, double dmax, int m, int onlyInside, double[] Q, double[] w){
 		if(dmin >= dmax || m < 1){
 			return new double[]{dmin, dmax, dmax-dmin,1,0,2,0};
 		}
 		double best_score = -1.0;
 		double[] result = null;
-		
+
 		int j = 1;
 		while(j < 5){
 			for(double q:Q){
@@ -174,10 +180,10 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 						if(score(w, sm, cm, dm, 1) < best_score){
 							break;
 						}
-						
+
 						double min_start = floor(dmax / step) * j - (k - 1) * j;
 						double max_start = ceil(dmin / step) * j;
-						
+
 						if(min_start > max_start || /*precision insanity check*/(min_start+1)==min_start){
 							z++;
 							break;
@@ -186,7 +192,7 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 							double lmin = start * (step/j);
 							double lmax = lmin + step * (k-1);
 							double lstep = step;
-							
+
 							double s = simplicity(q, Q, j, lmin, lmax, lstep);
 							double c = coverage(dmin, dmax, lmin, lmax);
 							double d = density(k, m, dmin, dmax, lmin, lmax);
@@ -197,7 +203,7 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 									(onlyInside <= 0 || (lmin >= dmin && lmax <= dmax))
 									&&
 									(onlyInside >= 0 || (lmin <= dmin && lmax >= dmax))
-							){
+									){
 								best_score = scr;
 								result = new double[]{lmin, lmax, lstep, j, q, k, scr};
 							}
@@ -211,22 +217,22 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 		}
 		return result;
 	}
-	
-	public static double[] getTicks(double dmin, double dmax, int m, double[] Q, double[] w){
+
+	static double[] getTicks(double dmin, double dmax, int m, double[] Q, double[] w){
 		double[] l = ext_wilk(dmin, dmax, m, 1, Q, w);
 		double lmin  = l[0];
-//		double lmax  = l[1];
+		//double lmax  = l[1];
 		double lstep = l[2];
-//		int    j =(int)l[3];
-//		double q     = l[4];
+		//int    j =(int)l[3];
+		//double q     = l[4];
 		int    k =(int)l[5];
-//		double scr   = l[6];
-		
+		//double scr   = l[6];
+
 		double[] ticks = new double[k];
 		for(int i=0; i < k; i++){
 			ticks[i] = lmin + i*lstep;
 		}
 		return ticks;
 	}
-	
+
 }

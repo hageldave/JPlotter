@@ -8,9 +8,25 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import hageldave.imagingkit.core.Img;
+import jplotter.Annotations.GLContextRequired;
 
+/**
+ * Utility class containing methods for Open GL specific tasks.
+ * @author hageldave
+ */
 public class GLUtils {
 
+	/**
+	 * Creates an empty 2D texture. The texture has mipmap level 0.
+	 * @param width
+	 * @param height
+	 * @param internalformat
+	 * @param format
+	 * @param filter the filter for GL_TEXTURE_MIN_FILTER and GL_TEXTURE_MAG_FILTER e.g. GL11.GL_LINEAR
+	 * @param wrap the wrapping for GL_TEXTURE_WRAP_S and GL_TEXTURE_WRAP_T e.g. GL12.GL_CLAMP_TO_EDGE
+	 * @return GL object name of the created texture (texture id)
+	 */
+	@GLContextRequired
 	public static int create2DTexture(int width, int height, int internalformat, int format, int filter, int wrap) {
 		int texid = GL11.glGenTextures();
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, texid);
@@ -36,6 +52,15 @@ public class GLUtils {
 		return texid;
 	}
 	
+	/**
+	 * Creates a multisampled 2D texture with fixed sample locations. 
+	 * @param width
+	 * @param height
+	 * @param internalformat
+	 * @param numSamples
+	 * @return GL object name of the created texture (texture id)
+	 */
+	@GLContextRequired
 	public static int create2DTextureMultisample(int width, int height, int internalformat, int numSamples) {
 		int texid = GL11.glGenTextures();
 		GL11.glBindTexture(GL32.GL_TEXTURE_2D_MULTISAMPLE, texid);
@@ -53,6 +78,15 @@ public class GLUtils {
 		return texid;
 	}
 	
+	/**
+	 * Creates a 2D texture from the specified image with internal format
+	 * GL_RGBA8.
+	 * @param img from which texture is created
+	 * @param filter the filter for GL_TEXTURE_MIN_FILTER and GL_TEXTURE_MAG_FILTER e.g. GL11.GL_LINEAR
+	 * @param wrap the wrapping for GL_TEXTURE_WRAP_S and GL_TEXTURE_WRAP_T e.g. GL12.GL_CLAMP_TO_EDGE
+	 * @return GL object name of the created texture (texture id)
+	 */
+	@GLContextRequired
 	public static int create2DTexture(Img img, int filter, int wrap) {
 		int format=GL11.GL_RGBA, internalformat=GL11.GL_RGBA8;
 		int texid = GL11.glGenTextures();
@@ -79,7 +113,13 @@ public class GLUtils {
 		return texid;
 	}
 	
-	
+	/**
+	 * Calls {@link GL30#glCheckFramebufferStatus(int)} and translates
+	 * the returned status code into the corresponding constant's name.
+	 * @return empty string if {@code GL_FRAMEBUFFER_COMPLETE}, else the 
+	 * name of the status e.g. "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT".
+	 */
+	@GLContextRequired
 	public static String checkFBOstatus() {
 		int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
 		switch (status) {
@@ -118,14 +158,17 @@ public class GLUtils {
 		}
 	}
 	
+	/**
+	 * Creates (or fills) an array that contains an orthographic
+	 * projection matrix in column major order.
+	 * @param buffer null or array of length 16
+	 * @param left 
+	 * @param right
+	 * @param bottom
+	 * @param top
+	 * @return the specified array or a new array if null was specified.
+	 */
 	public static float[] orthoMX(float[] buffer, float left, float right, float bottom, float top) {
-//		detail::tmat4x4<valType> Result(1);
-//		Result[0][0] = valType(2) / (right - left);
-//		Result[1][1] = valType(2) / (top - bottom);
-//		Result[2][2] = - valType(1);
-//		Result[3][0] = - (right + left) / (right - left);
-//		Result[3][1] = - (top + bottom) / (top - bottom);
-//		return Result;
 		if(Objects.isNull(buffer)){
 			buffer = new float[16];
 		}
@@ -153,19 +196,12 @@ public class GLUtils {
 		return buffer;
 	}
 	
-	public static float[] mx3fromRowMajor(
-			float m00, float m01, float m02,
-			float m10, float m11, float m12,
-			float m20, float m21, float m22) 
-	{
-		return new float[]{m00,m10,m20, m01,m11,m21, m02,m12,m22};
-	}
-	
 	/**
-	 * performs glReadPixels for pixel at specified position
+	 * Performs glReadPixels for pixel at specified position
 	 * @param attachment one of GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1, GL30.GL_DEPTH_ATTACHMENT
 	 * @return color in integer packed 8bit per channel ARGB format (blue on least significant 8 bytes)
 	 */
+	@GLContextRequired
 	public static int fetchPixel(int fboID, int attachment, int x, int y){
 		int pixel = 0;
 		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fboID);
@@ -178,6 +214,7 @@ public class GLUtils {
 		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 		return pixel;
 	}
+	
 	
 	public static class GLRuntimeException extends RuntimeException {
 		private static final long serialVersionUID = 1L;
@@ -200,6 +237,7 @@ public class GLUtils {
 		
 	}
 	
+	@GLContextRequired
 	public static boolean canMultisample2X(){
 		return 
 				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 2
@@ -207,6 +245,7 @@ public class GLUtils {
 				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 2;
 	}
 	
+	@GLContextRequired
 	public static boolean canMultisample4X(){
 		return 
 				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 4

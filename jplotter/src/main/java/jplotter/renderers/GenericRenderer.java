@@ -40,7 +40,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	 * <li>calling {@link Renderable#initGL()} on every Renderable</li>
 	 * <li>binding the {@link #shader} ({@link Shader#bind()})</li>
 	 * <li>setting the projection matrix {@link #orthoMX} to an
-	 * orthonormal projection on the area (0,0) to (w,h)</li> 
+	 * orthographic projection on the area (0,0) to (w,h)</li> 
 	 * <li>calling {@link #renderStart(int, int)}</li>
 	 * <li>iterating over every Renderable, calling {@link Renderable#updateGL()}
 	 * if {@link Renderable#isDirty()}, and then passing it to {@link #renderItem(Renderable)}</li>
