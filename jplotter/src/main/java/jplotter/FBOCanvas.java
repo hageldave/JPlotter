@@ -1,11 +1,11 @@
 package jplotter;
 
-import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,8 +30,21 @@ import jplotter.util.GLUtils;
 import jplotter.util.Utils;
 
 /**
- * The FBOCanvas is an {@link AWTGLCanvas} which uses a FrameBufferObject ({@link FBO}) for off screen rendering
- * which enables picking by utilizing a second color attachment in the FBO.
+ * The FBOCanvas is an {@link AWTGLCanvas} which uses a FrameBufferObject ({@link FBO}) 
+ * for off screen rendering which enables picking by utilizing a second color attachment 
+ * in the FBO.
+ * <p>
+ * Picking is a technique for figuring out what primitive or object was rendered to which
+ * position of the framebuffer. Every drawn object can be assigned a unique integer id (24 bits)
+ * which is then translated into an RGB color value and used to render the object into 
+ * the second color attachment of the FBO.
+ * The second attachment is never shown on screen but can be read with a glReadPixels()
+ * call.
+ * This way the object id can be queried for a specific mouse location, allowing for easy
+ * interaction.
+ * <p>
+ * 
+ * 
  * @author hageldave
  */
 public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
@@ -162,35 +175,48 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		});
 	}
 
-	public int getPixel(int x, int y, boolean picking){
+	public int getPixel(int x, int y, boolean picking, int areaSize){
 		int attachment = picking ? GL30.GL_COLOR_ATTACHMENT1:GL30.GL_COLOR_ATTACHMENT0;
-		int[] color = new int[1];
-		Runnable fetchPixel = new Runnable() {
-			@Override
-			public void run() {
-				PlatformGLCanvas platformcanvas=FBOCanvas.this.getPlatformCanvas();
-				if(Objects.isNull(platformcanvas)){
-					return;
+		int[] colors = new int[areaSize*areaSize];
+		
+		Utils.execOnAWTEventDispatch(()->{
+			runInContext(()->{
+				GLUtils.fetchPixels(
+						fbo.getFBOid(), 
+						attachment, 
+						x-areaSize/2, 
+						fbo.height-1-y+areaSize/2, 
+						areaSize, 
+						areaSize, 
+						colors
+				);
+			});
+		});
+		if(areaSize == 1){
+			return colors[0];
+		}
+		int center = areaSize*(areaSize/2)+(areaSize/2);
+		int centerValue = colors[center];
+		int centerBonus = centerValue == 0 ? 0:1;
+		// calculate most prominent color (mode)
+		Arrays.sort(colors);
+		int currentValue = colors[0]; 
+		int mostValue = currentValue; 
+		int count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
+		int maxCount=count;
+		for(int i = 1; i < colors.length; i++){
+			if(colors[i]==currentValue && currentValue != 0){
+				count++;
+			} else {
+				if(count > maxCount){
+					maxCount = count;
+					mostValue = currentValue;
 				}
-				try {
-					platformcanvas.lock();
-					platformcanvas.makeCurrent(FBOCanvas.this.context);
-					color[0] = GLUtils.fetchPixel(fbo.getFBOid(), attachment, x, fbo.height-1-y);
-				} catch (IllegalArgumentException | SecurityException | AWTException e) {
-					e.printStackTrace();
-				} finally {
-					if(Objects.nonNull(platformcanvas)){
-						try {
-							platformcanvas.makeCurrent(0L);
-							platformcanvas.unlock();
-						} catch (AWTException e) {
-						}
-					}
-				}
+				currentValue = colors[i];
+				count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
 			}
-		};
-		Utils.execOnAWTEventDispatch(fetchPixel);
-		return color[0];
+		}
+		return mostValue;
 	}
 
 

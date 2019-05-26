@@ -3,8 +3,6 @@ package jplotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -70,14 +68,6 @@ public class IrisViz {
 			public void windowClosing(WindowEvent e) {
 				canvas.close();
 				CharacterAtlas.clearAndCloseAtlasCollection();
-			}
-		});
-
-		canvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				int pixel = canvas.getPixel(e.getX(), e.getY(), SwingUtilities.isRightMouseButton(e));
-				System.out.println(Integer.toHexString(pixel));
 			}
 		});
 		SwingUtilities.invokeLater(()->{

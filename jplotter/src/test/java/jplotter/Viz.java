@@ -78,7 +78,11 @@ public class Viz {
 		canvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				int pixel = canvas.getPixel(e.getX(), e.getY(), SwingUtilities.isRightMouseButton(e));
+				int pixel = canvas.getPixel(
+						e.getX(), 
+						e.getY(), 
+						SwingUtilities.isRightMouseButton(e), 
+						5);
 				System.out.println(Integer.toHexString(pixel));
 			}
 		});

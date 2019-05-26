@@ -196,23 +196,29 @@ public class GLUtils {
 		return buffer;
 	}
 	
+//	/**
+//	 * Performs glReadPixels for pixel at specified position
+//	 * @param attachment one of GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1, GL30.GL_DEPTH_ATTACHMENT
+//	 * @return color in integer packed 8bit per channel ARGB format (blue on least significant 8 bytes)
+//	 */
 	/**
-	 * Performs glReadPixels for pixel at specified position
+	 * Performs glReadPixels for pixels in the specified area.
+	 * @param fboID GL object name of the framebuffer object
 	 * @param attachment one of GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1, GL30.GL_DEPTH_ATTACHMENT
-	 * @return color in integer packed 8bit per channel ARGB format (blue on least significant 8 bytes)
+	 * @param x coordinate of the origin of the area to read
+	 * @param y coordinate of the origin of the area to read
+	 * @param w width of the area
+	 * @param h height of the area
+	 * @param buffer storage for the pixel values (at least w*h in length)
 	 */
 	@GLContextRequired
-	public static int fetchPixel(int fboID, int attachment, int x, int y){
-		int pixel = 0;
+	public static void fetchPixels(int fboID, int attachment, int x, int y, int w, int h, int[] buffer){
 		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fboID);
 		{
 			GL11.glReadBuffer(attachment);
-			int[] rgba_bytes = new int[1];
-			GL11.glReadPixels(x, y, 1, 1, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, rgba_bytes);
-			pixel = rgba_bytes[0];
+			GL11.glReadPixels(x, y, w, h, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buffer);
 		}
 		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
-		return pixel;
 	}
 	
 	/**
