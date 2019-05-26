@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,7 +17,6 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
-import org.lwjgl.opengl.awt.PlatformGLCanvas;
 
 import jplotter.Annotations.GLContextRequired;
 import jplotter.globjects.FBO;
@@ -33,17 +31,41 @@ import jplotter.util.Utils;
  * The FBOCanvas is an {@link AWTGLCanvas} which uses a FrameBufferObject ({@link FBO}) 
  * for off screen rendering which enables picking by utilizing a second color attachment 
  * in the FBO.
+ * The FBO's first color attachment is drawn (blit) to the onscreen framebuffer for display.
  * <p>
  * Picking is a technique for figuring out what primitive or object was rendered to which
  * position of the framebuffer. Every drawn object can be assigned a unique integer id (24 bits)
  * which is then translated into an RGB color value and used to render the object into 
  * the second color attachment of the FBO.
- * The second attachment is never shown on screen but can be read with a glReadPixels()
+ * The second attachment is never shown on screen but can be read with a {@code glReadPixels()}
  * call.
  * This way the object id can be queried for a specific mouse location, allowing for easy
  * interaction.
  * <p>
- * 
+ * If the system supports multisampled FBOs (and {@link #useMSAA} is true) this Canvas will use
+ * a multisampled FBO on top of a regular FBO for anti aliasing (MSAA).
+ * The reason for the regular FBO in between is that {@code glReadPixels()} is not supported by
+ * multisampled FBOs, so in order for picking to work the contents have to be transferred to a 
+ * regular FBO first.
+ * This transfer can unfortunately not be done using a {@code glBlitFramebuffer} operation as the
+ * anti aliasing would feather the edges of the picking color attachment as well and thus break
+ * its functionality by altering the colors.
+ * Instead a shader is used to draw the multisampled FBO's textures to the other FBO.
+ * <p>
+ * The actual rendering of contents is done in the {@link #paintToFBO(int, int)} method which
+ * is abstract and has to be implemented by a subclass.
+ * <p>
+ * Since every AWTGLCanvas has its own GL context, all GL resources, such as textures or vertex arrays,
+ * are only valid for the context they were created in.
+ * Unfortunately there is no way of telling which resource belongs to which context, which is why
+ * All instanced of {@link FBOCanvas} have a unique nonzero integer {@link #canvasID}.
+ * This id will be set as the static class attribute {@link #CURRENTLY_ACTIVE_CANVAS} whenever
+ * an {@link FBOCanvas} activates its GL context, when the canvas' GL context becomes inactive
+ * the CURRENTLY_ACTIVE_CANVAS attribute is set back to zero.
+ * By checking the value of this attribute we are able to know which {@link FBOCanvas}'
+ * GL context is currently active.
+ * <br><b> For this to work properly it is essential that all GL calls are happening on the AWT event dispatch
+ * thread </b>(see https://docs.oracle.com/javase/tutorial/uiswing/concurrency/dispatch.html).
  * 
  * @author hageldave
  */
@@ -120,10 +142,10 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected Shader fillShader=null;
 	protected VertexArray vertexArray=null;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
-	protected PlatformGLCanvas platformcanvas;
 	protected boolean useBitBlit = false;
 	protected Color fboClearColor = Color.darkGray;
 	protected Color screenClearColor = Color.BLACK;
+	protected boolean useMSAA = true;
 	public final int canvasID;
 
 	public FBOCanvas(GLData data){
@@ -132,7 +154,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
-				render();
+				repaint();
 			}
 		});
 	}
@@ -143,7 +165,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
-				render();
+				repaint();
 			}
 		});
 	}
@@ -220,26 +242,13 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	}
 
 
-	protected PlatformGLCanvas getPlatformCanvas() {
-		if(Objects.isNull(platformcanvas)){
-			try {
-				Field declaredField = AWTGLCanvas.class.getDeclaredField("platformCanvas");
-				declaredField.setAccessible(true);
-				platformcanvas = (PlatformGLCanvas) declaredField.get(FBOCanvas.this);
-			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		}
-		return platformcanvas;
-	}
-
 	@Override
 	public void paintGL(){
 		int w,h;
 		if((w=getWidth()) >0 && (h=getHeight()) >0){
 			if(fbo == null || w!=fbo.width || h!=fbo.height){
 				setFBO(new FBO(w, h, false));
-				if(GLUtils.canMultisample2X()){
+				if(useMSAA && GLUtils.canMultisample2X()){
 					setFBO_MS(new FBO(w, h, true));
 				}
 			}
@@ -248,7 +257,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			setRenderTargetsColorAndPicking(w, h);
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			/* we need to first draw a viewport filling quad that fills the buffer with the clear color
-			 * in order to resolve issue #4
+			 * in order to resolve issue #4 (https://github.com/hageldave/JPlotter/issues/4)
 			 */
 			{
 				fillShader.bind();
@@ -379,7 +388,11 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	
 	@Override
 	public void repaint() {
-		SwingUtilities.invokeLater(()->render());
+		if(SwingUtilities.isEventDispatchThread()){
+			render();
+		} else {
+			SwingUtilities.invokeLater(()->render());
+		}
 	}
 	
 	@Override
