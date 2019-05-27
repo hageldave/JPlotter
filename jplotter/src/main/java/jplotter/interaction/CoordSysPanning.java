@@ -11,11 +11,26 @@ import javax.swing.SwingUtilities;
 
 import jplotter.CoordSysCanvas;
 
+/**
+ * The CoordSysPanning class implements a {@link MouseListener}
+ * and {@link MouseMotionListener} that realize panning functionality
+ * for the coordinate view of the {@link CoordSysCanvas}.
+ * When registering this with a CoordSysCanvas dragging with the left mouse
+ * button over the Canvas will set the coordinate view accordingly.
+ * <p>
+ * Intended use: {@code CoordSysPanning pan = new CoordSysPanning(canvas).register(); }
+ * 
+ * @author hageldave
+ */
 public class CoordSysPanning implements MouseListener, MouseMotionListener {
 	
-	Point startPoint;
-	CoordSysCanvas canvas;
+	protected Point startPoint;
+	protected CoordSysCanvas canvas;
 	
+	/**
+	 * Creates a new {@link CoordSysPanning} for the specified canvas.
+	 * @param canvas to control coordinate view of
+	 */
 	public CoordSysPanning(CoordSysCanvas canvas) {
 		this.canvas = canvas;
 	}
@@ -75,6 +90,11 @@ public class CoordSysPanning implements MouseListener, MouseMotionListener {
 		// NOOP
 	}
 
+	/**
+	 * Adds this {@link CoordSysPanning} as {@link MouseListener} and
+	 * {@link MouseMotionListener} to the associated canvas.
+	 * @return this for chaining
+	 */
 	public CoordSysPanning register(){
 		if( ! Arrays.asList(canvas.getMouseListeners()).contains(this))
 			canvas.addMouseListener(this);
@@ -83,6 +103,11 @@ public class CoordSysPanning implements MouseListener, MouseMotionListener {
 		return this;
 	}
 	
+	/**
+	 * Removes this {@link CoordSysPanning} from the associated canvas'
+	 * mouse and mouse motion listeners.
+	 * @return
+	 */
 	public CoordSysPanning deRegister(){
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
