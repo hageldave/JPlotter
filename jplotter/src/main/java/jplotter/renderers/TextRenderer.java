@@ -111,7 +111,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 		float cos = (float)org.joml.Math.cos(txt.getAngle());
 		modelMX.setColumn(0, cos, sin, 0);
 		modelMX.setColumn(1,-sin, cos, 0);
-		modelMX.setColumn(2, txt.getOrigin().x, txt.getOrigin().y, 0);
+		modelMX.setColumn(2, (int)txt.getOrigin().getX(), (int)txt.getOrigin().getY(), 0);
 		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
 		GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), txt.getColorA());

@@ -11,6 +11,7 @@ import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.awt.GLData;
 
+import jplotter.renderables.CharacterAtlas;
 import jplotter.renderables.Lines;
 import jplotter.renderables.Text;
 import jplotter.renderers.AdaptableView;
@@ -51,6 +52,11 @@ public class CoordSysCanvas extends FBOCanvas {
 
 	Color tickColor = Color.DARK_GRAY;
 	Color guideColor = new Color(0xdddddd);
+	
+	int leftPadding = 10;
+	int rightPadding = 10;
+	int topPadding = 10;
+	int botPadding = 10;
 
 	PointeredPoint2D coordsysframeLB = coordWindowOrigin;
 	PointeredPoint2D coordsysframeRT = Utils.copy(coordWindowOrigin);
@@ -112,6 +118,26 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.yticks = yticksAndLabels.first;
 		String[] xticklabels = xticksAndLabels.second;
 		String[] yticklabels = yticksAndLabels.second;
+		
+		final int tickfontSize = 10;
+		final int labelfontSize = 12;
+		final int style = Font.PLAIN;
+		final boolean antialiased = true;
+		// find maximum length of y axis labels
+		int maxYTickLabelWidth = 0;
+		for(String label:yticklabels){
+			int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style, antialiased).getBounds().width;
+			maxYTickLabelWidth = Math.max(maxYTickLabelWidth, labelW);
+		}
+		int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style, antialiased).getBounds().height;
+		int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style, antialiased).getBounds().height;
+		// move coordwindow origin so that labels have enough display space
+		coordWindowOrigin.x[0] = maxYTickLabelWidth + leftPadding + 7;
+		coordWindowOrigin.y[0] = maxXTickLabelHeight + botPadding + 6;
+		// move opposing corner of coordwindow to have enough display space
+		coordsysframeRT.x[0] = getWidth()-rightPadding-maxLabelHeight-4;
+		coordsysframeRT.y[0] = getHeight()-topPadding-maxLabelHeight-4;
+		
 		ticks.removeAllSegments();
 		textR.deleteAllItems();
 		guides.removeAllSegments();
@@ -125,7 +151,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			Point2D onaxis = new Point2D.Double(x,coordWindowOrigin.getY());
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4), tickColor);
 			// label
-			Text label = new Text(xticklabels[i], 10, Font.PLAIN, true);
+			Text label = new Text(xticklabels[i], tickfontSize, style, antialiased);
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(
 					(int)(onaxis.getX()-textSize.getWidth()/2.0), 
@@ -138,28 +164,22 @@ public class CoordSysCanvas extends FBOCanvas {
 		for(int i=0; i<yticks.length; i++){
 			// tick
 			double m = (yticks[i]-coordinateArea.getMinY())/coordinateArea.getHeight();
-			double y = coordWindowOrigin.getY()+m*yAxisHeight;
-			Point2D onaxis = new Point2D.Double(coordWindowOrigin.getX(),y);
-			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4,0), tickColor);
+			Point2D onaxis = new TranslatedPoint2D(coordsysframeLB, 0, m*yAxisHeight);
+			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0), tickColor);
 			// label
-			Text label = new Text(yticklabels[i], 10, Font.PLAIN, true);
+			Text label = new Text(yticklabels[i], tickfontSize, style, antialiased);
 			Dimension textSize = label.getTextSize();
-			label.setOrigin(
-					(int)(onaxis.getX()-7-textSize.getWidth()), 
-					(int)(onaxis.getY()-textSize.getHeight()/2.0));
+			label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -textSize.getHeight()/2.0));
 			textR.addItemToRender(label);
 			// guide
-			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, xAxisWidth, 0), guideColor);
+			guides.addSegment(onaxis, new TranslatedPoint2D(coordsysframeRB, 0, m*yAxisHeight), guideColor);
 		}
 		// axis labels
-		Text labelX = new Text(getxAxisLabel(), 12, Font.PLAIN, true);
-		Text labelY = new Text(getyAxisLabel(), 12, Font.PLAIN, true);
+		Text labelX = new Text(getxAxisLabel(), labelfontSize, style, antialiased);
+		Text labelY = new Text(getyAxisLabel(), labelfontSize, style, antialiased);
 		labelY.setAngle(-(float)Math.PI/2);
-		labelX.setOrigin(	(int)(coordsysframeLT.getX() + xAxisWidth/2 - labelX.getTextSize().width/2) , 
-							(int)(coordsysframeLT.getY() + 4) );
-		labelY.setOrigin(
-				(int)(coordsysframeRB.getX() + 4), 
-				(int)(coordsysframeRT.getY() - yAxisHeight/2 + labelY.getTextSize().width/2));
+		labelX.setOrigin(new TranslatedPoint2D(coordsysframeLT, xAxisWidth/2 - labelX.getTextSize().width/2, 4));
+		labelY.setOrigin(new TranslatedPoint2D(coordsysframeRB, 4, yAxisHeight/2 - labelY.getTextSize().width/2));
 		textR.addItemToRender(labelX);
 		textR.addItemToRender(labelY);
 	}

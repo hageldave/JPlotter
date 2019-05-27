@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.Objects;
 
 import hageldave.imagingkit.core.Pixel;
@@ -40,7 +41,7 @@ public class Text implements Renderable {
 	protected Dimension textSize;
 	protected Color color;
 	protected int pickColor;
-	protected Point origin;
+	protected Point2D origin;
 	protected VertexArray va=null;
 	protected float angle=0;
 	protected String txtStr;
@@ -176,7 +177,7 @@ public class Text implements Renderable {
 	 * @return the origin of this text object, i.e. the bottom left corner of the rectangle enclosing the text,
 	 * the text's location so to say
 	 */
-	public Point getOrigin() {
+	public Point2D getOrigin() {
 		return origin;
 	}
 
@@ -186,7 +187,7 @@ public class Text implements Renderable {
 	 * @param origin to set
 	 * @return this for chaining
 	 */
-	public Text setOrigin(Point origin) {
+	public Text setOrigin(Point2D origin) {
 		this.origin = origin;
 		return this;
 	}
