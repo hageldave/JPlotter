@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,6 +18,7 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
+import org.lwjgl.opengl.awt.PlatformGLCanvas;
 
 import jplotter.Annotations.GLContextRequired;
 import jplotter.globjects.FBO;
@@ -148,7 +150,16 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected boolean useMSAA = true;
 	public final int canvasID;
 
-	public FBOCanvas(GLData data){
+	/**
+	 * Creates a new {@link FBOCanvas}.
+	 * Increments the {@link #ATOMIC_COUNTER} and sets
+	 * its value as this canvas' {@link #canvasID}.
+	 * It also registers a {@link ComponentListener} that
+	 * calls the {@link #repaint()} method when resizing.
+	 * 
+	 * @param data GLData object for creating the GL context.
+	 */
+	protected FBOCanvas(GLData data){
 		super(data);
 		this.canvasID = ATOMIC_COUNTER.incrementAndGet();
 		this.addComponentListener(new ComponentAdapter() {
@@ -159,23 +170,28 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		});
 	}
 
-	public FBOCanvas() {
-		super();
-		this.canvasID = ATOMIC_COUNTER.incrementAndGet();
-		this.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				repaint();
-			}
-		});
+	/** Calls {@link #FBOCanvas(GLData)} with default {@link GLData}. */
+	protected FBOCanvas() {
+		this(new GLData());
 	}
 	
+	/**
+	 * Activates this {@link AWTGLCanvas}' GL context,
+	 * locks the {@link PlatformGLCanvas} and sets the
+	 * {@link #CURRENTLY_ACTIVE_CANVAS} canvas to this
+	 * {@link #canvasID}.
+	 */
 	@Override
 	protected void beforeRender() {
 		CURRENTLY_ACTIVE_CANVAS = this.canvasID;
 		super.beforeRender();
 	}
 	
+	/**
+	 * Deactivates this {@link AWTGLCanvas}' GL context,
+	 * unlocks the {@link PlatformGLCanvas} and sets the
+	 * {@link #CURRENTLY_ACTIVE_CANVAS} canvas to 0.
+	 */
 	@Override
 	protected void afterRender() {
 		super.afterRender();
@@ -183,7 +199,12 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	}
 
 
+	/**
+	 * Calls {@link CapabilitiesCreator#create()} and allocates GL resources, 
+	 * i.e. creates the {@link Shader}s of this canvas as well as its vertex array.
+	 */
 	@Override
+	@GLContextRequired
 	public void initGL() {
 		CapabilitiesCreator.create();
 		this.blitShader = new Shader(blitVertexShaderSrc, blitFragmentShaderSrc);
@@ -197,7 +218,27 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		});
 	}
 
+	/**
+	 * Reads the color value of the pixel at the specified location if areaSize == 1.
+	 * This can be used to get the color or picking color under the mouse cursor.
+	 * <p>
+	 * Since the cursor placement may be inexact and thus miss the location the user
+	 * was actually interested in, the areaSize parameter can be increased to create
+	 * a window of pixels around the specified location.
+	 * This window area will be examined and the most prominent non zero color value will
+	 * be returned.
+	 * @param x coordinate of the pixels location
+	 * @param y coordinate of the pixels location
+	 * @param picking whether the picking color or the visible color should be retrieved.
+	 * @param areaSize width and height of the area around the specified location.
+	 * @return the most prominent color in the area as integer packed ARGB value.
+	 * If the returned value is to be used as an object id from picking color, then the
+	 * alpha value probably has to be discarded first using {@code 0x00ffffff & returnValue}.
+	 */
 	public int getPixel(int x, int y, boolean picking, int areaSize){
+		if(fbo == null){
+			return 0;
+		}
 		int attachment = picking ? GL30.GL_COLOR_ATTACHMENT1:GL30.GL_COLOR_ATTACHMENT0;
 		int[] colors = new int[areaSize*areaSize];
 		
@@ -241,8 +282,12 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		return mostValue;
 	}
 
-
+	/**
+	 * Clears the FBO and sets it as render target before calling {@link #paintToFBO(int, int)}.
+	 * Afterwards the contents of the FBO are transferred to the screen framebuffer.
+	 */
 	@Override
+	@GLContextRequired
 	public void paintGL(){
 		int w,h;
 		if((w=getWidth()) >0 && (h=getHeight()) >0){
@@ -327,10 +372,21 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		this.swapBuffers();
 	}
 
-	public abstract void paintToFBO(int width, int height);
+	/**
+	 * Paints this Canvas' contents to the currently active draw buffer that is this {@link FBOCanvas}'
+	 * framebuffer object.
+	 * @param width of the current viewport
+	 * @param height of the current viewport
+	 */
+	@GLContextRequired
+	protected abstract void paintToFBO(int width, int height);
 
-
-
+	/**
+	 * Disposes of this {@link FBOCanvas} GL resources, i.e. closes the shaders, 
+	 * vertex array and FBOs.
+	 * Since this Canvas is the provider of a GL context, it also closes the 
+	 * {@link CharacterAtlas}es that are associated with its context.
+	 */
 	@Override
 	@GLContextRequired
 	public void close() {
@@ -361,6 +417,16 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		this.fboMS = fboMS;
 	}
 
+	/**
+	 * Sets the render targets and view port size.
+	 * @param fboID to bind or 0 to unbind the framebuffer
+	 * @param width of the viewport
+	 * @param height of the viewport
+	 * @param drawBuffers the drawbuffers to activate 
+	 * e.g. {@link GL30#GL_COLOR_ATTACHMENT0} and {@link GL30#GL_COLOR_ATTACHMENT1} 
+	 * or {@link GL11#GL_BACK}.
+	 */
+	@GLContextRequired
 	protected static void setRenderTargets(int fboID, int width, int height, int... drawBuffers){
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fboID);
 		if(drawBuffers.length > 1){
@@ -371,21 +437,52 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		GL11.glViewport(0, 0, width, height);
 	}
 
+	/**
+	 * Binds this {@link FBOCanvas} {@link FBO} 
+	 * (if {@link #fboMS} is non null it will be bound instead of {@link #fbo})
+	 * and sets the drawbuffers to the first and second color attachment 
+	 * (GL_COLOR_ATTACHMENT0 and GL_COLOR_ATTACHMENT1).
+	 * The viewport size will be set to the specified dimensions.
+	 * @param width of the viewport
+	 * @param height of the viewport
+	 */
 	protected void setRenderTargetsColorAndPicking(int width, int height) {
 		int fboIDToUse = Objects.nonNull(this.fboMS) ? this.fboMS.getFBOid() : this.fbo.getFBOid();
 		setRenderTargets(fboIDToUse, width, height, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
 	}
 
+	/**
+	 * Binds this {@link FBOCanvas} {@link FBO} 
+	 * (if {@link #fboMS} is non null it will be bound instead of {@link #fbo})
+	 * and sets the drawbuffer to the first color attachment 
+	 * (GL_COLOR_ATTACHMENT0).
+	 * The viewport size will be set to the specified dimensions.
+	 * @param width of the viewport
+	 * @param height of the viewport
+	 */
 	protected void setRenderTargetsColorOnly(int width, int height) {
 		int fboIDToUse = Objects.nonNull(this.fboMS) ? this.fboMS.getFBOid() : this.fbo.getFBOid();
 		setRenderTargets(fboIDToUse, width, height, GL30.GL_COLOR_ATTACHMENT0);
 	}
 
+	/**
+	 * Binds this {@link FBOCanvas} {@link FBO} 
+	 * (if {@link #fboMS} is non null it will be bound instead of {@link #fbo})
+	 * and sets the drawbuffer to the second color attachment 
+	 * (GL_COLOR_ATTACHMENT1).
+	 * The viewport size will be set to the specified dimensions.
+	 * @param width of the viewport
+	 * @param height of the viewport
+	 */
 	protected void setRenderTargetsPickingOnly(int width, int height) {
 		int fboIDToUse = Objects.nonNull(this.fboMS) ? this.fboMS.getFBOid() : this.fbo.getFBOid();
 		setRenderTargets(fboIDToUse, width, height, GL30.GL_COLOR_ATTACHMENT1);
 	}
 	
+	/**
+	 * Calls {@link #render()} is on AWT event dispatch thread or
+	 * schedules a render call on it.
+	 */
 	@Override
 	public void repaint() {
 		if(SwingUtilities.isEventDispatchThread()){
@@ -395,17 +492,27 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		}
 	}
 	
+	/**
+	 * NOOP - this canvas is painted using OpenGL through the {@link #render()} method.
+	 */
 	@Override
-	public void paint(Graphics g) {
-		// don't modify the graphics object
-	}
-	@Override
-	public void paintAll(Graphics g) {
+	public final void paint(Graphics g) {
 		// don't modify the graphics object
 	}
 	
+	/**
+	 * NOOP - this canvas is painted using OpenGL through the {@link #render()} method.
+	 */
 	@Override
-	public void update(Graphics g) {
+	public final void paintAll(Graphics g) {
+		// don't modify the graphics object
+	}
+	
+	/**
+	 * NOOP - this canvas is painted using OpenGL through the {@link #render()} method.
+	 */
+	@Override
+	public final void update(Graphics g) {
 		// don't modify the graphics object
 	}
 	

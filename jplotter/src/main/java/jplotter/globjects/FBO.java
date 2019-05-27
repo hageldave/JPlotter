@@ -14,7 +14,7 @@ import jplotter.util.GLUtils.GLRuntimeException;
  * <a href="https://www.khronos.org/opengl/wiki/Framebuffer_Object">
  * framebuffer object
  * </a>.
- * This consists of a framebuffer with a depth attachment and two color 
+ * This implementation is a framebuffer which consists of a depth attachment and two color 
  * attachments where the second is intended to contain the renderings 
  * in picking colors.
  * The FBO can be created multisampled for multisampling anti aliasing (MSAA).
