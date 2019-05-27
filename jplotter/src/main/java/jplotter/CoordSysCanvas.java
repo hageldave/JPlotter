@@ -13,6 +13,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.awt.GLData;
 
 import jplotter.Annotations.GLContextRequired;
+import jplotter.interaction.CoordSysPanning;
+import jplotter.interaction.CoordSysScrollZoom;
 import jplotter.renderables.CharacterAtlas;
 import jplotter.renderables.Lines;
 import jplotter.renderables.Text;
@@ -28,7 +30,30 @@ import jplotter.util.TranslatedPoint2D;
 import jplotter.util.Utils;
 
 /**
- * 
+ * The CoordSysCanvas is an {@link FBOCanvas} that displays a coordinate system.
+ * This coordinate system is enclosed by 4 axes that form a rectangle around the
+ * area that displays the contents of the coordinate system.
+ * <p>
+ * The upper x-axis and right y-axis feature the labels (names) of the axes.
+ * The lower x-axis and the left y-axis feature tick marks and labels that
+ * help to orientate and read off coordinates.
+ * The positioning and labeling of the tick marks is done by a {@link TickMarkGenerator}
+ * which is per default an instance of {@link ExtendedWilkinson}.
+ * For each tick a vertical or horizontal guide line is drawn across the area of the
+ * coordinate system.
+ * <p>
+ * What coordinate range the coordinate system area corresponds to is controlled by
+ * the coordinate view (see {@link #setCoordinateView(double, double, double, double)})
+ * and defaults to [-1,1] for both axes.
+ * The contents that are drawn inside the coordinate area are rendered by the content renderer
+ * (see {@link #setContent(Renderer)}).
+ * If that renderer implements the {@link AdaptableView} interface it will be passed the
+ * view matrix corresponding to the coordinate view.
+ * The content renderer will be able to draw within the viewport defined by the coordinate
+ * system area of this Canvas.
+ * <p>
+ * For interacting with this CoordSysCanvas there already exist implementations of MouseListeners
+ * for panning and zooming (see {@link CoordSysPanning} and {@link CoordSysScrollZoom}).
  * 
  * @author hageldave
  */
@@ -67,17 +92,17 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected int topPadding = 10;
 	protected int botPadding = 10;
 
-	protected PointeredPoint2D coordsysframeLB = new PointeredPoint2D();
-	protected PointeredPoint2D coordsysframeRT = Utils.copy(coordsysframeLB);
-	protected PointeredPoint2D coordsysframeLT = new PointeredPoint2D(coordsysframeLB.x, coordsysframeRT.y);
-	protected PointeredPoint2D coordsysframeRB = new PointeredPoint2D(coordsysframeRT.x, coordsysframeLB.y);
+	protected PointeredPoint2D coordsysAreaLB = new PointeredPoint2D();
+	protected PointeredPoint2D coordsysAreaRT = Utils.copy(coordsysAreaLB);
+	protected PointeredPoint2D coordsysAreaLT = new PointeredPoint2D(coordsysAreaLB.x, coordsysAreaRT.y);
+	protected PointeredPoint2D coordsysAreaRB = new PointeredPoint2D(coordsysAreaRT.x, coordsysAreaLB.y);
 
 	protected Matrix3f coordSysScaleMX = new Matrix3f();
 	protected Matrix3f coordSysTransMX = new Matrix3f();
 	/** 
-	 * The transform that corresponds to this coordinate systems {@link #coordinateView}
-	 * = {@link #coordSysScaleMX} * {@link #coordSysTransMX}
-	 * which is passed to the content renderers
+	 * The transform that corresponds to this coordinate systems {@link #coordinateView}.
+	 * coordSysViewMX = {@link #coordSysScaleMX} * {@link #coordSysTransMX}
+	 * which is passed to the content renderer.
 	 */
 	protected Matrix3f coordSysViewMX = new Matrix3f();
 
@@ -88,10 +113,10 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected CoordSysCanvas(GLData data) {
 		super(data);
 		super.fboClearColor = Color.WHITE;
-		this.axes.addSegment(coordsysframeLB, coordsysframeRB, Color.BLACK);
-		this.axes.addSegment(coordsysframeLB, coordsysframeLT, Color.BLACK);
-		this.axes.addSegment(coordsysframeLT, coordsysframeRT, Color.GRAY);
-		this.axes.addSegment(coordsysframeRB, coordsysframeRT, Color.GRAY);
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB, Color.BLACK);
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT, Color.BLACK);
+		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT, Color.GRAY);
+		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT, Color.GRAY);
 		this.axes.setThickness(2);
 		this.preContentLinesR
 			.addItemToRender(guides)
@@ -128,7 +153,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	/**
 	 * Sets up pretty much everything.
 	 * <ul>
-	 * <li>the bounds of the coordinate system frame ({@link #coordsysframeLB}, {@link #coordsysframeRT})</li>
+	 * <li>the bounds of the coordinate system frame ({@link #coordsysAreaLB}, {@link #coordsysAreaRT})</li>
 	 * <li>the tick mark values and labels</li>
 	 * <li>the tick mark guides</li>
 	 * <li>the location of the axis labels</li>
@@ -164,11 +189,11 @@ public class CoordSysCanvas extends FBOCanvas {
 		int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style, antialiased).getBounds().height;
 		int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style, antialiased).getBounds().height;
 		// move coordwindow origin so that labels have enough display space
-		coordsysframeLB.x[0] = maxYTickLabelWidth + leftPadding + 7;
-		coordsysframeLB.y[0] = maxXTickLabelHeight + botPadding + 6;
+		coordsysAreaLB.x[0] = maxYTickLabelWidth + leftPadding + 7;
+		coordsysAreaLB.y[0] = maxXTickLabelHeight + botPadding + 6;
 		// move opposing corner of coordwindow to have enough display space
-		coordsysframeRT.x[0] = getWidth()-rightPadding-maxLabelHeight-4;
-		coordsysframeRT.y[0] = getHeight()-topPadding-maxLabelHeight-4;
+		coordsysAreaRT.x[0] = getWidth()-rightPadding-maxLabelHeight-4;
+		coordsysAreaRT.y[0] = getHeight()-topPadding-maxLabelHeight-4;
 		
 		// dispose of old stuff
 		ticks.removeAllSegments();
@@ -180,14 +205,14 @@ public class CoordSysCanvas extends FBOCanvas {
 		tickMarkLabels.clear();
 		
 		// create new stuff
-		double xAxisWidth = coordsysframeLB.distance(coordsysframeRB);
-		double yAxisHeight = coordsysframeLB.distance(coordsysframeLT);
+		double xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
+		double yAxisHeight = coordsysAreaLB.distance(coordsysAreaLT);
 		// xaxis ticks
 		for(int i=0; i<xticks.length; i++){
 			// tick
 			double m = (xticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
-			double x = coordsysframeLB.getX()+m*xAxisWidth;
-			Point2D onaxis = new Point2D.Double(x,coordsysframeLB.getY());
+			double x = coordsysAreaLB.getX()+m*xAxisWidth;
+			Point2D onaxis = new Point2D.Double(x,coordsysAreaLB.getY());
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4), tickColor);
 			// label
 			Text label = new Text(xticklabels[i], tickfontSize, style, antialiased);
@@ -203,7 +228,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		for(int i=0; i<yticks.length; i++){
 			// tick
 			double m = (yticks[i]-coordinateView.getMinY())/coordinateView.getHeight();
-			Point2D onaxis = new TranslatedPoint2D(coordsysframeLB, 0, m*yAxisHeight);
+			Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, m*yAxisHeight);
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0), tickColor);
 			// label
 			Text label = new Text(yticklabels[i], tickfontSize, style, antialiased);
@@ -211,7 +236,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -textSize.getHeight()/2.0));
 			tickMarkLabels.add(label);
 			// guide
-			guides.addSegment(onaxis, new TranslatedPoint2D(coordsysframeRB, 0, m*yAxisHeight), guideColor);
+			guides.addSegment(onaxis, new TranslatedPoint2D(coordsysAreaRB, 0, m*yAxisHeight), guideColor);
 		}
 		for(Text txt: tickMarkLabels){
 			preContentTextR.addItemToRender(txt);
@@ -220,8 +245,8 @@ public class CoordSysCanvas extends FBOCanvas {
 		xAxisLabelText.setTextString(getxAxisLabel());
 		yAxisLabelText.setTextString(getyAxisLabel());
 		yAxisLabelText.setAngle(-(float)Math.PI/2);
-		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysframeRB, 4, yAxisHeight/2 - yAxisLabelText.getTextSize().width/2));
-		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysframeLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
+		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 - yAxisLabelText.getTextSize().width/2));
+		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
 	}
 	
 	/**
@@ -308,10 +333,10 @@ public class CoordSysCanvas extends FBOCanvas {
 		// draw into the coord system
 		if(content != null){
 			content.glInit();
-			int viewportX = (int)coordsysframeLB.getX();
-			int viewPortY = (int)coordsysframeLB.getY();
-			int viewPortW = (int)coordsysframeLB.distance(coordsysframeRB);
-			int viewPortH = (int)coordsysframeLB.distance(coordsysframeLT);
+			int viewportX = (int)coordsysAreaLB.getX();
+			int viewPortY = (int)coordsysAreaLB.getY();
+			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
+			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
 			GL11.glViewport(viewportX,viewPortY,viewPortW,viewPortH);
 			if(content instanceof AdaptableView){
 				double scaleX = viewPortW/coordinateView.getWidth();
@@ -334,6 +359,9 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * <p>
 	 * This determines what range of coordinates is visible when rendering the {@link #content}.
 	 * By default the coordinate view covers the range [-1,1] for both x and y coordinates.
+	 * When the resulting value ranges maxX-minX or maxY-minY fall below 1e-9, the method
+	 * refuses to set the view accordingly to prevent unrecoverable zooming and inaccurate
+	 * or broken renderings due to floating point precision.
 	 * <p>
 	 * This method also sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
 	 * 
@@ -361,17 +389,25 @@ public class CoordSysCanvas extends FBOCanvas {
 		return coordinateView;
 	}
 	
-	
-	public Rectangle2D getCoordSysFrame() {
+	/**
+	 * @return the area of this canvas in which the coordinate system contents are rendered.
+	 * It is the viewPort for the {@link #content} renderer which is enclosed by
+	 * the coordinate system axes.
+	 */
+	public Rectangle2D getCoordSysArea() {
 		return new Rectangle2D.Double(
-				coordsysframeLB.getX(), 
-				coordsysframeLB.getY(), 
-				coordsysframeLB.distance(coordsysframeRB), 
-				coordsysframeLB.distance(coordsysframeLT)
+				coordsysAreaLB.getX(), 
+				coordsysAreaLB.getY(), 
+				coordsysAreaLB.distance(coordsysAreaRB), 
+				coordsysAreaLB.distance(coordsysAreaLT)
 		);
 	}
 
 
+	/**
+	 * Disposes of GL resources, i.e. closes its renderers and all resources 
+	 * of the FBOCanvas that it is (see {@link FBOCanvas#close()}).
+	 */
 	@Override
 	public void close() {
 		if(Objects.nonNull(preContentTextR))

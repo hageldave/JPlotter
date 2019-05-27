@@ -33,7 +33,7 @@ public class CoordSysPanning implements MouseListener, MouseMotionListener {
 			double mouseTx = dragPoint.getX()-startPoint.getX();
 			double mouseTy = dragPoint.getY()-startPoint.getY();
 			startPoint = dragPoint;
-			Rectangle2D coordSysFrame = canvas.getCoordSysFrame();
+			Rectangle2D coordSysFrame = canvas.getCoordSysArea();
 			Rectangle2D coordinateArea = canvas.getCoordinateView();
 			double relativeTx = mouseTx/coordSysFrame.getWidth();
 			double relativeTy = mouseTy/coordSysFrame.getHeight();
