@@ -60,7 +60,7 @@ public class IrisViz {
 				content.points.addItemToRender(virginica).addItemToRender(versicolor).addItemToRender(setosa);
 			}
 		}
-		canvas.setCoordinateArea(0, 0, 8, 3);
+		canvas.setCoordinateView(0, 0, 8, 3);
 
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {

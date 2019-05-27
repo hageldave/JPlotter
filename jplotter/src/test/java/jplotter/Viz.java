@@ -66,7 +66,7 @@ public class Viz {
 			}
 			content.points.addItemToRender(circlepoints).addItemToRender(quiver);
 		}
-		canvas.setCoordinateArea(0, 0, 2, 1);
+		canvas.setCoordinateView(0, 0, 2, 1);
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override

@@ -18,6 +18,7 @@ import static org.lwjgl.opengl.GL32.*;
  * @author hageldave
  */
 public class Shader implements AutoCloseable {
+	public static boolean alwaysPrintInfoLogsAndShaders = false;
 	
 	int vertexShaderID;
 	int geometryShaderID;
@@ -50,7 +51,8 @@ public class Shader implements AutoCloseable {
 						+ shaderInfoLog + '\n' + vertsh_src
 				);
 			}
-			printInfoLogAndShader(System.out, shaderInfoLog, vertsh_src);
+			if(alwaysPrintInfoLogsAndShaders)
+				printInfoLogAndShader(System.out, shaderInfoLog, vertsh_src);
 		}
 		geometryShaderID = Objects.isNull(geomsh_src) ? 0:glCreateShader(GL_GEOMETRY_SHADER);
 		if(geometryShaderID != 0){
@@ -64,7 +66,8 @@ public class Shader implements AutoCloseable {
 						+ shaderInfoLog + '\n' + geomsh_src
 				);
 			}
-			printInfoLogAndShader(System.out, shaderInfoLog, geomsh_src);
+			if(alwaysPrintInfoLogsAndShaders)
+				printInfoLogAndShader(System.out, shaderInfoLog, geomsh_src);
 		}
 		fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 		{
@@ -78,7 +81,8 @@ public class Shader implements AutoCloseable {
 						+ shaderInfoLog + '\n' + fragsh_src
 				);
 			}
-			printInfoLogAndShader(System.out, shaderInfoLog, fragsh_src);
+			if(alwaysPrintInfoLogsAndShaders)
+				printInfoLogAndShader(System.out, shaderInfoLog, fragsh_src);
 		}
 		shaderProgID = glCreateProgram();
 		{
@@ -99,7 +103,8 @@ public class Shader implements AutoCloseable {
 						+ fragsh_src
 				);
 			}
-			printInfoLogAndShader(System.out, programInfoLog, "");
+			if(alwaysPrintInfoLogsAndShaders)
+				printInfoLogAndShader(System.out, programInfoLog, "");
 		}
 	}
 	

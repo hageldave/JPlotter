@@ -375,6 +375,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	/**
 	 * Paints this Canvas' contents to the currently active draw buffer that is this {@link FBOCanvas}'
 	 * framebuffer object.
+	 * Will be called during {@link #paintGL()} which is called during {@link #render()}.
 	 * @param width of the current viewport
 	 * @param height of the current viewport
 	 */

@@ -86,7 +86,7 @@ public class StatLogViz {
 					maxY = Math.max(maxY, y);
 				}
 				minY = -10;
-				canvas.setCoordinateArea(minX-10, minY-10, maxX+1, maxY+10);
+				canvas.setCoordinateView(minX-10, minY-10, maxX+1, maxY+10);
 			}
 		}
 
