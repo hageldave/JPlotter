@@ -118,6 +118,61 @@ public class Lines implements Renderable {
 	public Lines addSegment(double x1, double y1, double x2, double y2, int c){
 		return addSegment(x1, y1, x2, y2, c, c);
 	}
+	
+	/**
+	 * Adds a strip of line segments that connect the specified
+	 * points.
+	 * Sets the {@link #isDirty()} state to true.
+	 * @param c color of the line
+	 * @param xCoords x coordinates of the points on the line
+	 * @param yCoords y coordinates of the points on the line
+	 * @return this for chaining
+	 */
+	public Lines addLineStrip(int c, double[] xCoords, double[] yCoords){
+		for(int i = 0; i < xCoords.length-1; i++){
+			this.addSegment(xCoords[i], yCoords[i], xCoords[i+1], yCoords[i+1], c);
+		}
+		return this;
+	}
+	
+	/**
+	 * Adds a strip of line segments that connect the specified
+	 * points.
+	 * Sets the {@link #isDirty()} state to true.
+	 * @param c color of the line
+	 * @param points which are connected by line segments
+	 * @return this for chaining
+	 */
+	public Lines addLineStrip(Color c, Point2D...points){
+		for(int i = 0; i < points.length-1; i++){
+			this.addSegment(points[i], points[i+1], c);
+		}
+		return this;
+	}
+	
+	/**
+	 * Adds a strip of line segments that connect the specified points.
+	 * The point coordinates are specified as interleaved values, i.e.
+	 * array of pairs of (x,y) coordinates.
+	 * Sets the {@link #isDirty()} state to true.
+	 * @param c color of the line
+	 * @param coords (x,y) pairs of the points to connect
+	 * @return this for chaining
+	 * @throws IllegalArgumentException when the number of coordinate values is odd.
+	 */
+	public Lines addLineStrip(int c, double... coords){
+		if(coords.length%2 != 0){
+			throw new IllegalArgumentException("did not provide even amount of coordinate values.");
+		}
+		for(int i=0; i<coords.length/2-1; i++){
+			this.addSegment(
+					coords[(i+0)*2+0], coords[(i+0)*2+1], 
+					coords[(i+1)*2+0], coords[(i+1)*2+1], 
+					c
+			);
+		}
+		return this;
+	}
 
 	/**
 	 * Removes a line segment from this object

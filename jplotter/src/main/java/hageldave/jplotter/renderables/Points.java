@@ -207,8 +207,8 @@ public class Points implements Renderable {
 	 * The glyph will then be scaled by the factor {@code f = globalScaling * point.scaling * renderer.scaling}.
 	 * @param globalScaling of the points in this collection.
 	 */
-	public void setGlobalScaling(float globalScaling) {
-		this.globalScaling = globalScaling;
+	public void setGlobalScaling(double globalScaling) {
+		this.globalScaling = (float)globalScaling;
 	}
 
 	/**
