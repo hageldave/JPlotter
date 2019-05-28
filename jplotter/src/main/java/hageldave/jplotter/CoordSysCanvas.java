@@ -3,6 +3,7 @@ package hageldave.jplotter;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
@@ -65,9 +66,9 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected LinesRenderer postContentLinesR = new LinesRenderer();
 	protected TextRenderer postContentTextR = new TextRenderer();
 	protected Renderer content=null;
-	
+
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
-	
+
 	protected TickMarkGenerator tickMarkGenerator = new ExtendedWilkinson();
 
 	protected Lines axes = new Lines();
@@ -86,7 +87,7 @@ public class CoordSysCanvas extends FBOCanvas {
 
 	protected Color tickColor = Color.DARK_GRAY;
 	protected Color guideColor = new Color(0xdddddd);
-	
+
 	protected int leftPadding = 10;
 	protected int rightPadding = 10;
 	protected int topPadding = 10;
@@ -109,7 +110,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected String xAxisLabel = null;
 	protected String yAxisLabel = null;
 
-	
+
 	protected CoordSysCanvas(GLData data) {
 		super(data);
 		super.fboClearColor = Color.WHITE;
@@ -119,18 +120,18 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT, Color.GRAY);
 		this.axes.setThickness(2);
 		this.preContentLinesR
-			.addItemToRender(guides)
-			.addItemToRender(ticks);
+		.addItemToRender(guides)
+		.addItemToRender(ticks);
 		this.preContentTextR
-			.addItemToRender(xAxisLabelText)
-			.addItemToRender(yAxisLabelText);
+		.addItemToRender(xAxisLabelText)
+		.addItemToRender(yAxisLabelText);
 		this.postContentLinesR.addItemToRender(axes);
 	}
 
 	public CoordSysCanvas() {
 		this(new GLData());
 	}
-	
+
 	/**
 	 * Sets the {@link #isDirty} state of this CoordSysCanvas to true.
 	 * This indicates that axis locations, tick marks, labels and guides
@@ -175,7 +176,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.yticks = yticksAndLabels.first;
 		String[] xticklabels = xticksAndLabels.second;
 		String[] yticklabels = yticksAndLabels.second;
-		
+
 		final int tickfontSize = 10;
 		final int labelfontSize = 12;
 		final int style = Font.PLAIN;
@@ -194,7 +195,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		// move opposing corner of coordwindow to have enough display space
 		coordsysAreaRT.x[0] = getWidth()-rightPadding-maxLabelHeight-4;
 		coordsysAreaRT.y[0] = getHeight()-topPadding-maxLabelHeight-4;
-		
+
 		// dispose of old stuff
 		ticks.removeAllSegments();
 		guides.removeAllSegments();
@@ -203,7 +204,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			txt.close();
 		}
 		tickMarkLabels.clear();
-		
+
 		// create new stuff
 		double xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
 		double yAxisHeight = coordsysAreaLB.distance(coordsysAreaLT);
@@ -248,21 +249,21 @@ public class CoordSysCanvas extends FBOCanvas {
 		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 - yAxisLabelText.getTextSize().width/2));
 		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
 	}
-	
+
 	/**
 	 * @return "X" if {@link #xAxisLabel} is null or the actual axis label.
 	 */
 	public String getxAxisLabel() {
 		return xAxisLabel == null ? "X":xAxisLabel;
 	}
-	
+
 	/**
 	 * @return "Y" if {@link #yAxisLabel} is null or the actual axis label.
 	 */
 	public String getyAxisLabel() {
 		return yAxisLabel == null ? "Y":yAxisLabel;
 	}
-	
+
 	/**
 	 * Sets the specified string as the x axis label which appears on top of the coordinate system.
 	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
@@ -272,7 +273,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.xAxisLabel = xAxisLabel;
 		setDirty();
 	}
-	
+
 	/**
 	 * Sets the specified string as the y axis label which appears to the right of the coordinate system.
 	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
@@ -289,7 +290,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	public TickMarkGenerator getTickMarkGenerator() {
 		return tickMarkGenerator;
 	}
-	
+
 	/**
 	 * Sets the specified {@link TickMarkGenerator} for this {@link CoordSysCanvas}.
 	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
@@ -351,7 +352,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		postContentLinesR.render(w, h);
 		postContentTextR.render(w, h);
 	}
-	
+
 	/**
 	 * Sets the coordinate view. This is the range of x and y coordinates that is displayed by this
 	 * {@link CoordSysCanvas}. It is not the rectangular area in which the content appears on screen
@@ -378,7 +379,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.coordinateView = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 		setDirty();
 	}
-	
+
 	/**
 	 * Returns the coordinate view, which is the range of x and y coordinates visible in the
 	 * coordinate system.
@@ -388,7 +389,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	public Rectangle2D getCoordinateView() {
 		return coordinateView;
 	}
-	
+
 	/**
 	 * @return the area of this canvas in which the coordinate system contents are rendered.
 	 * It is the viewPort for the {@link #content} renderer which is enclosed by
@@ -400,9 +401,28 @@ public class CoordSysCanvas extends FBOCanvas {
 				coordsysAreaLB.getY(), 
 				coordsysAreaLB.distance(coordsysAreaRB), 
 				coordsysAreaLB.distance(coordsysAreaLT)
-		);
+				);
 	}
 
+
+	/**
+	 * Transforms a mouse location on this Canvas to the corresponding
+	 * coordinates in the coordinate system view.
+	 * @param mousePoint to be transformed
+	 * @return transformed location
+	 */
+	public Point2D transformMouseToCoordSys(Point mousePoint){
+		Rectangle2D coordSysArea = getCoordSysArea();
+		double x = mousePoint.getX()-coordSysArea.getMinX();
+		double y = mousePoint.getY()-coordSysArea.getMinY();
+		x /= coordSysArea.getWidth()-1;
+		y /= coordSysArea.getHeight()-1;
+		y = 1-y;
+		Rectangle2D coordinateView = getCoordinateView();
+		x = x*coordinateView.getWidth()+coordinateView.getMinX();
+		y = y*coordinateView.getHeight()+coordinateView.getMinY();
+		return new Point2D.Double(x, y);
+	}
 
 	/**
 	 * Disposes of GL resources, i.e. closes its renderers and all resources 
