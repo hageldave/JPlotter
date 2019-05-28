@@ -148,10 +148,5 @@ public class TextRenderer extends GenericRenderer<Text> {
 			shader.close();
 		deleteAllItems();
 	}
-	
-	@Override
-	public boolean drawsPicking() {
-		return true;
-	}
 
 }

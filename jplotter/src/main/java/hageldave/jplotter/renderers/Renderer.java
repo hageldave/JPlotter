@@ -9,10 +9,16 @@ import hageldave.jplotter.renderables.Renderable;
  * The Renderer interface defines methods to 
  * initialize the renderer,
  * execute a rendering pass,
- * closing the renderer
- * and reporting whether the renderer is capable of drawing
- * picking color, ie.e drawing into the first and second color attachment
- * of an FBO.
+ * closing the renderer.
+ * <p>
+ * <b>Implementation Notice:</b><br>
+ * A renderer's fragment shader is obliged to output color for two
+ * buffers, which are the two color attachments of an {@link FBO}.
+ * These have to be written to <br>
+ * {@code layout(location=0) out vec4 c1;} and <br>
+ * {@code layout(location=1) out vec4 c2;}.<br>
+ * When the renderer has no use for the picking attachment, {@code vec4(0,0,0,0)}
+ * can be written as default.
  * 
  * @author hageldave
  */
@@ -39,13 +45,5 @@ public interface Renderer extends AutoCloseable {
 	 */
 	@GLContextRequired
 	public void close();
-	
-	/**
-	 * @return true when this renderer can draw to the second
-	 * color attachment of an {@link FBO} that is the picking color.
-	 * This may be used to determine if the second color attachment
-	 * can be enabled along side the first as draw buffer.
-	 */
-	public default boolean drawsPicking(){return false;}
 	
 }

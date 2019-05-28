@@ -177,9 +177,4 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		deleteAllItems();
 	}
 	
-	@Override
-	public boolean drawsPicking() {
-		return true;
-	}
-	
 }
