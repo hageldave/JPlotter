@@ -451,7 +451,7 @@ public class Triangles implements Renderable {
 	 * Specification of a Triangle which comprises vertex locations, colors and picking color.
 	 * @author hageldave
 	 */
-	static class TriangleDetails {
+	public static class TriangleDetails {
 		public float x0,x1,x2, y0,y1,y2;
 		public int c0,c1,c2, pick;
 		public TriangleDetails(
