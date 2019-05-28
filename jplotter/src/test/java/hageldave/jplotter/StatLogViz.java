@@ -24,7 +24,7 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 public class StatLogViz {
 
 	public static void main(String[] args) throws IOException {
-		JFrame frame = new JFrame("Statlog (Shuttle) data set - Features 7 & 8");
+		JFrame frame = new JFrame("Statlog (Shuttle) data set");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
@@ -89,6 +89,8 @@ public class StatLogViz {
 				canvas.setCoordinateView(minX-10, minY-10, maxX+1, maxY+10);
 			}
 		}
+		canvas.setxAxisLabel("Feature 7");
+		canvas.setyAxisLabel("Feature 8");
 
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
@@ -99,7 +101,7 @@ public class StatLogViz {
 		});
 
 		new CoordSysPanning(canvas).register();
-		new CoordSysScrollZoom(canvas).register();
+		new CoordSysScrollZoom(canvas).setZoomFactor(1.5).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

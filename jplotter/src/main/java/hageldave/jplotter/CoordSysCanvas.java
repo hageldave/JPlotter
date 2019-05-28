@@ -246,7 +246,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		xAxisLabelText.setTextString(getxAxisLabel());
 		yAxisLabelText.setTextString(getyAxisLabel());
 		yAxisLabelText.setAngle(-(float)Math.PI/2);
-		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 - yAxisLabelText.getTextSize().width/2));
+		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 + yAxisLabelText.getTextSize().width/2));
 		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
 	}
 
