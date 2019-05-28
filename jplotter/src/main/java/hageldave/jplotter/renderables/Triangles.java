@@ -452,8 +452,8 @@ public class Triangles implements Renderable {
 	 * @author hageldave
 	 */
 	static class TriangleDetails {
-		public final float x0,x1,x2, y0,y1,y2;
-		public final int c0,c1,c2, pick;
+		public float x0,x1,x2, y0,y1,y2;
+		public int c0,c1,c2, pick;
 		public TriangleDetails(
 				float x0, float y0, int c0, 
 				float x1, float y1, int c1, 
@@ -473,6 +473,14 @@ public class Triangles implements Renderable {
 				pick = pick | 0xff000000;
 			this.pick = pick;
 		}
+	}
+	
+	/**
+	 * @return the list of triangle details.<br>
+	 * Make sure to call {@link #setDirty()} when manipulating.
+	 */
+	public ArrayList<TriangleDetails> getTriangles() {
+		return triangles;
 	}
 
 	/**
