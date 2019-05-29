@@ -49,8 +49,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "layout(location = 1) out vec4 pick_color;"
 			+ NL + "in vec4 vColor;"
 			+ NL + "in vec4 vPickColor;"
+			+ NL + "uniform float alphaMultiplier;"
 			+ NL + "void main() {"
-			+ NL + "   frag_color = vColor;"
+			+ NL + "   frag_color = vec4(vColor.rgb, vColor.a*alphaMultiplier);"
 			+ NL + "   pick_color = vPickColor;"
 			+ NL + "}"
 			+ NL
@@ -113,6 +114,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
 		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
+		GL20.glUniform1f(loc, item.getGlobalAlphaMultiplier());
 		// draw things
 		item.bindVertexArray();
 		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, item.numTriangles()*3);

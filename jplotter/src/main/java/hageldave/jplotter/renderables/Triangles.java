@@ -20,6 +20,10 @@ import hageldave.jplotter.globjects.VertexArray;
  * This color may serve as an identifier of the object that can be queried from 
  * a location of the rendering canvas. 
  * It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values) or 0.
+ * <p>
+ * There is also a global alpha multiplier parameter which scales every triangle's color alpha value,
+ * which can be used to introduce transparency for all triangles of this collection.
+ * This may come in handy to let other rendered content under a triangle 'shine through'.
  * 
  * @author hageldave
  */
@@ -27,6 +31,7 @@ public class Triangles implements Renderable {
 
 	protected VertexArray va;
 	protected boolean isDirty;
+	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<TriangleDetails> triangles = new ArrayList<>();
 	
 	/**
@@ -374,6 +379,22 @@ public class Triangles implements Renderable {
 		return this;
 	}
 	
+	/**
+	 * Sets the global alpha multiplier parameter of this {@link Triangles} object.
+	 * The value will be multiplied with each vertex' alpha color value when rendering.
+	 * The triangle will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+	 * @param globalAlphaMultiplier of the triangles in this collection
+	 */
+	public void setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = globalAlphaMultiplier;
+	}
+
+	/**
+	 * @return the global alpha multiplier of the triangles in this collection
+	 */
+	public float getGlobalAlphaMultiplier() {
+		return globalAlphaMultiplier;
+	}
 
 	/**
 	 * Disposes of GL resources, i.e. coloses the vertex array.

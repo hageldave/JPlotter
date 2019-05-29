@@ -37,20 +37,22 @@ public class Viz {
 		// setup content
 		{
 			Triangles tris = new Triangles();
-			Lines testcontent = new Lines();
+			Lines lines = new Lines();
 			double scaling = 0.1;
-			Color triColor = new Color(0x886633aa,true);
+			Color triColor = new Color(0xff6633aa,true);
 			for(int i = 0; i < 100; i++){
 				double x1 = i*scaling;
 				double x2 = (i+1)*scaling;
 				double y1 = Math.sin(x1);
 				double y2 = Math.sin(x2);
-				testcontent.addSegment(x1, y1, x2, y2, 0xffff00ff);
-				testcontent.addSegment(i, i, i+1, i+1, 0xff00ff00);
+				lines.addSegment(x1, y1, x2, y2, 0xffff00ff);
+				lines.addSegment(i, i, i+1, i+1, 0xff00ff00);
 				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0, triColor);
 			}
-			testcontent.setThickness(2f);
-			content.lines.addItemToRender(testcontent);
+			tris.setGlobalAlphaMultiplier(0.2f);
+			lines.setThickness(2f);
+			lines.setGlobalAlphaMultiplier(0.8f);
+			content.lines.addItemToRender(lines);
 			content.triangles.addItemToRender(tris);
 			
 			Points circlepoints = new Points(DefaultGlyph.TRIANGLE_F);

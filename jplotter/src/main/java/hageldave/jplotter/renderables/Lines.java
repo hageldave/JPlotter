@@ -21,6 +21,9 @@ import hageldave.jplotter.globjects.VertexArray;
  * The picking color is the color with which the lines are rendered into the (invisible) picking color attachment
  * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
  * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values) or 0.
+ * <p>
+ * There is also a global alpha multiplier which scales every segments color alpha value, which can be used to introduce transparency
+ * for all segments of this collection. This may come in handy to visualize density when plotting a huge amount of lines.
  * 
  * @author hageldave
  */
@@ -33,6 +36,8 @@ public class Lines implements Renderable {
 	protected float thickness = 1;
 
 	protected boolean isDirty;
+	
+	protected float globalAlphaMultiplier=1;
 
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
@@ -213,6 +218,23 @@ public class Lines implements Renderable {
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Sets the global alpha multiplier parameter of this {@link Lines} object.
+	 * The value will be multiplied with each segment point's alpha color value when rendering.
+	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+	 * @param globalAlphaMultiplier of the triangles in this collection
+	 */
+	public void setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = globalAlphaMultiplier;
+	}
+
+	/**
+	 * @return the global alpha multiplier of the segments in this collection
+	 */
+	public float getGlobalAlphaMultiplier() {
+		return globalAlphaMultiplier;
 	}
 
 	/**

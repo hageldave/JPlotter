@@ -99,8 +99,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 1) out vec4 pick_color;"
 			+ NL + "in vec4 gcolor;"
 			+ NL + "in vec4 gpick;"
+			+ NL + "uniform float alphaMultiplier;"
 			+ NL + "void main() {"
-			+ NL + "   frag_color = gcolor;"
+			+ NL + "   frag_color = vec4(gcolor.rgb, gcolor.a*alphaMultiplier);"
 			+ NL + "   pick_color = gpick;"
 			+ NL + "}"
 			+ NL
@@ -154,6 +155,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
 		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
+		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
 		// draw things
 		lines.bindVertexArray();
 		GL11.glDrawArrays(GL11.GL_LINES, 0, lines.numSegments()*2);

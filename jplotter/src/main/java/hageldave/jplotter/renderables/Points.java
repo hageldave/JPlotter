@@ -27,7 +27,7 @@ import hageldave.jplotter.globjects.VertexArray;
  * </ul>
  * Apart from these per point attributes, this {@link Points} class features a global scaling parameter by which all
  * point instances of this collection will be scaled at rendering ({@link #setGlobalScaling(float)}).
- * Also a global alpha multiplier which scales every points color alpha value can be used to introduce transparency
+ * Also a global alpha multiplier which scales every points color alpha value, which can be used to introduce transparency
  * for all points of this collection, which may come in handy to visualize density when plotting a huge amount of points.
  * 
  * @author hageldave
@@ -238,9 +238,9 @@ public class Points implements Renderable {
 	}
 
 	/**
-	 * Sets the global scaling parameter of this {@link Points} object.
+	 * Sets the global alpha multiplier parameter of this {@link Points} object.
 	 * The value will be multiplied with each points alpha color value when rendering.
-	 * The glyph will the be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+	 * The glyph will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
 	 * @param globalAlphaMultiplier of the points in this collection
 	 */
 	public void setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
