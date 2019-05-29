@@ -5,24 +5,22 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.globjects.FBO;
 import hageldave.jplotter.globjects.VertexArray;
-import hageldave.jplotter.util.Pair;
 
 /**
  * The Lines class is a collection of linear line segments.
  * Each segment is defined by a 2D start and end point and can
  * be colored per point. This means that when the colors at start
- * and endpoint are differnt the line will be rendered with a
+ * and endpoint are different the line will be rendered with a
  * linear color gradient which is interpolated between the two points.
  * Per default the thickness of the line segments is 1 pixel but can be
  * altered for all segments in a {@link Lines} object (not per segment).
- * The Lines object has a global picking color (same for all line segments).
+ * Each segment has a single picking color.
  * The picking color is the color with which the lines are rendered into the (invisible) picking color attachment
  * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
- * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values).
+ * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values) or 0.
  * 
  * @author hageldave
  */
@@ -30,13 +28,9 @@ public class Lines implements Renderable {
 
 	protected VertexArray va;
 
-	protected ArrayList<Pair<Point2D,Point2D>> segments = new ArrayList<>();
-
-	protected ArrayList<Pair<Color,Color>> colors = new ArrayList<>();
+	protected ArrayList<SegmentDetails> segments = new ArrayList<>();
 
 	protected float thickness = 1;
-
-	protected int pickColor;
 
 	protected boolean isDirty;
 
@@ -67,15 +61,29 @@ public class Lines implements Renderable {
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param p1 start point
 	 * @param p2 end point
+	 * @param c1 integer packed ARGB color value of line at start point (e.g. 0xff00ff00 = opaque green)
+	 * @param c2 integer packed ARGB color value of line at end point
+	 * @param pickingColor the picking color of the segment. 
+	 * When a non 0 transparent color is specified its alpha channel will be set to 0xff to make it opaque.
+	 * @return this for chaining
+	 */
+	public Lines addSegment(Point2D p1, Point2D p2, int c1, int c2, int pickingColor){
+		segments.add(new SegmentDetails(p1, p2, c1, c2, pickingColor));
+		setDirty();
+		return this;
+	}
+	
+	/**
+	 * Adds a new line segment to this object.
+	 * Sets the {@link #isDirty()} state to true.
+	 * @param p1 start point
+	 * @param p2 end point
 	 * @param c1 color of line at start point
 	 * @param c2 color of line at end point
 	 * @return this for chaining
 	 */
 	public Lines addSegment(Point2D p1, Point2D p2, Color c1, Color c2){
-		segments.add(Pair.of(p1,p2));
-		colors.add(Pair.of(c1,c2));
-		setDirty();
-		return this;
+		return this.addSegment(p1, p2, c1.getRGB(), c2.getRGB(), 0);
 	}
 
 	/**
@@ -88,6 +96,23 @@ public class Lines implements Renderable {
 	 */
 	public Lines addSegment(Point2D p1, Point2D p2, Color c){
 		return addSegment(p1, p2, c, c);
+	}
+	
+	/**
+	 * Adds a new line segment to this object.
+	 * Sets the {@link #isDirty()} state to true.
+	 * @param x1 x coordinate of start point
+	 * @param y1 y coordinate of start point
+	 * @param x2 x coordinate of end point
+	 * @param y2 y coordinate of end point
+	 * @param c1 integer packed ARGB color value of line at start point (e.g. 0xff00ff00 = opaque green)
+	 * @param c2 integer packed ARGB color value of line at end point
+	 * @param pickingColor the picking color of the segment. 
+	 * When a non 0 transparent color is specified its alpha channel will be set to 0xff to make it opaque.
+	 * @return this for chaining
+	 */
+	public Lines addSegment(double x1, double y1, double x2, double y2, int c1, int c2, int pickingColor){
+		return addSegment(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2), c1, c2, pickingColor);
 	}
 
 	/**
@@ -102,7 +127,7 @@ public class Lines implements Renderable {
 	 * @return this for chaining
 	 */
 	public Lines addSegment(double x1, double y1, double x2, double y2, int c1, int c2){
-		return addSegment(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2), new Color(c1, true), new Color(c2, true));
+		return addSegment(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2), c1, c2, 0);
 	}
 
 	/**
@@ -180,26 +205,14 @@ public class Lines implements Renderable {
 	 * @param segment pair of start and end point that defines the segment to remove
 	 * @return true when successful
 	 */
-	public boolean removeSegment(Pair<Point2D,Point2D> segment){
+	public boolean removeSegment(SegmentDetails segment){
 		int idx = segments.indexOf(segment);
 		if(idx >= 0){
 			segments.remove(idx);
-			colors.remove(idx);
 			setDirty();
 			return true;
 		}
 		return false;
-	}
-
-	/**
-	 * Removes a line segment from this object
-	 * Sets the {@link #isDirty()} state to true if successful.
-	 * @param p1 start point that of the segment to remove
-	 * @param p2 end point that of the segment to remove
-	 * @return true when successful
-	 */
-	public boolean removeSegment(Point2D p1, Point2D p2){
-		return removeSegment(Pair.of(p1, p2));
 	}
 
 	/**
@@ -208,22 +221,14 @@ public class Lines implements Renderable {
 	 */
 	public void removeAllSegments() {
 		this.segments.clear();
-		this.colors.clear();
 		setDirty();
 	}
 
 	/**
 	 * @return a copy of the line segments list
 	 */
-	public ArrayList<Pair<Point2D, Point2D>> getSegments() {
-		return new ArrayList<>(segments);
-	}
-
-	/**
-	 * @return a copy of the segment color list
-	 */
-	public ArrayList<Pair<Color, Color>> getColors() {
-		return new ArrayList<>(colors);
+	public ArrayList<SegmentDetails> getSegments() {
+		return segments;
 	}
 
 	/**
@@ -242,50 +247,29 @@ public class Lines implements Renderable {
 	public float getThickness() {
 		return thickness;
 	}
-
+	
 	/**
-	 * Sets the picking color of this {@link Lines} object. 
-	 * The picking color is the color with which the segments are rendered into the (invisible) picking color attachment
-	 * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
-	 * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values).
-	 * @param pickColor opaque integer packed RGB value, 0 or one in [0xff000001..0xffffffff].
-	 * When a transparent color is specified its alpha channel will be set to 0xff to make it opaque.
-	 * @return this for chaining
+	 * Specification of a line segment which comprises vertex locations, colors and picking color.
+	 * @author hageldave
 	 */
-	public Lines setPickColor(int pickColor) {
-		this.pickColor = pickColor;
-		// can only use opaque colors cause transparent colors will not work on overlaps
-		if(pickColor != 0)
-			this.pickColor = pickColor | 0xff000000;
-		return this;
-	}
-
-	/**
-	 * @return the picking color of this {@link Lines} object
-	 */
-	public int getPickColor() {
-		return pickColor;
-	}
-
-	/**
-	 * @return the normalized red channel of the picking color (in [0,1])
-	 */
-	public float getPickColorR() {
-		return Pixel.r(pickColor)/255f;
-	}
-
-	/**
-	 * @return the normalized green channel of the picking color in [0,1])
-	 */
-	public float getPickColorG() {
-		return Pixel.g(pickColor)/255f;
-	}
-
-	/**
-	 * @return the normalized blue channel of the picking color in [0,1])
-	 */
-	public float getPickColorB() {
-		return Pixel.b(pickColor)/255f;
+	public static class SegmentDetails {
+		public Point2D p0;
+		public Point2D p1;
+		public int color0;
+		public int color1;
+		public int pickingColor;
+		
+		public SegmentDetails(Point2D p0, Point2D p1, int color0, int color1, int pickingColor) {
+			this.p0 = p0;
+			this.p1 = p1;
+			this.color0 = color0;
+			this.color1 = color1;
+			if(pickingColor != 0)
+				pickingColor = pickingColor | 0xff000000;
+			this.pickingColor = pickingColor;
+		}
+		
+		
 	}
 
 	/**
@@ -310,7 +294,7 @@ public class Lines implements Renderable {
 	@GLContextRequired
 	public void initGL(){
 		if(Objects.isNull(va)){
-			va = new VertexArray(2);
+			va = new VertexArray(3);
 			updateGL();
 		}
 	}
@@ -327,19 +311,22 @@ public class Lines implements Renderable {
 		if(Objects.nonNull(va)){
 			float[] segmentCoordBuffer = new float[segments.size()*2*2];
 			int[] colorBuffer = new int[segments.size()*2];
+			int[] pickBuffer = new int[segments.size()*2];
 			for(int i=0; i<segments.size(); i++){
-				Pair<Point2D, Point2D> seg = segments.get(i);
-				Pair<Color, Color> colorpair = colors.get(i);
-				segmentCoordBuffer[i*4+0] = (float) seg.first.getX();
-				segmentCoordBuffer[i*4+1] = (float) seg.first.getY();
-				segmentCoordBuffer[i*4+2] = (float) seg.second.getX();
-				segmentCoordBuffer[i*4+3] = (float) seg.second.getY();
+				SegmentDetails seg = segments.get(i);
+				segmentCoordBuffer[i*4+0] = (float) seg.p0.getX();
+				segmentCoordBuffer[i*4+1] = (float) seg.p0.getY();
+				segmentCoordBuffer[i*4+2] = (float) seg.p1.getX();
+				segmentCoordBuffer[i*4+3] = (float) seg.p1.getY();
 
-				colorBuffer[i*2+0] = colorpair.first.getRGB();
-				colorBuffer[i*2+1] = colorpair.second.getRGB();
+				colorBuffer[i*2+0] = seg.color0;
+				colorBuffer[i*2+1] = seg.color1;
+				
+				pickBuffer[i*2+0] = pickBuffer[i*2+1] = seg.pickingColor;
 			}
 			va.setBuffer(0, 2, segmentCoordBuffer);
 			va.setBuffer(1, 1, false, colorBuffer);
+			va.setBuffer(2, 1, false, pickBuffer);
 			isDirty = false;
 		}
 	}
@@ -365,7 +352,7 @@ public class Lines implements Renderable {
 	 */
 	@GLContextRequired
 	public void bindVertexArray() {
-		va.bindAndEnableAttributes(0,1);
+		va.bindAndEnableAttributes(0,1,2);
 	}
 
 
@@ -375,7 +362,7 @@ public class Lines implements Renderable {
 	 */
 	@GLContextRequired
 	public void releaseVertexArray() {
-		va.releaseAndDisableAttributes(0,1);
+		va.releaseAndDisableAttributes(0,1,2);
 	}
 
 }

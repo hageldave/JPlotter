@@ -50,7 +50,6 @@ public class Viz {
 				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0, triColor);
 			}
 			testcontent.setThickness(2f);
-			testcontent.setPickColor(0xffbabe);
 			content.lines.addItemToRender(testcontent);
 			content.triangles.addItemToRender(tris);
 			

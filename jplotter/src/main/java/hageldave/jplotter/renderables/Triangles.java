@@ -19,7 +19,7 @@ import hageldave.jplotter.globjects.VertexArray;
  * of an {@link FBO}. 
  * This color may serve as an identifier of the object that can be queried from 
  * a location of the rendering canvas. 
- * It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values).
+ * It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values) or 0.
  * 
  * @author hageldave
  */
@@ -448,7 +448,7 @@ public class Triangles implements Renderable {
 	}
 
 	/**
-	 * Specification of a Triangle which comprises vertex locations, colors and picking color.
+	 * Specification of a triangle which comprises vertex locations, colors and picking color.
 	 * @author hageldave
 	 */
 	public static class TriangleDetails {
@@ -479,7 +479,7 @@ public class Triangles implements Renderable {
 	 * @return the list of triangle details.<br>
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
-	public ArrayList<TriangleDetails> getTriangles() {
+	public ArrayList<TriangleDetails> getTriangleDetails() {
 		return triangles;
 	}
 

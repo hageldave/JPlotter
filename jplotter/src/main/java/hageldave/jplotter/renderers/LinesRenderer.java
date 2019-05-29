@@ -30,9 +30,11 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
 			+ NL + "layout(location = 1) in uint in_color;"
+			+ NL + "layout(location = 2) in uint in_pick;"
 			+ NL + "uniform mat4 viewMX;"
 			+ NL + "uniform mat3 modelMX;"
 			+ NL + "out vec4 vcolor;"
+			+ NL + "out vec4 vpick;"
 
 			+ NL + "vec4 unpackARGB(uint c) {"
 			+ NL + "   uint mask = uint(255);"
@@ -42,6 +44,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "void main() {"
 			+ NL + "   gl_Position = viewMX*vec4(modelMX*vec3(in_position,1),1);"
 			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "}"
 			+ NL
 			;
@@ -52,7 +55,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform float linewidth;"
 			+ NL + "in vec4 vcolor[];"
+			+ NL + "in vec4 vpick[];"
 			+ NL + "out vec4 gcolor;"
+			+ NL + "out vec4 gpick;"
 			+ NL + "void main() {"
 			+ NL + "   vec2 p1 = gl_in[0].gl_Position.xy;"
 			+ NL + "   vec2 p2 = gl_in[1].gl_Position.xy;"
@@ -63,21 +68,25 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   p = p1+miterDir;"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[0];"
+			+ NL + "   gpick = vpick[0];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p1-miterDir;"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[0];"
+			+ NL + "   gpick = vpick[0];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p2+miterDir;"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[1];"
+			+ NL + "   gpick = vpick[1];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p2-miterDir;"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[1];"
+			+ NL + "   gpick = vpick[1];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   EndPrimitive();"
@@ -88,11 +97,11 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) out vec4 frag_color;"
 			+ NL + "layout(location = 1) out vec4 pick_color;"
-			+ NL + "uniform vec4 pickColorToUse;"
 			+ NL + "in vec4 gcolor;"
+			+ NL + "in vec4 gpick;"
 			+ NL + "void main() {"
 			+ NL + "   frag_color = gcolor;"
-			+ NL + "   pick_color = pickColorToUse;"
+			+ NL + "   pick_color = gpick;"
 			+ NL + "}"
 			+ NL
 			;
@@ -145,8 +154,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
 		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
-		GL20.glUniform4f(loc, lines.getPickColorR(), lines.getPickColorG(), lines.getPickColorB(), 1f);
 		// draw things
 		lines.bindVertexArray();
 		GL11.glDrawArrays(GL11.GL_LINES, 0, lines.numSegments()*2);

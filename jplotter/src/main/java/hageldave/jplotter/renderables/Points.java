@@ -1,6 +1,7 @@
 package hageldave.jplotter.renderables;
 
 import java.awt.Color;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -21,7 +22,7 @@ import hageldave.jplotter.globjects.VertexArray;
  * <li>color - the color with wich the glyph it is renered</li>
  * <li>picking color - the picking color with which the glyph is rendered into the (invisible) picking color attachment
  * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
- * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values).
+ * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values) or 0.
  * </li>
  * </ul>
  * Apart from these per point attributes, this {@link Points} class features a global scaling parameter by which all
@@ -89,8 +90,8 @@ public class Points implements Renderable {
 			int[] colors = new int[numPoints*2];
 			for(int i=0; i<numPoints; i++){
 				PointDetails pd = points.get(i);
-				position[i*2+0] = pd.px;
-				position[i*2+1] = pd.py;
+				position[i*2+0] = (float)pd.location.getX();
+				position[i*2+1] = (float)pd.location.getY();
 				rotAndScale[i*2+0] = pd.rot;
 				rotAndScale[i*2+1] = pd.scale;
 				colors[i*2+0] = pd.color;
@@ -114,6 +115,26 @@ public class Points implements Renderable {
 	public void setDirty() {
 		this.isDirty = true;
 	}
+	
+	/**
+	 * Adds a point to this {@link Points} object.
+	 * This sets the {@link #isDirty()} state to true.
+	 * <p>
+	 * When keeping a reference to the location and changing it later on,
+	 * {@link #setDirty()} needs to be called in order for this {@link Points}
+	 * object to update and reflect the changed location.
+	 * @param p point location
+	 * @param rot rotation of the glyph for the point in radian
+	 * @param scale scaling of the glyph for the point
+	 * @param color integer packed ARGB color value of the glyph for the point (e.g. 0xff00ff00 = opaque green)
+	 * @param pick picking color of the point (see {@link Points} for details)
+	 * @return this for chaining
+	 */
+	public Points addPoint(Point2D p, double rot, double scale, int color, int pick){
+		this.points.add(new PointDetails(p, (float)rot, (float)scale, color, pick));
+		setDirty();
+		return this;
+	}
 
 	/**
 	 * Adds a point to this {@link Points} object.
@@ -127,9 +148,7 @@ public class Points implements Renderable {
 	 * @return this for chaining
 	 */
 	public Points addPoint(double px, double py, double rot, double scale, int color, int pick){
-		this.points.add(new PointDetails((float)px, (float)py, (float)rot, (float)scale, color, pick));
-		setDirty();
-		return this;
+		return addPoint(new Point2D.Double(px, py), rot, scale, color, pick);
 	}
 
 	/**
@@ -241,16 +260,14 @@ public class Points implements Renderable {
 	 * @author hageldave
 	 */
 	public static class PointDetails {
-		public final float px;
-		public final float py;
-		public final float rot;
-		public final float scale;
-		public final int color;
-		public final int pickColor;
+		public Point2D location;
+		public float rot;
+		public float scale;
+		public int color;
+		public int pickColor;
 		
-		public PointDetails(float px, float py, float rot, float scale, int color, int pickColor) {
-			this.px = px;
-			this.py = py;
+		public PointDetails(Point2D location, float rot, float scale, int color, int pickColor) {
+			this.location = location;
 			this.rot = rot;
 			this.scale = scale;
 			this.color = color;
@@ -258,6 +275,14 @@ public class Points implements Renderable {
 				pickColor = pickColor | 0xff000000;
 			this.pickColor = pickColor;
 		}
+	}
+	
+	/**
+	 * @return the list of point details.<br>
+	 * Make sure to call {@link #setDirty()} when manipulating.
+	 */
+	public ArrayList<PointDetails> getPointDetails() {
+		return points;
 	}
 
 	/**
