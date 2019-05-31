@@ -7,6 +7,7 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 
@@ -15,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.renderables.DefaultGlyph;
+import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 
@@ -66,43 +68,58 @@ public class IrisViz {
 				canvas.setyAxisLabel(i==3 ? dimNames[j] : "");
 				CompleteRenderer content = new CompleteRenderer();
 				canvas.setContent(content);
-				Points[] perClassPoints = new Points[]{
-						new Points(DefaultGlyph.CROSS),
-						new Points(DefaultGlyph.SQUARE),
-						new Points(DefaultGlyph.TRIANGLE)
-				};
-				content
-				.addItemToRender(perClassPoints[0])
-				.addItemToRender(perClassPoints[1])
-				.addItemToRender(perClassPoints[2]);
 
 				int[] perClassColors = new int[]{0xff007700,0xff990000,0xff0000bb};
 				double maxX,minX,maxY,minY;
 				maxX = maxY = Double.NEGATIVE_INFINITY;
 				minX = minY = Double.POSITIVE_INFINITY;
-				for(int k = 0; k < dataset.size(); k++){
-					double[] instance = dataset.get(k);
-					int clazz = (int)instance[4];
-					double x =instance[i];
-					double y = instance[j];
-					perClassPoints[clazz].addPoint(
-							x,
-							y,
-							0, 
-							1, 
-							perClassColors[clazz], 
-							k+1
-							);
-					maxX = Math.max(maxX, x);
-					maxY = Math.max(maxY, y);
-					minX = Math.min(minX, x);
-					minY = Math.min(minY, y);
+				if(i==j){
+					// make histo when same dimension on x and y axis
+					double[][] histo = mkHistogram(dataset, i, 20);
+					Lines lines = new Lines();
+					lines.addLineStrip(perClassColors[0], histo[3], histo[0]);
+					lines.addLineStrip(perClassColors[1], histo[3], histo[1]);
+					lines.addLineStrip(perClassColors[2], histo[3], histo[2]);
+					content.addItemToRender(lines);
+					minX = Arrays.stream(histo[3]).min().getAsDouble();
+					maxX = Arrays.stream(histo[3]).max().getAsDouble();
+					maxY = Math.max(maxY, Arrays.stream(histo[0]).max().getAsDouble());
+					maxY = Math.max(maxY, Arrays.stream(histo[1]).max().getAsDouble());
+					maxY = Math.max(maxY, Arrays.stream(histo[2]).max().getAsDouble());
+					minY = 0;
+				} else {
+					// make scatter
+					Points[] perClassPoints = new Points[]{
+							new Points(DefaultGlyph.CROSS),
+							new Points(DefaultGlyph.SQUARE),
+							new Points(DefaultGlyph.TRIANGLE)
+					};
+					content
+					.addItemToRender(perClassPoints[0])
+					.addItemToRender(perClassPoints[1])
+					.addItemToRender(perClassPoints[2]);
+					for(int k = 0; k < dataset.size(); k++){
+						double[] instance = dataset.get(k);
+						int clazz = (int)instance[4];
+						double x =instance[i];
+						double y = instance[j];
+						perClassPoints[clazz].addPoint(
+								x,
+								y,
+								0, 
+								1, 
+								perClassColors[clazz], 
+								k+1
+								);
+						maxX = Math.max(maxX, x);
+						maxY = Math.max(maxY, y);
+						minX = Math.min(minX, x);
+						minY = Math.min(minY, y);
+					}
 				}
 				canvas.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}
-
-
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -114,6 +131,24 @@ public class IrisViz {
 			frame.setVisible(true);
 			frame.transferFocus();
 		});
+	}
+	
+	static double[][] mkHistogram(ArrayList<double[]> dataset, int dim, int numbuckets){
+		double min = dataset.stream().mapToDouble(instance->instance[dim]).min().getAsDouble();
+		double max = dataset.stream().mapToDouble(instance->instance[dim]).max().getAsDouble();
+		double range = max-min;
+		double[] bucketVals = new double[numbuckets];
+		for(int i = 0; i < numbuckets; i++){
+			bucketVals[i] = i*range/(numbuckets-1) + min;
+		}
+		double[][] counts = new double[3][numbuckets];
+		for(int i = 0; i < dataset.size(); i++){
+			double[] instance = dataset.get(i);
+				double v = instance[dim];
+				int bucket = (int)((v-min)/range*numbuckets);
+				counts[(int)instance[4]][bucket<numbuckets ? bucket : numbuckets-1]++;
+		}
+		return new double[][]{counts[0],counts[1],counts[2],bucketVals};
 	}
 
 }
