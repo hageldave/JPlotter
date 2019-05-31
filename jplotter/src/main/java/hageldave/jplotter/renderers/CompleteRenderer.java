@@ -119,9 +119,10 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	 * Only instances of {@link Triangles}, {@link Lines}, {@link Points} and {@link Text}
 	 * are accepted, other item types result in an {@link IllegalArgumentException}. 
 	 * @param item to add
+	 * @return this for chaining
 	 * @throws IllegalArgumentException when unsupported type of item is specified.
 	 */
-	public void addItemToRender(Renderable item){
+	public CompleteRenderer addItemToRender(Renderable item){
 		if(item instanceof Triangles){
 			triangles.addItemToRender((Triangles) item);
 		} else 
@@ -140,6 +141,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 					+ ". This type is not supported by this renderer."
 			);
 		}
+		return this;
 	}
 
 }
