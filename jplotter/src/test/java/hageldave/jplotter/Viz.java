@@ -30,11 +30,7 @@ public class Viz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
-		CoordSysCanvas canvas = new CoordSysCanvas(){
-			{
-				rightPadding = 100;
-			}
-		};
+		CoordSysCanvas canvas = new CoordSysCanvas();
 		CompleteRenderer content = new CompleteRenderer();
 		content.setRenderOrder(PNT, LIN, TRI, TXT);
 		canvas.setContent(content);
@@ -75,8 +71,11 @@ public class Viz {
 		}
 		Legend legend = new Legend();
 		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, new Color(0xffe41a1c), "rand pnts");
-		legend.addGlyphLabel(DefaultGlyph.ARROW, new Color(0xff377eb8), "vectors");
-		canvas.setLegend(legend);
+		legend.addGlyphLabel(DefaultGlyph.ARROW, new Color(0xff377eb8), "-(x,y)");
+		legend.addLineLabel(2, new Color(0xffff00ff), "sin(x)");
+		legend.addLineLabel(2, new Color(0xff00ff00), "x=y");
+		canvas.setLegendRight(legend);
+		canvas.setLegendRightWidth(80);
 		
 		canvas.setCoordinateView(0, 0, 2, 1);
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);

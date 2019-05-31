@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
@@ -66,7 +67,14 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected LinesRenderer postContentLinesR = new LinesRenderer();
 	protected TextRenderer postContentTextR = new TextRenderer();
 	protected Renderer content=null;
-	protected Renderer legend=null;
+	protected Renderer legendRight=null;
+	protected Renderer legendBottom=null;
+	
+	protected int legendRightWidth = 70;
+	protected int legendBottomHeight = 20;
+	
+	protected Rectangle legendRightViewPort = new Rectangle();
+	protected Rectangle legendBottomViewPort = new Rectangle();
 
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
@@ -152,8 +160,28 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.content = content;
 	}
 	
-	public void setLegend(Renderer legend) {
-		this.legend = legend;
+	public void setLegendRight(Renderer legend) {
+		this.legendRight= legend;
+	}
+	
+	public void setLegendBottom(Renderer legend) {
+		this.legendBottom = legend;
+	}
+	
+	public void setLegendBottomHeight(int legendBottomHeight) {
+		this.legendBottomHeight = legendBottomHeight;
+	}
+	
+	public void setLegendRightWidth(int legendRightWidth) {
+		this.legendRightWidth = legendRightWidth;
+	}
+	
+	public int getLegendRightWidth() {
+		return legendRightWidth;
+	}
+	
+	public int getLegendBottomHeight() {
+		return legendBottomHeight;
 	}
 
 	/**
@@ -194,11 +222,15 @@ public class CoordSysCanvas extends FBOCanvas {
 		}
 		int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style, antialiased).getBounds().height;
 		int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style, antialiased).getBounds().height;
+		
+		int legendRightW = Objects.nonNull(legendRight) ? legendRightWidth+4:0;
+		int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
+		
 		// move coordwindow origin so that labels have enough display space
 		coordsysAreaLB.x[0] = maxYTickLabelWidth + leftPadding + 7;
-		coordsysAreaLB.y[0] = maxXTickLabelHeight + botPadding + 6;
+		coordsysAreaLB.y[0] = maxXTickLabelHeight + botPadding + legendBotH + 6;
 		// move opposing corner of coordwindow to have enough display space
-		coordsysAreaRT.x[0] = getWidth()-rightPadding-maxLabelHeight-4;
+		coordsysAreaRT.x[0] = getWidth()-rightPadding-maxLabelHeight-legendRightW-4;
 		coordsysAreaRT.y[0] = getHeight()-topPadding-maxLabelHeight-4;
 
 		// dispose of old stuff
@@ -249,10 +281,32 @@ public class CoordSysCanvas extends FBOCanvas {
 		}
 		// axis labels
 		xAxisLabelText.setTextString(getxAxisLabel());
+		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
 		yAxisLabelText.setTextString(getyAxisLabel());
 		yAxisLabelText.setAngle(-(float)Math.PI/2);
 		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 + yAxisLabelText.getTextSize().width/2));
-		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
+		
+		// setup legend areas
+		if(Objects.nonNull(legendRight)){
+			legendRightViewPort.setBounds(
+					(int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4), 
+					botPadding, 
+					legendRightWidth, 
+					(int)(coordsysAreaRT.getY()-botPadding)
+			);
+		} else {
+			legendRightViewPort.setBounds(0, 0, 0, 0);
+		}
+		if(Objects.nonNull(legendBottom)){
+			legendBottomViewPort.setBounds(
+					(int)coordsysAreaLB.getX(),
+					botPadding,
+					(int)(coordsysAreaLB.distance(coordsysAreaRB)),
+					legendBottomHeight
+			);
+		} else {
+			legendBottomViewPort.setBounds(0, 0, 0, 0);
+		}
 	}
 
 	/**
@@ -318,8 +372,10 @@ public class CoordSysCanvas extends FBOCanvas {
 		postContentTextR.glInit();
 		if(content != null)
 			content.glInit();
-		if(legend != null)
-			legend.glInit();
+		if(legendRight != null)
+			legendRight.glInit();
+		if(legendBottom != null)
+			legendBottom.glInit();
 	}
 
 	/**
@@ -341,11 +397,11 @@ public class CoordSysCanvas extends FBOCanvas {
 		// draw into the coord system
 		if(content != null){
 			content.glInit();
-			int viewportX = (int)coordsysAreaLB.getX();
+			int viewPortX = (int)coordsysAreaLB.getX();
 			int viewPortY = (int)coordsysAreaLB.getY();
 			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
 			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
-			GL11.glViewport(viewportX,viewPortY,viewPortW,viewPortH);
+			GL11.glViewport(viewPortX,viewPortY,viewPortW,viewPortH);
 			if(content instanceof AdaptableView){
 				double scaleX = viewPortW/coordinateView.getWidth();
 				double scaleY = viewPortH/coordinateView.getHeight();
@@ -356,14 +412,17 @@ public class CoordSysCanvas extends FBOCanvas {
 			content.render(viewPortW, viewPortH);
 			GL11.glViewport(0, 0, w, h);
 		}
-		if(legend != null){
-			legend.glInit();
-			int viewportX = (int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4);
-			int viewPortY = 0;
-			int viewPortW = Math.max(0,w-viewportX);
-			int viewPortH = (int)coordsysAreaRT.getY();
-			GL11.glViewport(viewportX,viewPortY,viewPortW,viewPortH);
-			legend.render(viewPortW,viewPortH);
+		// draw legends
+		if(Objects.nonNull(legendRight)){
+			legendRight.glInit();;
+			GL11.glViewport(legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+			legendRight.render(legendRightViewPort.width, legendRightViewPort.height);
+			GL11.glViewport(0, 0, w, h);
+		}
+		if(Objects.nonNull(legendBottom)){
+			legendBottom.glInit();;
+			GL11.glViewport(legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+			legendBottom.render(legendBottomViewPort.width, legendBottomViewPort.height);
 			GL11.glViewport(0, 0, w, h);
 		}
 		postContentLinesR.render(w, h);
@@ -457,15 +516,17 @@ public class CoordSysCanvas extends FBOCanvas {
 			postContentLinesR.close();
 		if(Objects.nonNull(content))
 			content.close();
-		if(Objects.nonNull(legend)){
-			legend.close();
-		}
+		if(Objects.nonNull(legendRight))
+			legendRight.close();
+		if(Objects.nonNull(legendBottom))
+			legendBottom.close();
 		preContentTextR = null;
 		preContentLinesR = null;
 		postContentTextR = null;
 		postContentLinesR = null;
 		content = null;
-		legend = null;
+		legendRight = null;
+		legendBottom = null;
 		super.close();
 	}
 

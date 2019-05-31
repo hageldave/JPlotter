@@ -92,6 +92,28 @@ public class Legend implements Renderable, Renderer {
 				currentY -= Math.max(10, fontHeight)+4; 
 			}
 		}
+		// lines second
+		for(Pair<String, Pair<Double, Color>> lineLabel : lineLabels) {
+			Text lbltxt = new Text(lineLabel.first, fontSize, fontStyle, true);
+			texts.add(lbltxt);
+			Double thickness = lineLabel.second.first;
+			Color color = lineLabel.second.second;
+			if(!thickness2lines.containsKey(thickness)){
+				Lines lines = new Lines();
+				lines.setThickness(thickness.floatValue());
+				thickness2lines.put(thickness, lines);
+			}
+			Lines lines = thickness2lines.get(thickness);
+			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+10, currentY+fontHeight/2+1, color.getRGB());
+			currentX += 14;
+			lbltxt.setOrigin(currentX, currentY);
+			currentX += lbltxt.getTextSize().width + fontHeight;
+			if(viewPortWidth-currentX < 14 + maxTextWidth){
+				// new line
+				currentX = leftPadding;
+				currentY -= Math.max(10, fontHeight)+4; 
+			}
+		}
 		
 		// initialize renderables
 		glyph2points.values().forEach(p->{
