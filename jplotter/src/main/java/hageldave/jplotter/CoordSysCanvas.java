@@ -66,6 +66,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected LinesRenderer postContentLinesR = new LinesRenderer();
 	protected TextRenderer postContentTextR = new TextRenderer();
 	protected Renderer content=null;
+	protected Renderer legend=null;
 
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
@@ -149,6 +150,10 @@ public class CoordSysCanvas extends FBOCanvas {
 	 */
 	public void setContent(Renderer content) {
 		this.content = content;
+	}
+	
+	public void setLegend(Renderer legend) {
+		this.legend = legend;
 	}
 
 	/**
@@ -313,6 +318,8 @@ public class CoordSysCanvas extends FBOCanvas {
 		postContentTextR.glInit();
 		if(content != null)
 			content.glInit();
+		if(legend != null)
+			legend.glInit();
 	}
 
 	/**
@@ -347,6 +354,16 @@ public class CoordSysCanvas extends FBOCanvas {
 				((AdaptableView) content).setViewMX(coordSysScaleMX.mul(coordSysTransMX,coordSysViewMX), coordSysScaleMX, coordSysTransMX);
 			}
 			content.render(viewPortW, viewPortH);
+			GL11.glViewport(0, 0, w, h);
+		}
+		if(legend != null){
+			legend.glInit();
+			int viewportX = (int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4);
+			int viewPortY = 0;
+			int viewPortW = Math.max(0,w-viewportX);
+			int viewPortH = (int)coordsysAreaRT.getY();
+			GL11.glViewport(viewportX,viewPortY,viewPortW,viewPortH);
+			legend.render(viewPortW,viewPortH);
 			GL11.glViewport(0, 0, w, h);
 		}
 		postContentLinesR.render(w, h);
@@ -440,11 +457,15 @@ public class CoordSysCanvas extends FBOCanvas {
 			postContentLinesR.close();
 		if(Objects.nonNull(content))
 			content.close();
+		if(Objects.nonNull(legend)){
+			legend.close();
+		}
 		preContentTextR = null;
 		preContentLinesR = null;
 		postContentTextR = null;
 		postContentLinesR = null;
 		content = null;
+		legend = null;
 		super.close();
 	}
 

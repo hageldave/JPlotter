@@ -17,6 +17,7 @@ import hageldave.jplotter.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.renderables.DefaultGlyph;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
@@ -29,7 +30,11 @@ public class Viz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		CoordSysCanvas canvas = new CoordSysCanvas(){
+			{
+				rightPadding = 100;
+			}
+		};
 		CompleteRenderer content = new CompleteRenderer();
 		content.setRenderOrder(PNT, LIN, TRI, TXT);
 		canvas.setContent(content);
@@ -45,7 +50,7 @@ public class Viz {
 				double x2 = (i+1)*scaling;
 				double y1 = Math.sin(x1);
 				double y2 = Math.sin(x2);
-				lines.addSegment(x1, y1, x2, y2, 0xffff00ff);
+				lines.addSegment(x1, y1, x2, y2, 0xffff00ff,0xffff00ff, 0xbabe01);
 				lines.addSegment(i, i, i+1, i+1, 0xff00ff00);
 				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0, triColor);
 			}
@@ -68,6 +73,11 @@ public class Viz {
 			}
 			content.points.addItemToRender(circlepoints).addItemToRender(quiver);
 		}
+		Legend legend = new Legend();
+		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, new Color(0xffe41a1c), "rand pnts");
+		legend.addGlyphLabel(DefaultGlyph.ARROW, new Color(0xff377eb8), "vectors");
+		canvas.setLegend(legend);
+		
 		canvas.setCoordinateView(0, 0, 2, 1);
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
