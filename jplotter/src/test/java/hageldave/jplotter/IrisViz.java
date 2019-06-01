@@ -63,8 +63,10 @@ public class IrisViz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		JPanel gridPane = new JPanel(new GridLayout(4, 4));
+		gridPane.setBackground(Color.WHITE);
 		frame.getContentPane().add(gridPane, BorderLayout.CENTER);
 		JPanel header = new JPanel();
+		header.setBackground(Color.WHITE);
 		header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
 		frame.getContentPane().add(header, BorderLayout.NORTH);
 		
@@ -83,7 +85,6 @@ public class IrisViz {
 			legend.addGlyphLabel(perClassGlyphs[c], new Color(perClassColors[c]), perClassNames[c]);
 		}
 		legendCanvas.setRenderer(legend);
-		header.setBackground(Color.white);
 		header.add(Box.createHorizontalStrut(30));
 		header.add(legendCanvas);
 		

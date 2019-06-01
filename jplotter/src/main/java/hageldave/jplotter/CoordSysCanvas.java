@@ -18,6 +18,7 @@ import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.renderables.CharacterAtlas;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderers.AdaptableView;
@@ -53,6 +54,13 @@ import hageldave.jplotter.util.Utils;
  * view matrix corresponding to the coordinate view.
  * The content renderer will be able to draw within the viewport defined by the coordinate
  * system area of this Canvas.
+ * <p>
+ * Optionally a {@link Renderer} for drawing a legend (such as the {@link Legend} class)
+ * can be set to either the bottom or right hand side of the coordinate system (can also
+ * use both areas at once).
+ * Use {@link #setLegendBottom(Renderer)} or {@link #setLegendRight(Renderer)} to do so.
+ * The legend area size can be partially controlled by {@link #setLegendBottomHeight(int)}
+ * and {@link #setLegendRightWidth(int)} if this is needed.
  * <p>
  * For interacting with this CoordSysCanvas there already exist implementations of MouseListeners
  * for panning and zooming (see {@link CoordSysPanning} and {@link CoordSysScrollZoom}).
@@ -122,7 +130,6 @@ public class CoordSysCanvas extends FBOCanvas {
 
 	protected CoordSysCanvas(GLData data) {
 		super(data);
-		super.fboClearColor = Color.WHITE;
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB, Color.BLACK);
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT, Color.BLACK);
 		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT, Color.GRAY);
@@ -155,31 +162,73 @@ public class CoordSysCanvas extends FBOCanvas {
 	/**
 	 * Sets the content renderer that will draw into the area of the coordinate system.
 	 * @param content the content renderer
+	 * @return the previous content renderer (which may need to be closed to free GL resources),
+	 * null if none was set
 	 */
-	public void setContent(Renderer content) {
+	public Renderer setContent(Renderer content) {
+		Renderer old = this.content;
 		this.content = content;
+		return old;
 	}
 	
-	public void setLegendRight(Renderer legend) {
+	/**
+	 * Sets the renderer that will draw the legend to the right of the coordinate system.
+	 * The view port area for this renderer will start at the top edge of the coordinate system,
+	 * be {@link #getLegendRightWidth()} wide and extend to the bottom of the canvas (-padding).
+	 * @param legend renderer for right side of coordinate system
+	 * @return the previous legend renderer (which may need to be closed to free GL resources),
+	 * null if none was set
+	 */
+	public Renderer setLegendRight(Renderer legend) {
+		Renderer old = this.legendRight;
 		this.legendRight= legend;
+		return old;
 	}
 	
-	public void setLegendBottom(Renderer legend) {
+	/**
+	 * Sets the renderer that will draw the legend below the coordinate system.
+	 * The view port area for this renderer will start at the left edge of the coordinate system below
+	 * the axis tick labels, will be as wide as the x-axis and {@link #getLegendBottomHeight()} high.
+	 * @param legend renderer for bottom side of coordinate system
+	 * @return the previous legend renderer (which may need to be closed to free GL resources),
+	 * null if none was set
+	 */
+	public Renderer setLegendBottom(Renderer legend) {
+		Renderer old = this.legendBottom;
 		this.legendBottom = legend;
+		return old;
 	}
 	
+	/**
+	 * Sets the height of the legend area below the coordinate system.
+	 * (width is determined by x-axis width)
+	 * @param legendBottomHeight height of the bottom legend area.
+	 * (default is 20px)
+	 */
 	public void setLegendBottomHeight(int legendBottomHeight) {
 		this.legendBottomHeight = legendBottomHeight;
 	}
 	
+	/**
+	 * Sets the width of the legend area right to the coordinate system.
+	 * (height is determined by the space available until the bottom of the canvas)
+	 * @param legendRightWidth width of the right legend area.
+	 * (default is 70 px)
+	 */
 	public void setLegendRightWidth(int legendRightWidth) {
 		this.legendRightWidth = legendRightWidth;
 	}
 	
+	/**
+	 * @return width of the width of the right hand side legend area.
+	 */
 	public int getLegendRightWidth() {
 		return legendRightWidth;
 	}
 	
+	/**
+	 * @return height of the bottom side legend area.
+	 */
 	public int getLegendBottomHeight() {
 		return legendBottomHeight;
 	}

@@ -1,6 +1,7 @@
 package hageldave.jplotter.renderables;
 
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,6 +13,23 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Pair;
 
+/**
+ * The Legend class is {@link Renderable} and its own {@link Renderer} at once.
+ * It is intended to be used to display labels and corresponding visual representatives 
+ * such as a colored {@link Glyph} or line segment, in order to explain the meaning 
+ * of the contents of a visualization.
+ * <p>
+ * To add items to the legend, the methods {@link #addGlyphLabel(Glyph, Color, String)} and 
+ * {@link #addLineLabel(double, Color, String)} can be used.
+ * The layout of the items is very similar to {@link FlowLayout} in which the items
+ * are positioned next to each other until no more space is available to the right
+ * and a line break happens, then positioning continues in the next row.
+ * A slight difference is that glyph labels are always first in order and followed by
+ * line labels.
+ * Layouting happens on {@link #updateGL()}.
+ * 
+ * @author hageldave
+ */
 public class Legend implements Renderable, Renderer {
 	
 	protected ArrayList<Pair<String, Pair<Glyph,Color>>> glyphLabels = new ArrayList<>();
@@ -32,21 +50,44 @@ public class Legend implements Renderable, Renderer {
 	
 	protected int viewPortHeight = 0;
 	
+	/**
+	 * Sets the {@link #isDirty()} state of this legend to true.
+	 * This indicates that a call to {@link #updateGL()} is necessary
+	 * to sync GL resources with this legends state.
+	 * @return this for chaining
+	 */
 	public Legend setDirty() {
 		this.isDirty = true;
 		return this;
 	}
 	
+	/**
+	 * Adds a label for a glyph to this legend.
+	 * @param glyph to appear in front of the label text
+	 * @param color color of the glyph
+	 * @param labeltxt text of the label
+	 * @return this for chaining
+	 */
 	public Legend addGlyphLabel(Glyph glyph, Color color, String labeltxt){
 		glyphLabels.add(Pair.of(labeltxt, Pair.of(glyph, color)));
 		return setDirty();
 	}
 	
+	/**
+	 * Adds a label for a line to this legend.
+	 * @param thickness of the line to appear in front of the label text
+	 * @param color of the line
+	 * @param labeltxt text of the label
+	 * @return this for chaining
+	 */
 	public Legend addLineLabel(double thickness, Color color, String labeltxt){
 		this.lineLabels.add(Pair.of(labeltxt, Pair.of(thickness, color)));
 		return setDirty();
 	}
 	
+	/**
+	 * NOOP
+	 */
 	@Override
 	public void initGL() {
 		// will initialize renderables in updateGL
@@ -57,7 +98,13 @@ public class Legend implements Renderable, Renderer {
 		return isDirty;
 	}
 
+	/**
+	 * Purges all {@link Points}, {@link Lines} and {@link Text}s of this Legend.
+	 * Then these Renderables are created again while laying them out according to
+	 * the available viewport size.
+	 */
 	@Override
+	@GLContextRequired
 	public void updateGL() {
 		clearGL();
 		// do layout
@@ -138,6 +185,7 @@ public class Legend implements Renderable, Renderer {
 		delegate.close();
 	}
 	
+	
 	@GLContextRequired
 	protected void clearGL() {
 		glyph2points.values().forEach(p->{
@@ -157,11 +205,15 @@ public class Legend implements Renderable, Renderer {
 		texts.clear();
 	}
 
+	/**
+	 * Initializes the delegate {@link Renderer}.
+	 */
 	@Override
 	public void glInit() {
 		delegate.glInit();
 	}
 
+	
 	@Override
 	public void render(int w, int h) {
 		if(w == 0 || h == 0){

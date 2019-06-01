@@ -145,7 +145,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected VertexArray vertexArray=null;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	protected boolean useBitBlit = false;
-	protected Color fboClearColor = Color.darkGray;
 	protected Color screenClearColor = Color.BLACK;
 	protected boolean useMSAA = true;
 	public final int canvasID;
@@ -308,7 +307,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				fillShader.bind();
 				int loc;
 				loc = GL20.glGetUniformLocation(fillShader.getShaderProgID(), "colorFill");
-				GL20.glUniform4f(loc, fboClearColor.getRed()/255f, fboClearColor.getGreen()/255f, fboClearColor.getBlue()/255f, fboClearColor.getAlpha()/255f);
+				GL20.glUniform4f(loc, getBackground().getRed()/255f, getBackground().getGreen()/255f, getBackground().getBlue()/255f, getBackground().getAlpha()/255f);
 				loc = GL20.glGetUniformLocation(fillShader.getShaderProgID(), "pickFill");
 				GL20.glUniform4f(loc, 0,0,0,0);
 				loc = GL20.glGetUniformLocation(fillShader.getShaderProgID(), "projMX");

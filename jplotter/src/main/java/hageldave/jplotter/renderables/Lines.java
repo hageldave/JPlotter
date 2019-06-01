@@ -226,8 +226,8 @@ public class Lines implements Renderable {
 	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
 	 * @param globalAlphaMultiplier of the triangles in this collection
 	 */
-	public void setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
-		this.globalAlphaMultiplier = globalAlphaMultiplier;
+	public void setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = (float)globalAlphaMultiplier;
 	}
 
 	/**
@@ -258,8 +258,8 @@ public class Lines implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
-	public Lines setThickness(float thickness) {
-		this.thickness = thickness;
+	public Lines setThickness(double thickness) {
+		this.thickness = (float)thickness;
 		return this;
 	}
 

@@ -11,6 +11,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.CoordSysCanvas;
@@ -28,6 +29,8 @@ public class Viz {
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("AWT test");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setContentPane(new JPanel());
+		frame.getContentPane().setBackground(Color.white);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
 		CoordSysCanvas canvas = new CoordSysCanvas();
@@ -50,24 +53,23 @@ public class Viz {
 				lines.addSegment(i, i, i+1, i+1, 0xff00ff00);
 				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0, triColor);
 			}
-			tris.setGlobalAlphaMultiplier(0.2f);
-			lines.setThickness(2f);
-			lines.setGlobalAlphaMultiplier(0.8f);
+			tris.setGlobalAlphaMultiplier(0.2);
+			lines.setThickness(2);
+			lines.setGlobalAlphaMultiplier(0.8);
 			content.lines.addItemToRender(lines);
 			content.triangles.addItemToRender(tris);
 			
-			Points circlepoints = new Points(DefaultGlyph.TRIANGLE_F);
-			circlepoints.setGlobalAlphaMultiplier(0.2f);
+			Points trianglepoints = new Points(DefaultGlyph.TRIANGLE_F);
 			Points quiver = new Points(DefaultGlyph.ARROW);
 			Color color1 = new Color(0xffe41a1c);
 			Color color2 = new Color(0xff377eb8);
 			for(int i = 0; i < 100; i++){
-				circlepoints.addPoint(Math.random(), Math.random(), color1);
+				trianglepoints.addPoint(Math.random(), Math.random(), color1);
 				double x = Math.random();
 				double y = Math.random();
 				quiver.addPoint(x,y, Math.atan2(-y, -x), Math.sqrt(x*x+y*y), color2);
 			}
-			content.points.addItemToRender(circlepoints).addItemToRender(quiver);
+			content.points.addItemToRender(trianglepoints).addItemToRender(quiver);
 		}
 		Legend legend = new Legend();
 		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, new Color(0xffe41a1c), "rand pnts");

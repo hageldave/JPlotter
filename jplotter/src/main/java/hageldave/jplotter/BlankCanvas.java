@@ -1,6 +1,5 @@
 package hageldave.jplotter;
 
-import java.awt.Color;
 import java.util.Objects;
 
 import hageldave.jplotter.Annotations.GLContextRequired;
@@ -10,10 +9,6 @@ public class BlankCanvas extends FBOCanvas {
 	private static final long serialVersionUID = 1L;
 
 	protected Renderer renderer;
-
-	public BlankCanvas() {
-		super.fboClearColor = Color.white;
-	}
 
 	@Override
 	@GLContextRequired

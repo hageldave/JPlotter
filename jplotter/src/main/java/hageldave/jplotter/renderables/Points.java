@@ -246,8 +246,8 @@ public class Points implements Renderable {
 	 * @param globalAlphaMultiplier of the points in this collection
 	 * @return this for chaining
 	 */
-	public Points setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
-		this.globalAlphaMultiplier = globalAlphaMultiplier;
+	public Points setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = (float)globalAlphaMultiplier;
 		return this;
 	}
 

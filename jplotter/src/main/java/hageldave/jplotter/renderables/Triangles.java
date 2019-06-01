@@ -385,8 +385,8 @@ public class Triangles implements Renderable {
 	 * The triangle will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
 	 * @param globalAlphaMultiplier of the triangles in this collection
 	 */
-	public void setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
-		this.globalAlphaMultiplier = globalAlphaMultiplier;
+	public void setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = (float)globalAlphaMultiplier;
 	}
 
 	/**
