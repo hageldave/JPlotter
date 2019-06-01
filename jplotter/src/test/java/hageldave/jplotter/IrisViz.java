@@ -1,5 +1,6 @@
 package hageldave.jplotter;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -12,11 +13,15 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.renderables.DefaultGlyph;
+import hageldave.jplotter.renderables.Glyph;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
@@ -25,17 +30,11 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 public class IrisViz {
 
 	public static void main(String[] args) throws IOException {
-		JFrame frame = new JFrame("AWT test");
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		JPanel gridPane = new JPanel(new GridLayout(4, 4));
-		frame.setContentPane(gridPane);
-
 		// setup content
 		ArrayList<double[]> dataset = new ArrayList<>();
 		//URL irissrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data");
 		try (	InputStream stream = IrisViz.class.getResourceAsStream("/iris.data");
-				Scanner  sc = new Scanner(stream);
-				)
+				Scanner  sc = new Scanner(stream))
 		{
 			while(sc.hasNextLine()){
 				String nextLine = sc.nextLine();
@@ -58,9 +57,37 @@ public class IrisViz {
 				dataset.add(values);
 			}
 		}
-		// done reading, lets make scatter plot matrix 
-		LinkedList<CoordSysCanvas> canvasCollection = new LinkedList<>();
+		
+		// done reading data, lets make the viz
+		JFrame frame = new JFrame("Iris Dataset");
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.getContentPane().setLayout(new BorderLayout());
+		JPanel gridPane = new JPanel(new GridLayout(4, 4));
+		frame.getContentPane().add(gridPane, BorderLayout.CENTER);
+		JPanel header = new JPanel();
+		header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
+		frame.getContentPane().add(header, BorderLayout.NORTH);
+		
+		LinkedList<FBOCanvas> canvasCollection = new LinkedList<>();
 		String[] dimNames = new String[]{"sepal length","sepal width","petal length","petal width"};
+		String[] perClassNames = new String[]{"Setosa", "Versicolor", "Virginica"};
+		int[] perClassColors = new int[]{0xff66c2a5,0xfffc8d62,0xff8da0cb};
+		Glyph[] perClassGlyphs = new Glyph[]{DefaultGlyph.CIRCLE_F, DefaultGlyph.SQUARE_F, DefaultGlyph.TRIANGLE_F};
+		
+		// add legend on top
+		BlankCanvas legendCanvas = new BlankCanvas();
+		canvasCollection.add(legendCanvas);
+		legendCanvas.setPreferredSize(new Dimension(300, 16));
+		Legend legend = new Legend();
+		for(int c=0; c<3; c++){
+			legend.addGlyphLabel(perClassGlyphs[c], new Color(perClassColors[c]), perClassNames[c]);
+		}
+		legendCanvas.setRenderer(legend);
+		header.setBackground(Color.white);
+		header.add(Box.createHorizontalStrut(30));
+		header.add(legendCanvas);
+		
+		// make scatter plot matrix
 		for(int j = 0; j < 4; j++){
 			for(int i = 0; i < 4; i++){
 				CoordSysCanvas canvas = new CoordSysCanvas();
@@ -71,7 +98,6 @@ public class IrisViz {
 				CompleteRenderer content = new CompleteRenderer();
 				canvas.setContent(content);
 
-				int[] perClassColors = new int[]{0xff66c2a5,0xfffc8d62,0xff8da0cb};
 				double maxX,minX,maxY,minY;
 				maxX = maxY = Double.NEGATIVE_INFINITY;
 				minX = minY = Double.POSITIVE_INFINITY;
@@ -102,14 +128,14 @@ public class IrisViz {
 				} else {
 					// make scatter
 					Points[] perClassPoints = new Points[]{
-							new Points(DefaultGlyph.CIRCLE_F),
-							new Points(DefaultGlyph.SQUARE_F),
-							new Points(DefaultGlyph.TRIANGLE_F)
+							new Points(perClassGlyphs[0]),
+							new Points(perClassGlyphs[1]),
+							new Points(perClassGlyphs[2])
 					};
 					content
-					.addItemToRender(perClassPoints[0].setGlobalAlphaMultiplier(0.7f))
-					.addItemToRender(perClassPoints[1].setGlobalAlphaMultiplier(0.7f))
-					.addItemToRender(perClassPoints[2].setGlobalAlphaMultiplier(0.7f));
+					.addItemToRender(perClassPoints[0].setGlobalAlphaMultiplier(0.6f))
+					.addItemToRender(perClassPoints[1].setGlobalAlphaMultiplier(0.6f))
+					.addItemToRender(perClassPoints[2].setGlobalAlphaMultiplier(0.6f));
 					for(int k = 0; k < dataset.size(); k++){
 						double[] instance = dataset.get(k);
 						int clazz = (int)instance[4];
@@ -132,6 +158,7 @@ public class IrisViz {
 				canvas.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}
+		
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
