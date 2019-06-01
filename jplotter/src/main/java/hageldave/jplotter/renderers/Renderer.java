@@ -25,9 +25,9 @@ import hageldave.jplotter.renderables.Renderable;
 public interface Renderer extends AutoCloseable {
 
 	/**
-	 * initializes this renderer, i.e. allocates GL resources
-	 * such as a {@link Shader} or the resources of
-	 * {@link Renderable}s it's using.
+	 * Initializes this renderer, i.e. allocates GL resources such as a 
+	 * {@link Shader} or the resources of {@link Renderable}s it's using.
+	 * This method should return early when already been called before.
 	 */
 	@GLContextRequired
 	public void glInit();

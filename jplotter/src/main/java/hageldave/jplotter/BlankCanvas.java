@@ -3,8 +3,18 @@ package hageldave.jplotter;
 import java.util.Objects;
 
 import hageldave.jplotter.Annotations.GLContextRequired;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderers.Renderer;
 
+/**
+ * The BlankCanvas is an {@link FBOCanvas} that uses a single {@link Renderer} 
+ * to draw its contents.
+ * <p>
+ * This can for example come in handy when a {@link Legend} should be drawn in
+ * another canvas than the {@link CoordSysCanvas}. 
+ * 
+ * @author hageldave
+ */
 public class BlankCanvas extends FBOCanvas {
 	private static final long serialVersionUID = 1L;
 
@@ -36,6 +46,10 @@ public class BlankCanvas extends FBOCanvas {
 		renderer = null;
 	}
 	
+	/**
+	 * Sets the renderer of this canvas.
+	 * @param renderer to draw contents.
+	 */
 	public void setRenderer(Renderer renderer) {
 		this.renderer = renderer;
 	}
