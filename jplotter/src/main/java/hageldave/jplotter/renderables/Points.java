@@ -225,9 +225,11 @@ public class Points implements Renderable {
 	 * The value will be multiplied with each point instance's scaling parameter when rendering.
 	 * The glyph will then be scaled by the factor {@code f = globalScaling * point.scaling * renderer.scaling}.
 	 * @param globalScaling of the points in this collection.
+	 * @return this for chaining
 	 */
-	public void setGlobalScaling(double globalScaling) {
+	public Points setGlobalScaling(double globalScaling) {
 		this.globalScaling = (float)globalScaling;
+		return this;
 	}
 
 	/**
@@ -242,9 +244,11 @@ public class Points implements Renderable {
 	 * The value will be multiplied with each points alpha color value when rendering.
 	 * The glyph will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
 	 * @param globalAlphaMultiplier of the points in this collection
+	 * @return this for chaining
 	 */
-	public void setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
+	public Points setGlobalAlphaMultiplier(float globalAlphaMultiplier) {
 		this.globalAlphaMultiplier = globalAlphaMultiplier;
+		return this;
 	}
 
 	/**

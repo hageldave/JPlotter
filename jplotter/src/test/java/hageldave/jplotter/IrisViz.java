@@ -1,5 +1,6 @@
 package hageldave.jplotter;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
@@ -18,6 +19,7 @@ import javax.swing.SwingUtilities;
 import hageldave.jplotter.renderables.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 
 public class IrisViz {
@@ -69,18 +71,28 @@ public class IrisViz {
 				CompleteRenderer content = new CompleteRenderer();
 				canvas.setContent(content);
 
-				int[] perClassColors = new int[]{0xff007700,0xff990000,0xff0000bb};
+				int[] perClassColors = new int[]{0xff66c2a5,0xfffc8d62,0xff8da0cb};
 				double maxX,minX,maxY,minY;
 				maxX = maxY = Double.NEGATIVE_INFINITY;
 				minX = minY = Double.POSITIVE_INFINITY;
 				if(i==j){
 					// make histo when same dimension on x and y axis
-					double[][] histo = mkHistogram(dataset, i, 20);
+					int numBuckets = 20;
+					double[][] histo = mkHistogram(dataset, i, numBuckets);
 					Lines lines = new Lines();
+					lines.setThickness(1.5f);
 					lines.addLineStrip(perClassColors[0], histo[3], histo[0]);
 					lines.addLineStrip(perClassColors[1], histo[3], histo[1]);
 					lines.addLineStrip(perClassColors[2], histo[3], histo[2]);
 					content.addItemToRender(lines);
+					Triangles tris = new Triangles();
+					for(int k = 0; k < numBuckets-1; k++){
+						for(int c = 0; c < 3; c++){
+							tris.addQuad(histo[3][k], 0, histo[3][k], histo[c][k], histo[3][k+1], histo[c][k+1], histo[3][k+1], 0, new Color(perClassColors[c]));
+						}
+					}
+					tris.setGlobalAlphaMultiplier(0.1f);
+					content.addItemToRender(tris);
 					minX = Arrays.stream(histo[3]).min().getAsDouble();
 					maxX = Arrays.stream(histo[3]).max().getAsDouble();
 					maxY = Math.max(maxY, Arrays.stream(histo[0]).max().getAsDouble());
@@ -90,14 +102,14 @@ public class IrisViz {
 				} else {
 					// make scatter
 					Points[] perClassPoints = new Points[]{
-							new Points(DefaultGlyph.CROSS),
-							new Points(DefaultGlyph.SQUARE),
-							new Points(DefaultGlyph.TRIANGLE)
+							new Points(DefaultGlyph.CIRCLE_F),
+							new Points(DefaultGlyph.SQUARE_F),
+							new Points(DefaultGlyph.TRIANGLE_F)
 					};
 					content
-					.addItemToRender(perClassPoints[0])
-					.addItemToRender(perClassPoints[1])
-					.addItemToRender(perClassPoints[2]);
+					.addItemToRender(perClassPoints[0].setGlobalAlphaMultiplier(0.7f))
+					.addItemToRender(perClassPoints[1].setGlobalAlphaMultiplier(0.7f))
+					.addItemToRender(perClassPoints[2].setGlobalAlphaMultiplier(0.7f));
 					for(int k = 0; k < dataset.size(); k++){
 						double[] instance = dataset.get(k);
 						int clazz = (int)instance[4];

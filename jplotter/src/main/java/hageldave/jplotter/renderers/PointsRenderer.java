@@ -161,7 +161,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "globalScaling");
 		GL20.glUniform1f(loc, this.glyphScaling * item.glyph.pixelSize() * item.getGlobalScaling());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
-		GL20.glUniform1f(loc, this.glyphScaling * item.glyph.pixelSize() * item.getGlobalAlphaMultiplier());
+		GL20.glUniform1f(loc, item.getGlobalAlphaMultiplier());
 		// draw things
 		item.bindVertexArray();
 		if(item.glyph.useElementsDrawCall()){
