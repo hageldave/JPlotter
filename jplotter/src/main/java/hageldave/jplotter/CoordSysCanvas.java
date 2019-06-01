@@ -74,6 +74,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected TextRenderer preContentTextR = new TextRenderer();
 	protected LinesRenderer postContentLinesR = new LinesRenderer();
 	protected TextRenderer postContentTextR = new TextRenderer();
+	protected Renderer overlay;
 	protected Renderer content=null;
 	protected Renderer legendRight=null;
 	protected Renderer legendBottom=null;
@@ -196,6 +197,18 @@ public class CoordSysCanvas extends FBOCanvas {
 	public Renderer setLegendBottom(Renderer legend) {
 		Renderer old = this.legendBottom;
 		this.legendBottom = legend;
+		return old;
+	}
+	
+	/**
+	 * Sets the overlay renderer that will draw at last in the sequence and thus
+	 * overlays the whole rendering.
+	 * @param overlayRenderer
+	 * @return
+	 */
+	public Renderer setOverlay(Renderer overlayRenderer) {
+		Renderer old = overlayRenderer;
+		this.overlay = overlayRenderer;
 		return old;
 	}
 	
@@ -461,6 +474,9 @@ public class CoordSysCanvas extends FBOCanvas {
 			content.render(viewPortW, viewPortH);
 			GL11.glViewport(0, 0, w, h);
 		}
+		postContentLinesR.render(w, h);
+		postContentTextR.render(w, h);
+		
 		// draw legends
 		if(Objects.nonNull(legendRight)){
 			legendRight.glInit();;
@@ -474,8 +490,25 @@ public class CoordSysCanvas extends FBOCanvas {
 			legendBottom.render(legendBottomViewPort.width, legendBottomViewPort.height);
 			GL11.glViewport(0, 0, w, h);
 		}
-		postContentLinesR.render(w, h);
-		postContentTextR.render(w, h);
+		
+		// draw overlay
+		if(Objects.nonNull(overlay)){
+			Rectangle overlayViewPort = this.getOverlayArea();
+			int vpx,vpy,vpw,vph;
+			if(Objects.nonNull(overlayViewPort)){
+				vpx=0;
+				vpy=0;
+				vpw=w;
+				vph=h;
+			} else {
+				vpx=overlayViewPort.x; 
+				vpy=overlayViewPort.y; 
+				vpw=overlayViewPort.width; 
+				vph=overlayViewPort.height;
+			}
+			GL11.glViewport(vpx, vpy, vpw, vph);
+			overlay.render(vpw, vph);
+		}
 	}
 
 	/**
@@ -529,6 +562,16 @@ public class CoordSysCanvas extends FBOCanvas {
 				);
 	}
 
+
+	/**
+	 * Returns the area for the {@link #overlay} to render in.
+	 * By default returns null, which results in the whole canvas as area,
+	 * can be overridden to fit your needs.
+	 * @return null by default
+	 */
+	protected Rectangle getOverlayArea() {
+		return null;
+	}
 
 	/**
 	 * Transforms a mouse location on this Canvas to the corresponding
