@@ -14,6 +14,7 @@ import java.util.Objects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL15;
+import org.lwjgl.system.Platform;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.FBOCanvas;
@@ -49,14 +50,28 @@ import hageldave.jplotter.util.GenericKey;
  */
 public class CharacterAtlas implements AutoCloseable {
 
-	protected static final String CHARACTERS = 
+	public static final String CHARACTERS = 
 			" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 
 	public static final float charTexWidth = 1.0f/CHARACTERS.length();
+	
+	private static String FONT_NAME;
 
 	protected static final Img FONTMETRIC_IMG = new Img(32, 32);
 
 	protected static final HashMap<Integer, HashMap<GenericKey, CharacterAtlas>> ATLAS_COLLECTION = new HashMap<>();
+	
+	static {
+		String fontname = System.getProperty("jplotter_fontname");
+		if(fontname == null) {
+			if(Platform.get() == Platform.WINDOWS) {
+				fontname = "Consolas";
+			} else {
+				fontname = Font.MONOSPACED;
+			}
+		}
+		FONT_NAME = fontname;
+	}
 
 	public final Font font;
 	public final int charWidth;
@@ -82,7 +97,7 @@ public class CharacterAtlas implements AutoCloseable {
 		this.antialiased = antialiased;
 
 		Object aahint = antialiased ? RenderingHints.VALUE_TEXT_ANTIALIAS_ON:RenderingHints.VALUE_TEXT_ANTIALIAS_OFF;
-		font = new Font(Font.MONOSPACED, style, fontSize);
+		font = new Font(FONT_NAME, style, fontSize);
 		Rectangle2D bounds = boundsForText(CHARACTERS.length(), font, antialiased);
 		Img img = new Img(bounds.getBounds().getSize());
 		charWidth = img.getWidth()/CHARACTERS.length();
@@ -156,7 +171,7 @@ public class CharacterAtlas implements AutoCloseable {
 	 * @return bounding rectangle for a text of specified length and font.
 	 */
 	public static Rectangle2D boundsForText(int textlength, int fontSize, int style, boolean antialiased){
-		Font font = new Font(Font.MONOSPACED, style, fontSize);
+		Font font = new Font(FONT_NAME, style, fontSize);
 		return boundsForText(textlength, font, antialiased);
 	}
 
