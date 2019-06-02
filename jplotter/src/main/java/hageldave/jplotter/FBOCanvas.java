@@ -2,6 +2,7 @@ package hageldave.jplotter;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -24,6 +25,8 @@ import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.globjects.FBO;
 import hageldave.jplotter.globjects.Shader;
 import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.hax.NonClearGraphics;
+import hageldave.jplotter.hax.NonClearGraphics2D;
 import hageldave.jplotter.renderables.CharacterAtlas;
 import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
@@ -480,40 +483,35 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	}
 	
 	/**
-	 * Calls {@link #render()} is on AWT event dispatch thread or
-	 * schedules a render call on it.
+	 * Calls {@link #render()} and super repaint on AWT event dispatch thread or
+	 * schedules a render and super repaint call on it.
 	 */
 	@Override
 	public void repaint() {
 		if(SwingUtilities.isEventDispatchThread()){
 			render();
+			super.repaint();
 		} else {
-			SwingUtilities.invokeLater(()->render());
+			SwingUtilities.invokeLater(()->{
+				render();
+				super.repaint();
+			});
 		}
 	}
 	
 	/**
-	 * NOOP - this canvas is painted using OpenGL through the {@link #render()} method.
+	 * Returns a wrapped {@link Graphics} object where 
+	 * {@link Graphics#clearRect(int, int, int, int)} is
+	 * disabled to prevent this FBOs rendering to be cleared.
 	 */
 	@Override
-	public final void paint(Graphics g) {
-		// don't modify the graphics object
-	}
-	
-	/**
-	 * NOOP - this canvas is painted using OpenGL through the {@link #render()} method.
-	 */
-	@Override
-	public final void paintAll(Graphics g) {
-		// don't modify the graphics object
-	}
-	
-	/**
-	 * NOOP - this canvas is painted using OpenGL through the {@link #render()} method.
-	 */
-	@Override
-	public final void update(Graphics g) {
-		// don't modify the graphics object
+	public Graphics getGraphics() {
+		Graphics graphics = super.getGraphics();
+		if(graphics instanceof Graphics2D){
+			return new NonClearGraphics2D((Graphics2D) graphics);
+		} else {
+			return new NonClearGraphics(graphics);
+		}
 	}
 	
 }
