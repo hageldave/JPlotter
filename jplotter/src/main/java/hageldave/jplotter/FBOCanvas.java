@@ -1,8 +1,6 @@
 package hageldave.jplotter;
 
 import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -25,8 +23,6 @@ import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.globjects.FBO;
 import hageldave.jplotter.globjects.Shader;
 import hageldave.jplotter.globjects.VertexArray;
-import hageldave.jplotter.hax.NonClearGraphics;
-import hageldave.jplotter.hax.NonClearGraphics2D;
 import hageldave.jplotter.renderables.CharacterAtlas;
 import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
@@ -497,21 +493,5 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				super.repaint();
 			});
 		}
-	}
-	
-	/**
-	 * Returns a wrapped {@link Graphics} object where 
-	 * {@link Graphics#clearRect(int, int, int, int)} is
-	 * disabled to prevent this FBOs rendering to be cleared.
-	 */
-	@Override
-	public Graphics getGraphics() {
-		Graphics graphics = super.getGraphics();
-		if(graphics instanceof Graphics2D){
-			return new NonClearGraphics2D((Graphics2D) graphics);
-		} else {
-			return new NonClearGraphics(graphics);
-		}
-	}
-	
+	}	
 }
