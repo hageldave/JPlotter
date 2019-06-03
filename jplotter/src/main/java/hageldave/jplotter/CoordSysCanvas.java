@@ -493,9 +493,10 @@ public class CoordSysCanvas extends FBOCanvas {
 		
 		// draw overlay
 		if(Objects.nonNull(overlay)){
+			overlay.glInit();
 			Rectangle overlayViewPort = this.getOverlayArea();
 			int vpx,vpy,vpw,vph;
-			if(Objects.nonNull(overlayViewPort)){
+			if(Objects.isNull(overlayViewPort)){
 				vpx=0;
 				vpy=0;
 				vpw=w;
@@ -508,6 +509,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			}
 			GL11.glViewport(vpx, vpy, vpw, vph);
 			overlay.render(vpw, vph);
+			GL11.glViewport(0, 0, w, h);
 		}
 	}
 

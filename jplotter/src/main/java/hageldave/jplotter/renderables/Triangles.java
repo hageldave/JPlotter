@@ -496,6 +496,14 @@ public class Triangles implements Renderable {
 				pick = pick | 0xff000000;
 			this.pick = pick;
 		}
+		public TriangleDetails(
+				double x0, double y0, int c0, 
+				double x1, double y1, int c1, 
+				double x2, double y2, int c2,
+				int pick) 
+		{
+			this((float)x0, (float)y0, c0, (float)x1, (float)y1, c1, (float)x2, (float)y2, c2, pick);
+		}
 	}
 	
 	/**

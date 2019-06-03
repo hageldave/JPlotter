@@ -78,6 +78,9 @@ public class Viz {
 		legend.addLineLabel(2, new Color(0xff00ff00), "x=y");
 		canvas.setLegendRight(legend);
 		canvas.setLegendRightWidth(80);
+		CompleteRenderer overlay = new CompleteRenderer();
+		canvas.setOverlay(overlay);
+		overlay.addItemToRender(new Lines().addLineStrip(0xffff0000, 50,50,50,200,200,200,200,50,50,50));
 		
 		canvas.setCoordinateView(0, 0, 2, 1);
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
