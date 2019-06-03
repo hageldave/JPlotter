@@ -111,9 +111,11 @@ public class Points implements Renderable {
 
 	/**
 	 * Sets the {@link #isDirty()} state to true.
+	 * @return this for chaining
 	 */
-	public void setDirty() {
+	public Points setDirty() {
 		this.isDirty = true;
+		return this;
 	}
 	
 	/**
@@ -132,8 +134,7 @@ public class Points implements Renderable {
 	 */
 	public Points addPoint(Point2D p, double rot, double scale, int color, int pick){
 		this.points.add(new PointDetails(p, (float)rot, (float)scale, color, pick));
-		setDirty();
-		return this;
+		return setDirty();
 	}
 
 	/**
@@ -207,10 +208,11 @@ public class Points implements Renderable {
 	/**
 	 * Clears this collection of points.
 	 * This set the {@link #isDirty()} to true.
+	 * @return this for chaining
 	 */
-	public void removeAllPoints(){
+	public Points removeAllPoints(){
 		this.points.clear();
-		setDirty();
+		return setDirty();
 	}
 
 	/**

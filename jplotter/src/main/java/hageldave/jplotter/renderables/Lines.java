@@ -225,9 +225,11 @@ public class Lines implements Renderable {
 	 * The value will be multiplied with each segment point's alpha color value when rendering.
 	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
 	 * @param globalAlphaMultiplier of the triangles in this collection
+	 * @return this for chaining
 	 */
-	public void setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
+	public Lines setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		this.globalAlphaMultiplier = (float)globalAlphaMultiplier;
+		return this;
 	}
 
 	/**
@@ -240,10 +242,11 @@ public class Lines implements Renderable {
 	/**
 	 * Removes all segments of this object.
 	 * Sets the {@link #isDirty()} state to true.
+	 * @return this for chaining
 	 */
-	public void removeAllSegments() {
+	public Lines removeAllSegments() {
 		this.segments.clear();
-		setDirty();
+		return setDirty();
 	}
 
 	/**

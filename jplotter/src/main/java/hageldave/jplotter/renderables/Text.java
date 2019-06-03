@@ -213,9 +213,11 @@ public class Text implements Renderable {
 	/**
 	 * Sets the rotation angle in radian by which this text object is rotated around its origin.
 	 * @param angle rotation angle
+	 * @return this for chaining
 	 */
-	public void setAngle(float angle) {
+	public Text setAngle(float angle) {
 		this.angle = angle;
+		return this;
 	}
 	
 	/**
@@ -300,11 +302,12 @@ public class Text implements Renderable {
 	 * displayed, other characters are mapped to whitespace for rendering.
 	 * This set the {@link #isDirty()} state of this {@link Renderable} to true.
 	 * @param txtStr the text string this object should display.
+	 * @return this for chaining
 	 */
-	public void setTextString(String txtStr) {
+	public Text setTextString(String txtStr) {
 		this.txtStr = txtStr;
 		this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontsize, style, antialiased).getBounds().getSize();
-		setDirty();
+		return setDirty();
 	}
 
 

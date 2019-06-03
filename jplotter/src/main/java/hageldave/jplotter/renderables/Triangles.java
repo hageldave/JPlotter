@@ -384,9 +384,11 @@ public class Triangles implements Renderable {
 	 * The value will be multiplied with each vertex' alpha color value when rendering.
 	 * The triangle will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
 	 * @param globalAlphaMultiplier of the triangles in this collection
+	 * @return this for chaining
 	 */
-	public void setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
+	public Triangles setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		this.globalAlphaMultiplier = (float)globalAlphaMultiplier;
+		return this;
 	}
 
 	/**
