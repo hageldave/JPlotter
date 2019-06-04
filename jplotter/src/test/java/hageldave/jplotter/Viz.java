@@ -5,10 +5,13 @@ import static hageldave.jplotter.renderers.CompleteRenderer.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -78,9 +81,52 @@ public class Viz {
 		legend.addLineLabel(2, new Color(0xff00ff00), "x=y");
 		canvas.setLegendRight(legend);
 		canvas.setLegendRightWidth(80);
+		
 		CompleteRenderer overlay = new CompleteRenderer();
 		canvas.setOverlay(overlay);
-		overlay.addItemToRender(new Lines().addLineStrip(0xffff0000, 50,50,50,200,200,200,200,50,50,50));
+		MouseAdapter areaZoom = new MouseAdapter() {
+			Lines areaBorder = new Lines();
+			Point start,end;
+			@Override
+			public void mousePressed(MouseEvent e) {
+				start = e.getPoint();
+				overlay.addItemToRender(areaBorder);
+			}
+			
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				end = e.getPoint();
+				int h = canvas.getHeight();
+				areaBorder.removeAllSegments()
+				.addSegment(start.x, h-start.y, start.x, h-end.y, 0xff222222)
+				.addSegment(end.x, h-start.y, end.x, h-end.y, 0xff222222)
+				.addSegment(start.x, h-start.y, end.x, h-start.y, 0xff222222)
+				.addSegment(start.x, h-end.y, end.x, h-end.y, 0xff222222)
+				;
+				canvas.repaint();
+			}
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				areaBorder.removeAllSegments();
+				overlay.lines.removeItemToRender(areaBorder);
+				if(start != null && end != null){
+					Point2D p1 = canvas.transformMouseToCoordSys(start);
+					Point2D p2 = canvas.transformMouseToCoordSys(end);
+					canvas.setCoordinateView(
+							Math.min(p1.getX(), p2.getX()),
+							Math.min(p1.getY(), p2.getY()),
+							Math.max(p1.getX(), p2.getX()),
+							Math.max(p1.getY(), p2.getY())
+					);
+				}
+				canvas.repaint();
+				start = null;
+				end = null;
+			}
+		};
+		canvas.addMouseListener(areaZoom);
+		canvas.addMouseMotionListener(areaZoom);
 		
 		canvas.setCoordinateView(0, 0, 2, 1);
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
@@ -102,7 +148,7 @@ public class Viz {
 				System.out.println(Integer.toHexString(pixel));
 			}
 		});
-		new CoordSysPanning(canvas).register();
+//		new CoordSysPanning(canvas).register();
 		new CoordSysScrollZoom(canvas).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
