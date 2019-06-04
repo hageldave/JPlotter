@@ -26,6 +26,7 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.util.TranslatedPoint2D;
 
 public class Viz {
 
@@ -86,22 +87,22 @@ public class Viz {
 		canvas.setOverlay(overlay);
 		MouseAdapter areaZoom = new MouseAdapter() {
 			Lines areaBorder = new Lines();
-			Point start,end;
+			TranslatedPoint2D start,end;
 			@Override
 			public void mousePressed(MouseEvent e) {
-				start = e.getPoint();
+				start = new TranslatedPoint2D(e.getPoint(),.5,.5);
 				overlay.addItemToRender(areaBorder);
 			}
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				end = e.getPoint();
+				end = new TranslatedPoint2D(e.getPoint(),.5,.5);
 				int h = canvas.getHeight();
 				areaBorder.removeAllSegments()
-				.addSegment(start.x, h-start.y, start.x, h-end.y, 0xff222222)
-				.addSegment(end.x, h-start.y, end.x, h-end.y, 0xff222222)
-				.addSegment(start.x, h-start.y, end.x, h-start.y, 0xff222222)
-				.addSegment(start.x, h-end.y, end.x, h-end.y, 0xff222222)
+				.addSegment(start.getX(), h-start.getY(), start.getX(), h-end.getY(), 0xff222222)
+				.addSegment(end.getX(), h-start.getY(), end.getX(), h-end.getY(), 0xff222222)
+				.addSegment(start.getX(), h-start.getY(), end.getX(), h-start.getY(), 0xff222222)
+				.addSegment(start.getX(), h-end.getY(), end.getX(), h-end.getY(), 0xff222222)
 				;
 				canvas.repaint();
 			}
@@ -111,8 +112,8 @@ public class Viz {
 				areaBorder.removeAllSegments();
 				overlay.lines.removeItemToRender(areaBorder);
 				if(start != null && end != null){
-					Point2D p1 = canvas.transformMouseToCoordSys(start);
-					Point2D p2 = canvas.transformMouseToCoordSys(end);
+					Point2D p1 = canvas.transformMouseToCoordSys((Point) start.origin);
+					Point2D p2 = canvas.transformMouseToCoordSys((Point) end.origin);
 					canvas.setCoordinateView(
 							Math.min(p1.getX(), p2.getX()),
 							Math.min(p1.getY(), p2.getY()),
