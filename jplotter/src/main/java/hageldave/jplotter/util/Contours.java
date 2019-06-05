@@ -1,16 +1,37 @@
 package hageldave.jplotter.util;
 
+import static hageldave.jplotter.util.Utils.interpolateColor;
+
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 
-public class MarchingSquares {
+/**
+ * The Contours class provides methods to compute contour lines and contour bands
+ * from a 2D regular grid of scalar values.
+ * See {@link #computeContourLines(double[][], double, int)}
+ * and {@link #computeContourBands(double[][], double, double, int, int)}
+ * 
+ * @author hageldave
+ */
+public class Contours {
 	
+	/**
+	 * Computes the contour lines from the grid samples of a bivariate function z(x,y).
+	 * The resulting line segments are solutions to the equation { (x,y) | z(x,y)=iso }
+	 * within the grid.
+	 * @param X x-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
+	 * @param Y y-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
+	 * @param Z z-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
+	 * @param isoValue the iso value for which the contour (iso) lines should be computed
+	 * @param color integer packed ARGB color value the returned line segments should have, e.g. 0xff00ff00 for opaque green.
+	 * @return list of line segments that form the contour lines. There is no particular order so subsequent segments are not 
+	 * necessarily adjacent.
+	 */
 	public static List<SegmentDetails> computeContourLines(double[][] X, double[][] Y, double[][] Z, double isoValue, int color){
 		List<SegmentDetails> contourLines = computeContourLines(Z, isoValue, color);
 		for(SegmentDetails segment:contourLines){
@@ -33,6 +54,19 @@ public class MarchingSquares {
 		return contourLines;
 	}
 	
+	/**
+	 * Computes the contour bands from the grid samples of a bivariate function z(x,y).
+	 * The resulting triangles are solutions to the equation { (x,y) | iso1 &lt; z(x,y) &lt; iso2 }
+	 * within the grid.
+	 * @param X x-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
+	 * @param Y y-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
+	 * @param Z z-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
+	 * @param isoValue1 the lower bound for values of the iso bands
+	 * @param isoValue2 the upper bound for values of the iso bands
+	 * @param c1 color for the isoValue1
+	 * @param c2 color for the isoValue2, values in between iso1 and iso2 will have their color linearly interpolated
+	 * @return list of triangles that form the iso bands. The order of triangles does NOT imply any adjacency between them.
+	 */
 	public static List<TriangleDetails> computeContourBands(double[][] X, double[][] Y, double[][] Z, double isoValue1, double isoValue2, int c1, int c2){
 		List<TriangleDetails> contourBands = computeContourBands(Z, isoValue1, isoValue2, c1, c2);
 		double[] xCoords = new double[3];
@@ -62,7 +96,24 @@ public class MarchingSquares {
 		return contourBands;
 	}
 
-	/* actually this is meandering triangles not marching squares (squares have too many cases) */
+	/**
+	 * Computes the contour lines from the grid samples of a bivariate function z(x,y)<br>
+	 * with implicit integer valued (x,y) = (i,j).<br>
+	 * The resulting line segments are solutions to the equation { (x,y) | z(x,y)=iso }
+	 * within the grid.
+	 * <p>
+	 * The lines are computed using the Meandering Triangles algorithm which divides each
+	 * square cell of the grid into 2 triangle cells first before computing isovalue intersections
+	 * on the triangle sides.
+	 * The more well known Marching Squares algorithm has significantly more cell cases to check, 
+	 * which is why Meandering Triangles was preferred here.
+	 * 
+	 * @param uniformGridSamples z-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (i,j,Z<sub>ij</sub>) )
+	 * @param isoValue the iso value for which the contour (iso) lines should be computed
+	 * @param color integer packed ARGB color value the returned line segments should have, e.g. 0xff00ff00 for opaque green.
+	 * @return list of line segments that form the contour lines. There is no particular order so subsequent segments are not 
+	 * necessarily adjacent.
+	 */
 	public static List<SegmentDetails> computeContourLines(double[][] uniformGridSamples, double isoValue, int color){
 		int height = uniformGridSamples.length;
 		int width = uniformGridSamples[0].length;
@@ -189,7 +240,25 @@ public class MarchingSquares {
 		return cntrLineSegments;
 	}
 	
-	
+	/**
+	 * Computes the contour bands from the grid samples of a bivariate function z(x,y)<br>
+	 * with implicit integer valued (x,y) = (i,j).<br>
+	 * The resulting triangles are solutions to the equation { (x,y) | iso1 &lt; z(x,y) &lt; iso2 }
+	 * within the grid.
+	 * <p>
+	 * The triangles are computed using the Meandering Triangles algorithm which divides each
+	 * square cell of the grid into 2 triangle cells first before computing isovalue intersections
+	 * on the triangle sides.
+	 * The more well known Marching Squares algorithm has significantly more cell cases to check, 
+	 * which is why Meandering Triangles was preferred here.
+	 * 
+	 * @param uniformGridSamples z-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (i,j,Z<sub>ij</sub>) )
+	 * @param isoValue1 the lower bound for values of the iso bands
+	 * @param isoValue2 the upper bound for values of the iso bands
+	 * @param c1 color for the isoValue1
+	 * @param c2 color for the isoValue2, values in between iso1 and iso2 will have their color linearly interpolated
+	 * @return list of triangles that form the iso bands. The order of triangles does NOT imply any adjacency between them.
+	 */
 	public static List<TriangleDetails> computeContourBands(double[][] uniformGridSamples, double isoValue1, double isoValue2, int c1, int c2){
 		if(isoValue1 > isoValue2){
 			// swap
@@ -503,42 +572,16 @@ public class MarchingSquares {
 		return type;
 	}
 
-	static int celltype(boolean upperleft, boolean upperright, boolean lowerleft, boolean lowerright){
-		int type = 0;
-		type = (type<<1) | (upperleft  ? 1:0);
-		type = (type<<1) | (upperright ? 1:0);
-		type = (type<<1) | (lowerleft  ? 1:0);
-		type = (type<<1) | (lowerright ? 1:0);
-		return type;
-	}
-
-	static int celltype(
-			boolean upperleft1, boolean upperright1, boolean lowerleft1, boolean lowerright1,
-			boolean upperleft2, boolean upperright2, boolean lowerleft2, boolean lowerright2
-			){
-		int type = 0;
-		type = (type<<4) | (upperleft1  ? (upperleft2 ? 2:1):0);
-		type = (type<<4) | (upperright1 ? (upperright2 ? 2:1):0);
-		type = (type<<4) | (lowerleft1  ? (lowerleft2 ? 2:1):0);
-		type = (type<<4) | (lowerright1 ? (lowerright2 ? 2:1):0);
-		return type;
-	}
-	
-	public static int interpolateColor(int c1, int c2, double m){
-		Img img = new Img(2, 1);
-		img.getData()[0] = c1;
-		img.getData()[1] = c2;
-		return img.interpolateARGB(m, 0);
-	}
-
-	public static double interpolateToValue(double lower, double upper, double iso){
+	/**
+	 * Returns m of the equation: iso = lower*(1-m) + upper*m <br>
+	 * which is: m = (iso-lower)/(upper-lower)
+	 * @param lower value
+	 * @param upper value
+	 * @param iso value in between lower and upper
+	 * @return m
+	 */
+	static double interpolateToValue(double lower, double upper, double iso){
 		return (iso-lower)/(upper-lower);
-	}
-
-	public static double distSquared(double x0, double y0, double x1, double y1){
-		double x = x0-x1;
-		double y = y0-y1;
-		return x*x+y*y;
 	}
 
 }
