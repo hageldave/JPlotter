@@ -1,32 +1,30 @@
 package hageldave.jplotter;
 
-import static hageldave.jplotter.renderers.CompleteRenderer.*;
+import static hageldave.jplotter.renderers.CompleteRenderer.LIN;
+import static hageldave.jplotter.renderers.CompleteRenderer.PNT;
+import static hageldave.jplotter.renderers.CompleteRenderer.TRI;
+import static hageldave.jplotter.renderers.CompleteRenderer.TXT;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.CoordSysCanvas;
-import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.renderables.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
-import hageldave.jplotter.util.TranslatedPoint2D;
 
 public class Viz {
 
@@ -85,49 +83,13 @@ public class Viz {
 		
 		CompleteRenderer overlay = new CompleteRenderer();
 		canvas.setOverlay(overlay);
-		MouseAdapter areaZoom = new MouseAdapter() {
-			Lines areaBorder = new Lines();
-			TranslatedPoint2D start,end;
-			@Override
-			public void mousePressed(MouseEvent e) {
-				start = new TranslatedPoint2D(e.getPoint(),.5,.5);
-				overlay.addItemToRender(areaBorder);
-			}
+		new CoordSysViewSelector(canvas) {
 			
 			@Override
-			public void mouseDragged(MouseEvent e) {
-				end = new TranslatedPoint2D(e.getPoint(),.5,.5);
-				int h = canvas.getHeight();
-				areaBorder.removeAllSegments()
-				.addSegment(start.getX(), h-start.getY(), start.getX(), h-end.getY(), 0xff222222)
-				.addSegment(end.getX(), h-start.getY(), end.getX(), h-end.getY(), 0xff222222)
-				.addSegment(start.getX(), h-start.getY(), end.getX(), h-start.getY(), 0xff222222)
-				.addSegment(start.getX(), h-end.getY(), end.getX(), h-end.getY(), 0xff222222)
-				;
-				canvas.repaint();
+			public void areaSelected(double minX, double minY, double maxX, double maxY) {
+				canvas.setCoordinateView(minX, minY, maxX, maxY);
 			}
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				areaBorder.removeAllSegments();
-				overlay.lines.removeItemToRender(areaBorder);
-				if(start != null && end != null){
-					Point2D p1 = canvas.transformMouseToCoordSys((Point) start.origin);
-					Point2D p2 = canvas.transformMouseToCoordSys((Point) end.origin);
-					canvas.setCoordinateView(
-							Math.min(p1.getX(), p2.getX()),
-							Math.min(p1.getY(), p2.getY()),
-							Math.max(p1.getX(), p2.getX()),
-							Math.max(p1.getY(), p2.getY())
-					);
-				}
-				canvas.repaint();
-				start = null;
-				end = null;
-			}
-		};
-		canvas.addMouseListener(areaZoom);
-		canvas.addMouseMotionListener(areaZoom);
+		}.register();
 		
 		canvas.setCoordinateView(0, 0, 2, 1);
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);

@@ -1,6 +1,7 @@
 package hageldave.jplotter.util;
 
 import java.awt.geom.Point2D;
+import java.util.Locale;
 
 /**
  * The TranslatedPoint2D is an implementation of {@link Point2D}
@@ -46,6 +47,16 @@ public class TranslatedPoint2D extends Point2D {
 	@Override
 	public void setLocation(double x, double y) {
 		origin.setLocation(x-tx, y-ty);
+	}
+	
+	@Override
+	public TranslatedPoint2D clone() {
+		return new TranslatedPoint2D(Utils.copy(origin), tx, ty);
+	}
+	
+	@Override
+	public String toString() {
+		return getClass().getSimpleName()+"["+origin.getX()+(tx<0?"-":"+")+tx+"="+getX()+" ,"+origin.getY()+(ty<0?"-":"+")+ty+"="+getY()+"]";
 	}
 
 }

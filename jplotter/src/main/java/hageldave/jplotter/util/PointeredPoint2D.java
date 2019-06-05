@@ -1,6 +1,7 @@
 package hageldave.jplotter.util;
 
 import java.awt.geom.Point2D;
+import java.util.Locale;
 
 /**
  * The PointeredPoint2D class is an implementation of the {@link Point2D}
@@ -65,6 +66,11 @@ public class PointeredPoint2D extends Point2D {
 	@Override
 	public Object clone() {
 		return new PointeredPoint2D(getX(), getY());
+	}
+	
+	@Override
+	public String toString() {
+		return String.format(Locale.US, "%s[%f, %f]", getClass().getSimpleName(), getX(),getY());
 	}
 
 }

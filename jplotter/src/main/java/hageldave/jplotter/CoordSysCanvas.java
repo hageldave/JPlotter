@@ -18,6 +18,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.awt.GLData;
 
 import hageldave.jplotter.Annotations.GLContextRequired;
+import hageldave.jplotter.Annotations.GLCoordinates;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.renderables.CharacterAtlas;
@@ -65,6 +66,7 @@ import hageldave.jplotter.util.Utils;
  * The legend area size can be partially controlled by {@link #setLegendBottomHeight(int)}
  * and {@link #setLegendRightWidth(int)} if this is needed.
  * <p>
+ * 
  * For interacting with this CoordSysCanvas there already exist implementations of MouseListeners
  * for panning and zooming (see {@link CoordSysPanning} and {@link CoordSysScrollZoom}).
  * 
@@ -81,11 +83,13 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected Renderer content=null;
 	protected Renderer legendRight=null;
 	protected Renderer legendBottom=null;
-	
+
 	protected int legendRightWidth = 70;
 	protected int legendBottomHeight = 20;
-	
+
+	@GLCoordinates
 	protected Rectangle legendRightViewPort = new Rectangle();
+	@GLCoordinates
 	protected Rectangle legendBottomViewPort = new Rectangle();
 
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
@@ -114,9 +118,13 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected int topPadding = 10;
 	protected int botPadding = 10;
 
+	@GLCoordinates
 	protected PointeredPoint2D coordsysAreaLB = new PointeredPoint2D();
+	@GLCoordinates
 	protected PointeredPoint2D coordsysAreaRT = Utils.copy(coordsysAreaLB);
+	@GLCoordinates
 	protected PointeredPoint2D coordsysAreaLT = new PointeredPoint2D(coordsysAreaLB.x, coordsysAreaRT.y);
+	@GLCoordinates
 	protected PointeredPoint2D coordsysAreaRB = new PointeredPoint2D(coordsysAreaRT.x, coordsysAreaLB.y);
 
 	protected Matrix3f coordSysScaleMX = new Matrix3f();
@@ -130,7 +138,7 @@ public class CoordSysCanvas extends FBOCanvas {
 
 	protected String xAxisLabel = null;
 	protected String yAxisLabel = null;
-	
+
 	protected ActionListener coordviewListener;
 
 
@@ -176,7 +184,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.content = content;
 		return old;
 	}
-	
+
 	/**
 	 * Sets the renderer that will draw the legend to the right of the coordinate system.
 	 * The view port area for this renderer will start at the top edge of the coordinate system,
@@ -190,7 +198,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.legendRight= legend;
 		return old;
 	}
-	
+
 	/**
 	 * Sets the renderer that will draw the legend below the coordinate system.
 	 * The view port area for this renderer will start at the left edge of the coordinate system below
@@ -204,7 +212,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.legendBottom = legend;
 		return old;
 	}
-	
+
 	/**
 	 * Sets the overlay renderer that will draw at last in the sequence and thus
 	 * overlays the whole rendering.
@@ -216,7 +224,23 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.overlay = overlayRenderer;
 		return old;
 	}
-	
+
+	public Renderer getOverlay() {
+		return overlay;
+	}
+
+	public Renderer getLegendBottom() {
+		return legendBottom;
+	}
+
+	public Renderer getLegendRight() {
+		return legendRight;
+	}
+
+	public Renderer getContent() {
+		return content;
+	}
+
 	/**
 	 * Sets the height of the legend area below the coordinate system.
 	 * (width is determined by x-axis width)
@@ -226,7 +250,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	public void setLegendBottomHeight(int legendBottomHeight) {
 		this.legendBottomHeight = legendBottomHeight;
 	}
-	
+
 	/**
 	 * Sets the width of the legend area right to the coordinate system.
 	 * (height is determined by the space available until the bottom of the canvas)
@@ -236,14 +260,14 @@ public class CoordSysCanvas extends FBOCanvas {
 	public void setLegendRightWidth(int legendRightWidth) {
 		this.legendRightWidth = legendRightWidth;
 	}
-	
+
 	/**
 	 * @return width of the width of the right hand side legend area.
 	 */
 	public int getLegendRightWidth() {
 		return legendRightWidth;
 	}
-	
+
 	/**
 	 * @return height of the bottom side legend area.
 	 */
@@ -258,10 +282,11 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * <li>the tick mark values and labels</li>
 	 * <li>the tick mark guides</li>
 	 * <li>the location of the axis labels</li>
+	 * <li>the areas for the legends (right and bottom legend)</li>
 	 * </ul>
 	 */
 	@GLContextRequired
-	protected void setupCoordsysTicksGuidesAndLabels() {
+	protected void setupAndLayout() {
 		Pair<double[],String[]> xticksAndLabels = tickMarkGenerator.genTicksAndLabels(
 				coordinateView.getMinX(), 
 				coordinateView.getMaxX(), 
@@ -289,10 +314,10 @@ public class CoordSysCanvas extends FBOCanvas {
 		}
 		int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style, antialiased).getBounds().height;
 		int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style, antialiased).getBounds().height;
-		
+
 		int legendRightW = Objects.nonNull(legendRight) ? legendRightWidth+4:0;
 		int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
-		
+
 		// move coordwindow origin so that labels have enough display space
 		coordsysAreaLB.x[0] = maxYTickLabelWidth + leftPadding + 7;
 		coordsysAreaLB.y[0] = maxXTickLabelHeight + botPadding + legendBotH + 6;
@@ -352,7 +377,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		yAxisLabelText.setTextString(getyAxisLabel());
 		yAxisLabelText.setAngle(-(float)Math.PI/2);
 		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 + yAxisLabelText.getTextSize().width/2));
-		
+
 		// setup legend areas
 		if(Objects.nonNull(legendRight)){
 			legendRightViewPort.setBounds(
@@ -360,7 +385,7 @@ public class CoordSysCanvas extends FBOCanvas {
 					botPadding, 
 					legendRightWidth, 
 					(int)(coordsysAreaRT.getY()-botPadding)
-			);
+					);
 		} else {
 			legendRightViewPort.setBounds(0, 0, 0, 0);
 		}
@@ -370,7 +395,7 @@ public class CoordSysCanvas extends FBOCanvas {
 					botPadding,
 					(int)(coordsysAreaLB.distance(coordsysAreaRB)),
 					legendBottomHeight
-			);
+					);
 		} else {
 			legendBottomViewPort.setBounds(0, 0, 0, 0);
 		}
@@ -454,7 +479,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		if(isDirty || viewportwidth != w || viewportheight != h){
 			// update axes
 			axes.setDirty();
-			setupCoordsysTicksGuidesAndLabels();
+			setupAndLayout();
 			viewportwidth = w;
 			viewportheight = h;
 			isDirty = false;
@@ -481,7 +506,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		}
 		postContentLinesR.render(w, h);
 		postContentTextR.render(w, h);
-		
+
 		// draw legends
 		if(Objects.nonNull(legendRight)){
 			legendRight.glInit();;
@@ -495,26 +520,11 @@ public class CoordSysCanvas extends FBOCanvas {
 			legendBottom.render(legendBottomViewPort.width, legendBottomViewPort.height);
 			GL11.glViewport(0, 0, w, h);
 		}
-		
+
 		// draw overlay
 		if(Objects.nonNull(overlay)){
 			overlay.glInit();
-			Rectangle overlayViewPort = this.getOverlayArea();
-			int vpx,vpy,vpw,vph;
-			if(Objects.isNull(overlayViewPort)){
-				vpx=0;
-				vpy=0;
-				vpw=w;
-				vph=h;
-			} else {
-				vpx=overlayViewPort.x; 
-				vpy=overlayViewPort.y; 
-				vpw=overlayViewPort.width; 
-				vph=overlayViewPort.height;
-			}
-			GL11.glViewport(vpx, vpy, vpw, vph);
-			overlay.render(vpw, vph);
-			GL11.glViewport(0, 0, w, h);
+			overlay.render(w,h);
 		}
 	}
 
@@ -549,14 +559,14 @@ public class CoordSysCanvas extends FBOCanvas {
 		}
 		return this;
 	}
-	
+
 	synchronized public CoordSysCanvas addCoordinateViewListener(CoordinateViewListener l){
 		if(l==null)
 			return this;
 		coordviewListener = AWTEventMulticaster.add(coordviewListener, l);
 		return this;
 	}
-	
+
 	synchronized public CoordSysCanvas removeActionListener(CoordinateViewListener l){
 		if(l==null)
 			return this;
@@ -579,6 +589,7 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * It is the viewPort for the {@link #content} renderer which is enclosed by
 	 * the coordinate system axes.
 	 */
+	@GLCoordinates
 	public Rectangle2D getCoordSysArea() {
 		return new Rectangle2D.Double(
 				coordsysAreaLB.getX(), 
@@ -588,30 +599,19 @@ public class CoordSysCanvas extends FBOCanvas {
 				);
 	}
 
-
 	/**
-	 * Returns the area for the {@link #overlay} to render in.
-	 * By default returns null, which results in the whole canvas as area,
-	 * can be overridden to fit your needs.
-	 * @return null by default
-	 */
-	protected Rectangle getOverlayArea() {
-		return null;
-	}
-
-	/**
-	 * Transforms a mouse location on this Canvas to the corresponding
-	 * coordinates in the coordinate system view.
+	 * Transforms a mouse location (in AWT coords) on this Canvas to the corresponding
+	 * coordinates in the coordinate system view (in GL coords).
 	 * @param mousePoint to be transformed
 	 * @return transformed location
 	 */
 	public Point2D transformMouseToCoordSys(Point mousePoint){
+		mousePoint = Utils.swapYAxis(mousePoint, getHeight());
 		Rectangle2D coordSysArea = getCoordSysArea();
 		double x = mousePoint.getX()-coordSysArea.getMinX();
 		double y = mousePoint.getY()-coordSysArea.getMinY();
 		x /= coordSysArea.getWidth()-1;
 		y /= coordSysArea.getHeight()-1;
-		y = 1-y;
 		Rectangle2D coordinateView = getCoordinateView();
 		x = x*coordinateView.getWidth()+coordinateView.getMinX();
 		y = y*coordinateView.getHeight()+coordinateView.getMinY();
@@ -638,6 +638,8 @@ public class CoordSysCanvas extends FBOCanvas {
 			legendRight.close();
 		if(Objects.nonNull(legendBottom))
 			legendBottom.close();
+		if(Objects.nonNull(overlay))
+			overlay.close();
 		preContentTextR = null;
 		preContentLinesR = null;
 		postContentTextR = null;
@@ -645,11 +647,12 @@ public class CoordSysCanvas extends FBOCanvas {
 		content = null;
 		legendRight = null;
 		legendBottom = null;
+		overlay = null;
 		super.close();
 	}
 
 	public static interface CoordinateViewListener extends ActionListener {
-		
+
 		@Override
 		default void actionPerformed(ActionEvent e) {
 			if(e.getSource() instanceof CoordSysCanvas){
@@ -657,9 +660,9 @@ public class CoordSysCanvas extends FBOCanvas {
 				coordinateViewChanged(canvas,canvas.getCoordinateView());
 			}
 		}
-		
+
 		void coordinateViewChanged(CoordSysCanvas src, Rectangle2D view);
-		
+
 	}
-	
+
 }

@@ -1,6 +1,8 @@
 package hageldave.jplotter.util;
 
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.SwingUtilities;
@@ -46,6 +48,17 @@ public class Utils {
 	}
 	
 	/**
+	 * Copies the specified {@link RectangularShape} (calls clone) and
+	 * casts the copy to the class of the original.
+	 * @param r rectangle to copy
+	 * @return the copied rectangle
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends RectangularShape> T copy(T r){
+		return (T) r.clone();
+	}
+	
+	/**
 	 * Linearly interpolates between the two specified colors.<br>
 	 * c = c1*(1-m) + c2*m
 	 * @param c1 integer packed ARGB color value 
@@ -70,6 +83,36 @@ public class Utils {
 				g1*(1-m)+g2*m,
 				b1*(1-m)+b2*m
 		);
+	}
+	
+	/**
+	 * Swaps between GL and AWT coordinates, AWT coordinate system
+	 * has its origin in the top left corner of a component and downwards pointing
+	 * y axis, whereas GL has its origin in the bottom left corner of the viewport
+	 * (at least in JPlotter) and upwards pointing y axis.
+	 * @param point to swap the y axis of
+	 * @param height of the component or viewport
+	 * @return point in coordinates of the other reference coordinate system.
+	 */
+	public static <P extends Point2D> P swapYAxis(P point, int height){
+		P copy = copy(point);
+		copy.setLocation(copy.getX(), height-1-copy.getY());
+		return copy;
+	}
+	
+	/**
+	 * Swaps between GL and AWT coordinates, AWT coordinate system
+	 * has its origin in the top left corner of a component and downwards pointing
+	 * y axis, whereas GL has its origin in the bottom left corner of the viewport
+	 * (at least in JPlotter) and upwards pointing y axis.
+	 * @param rect rectangle to swap the y axis of
+	 * @param height of the component or viewport
+	 * @return rectangle in coordinates of the other reference coordinate system.
+	 */
+	public static <R extends Rectangle2D> R swapYAxis(R rect, int height){
+		R copy = copy(rect);
+		copy.setRect(copy.getX(), height-1-copy.getMaxY(), copy.getWidth(), copy.getHeight());
+		return copy;
 	}
 	
 }
