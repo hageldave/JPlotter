@@ -1,10 +1,13 @@
 package hageldave.jplotter;
 
+import java.awt.AWTEventMulticaster;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
@@ -127,6 +130,8 @@ public class CoordSysCanvas extends FBOCanvas {
 
 	protected String xAxisLabel = null;
 	protected String yAxisLabel = null;
+	
+	protected ActionListener coordviewListener;
 
 
 	protected CoordSysCanvas(GLData data) {
@@ -530,14 +535,33 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * @param minY minimum y coordinate visible in the coordinate system
 	 * @param maxX maximum x coordinate visible in the coordinate system
 	 * @param maxY maximum y coordinate visible in the coordinate system
+	 * @return this for chaining
 	 */
-	public void setCoordinateView(double minX, double minY, double maxX, double maxY){
+	public CoordSysCanvas setCoordinateView(double minX, double minY, double maxX, double maxY){
 		if(maxX-minX < 1e-9 || maxY-minY < 1e-9){
 			System.err.printf("hitting coordinate area precision limit, x-range:%e, y-range:%e%n", maxX-minX, maxY-minY);
-			return;
+			return this;
 		}
 		this.coordinateView = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 		setDirty();
+		if(Objects.nonNull(coordviewListener)){
+			coordviewListener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_FIRST, "setCoordinateView"));
+		}
+		return this;
+	}
+	
+	synchronized public CoordSysCanvas addCoordinateViewListener(CoordinateViewListener l){
+		if(l==null)
+			return this;
+		coordviewListener = AWTEventMulticaster.add(coordviewListener, l);
+		return this;
+	}
+	
+	synchronized public CoordSysCanvas removeActionListener(CoordinateViewListener l){
+		if(l==null)
+			return this;
+		coordviewListener = AWTEventMulticaster.remove(coordviewListener, l);
+		return this;
 	}
 
 	/**
@@ -624,4 +648,18 @@ public class CoordSysCanvas extends FBOCanvas {
 		super.close();
 	}
 
+	public static interface CoordinateViewListener extends ActionListener {
+		
+		@Override
+		default void actionPerformed(ActionEvent e) {
+			if(e.getSource() instanceof CoordSysCanvas){
+				CoordSysCanvas canvas = (CoordSysCanvas) e.getSource();
+				coordinateViewChanged(canvas,canvas.getCoordinateView());
+			}
+		}
+		
+		void coordinateViewChanged(CoordSysCanvas src, Rectangle2D view);
+		
+	}
+	
 }
