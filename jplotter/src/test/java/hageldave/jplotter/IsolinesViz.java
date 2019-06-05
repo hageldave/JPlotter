@@ -33,7 +33,7 @@ public class IsolinesViz {
 		// setup content
 		DoubleBinaryOperator f1 = (x,y)->Math.exp(-(x*x+y*y));
 		DoubleBinaryOperator f2 = (x,y)->(x*y)-(y+1)*y;
-		final int resolution = 100;
+		final int resolution = 30;
 		double[][] X = new double[resolution][resolution];
 		double[][] Y = new double[resolution][resolution];
 		double[][] Z = new double[resolution][resolution];

@@ -544,8 +544,20 @@ public class Contours {
 								,0));
 						break;
 					}
+					// entirely in between vertices
+					case 0x200:{
+						double x0,y0,x1,y1,x2,y2,x3,y4, m0,m1,m2,m3;
+						m0 = interpolateToValue(v1, v0, isoValue1);
+						m1 = interpolateToValue(v1, v0, isoValue2);
+						m2 = interpolateToValue(v2, v0, isoValue1);
+						m3 = interpolateToValue(v2, v0, isoValue2);
+						//TODO
+					}
+					// missing trapezoid cases: 200,020,002,220,202,022
+					// missing pentagon cases: 012,102,120,210,201,021
 					default:
-						break;
+//						throw new RuntimeException(Integer.toHexString(celltype));
+//						break;
 					}
 				}
 			}
