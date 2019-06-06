@@ -170,7 +170,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");
-		GL20.glUniform1f(loc, lines.isVertexRoundingEnabled() ? 1:0);
+		GL20.glUniform1i(loc, lines.isVertexRoundingEnabled() ? 1:0);
 		// draw things
 		lines.bindVertexArray();
 		GL11.glDrawArrays(GL11.GL_LINES, 0, lines.numSegments()*2);

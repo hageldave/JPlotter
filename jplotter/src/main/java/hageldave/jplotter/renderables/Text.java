@@ -41,6 +41,7 @@ public class Text implements Renderable {
 	public final boolean antialiased;
 	protected Dimension textSize;
 	protected Color color;
+	protected Color background = new Color(0, true);
 	protected int pickColor;
 	protected Point2D origin;
 	protected VertexArray va=null;
@@ -92,7 +93,29 @@ public class Text implements Renderable {
 	public Color getColor() {
 		return color;
 	}
+	
+	/**
+	 * Sets the background color of the text, per default this is
+	 * transparent black (0x00000000) which wont be visible.
+	 * @param background color
+	 */
+	public void setBackground(Color background) {
+		this.background = background;
+	}
 
+	/**
+	 * Sets the background color of the text, per default this is
+	 * transparent black (0x00000000) which wont be visible.
+	 * @param background color
+	 */
+	public void setBackground(int argb) {
+		this.background = new Color(argb, true);
+	}
+	
+	public Color getBackground() {
+		return background;
+	}
+	
 	/**
 	 * @return normalized red channel of this text's color (in [0,1])
 	 */
@@ -223,8 +246,8 @@ public class Text implements Renderable {
 	 * @param angle rotation angle
 	 * @return this for chaining
 	 */
-	public Text setAngle(float angle) {
-		this.angle = angle;
+	public Text setAngle(double angle) {
+		this.angle = (float)angle;
 		return this;
 	}
 	

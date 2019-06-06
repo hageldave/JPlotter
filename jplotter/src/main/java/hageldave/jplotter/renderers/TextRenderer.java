@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.Color;
 import java.util.Objects;
 
 import org.joml.Matrix3f;
@@ -35,10 +36,20 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "layout(location = 1) in vec2 in_texcoords;"
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform mat4 viewMX;"
-			+ NL + "uniform mat3 modelMX;"
+			+ NL + "uniform mat2 modelMX;"
+			+ NL + "uniform vec2 origin;"
+			+ NL + "uniform float rot;"
 			+ NL + "out vec2 tex_Coords;"
+			
+			+ NL + "mat2 rotationMatrix(float angle){"
+			+ NL + "   float s = sin(angle), c = cos(angle);"
+			+ NL + "   return mat2(c,s,-s,c);"
+			+ NL + "}"
+			
 			+ NL + "void main() {"
-			+ NL + "   gl_Position = projMX*viewMX*vec4(modelMX*vec3(in_position,1),1);"
+			+ NL + "   mat2 rotMX = rotationMatrix(rot);"
+			+ NL + "   vec4 pos = viewMX*vec4((modelMX*rotMX*in_position)+origin, 1,1);"
+			+ NL + "   gl_Position = projMX*vec4(int(pos.x), int(pos.y), pos.z, pos.w);"
 			+ NL + "   tex_Coords = in_texcoords;"
 			+ NL + "}"
 			+ NL
@@ -50,18 +61,21 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "uniform sampler2D tex;"
 			+ NL + "uniform vec4 fragColorToUse;"
 			+ NL + "uniform vec4 pickColorToUse;"
+			+ NL + "uniform bool useTex;"
 			+ NL + "in vec2 tex_Coords;"
 			+ NL + "void main() {"
-			+ NL + "   vec4 texColor = texture(tex, tex_Coords);"
-			+ NL + "   frag_color = fragColorToUse*texColor;"
+			+ NL + "   frag_color = fragColorToUse;"
+			+ NL + "   if(useTex){"
+			+ NL + "      vec4 texColor = texture(tex, tex_Coords);"
+			+ NL + "      frag_color = fragColorToUse*texColor;"
+			+ NL + "   }"
 			+ NL + "   pick_color = pickColorToUse;"
 			+ NL + "}"
 			;
 	
-	protected Matrix3f rotationMX  = new Matrix3f();
-	protected Matrix3f modelMX  = new Matrix3f();
+	protected Matrix3f transMX = new Matrix3f();
 	protected float[] viewmxarray = new float[16];
-	protected float[] modelmxarray = new float[9];
+	protected float[] modelmxarray = new float[]{1,0,0,1};
 	
 	
 	/**
@@ -100,25 +114,49 @@ public class TextRenderer extends GenericRenderer<Text> {
 	protected void renderItem(Text txt) {
 		int loc;
 		txt.bindVertexArray();
+		
+		// draw background if bg color is not 0
+		if(txt.getBackground().getRGB() !=0){
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+			GL20.glUniformMatrix4fv(loc, false, orthoMX);
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
+			GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
+			GL20.glUniformMatrix2fv(loc, false, modelmxarray);
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "origin");
+			GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "rot");
+			GL20.glUniform1f(loc, txt.getAngle());
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
+			Color bg = txt.getBackground();
+			GL20.glUniform4f(loc, bg.getRed()/255f, bg.getGreen()/255f, bg.getBlue()/255f, bg.getAlpha()/255f);
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
+			GL20.glUniform4f(loc, 0,0,0,0);
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "useTex");
+			GL20.glUniform1i(loc, 0);
+			// draw things
+			GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
+		}
+		
 		GL13.glBindTexture(GL11.GL_TEXTURE_2D, txt.getTextureID());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
 		GL20.glUniform1i(loc, 0);
-		// set projection matrix in shader
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
 		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
-		float sin = (float)org.joml.Math.sin(txt.getAngle());
-		float cos = (float)org.joml.Math.cos(txt.getAngle());
-		rotationMX.setColumn(0, cos, sin, 0);
-		rotationMX.setColumn(1,-sin, cos, 0);
-		rotationMX.setColumn(2, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY(), 0);
-		GL20.glUniformMatrix3fv(loc, false, rotationMX.mul(modelMX,rotationMX).get(modelmxarray));
+		GL20.glUniformMatrix2fv(loc, false, modelmxarray);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "origin");
+		GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "rot");
+		GL20.glUniform1f(loc, txt.getAngle());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
 		GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), txt.getColorA());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
 		GL20.glUniform4f(loc, txt.getPickColorR(), txt.getPickColorG(), txt.getPickColorB(), 1f);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "useTex");
+		GL20.glUniform1i(loc, 1);
 		// draw things
 		GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
 		txt.releaseVertexArray();
@@ -147,11 +185,9 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@Override
 	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx) {
 		super.setViewMX(viewmx, scalemx, transmx);
-		modelMX.m00 = 1f/scalemx.m00();
-		modelMX.m01 = modelMX.m10 = 0;
-		modelMX.m11 = 1f/scalemx.m11();
-		modelMX.m20 = transmx.m20();
-		modelMX.m21 = transmx.m21();
+		this.modelmxarray[0] = 1f/scalemx.m00();
+		this.modelmxarray[1] = this.modelmxarray[2] = 0;
+		this.modelmxarray[3] = 1f/scalemx.m11();
 	}
 	
 	/**
