@@ -10,7 +10,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
 
@@ -36,7 +35,7 @@ public class IsolinesViz {
 		JFrame frame = new JFrame("Iso Lines");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().setPreferredSize(new Dimension(350, 300));
+		frame.getContentPane().setPreferredSize(new Dimension(500, 450));
 		CoordSysCanvas canvas = new CoordSysCanvas();
 		CompleteRenderer content = new CompleteRenderer();
 		canvas.setContent(content);
@@ -98,8 +97,7 @@ public class IsolinesViz {
 		contourbands.setGlobalAlphaMultiplier(0.3);
 		new CoordSysScrollZoom(canvas).register();
 		new CoordSysPanning(canvas).register();
-		Rectangle2D bounds = contourbands.getBounds();
-		canvas.setCoordinateView(bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY());
+		canvas.setCoordinateView(-2.5, -1.5, 0.5, 1.5);
 		
 		Lines userContour = new Lines();
 		Text userIsoLabel = new Text("", 10, Font.PLAIN, true);

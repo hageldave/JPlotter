@@ -1,6 +1,7 @@
 package hageldave.jplotter;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -23,6 +24,7 @@ import hageldave.jplotter.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.renderables.DefaultGlyph;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 
@@ -32,7 +34,7 @@ public class StatLogViz {
 		JFrame frame = new JFrame("Statlog (Shuttle) data set");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
+		frame.getContentPane().setPreferredSize(new Dimension(500, 500));;
 		CoordSysCanvas canvas = new CoordSysCanvas();
 		CompleteRenderer content = new CompleteRenderer();
 		canvas.setContent(content);
@@ -56,19 +58,19 @@ public class StatLogViz {
 				0xffe6ab02,
 				0xffa6761d
 		};
+		String[] classLabels = new String[]{
+				 "Rad Flow",
+				 "Fpv Close",
+				 "Fpv Open",
+				 "High",
+				 "Bypass",
+				 "Bpv Close",
+				 "Bpv Open",
+		};
 		URL statlogsrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/shuttle/shuttle.tst");
 		try (	InputStream stream = statlogsrc.openStream();
 				Scanner  sc = new Scanner(stream);
 				){
-			/* Classes on last data column
-			 * 1 Rad Flow 
-			 * 2 Fpv Close
-			 * 3 Fpv Open
-			 * 4 High
-			 * 5 Bypass
-			 * 6 Bpv Close
-			 * 7 Bpv Open 
-			 */
 			for(Points p : pointclasses)
 				content.points.addItemToRender(p);
 			// iterate dataset
@@ -93,6 +95,12 @@ public class StatLogViz {
 		}
 		canvas.setxAxisLabel("Feature 7");
 		canvas.setyAxisLabel("Feature 8");
+		Legend legend = new Legend();
+		for(int i = 0; i < classLabels.length; i++){
+			legend.addGlyphLabel(pointclasses[i].glyph, new Color(classcolors[i]), classLabels[i]);
+		}
+		canvas.setLegendBottom(legend);
+		canvas.setLegendBottomHeight(35);
 
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {

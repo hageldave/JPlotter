@@ -29,7 +29,7 @@ public class VectorFieldViz {
 		JFrame frame = new JFrame("Vector Field");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
+		frame.getContentPane().setPreferredSize(new Dimension(500, 500));;
 		CoordSysCanvas canvas = new CoordSysCanvas();
 		CompleteRenderer content = new CompleteRenderer();
 		canvas.setContent(content);
