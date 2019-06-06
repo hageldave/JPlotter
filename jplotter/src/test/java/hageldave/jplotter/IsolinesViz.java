@@ -106,7 +106,8 @@ public class IsolinesViz {
 		Text userIsoLabel = new Text("", 10, Font.ITALIC, true);
 		Triangles labelBackground = new Triangles().setGlobalAlphaMultiplier(0.5);
 		CompleteRenderer overlay = new CompleteRenderer();
-		canvas.setContent(content.withAppended(overlay));
+		canvas.setContent(content);
+		canvas.setOverlay(overlay);
 		content.addItemToRender(userContour);
 		overlay.addItemToRender(userIsoLabel);
 		overlay.addItemToRender(labelBackground);
@@ -122,20 +123,15 @@ public class IsolinesViz {
 			};
 			
 			void calcContour(Point mp){
-				Point2D p = canvas.transformMouseToCoordSys(mp);
-				double isoValue = f.applyAsDouble(p.getX(), p.getY());
+				Point2D p = Utils.swapYAxis(mp,canvas.getHeight());
+				Point2D coordsyspoint = canvas.transformToCoordSys(p); 
+				double isoValue = f.applyAsDouble(coordsyspoint.getX(), coordsyspoint.getY());
 				userIsoLabel
 					.setTextString(String.format("%.3f", isoValue))
 					.setColor(0xff8844bb)
-					.setOrigin(mp);
-				Rectangle2D labelbounds = userIsoLabel.getBounds();
-				Point2D minp = canvas.transformToCoordSys(new Point2D.Double(labelbounds.getMinX(), labelbounds.getMinY()));
-				Point2D maxp = canvas.transformMouseToCoordSys(new Point2D.Double(labelbounds.getMaxX(), labelbounds.getMaxY()));
+					.setOrigin(p);
 					
-				labelBackground.removeAllTriangles().addQuad(new Rectangle2D.Double(
-						minp.getX(), minp.getY(),
-						maxp.getX()-minp.getX(),maxp.getY()-minp.getY()),
-						Color.white,0);
+				labelBackground.removeAllTriangles().addQuad(userIsoLabel.getBounds(),Color.white,0);
 				List<SegmentDetails> contourSegments = Contours.computeContourLines(X, Y, Z, isoValue, 0xff8844bb);
 				userContour.removeAllSegments().getSegments().addAll(contourSegments);
 				canvas.repaint();
