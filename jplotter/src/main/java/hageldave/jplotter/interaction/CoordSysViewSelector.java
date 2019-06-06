@@ -70,8 +70,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		areaBorder.removeAllSegments();
 		overlay.lines.removeItemToRender(areaBorder);
 		if(start != null && end != null){
-			Point2D p1 = canvas.transformMouseToCoordSys(start);
-			Point2D p2 = canvas.transformMouseToCoordSys(end);
+			Point2D p1 = canvas.transformAWT2CoordSys(start);
+			Point2D p2 = canvas.transformAWT2CoordSys(end);
 			this.areaSelected(
 					Math.min(p1.getX(), p2.getX()),
 					Math.min(p1.getY(), p2.getY()),

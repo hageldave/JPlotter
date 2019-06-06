@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.event.ComponentAdapter;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -104,13 +105,27 @@ public class IsolinesViz {
 		
 		Lines userContour = new Lines();
 		Text userIsoLabel = new Text("", 10, Font.ITALIC, true);
-		Triangles labelBackground = new Triangles().setGlobalAlphaMultiplier(0.5);
+		Triangles labelBackground = new Triangles();
+		labelBackground.setGlobalAlphaMultiplier(0.5);
+		Point2D coordsysLabelLocation = new Point2D.Double();
 		CompleteRenderer overlay = new CompleteRenderer();
 		canvas.setContent(content);
 		canvas.setOverlay(overlay);
 		content.addItemToRender(userContour);
 		overlay.addItemToRender(userIsoLabel);
 		overlay.addItemToRender(labelBackground);
+		Runnable mkIsoLineFromCoordSyspoint = ()->{
+			Point2D p = canvas.transformCoordSys2GL(coordsysLabelLocation);
+			double isoValue = f.applyAsDouble(coordsysLabelLocation.getX(), coordsysLabelLocation.getY());
+			userIsoLabel
+				.setTextString(String.format("%.3f", isoValue))
+				.setColor(0xff8844bb)
+				.setOrigin(p);
+			labelBackground.removeAllTriangles().addQuad(userIsoLabel.getBounds(),Color.white,0);
+			List<SegmentDetails> contourSegments = Contours.computeContourLines(X, Y, Z, isoValue, 0xff8844bb);
+			userContour.removeAllSegments().getSegments().addAll(contourSegments);
+			canvas.repaint();
+		};
 		MouseAdapter contourPlacer = new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				if(e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK)
@@ -123,22 +138,20 @@ public class IsolinesViz {
 			};
 			
 			void calcContour(Point mp){
-				Point2D p = Utils.swapYAxis(mp,canvas.getHeight());
-				Point2D coordsyspoint = canvas.transformToCoordSys(p); 
-				double isoValue = f.applyAsDouble(coordsyspoint.getX(), coordsyspoint.getY());
-				userIsoLabel
-					.setTextString(String.format("%.3f", isoValue))
-					.setColor(0xff8844bb)
-					.setOrigin(p);
-					
-				labelBackground.removeAllTriangles().addQuad(userIsoLabel.getBounds(),Color.white,0);
-				List<SegmentDetails> contourSegments = Contours.computeContourLines(X, Y, Z, isoValue, 0xff8844bb);
-				userContour.removeAllSegments().getSegments().addAll(contourSegments);
-				canvas.repaint();
+				Point2D coordsyspoint = canvas.transformGL2CoordSys(Utils.swapYAxis(mp,canvas.getHeight()));
+				coordsysLabelLocation.setLocation(coordsyspoint);
+				mkIsoLineFromCoordSyspoint.run();
 			}
 		};
 		canvas.addMouseListener(contourPlacer);
 		canvas.addMouseMotionListener(contourPlacer);
+		canvas.addCoordinateViewListener(new CoordSysCanvas.CoordinateViewListener() {
+			@Override
+			public void coordinateViewChanged(CoordSysCanvas src, Rectangle2D view) {mkIsoLineFromCoordSyspoint.run();}
+		});
+		canvas.addComponentListener(new ComponentAdapter() {
+			public void componentResized(java.awt.event.ComponentEvent e) {mkIsoLineFromCoordSyspoint.run();};
+		});
 
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {

@@ -601,26 +601,46 @@ public class CoordSysCanvas extends FBOCanvas {
 	/**
 	 * Transforms a mouse location (in AWT coords) on this Canvas to the corresponding
 	 * coordinates in the coordinate system view (in GL coords).
-	 * @param mousePoint to be transformed
+	 * @param awtPoint to be transformed
 	 * @return transformed location
 	 */
-	public Point2D transformMouseToCoordSys(Point2D mousePoint){
-		mousePoint = Utils.swapYAxis(mousePoint, getHeight());
-		return transformToCoordSys(mousePoint);
+	public Point2D transformAWT2CoordSys(Point2D awtPoint){
+		awtPoint = Utils.swapYAxis(awtPoint, getHeight());
+		return transformGL2CoordSys(awtPoint);
 	}
 	
 	@GLCoordinates
-	public Point2D transformToCoordSys(Point2D point){
+	public Point2D transformGL2CoordSys(Point2D point){
 		Rectangle2D coordSysArea = getCoordSysArea();
+		Rectangle2D coordinateView = getCoordinateView();
 		double x = point.getX()-coordSysArea.getMinX();
 		double y = point.getY()-coordSysArea.getMinY();
 		x /= coordSysArea.getWidth()-1;
 		y /= coordSysArea.getHeight()-1;
-		Rectangle2D coordinateView = getCoordinateView();
 		x = x*coordinateView.getWidth()+coordinateView.getMinX();
 		y = y*coordinateView.getHeight()+coordinateView.getMinY();
 		return new Point2D.Double(x, y);
 	}
+	
+	@GLCoordinates
+	public Point2D transformCoordSys2GL(Point2D point){
+		Rectangle2D coordSysArea = getCoordSysArea();
+		Rectangle2D coordSysView = getCoordinateView();
+		double x = point.getX()-coordSysView.getMinX();
+		double y = point.getY()-coordSysView.getMinY();
+		x /= coordSysView.getWidth();
+		y /= coordSysView.getHeight();
+		x = x*(coordSysArea.getWidth()-1)+coordSysArea.getMinX();
+		y = y*(coordSysArea.getHeight()-1)+coordSysArea.getMinY();
+		return new Point2D.Double(x, y);
+	}
+	
+	public Point2D transformCoordSys2AWT(Point2D point){
+		Point2D glPoint = transformCoordSys2GL(point);
+		return Utils.swapYAxis(glPoint, getHeight());
+	}
+	
+	
 
 	/**
 	 * Disposes of GL resources, i.e. closes its renderers and all resources 

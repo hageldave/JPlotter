@@ -70,7 +70,7 @@ public class VectorFieldViz {
 			}
 			
 			void calcTrajectory(Point mousePoint){
-				Point2D point = canvas.transformMouseToCoordSys(mousePoint);
+				Point2D point = canvas.transformAWT2CoordSys(mousePoint);
 				double h = 0.02;
 				LinkedList<Point2D> trajectory = new LinkedList<>();
 				trajectory.add(point);
