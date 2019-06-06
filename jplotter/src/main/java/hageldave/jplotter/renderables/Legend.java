@@ -111,12 +111,19 @@ public class Legend implements Renderable, Renderer {
 		int leftPadding = 4;
 		int fontStyle = Font.PLAIN;
 		int fontSize = 10;
-		int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontSize, true).getBounds().height;
+		int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle, true).getBounds().height;
 		int maxTextWidth = glyphLabels.stream()
-		.map(p->CharacterAtlas.boundsForText(p.first.length(), fontSize, fontSize, true).getBounds().width)
-		.mapToInt(i->i)
-		.max()
-		.orElseGet(()->0);
+				.map(p->CharacterAtlas.boundsForText(p.first.length(), fontSize, fontStyle, true).getBounds().width)
+				.mapToInt(i->i)
+				.max()
+				.orElseGet(()->0
+		);
+		maxTextWidth = Math.max(maxTextWidth,lineLabels.stream()
+				.map(p->CharacterAtlas.boundsForText(p.first.length(), fontSize, fontStyle, true).getBounds().width)
+				.mapToInt(i->i)
+				.max()
+				.orElseGet(()->0)
+		);
 		int currentX = leftPadding;
 		int currentY = viewPortHeight-fontHeight-2;
 		// glyphs first
