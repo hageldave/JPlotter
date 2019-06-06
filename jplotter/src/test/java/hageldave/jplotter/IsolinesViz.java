@@ -1,6 +1,7 @@
 package hageldave.jplotter;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -60,13 +61,13 @@ public class IsolinesViz {
 			2,
 		};
 		int[] isoColors = new int[] {
-				0xff000044,
-				0xff220044,
-				0xff441144,
-				0xff661144,
-				0xff882244,
-				0xffaa2244,
-				0xffcc3344,
+				0xff000000,
+				0xff330000,
+				0xff660000,
+				0xff993322,
+				0xffcc6644,
+				0xffff9966,
+				0xffffcc88,
 		};
 		for(int i = 0; i < isoValues.length; i++) {
 			List<SegmentDetails> contours = Contours.computeContourLines(X, Y, Z, isoValues[i], isoColors[i]);
@@ -81,6 +82,8 @@ public class IsolinesViz {
 		contourbands.setGlobalAlphaMultiplier(0.3);
 		new CoordSysScrollZoom(canvas).register();
 		new CoordSysPanning(canvas).register();
+		canvas.setCoordinateView(-2.5, -1.5, .5, 1.5);
+		canvas.setBackground(Color.WHITE);
 //		// make trajectory (interactive)
 //		Lines trajectorySegments = new Lines();
 //		content.lines.addItemToRender(trajectorySegments);
