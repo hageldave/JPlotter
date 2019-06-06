@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import hageldave.imagingkit.core.Pixel;
@@ -171,6 +172,13 @@ public class Text implements Renderable {
 	 */
 	public Dimension getTextSize() {
 		return textSize;
+	}
+	
+	/**
+	 * @return the bounding rectangle of this text
+	 */
+	public Rectangle2D getBounds() {
+		return new Rectangle2D.Double(origin.getX(), origin.getY(), textSize.getWidth(), textSize.getHeight());
 	}
 
 	/**

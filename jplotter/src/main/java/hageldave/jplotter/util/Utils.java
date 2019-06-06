@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.lang.reflect.InvocationTargetException;
+import java.util.stream.Stream;
 
 import javax.swing.SwingUtilities;
 
@@ -113,6 +114,10 @@ public class Utils {
 		R copy = copy(rect);
 		copy.setRect(copy.getX(), height-1-copy.getMaxY(), copy.getWidth(), copy.getHeight());
 		return copy;
+	}
+	
+	public static <T> Stream<T> parallelize(Stream<T> stream, boolean parallel){
+		return parallel ? stream.parallel():stream;
 	}
 	
 }

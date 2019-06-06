@@ -46,4 +46,13 @@ public interface Renderer extends AutoCloseable {
 	@GLContextRequired
 	public void close();
 	
+	
+	public default ChainedRenderer withAppended(Renderer r){
+		return new ChainedRenderer(this, r);
+	}
+	
+	public default ChainedRenderer withPrepended(Renderer r){
+		return new ChainedRenderer(r, this);
+	}
+	
 }

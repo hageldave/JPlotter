@@ -3,6 +3,7 @@ package hageldave.jplotter.renderers;
 import java.util.Objects;
 
 import org.joml.Matrix3f;
+import org.joml.Matrix3fc;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -57,6 +58,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "}"
 			;
 	
+	protected Matrix3f rotationMX  = new Matrix3f();
 	protected Matrix3f modelMX  = new Matrix3f();
 	protected float[] viewmxarray = new float[16];
 	protected float[] modelmxarray = new float[9];
@@ -109,10 +111,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
 		float sin = (float)org.joml.Math.sin(txt.getAngle());
 		float cos = (float)org.joml.Math.cos(txt.getAngle());
-		modelMX.setColumn(0, cos, sin, 0);
-		modelMX.setColumn(1,-sin, cos, 0);
-		modelMX.setColumn(2, (int)txt.getOrigin().getX(), (int)txt.getOrigin().getY(), 0);
-		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
+		rotationMX.setColumn(0, cos, sin, 0);
+		rotationMX.setColumn(1,-sin, cos, 0);
+		rotationMX.setColumn(2, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY(), 0);
+		GL20.glUniformMatrix3fv(loc, false, rotationMX.mul(modelMX,rotationMX).get(modelmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
 		GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), txt.getColorA());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
@@ -136,6 +138,22 @@ public class TextRenderer extends GenericRenderer<Text> {
 		
 	}
 
+	/**
+	 * Sets the view matrix of this renderer.
+	 * In order to not zoom the glyphs an inverse scaling
+	 * is derived as model matrix for the glyphs to counteract
+	 * the view matrix.
+	 */
+	@Override
+	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx) {
+		super.setViewMX(viewmx, scalemx, transmx);
+		modelMX.m00 = 1f/scalemx.m00();
+		modelMX.m01 = modelMX.m10 = 0;
+		modelMX.m11 = 1f/scalemx.m11();
+		modelMX.m20 = transmx.m20();
+		modelMX.m21 = transmx.m21();
+	}
+	
 	/**
 	 * Disposes of GL resources, i.e. closes the shader.
 	 * It also deletes (closes) all {@link Text}s contained in this

@@ -2,13 +2,16 @@ package hageldave.jplotter.renderables;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.globjects.FBO;
 import hageldave.jplotter.globjects.VertexArray;
 import hageldave.jplotter.renderers.LinesRenderer;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The Lines class is a collection of linear line segments.
@@ -37,9 +40,9 @@ public class Lines implements Renderable {
 	protected float thickness = 1;
 
 	protected boolean isDirty;
-	
+
 	protected float globalAlphaMultiplier=1;
-	
+
 	protected boolean useVertexRounding=false;
 
 	/**
@@ -80,7 +83,7 @@ public class Lines implements Renderable {
 		setDirty();
 		return this;
 	}
-	
+
 	/**
 	 * Adds a new line segment to this object.
 	 * Sets the {@link #isDirty()} state to true.
@@ -105,7 +108,7 @@ public class Lines implements Renderable {
 	public Lines addSegment(Point2D p1, Point2D p2, Color c){
 		return addSegment(p1, p2, c, c);
 	}
-	
+
 	/**
 	 * Adds a new line segment to this object.
 	 * Sets the {@link #isDirty()} state to true.
@@ -151,7 +154,7 @@ public class Lines implements Renderable {
 	public Lines addSegment(double x1, double y1, double x2, double y2, int c){
 		return addSegment(x1, y1, x2, y2, c, c);
 	}
-	
+
 	/**
 	 * Adds a strip of line segments that connect the specified
 	 * points.
@@ -167,7 +170,7 @@ public class Lines implements Renderable {
 		}
 		return this;
 	}
-	
+
 	/**
 	 * Adds a strip of line segments that connect the specified
 	 * points.
@@ -182,7 +185,7 @@ public class Lines implements Renderable {
 		}
 		return this;
 	}
-	
+
 	/**
 	 * Adds a strip of line segments that connect the specified points.
 	 * The point coordinates are specified as interleaved values, i.e.
@@ -202,7 +205,7 @@ public class Lines implements Renderable {
 					coords[(i+0)*2+0], coords[(i+0)*2+1], 
 					coords[(i+1)*2+0], coords[(i+1)*2+1], 
 					c
-			);
+					);
 		}
 		return this;
 	}
@@ -222,7 +225,7 @@ public class Lines implements Renderable {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Sets the global alpha multiplier parameter of this {@link Lines} object.
 	 * The value will be multiplied with each segment point's alpha color value when rendering.
@@ -275,7 +278,7 @@ public class Lines implements Renderable {
 	public float getThickness() {
 		return thickness;
 	}
-	
+
 	/**
 	 * @return whether vertex rounding is enabled. This indicates if
 	 * the {@link LinesRenderer}'s shader will round vertex positions of 
@@ -287,7 +290,7 @@ public class Lines implements Renderable {
 	public boolean isVertexRoundingEnabled() {
 		return useVertexRounding;
 	}
-	
+
 	/**
 	 * En/Disables vertex rounding for this Lines object. This indicates if
 	 * the {@link LinesRenderer}'s shader will round vertex positions of 
@@ -304,7 +307,34 @@ public class Lines implements Renderable {
 		this.useVertexRounding = useVertexRounding;
 		return this;
 	}
-	
+
+	/**
+	 * @return the bounding rectangle that encloses all line segments in this {@link Lines} object.
+	 */
+	public Rectangle2D getBounds(){
+		if(numSegments() < 1)
+			return new Rectangle2D.Double();
+		
+		boolean useParallelStreaming = numSegments() > 1000;
+		double minX = Utils.parallelize(getSegments().stream(), useParallelStreaming)
+				.flatMap(seg->Arrays.asList(seg.p0,seg.p1).stream())
+				.mapToDouble(Point2D::getX)
+				.min().getAsDouble();
+		double maxX = Utils.parallelize(getSegments().stream(), useParallelStreaming)
+				.flatMap(seg->Arrays.asList(seg.p0,seg.p1).stream())
+				.mapToDouble(Point2D::getX)
+				.max().getAsDouble();
+		double minY = Utils.parallelize(getSegments().stream(), useParallelStreaming)
+				.flatMap(seg->Arrays.asList(seg.p0,seg.p1).stream())
+				.mapToDouble(Point2D::getY)
+				.min().getAsDouble();
+		double maxY = Utils.parallelize(getSegments().stream(), useParallelStreaming)
+				.flatMap(seg->Arrays.asList(seg.p0,seg.p1).stream())
+				.mapToDouble(Point2D::getY)
+				.max().getAsDouble();
+		return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+	}
+
 	/**
 	 * Specification of a line segment which comprises vertex locations, colors and picking color.
 	 * @author hageldave
@@ -315,7 +345,7 @@ public class Lines implements Renderable {
 		public int color0;
 		public int color1;
 		public int pickingColor;
-		
+
 		public SegmentDetails(Point2D p0, Point2D p1, int color0, int color1, int pickingColor) {
 			this.p0 = p0;
 			this.p1 = p1;
@@ -325,8 +355,6 @@ public class Lines implements Renderable {
 				pickingColor = pickingColor | 0xff000000;
 			this.pickingColor = pickingColor;
 		}
-		
-		
 	}
 
 	/**
@@ -378,7 +406,7 @@ public class Lines implements Renderable {
 
 				colorBuffer[i*2+0] = seg.color0;
 				colorBuffer[i*2+1] = seg.color1;
-				
+
 				pickBuffer[i*2+0] = pickBuffer[i*2+1] = seg.pickingColor;
 			}
 			va.setBuffer(0, 2, segmentCoordBuffer);

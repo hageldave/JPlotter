@@ -2,6 +2,7 @@ package hageldave.jplotter.renderables;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -10,6 +11,7 @@ import org.lwjgl.opengl.GL33;
 import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.globjects.FBO;
 import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The Points class is a collection of 2D points that are to be represented
@@ -258,6 +260,33 @@ public class Points implements Renderable {
 	 */
 	public float getGlobalAlphaMultiplier() {
 		return globalAlphaMultiplier;
+	}
+	
+	/**
+	 * @return the bounding rectangle that encloses all points in this {@link Points} object.
+	 */
+	public Rectangle2D getBounds(){
+		if(numPoints() < 1)
+			return new Rectangle2D.Double();
+		
+		boolean useParallelStreaming = numPoints() > 1000;
+		double minX = Utils.parallelize(getPointDetails().stream(), useParallelStreaming)
+				.map(pd->pd.location)
+				.mapToDouble(Point2D::getX)
+				.min().getAsDouble();
+		double maxX = Utils.parallelize(getPointDetails().stream(), useParallelStreaming)
+				.map(pd->pd.location)
+				.mapToDouble(Point2D::getX)
+				.max().getAsDouble();
+		double minY = Utils.parallelize(getPointDetails().stream(), useParallelStreaming)
+				.map(pd->pd.location)
+				.mapToDouble(Point2D::getY)
+				.min().getAsDouble();
+		double maxY = Utils.parallelize(getPointDetails().stream(), useParallelStreaming)
+				.map(pd->pd.location)
+				.mapToDouble(Point2D::getY)
+				.max().getAsDouble();
+		return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 	}
 
 	/**

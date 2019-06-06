@@ -605,11 +605,16 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * @param mousePoint to be transformed
 	 * @return transformed location
 	 */
-	public Point2D transformMouseToCoordSys(Point mousePoint){
+	public Point2D transformMouseToCoordSys(Point2D mousePoint){
 		mousePoint = Utils.swapYAxis(mousePoint, getHeight());
+		return transformToCoordSys(mousePoint);
+	}
+	
+	@GLCoordinates
+	public Point2D transformToCoordSys(Point2D point){
 		Rectangle2D coordSysArea = getCoordSysArea();
-		double x = mousePoint.getX()-coordSysArea.getMinX();
-		double y = mousePoint.getY()-coordSysArea.getMinY();
+		double x = point.getX()-coordSysArea.getMinX();
+		double y = point.getY()-coordSysArea.getMinY();
 		x /= coordSysArea.getWidth()-1;
 		y /= coordSysArea.getHeight()-1;
 		Rectangle2D coordinateView = getCoordinateView();

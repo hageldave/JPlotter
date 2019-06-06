@@ -3,23 +3,33 @@ package hageldave.jplotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Point;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.joml.Math;
+
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
+import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.util.Contours;
+import hageldave.jplotter.util.Utils;
 
 public class IsolinesViz {
 
@@ -27,17 +37,19 @@ public class IsolinesViz {
 		JFrame frame = new JFrame("Iso Lines");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
+		frame.getContentPane().setPreferredSize(new Dimension(350, 300));
 		CoordSysCanvas canvas = new CoordSysCanvas();
 		CompleteRenderer content = new CompleteRenderer();
 		canvas.setContent(content);
 		Legend legend = new Legend();
 		canvas.setLegendRight(legend);
 		canvas.setLegendRightWidth(50);
+		canvas.setBackground(Color.WHITE);
 
 		// setup content
 		DoubleBinaryOperator f1 = (x,y)->Math.exp(-(x*x+y*y));
 		DoubleBinaryOperator f2 = (x,y)->(x*y)-(y+1)*y;
+		DoubleBinaryOperator f = (x,y)->f1.applyAsDouble(x, y)-f2.applyAsDouble(x, y);
 		final int resolution = 200;
 		double[][] X = new double[resolution][resolution];
 		double[][] Y = new double[resolution][resolution];
@@ -46,7 +58,7 @@ public class IsolinesViz {
 			for(int i=0; i<X[0].length; i++) {
 				double x = i*8.0/(resolution-1) -4.0;
 				double y = j*8.0/(resolution-1) -4.0;
-				double z = f1.applyAsDouble(x, y) - f2.applyAsDouble(x, y);
+				double z = f.applyAsDouble(x, y);
 				X[j][i] = x;
 				Y[j][i] = y;
 				Z[j][i] = z;
@@ -87,51 +99,51 @@ public class IsolinesViz {
 		contourbands.setGlobalAlphaMultiplier(0.3);
 		new CoordSysScrollZoom(canvas).register();
 		new CoordSysPanning(canvas).register();
-		canvas.setCoordinateView(-2.5, -1.5, .5, 1.5);
-		canvas.setBackground(Color.WHITE);
-//		// make trajectory (interactive)
-//		Lines trajectorySegments = new Lines();
-//		content.lines.addItemToRender(trajectorySegments);
-//		MouseAdapter trajectoryInteraction = new MouseAdapter() {
-//			public void mousePressed(java.awt.event.MouseEvent e) {
-//				calcTrajectory(e.getPoint());
-//			}
-//
-//			public void mouseDragged(java.awt.event.MouseEvent e) {
-//				calcTrajectory(e.getPoint());
-//			}
-//
-//			void calcTrajectory(Point mousePoint){
-//				Point2D point = canvas.transformMouseToCoordSys(mousePoint);
-//				double h = 0.02;
-//				LinkedList<Point2D> trajectory = new LinkedList<>();
-//				trajectory.add(point);
-//				for(int i = 0; i < 1000; i++){
-//					double x = point.getX();
-//					double y = point.getY();
-//					// runge kutta 4
-//					double u0 = fu.applyAsDouble(x, y);
-//					double v0 = fv.applyAsDouble(x, y);
-//					double u1 = fu.applyAsDouble(x+u0*h/2, y+v0*h/2);
-//					double v1 = fv.applyAsDouble(x+u0*h/2, y+v0*h/2);
-//					double u2 = fu.applyAsDouble(x+u1*h/2, y+v1*h/2);
-//					double v2 = fv.applyAsDouble(x+u1*h/2, y+v1*h/2);
-//					double u3 = fu.applyAsDouble(x+u2*h, y+v2*h);
-//					double v3 = fv.applyAsDouble(x+u2*h, y+v2*h);
-//					x = x + h*(u0 + 2*u1 + 2*u2 + u3)/6;
-//					y = y + h*(v0 + 2*v1 + 2*v2 + v3)/6;
-//					point = new Point2D.Double(x,y);
-//					trajectory.add(point);
-//				}
-//				Utils.execOnAWTEventDispatch(()->{
-//					trajectorySegments.removeAllSegments();
-//					trajectorySegments.addLineStrip(new Color(0xffe41a1c), trajectory.toArray(new Point2D[0]));
-//					canvas.repaint();
-//				});
-//			}
-//		};
-//		canvas.addMouseListener(trajectoryInteraction);
-//		canvas.addMouseMotionListener(trajectoryInteraction);
+		Rectangle2D bounds = contourbands.getBounds();
+		canvas.setCoordinateView(bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY());
+		
+		Lines userContour = new Lines();
+		Text userIsoLabel = new Text("", 10, Font.ITALIC, true);
+		Triangles labelBackground = new Triangles().setGlobalAlphaMultiplier(0.5);
+		CompleteRenderer overlay = new CompleteRenderer();
+		canvas.setContent(content.withAppended(overlay));
+		content.addItemToRender(userContour);
+		overlay.addItemToRender(userIsoLabel);
+		overlay.addItemToRender(labelBackground);
+		MouseAdapter contourPlacer = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if(e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK)
+					calcContour(e.getPoint());
+			};
+			
+			public void mouseDragged(MouseEvent e) {
+				if(e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK)
+					calcContour(e.getPoint());
+			};
+			
+			void calcContour(Point mp){
+				Point2D p = canvas.transformMouseToCoordSys(mp);
+				double isoValue = f.applyAsDouble(p.getX(), p.getY());
+				userIsoLabel
+					.setTextString(String.format("%.3f", isoValue))
+					.setColor(0xff8844bb)
+					.setOrigin(mp);
+				Rectangle2D labelbounds = userIsoLabel.getBounds();
+				Point2D minp = canvas.transformToCoordSys(new Point2D.Double(labelbounds.getMinX(), labelbounds.getMinY()));
+				Point2D maxp = canvas.transformMouseToCoordSys(new Point2D.Double(labelbounds.getMaxX(), labelbounds.getMaxY()));
+					
+				labelBackground.removeAllTriangles().addQuad(new Rectangle2D.Double(
+						minp.getX(), minp.getY(),
+						maxp.getX()-minp.getX(),maxp.getY()-minp.getY()),
+						Color.white,0);
+				List<SegmentDetails> contourSegments = Contours.computeContourLines(X, Y, Z, isoValue, 0xff8844bb);
+				userContour.removeAllSegments().getSegments().addAll(contourSegments);
+				canvas.repaint();
+			}
+		};
+		canvas.addMouseListener(contourPlacer);
+		canvas.addMouseMotionListener(contourPlacer);
+
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override

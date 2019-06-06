@@ -2,12 +2,15 @@ package hageldave.jplotter.renderables;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.globjects.FBO;
 import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The Triangles class is a collection of 2D triangles.
@@ -307,6 +310,15 @@ public class Triangles implements Renderable {
 		return this.addQuad(bl.getX(), bl.getY(), tl.getX(), tl.getY(), tr.getX(), tr.getY(), br.getX(), br.getY());
 	}
 	
+	public Triangles addQuad(Rectangle2D rect, Color color, int picking){
+		return this.addQuad(
+				rect.getMinX(), rect.getMinY(), 
+				rect.getMinX(), rect.getMaxY(), 
+				rect.getMaxX(), rect.getMaxY(), 
+				rect.getMaxX(), rect.getMinY(), 
+				color, picking);
+	}
+	
 	/**
 	 * Adds a series of triangles called a triangle strip to {@link Triangles} object.
 	 * Each vertex forms a new triangle together with the two preceding vertices.
@@ -468,6 +480,33 @@ public class Triangles implements Renderable {
 	public Triangles setDirty() {
 		this.isDirty = true;
 		return this;
+	}
+	
+	/**
+	 * @return the bounding rectangle that encloses all line segments in this {@link Lines} object.
+	 */
+	public Rectangle2D getBounds(){
+		if(numTriangles() < 1)
+			return new Rectangle2D.Double();
+		
+		boolean useParallelStreaming = numTriangles() > 1000;
+		double minX = Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
+				.flatMap(tri->Arrays.asList(tri.x0,tri.x1,tri.x2).stream())
+				.mapToDouble(Float::floatValue)
+				.min().getAsDouble();
+		double maxX = Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
+				.flatMap(tri->Arrays.asList(tri.x0,tri.x1,tri.x2).stream())
+				.mapToDouble(Float::floatValue)
+				.max().getAsDouble();
+		double minY = Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
+				.flatMap(tri->Arrays.asList(tri.y0,tri.y1,tri.y2).stream())
+				.mapToDouble(Float::floatValue)
+				.min().getAsDouble();
+		double maxY = Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
+				.flatMap(tri->Arrays.asList(tri.y0,tri.y1,tri.y2).stream())
+				.mapToDouble(Float::floatValue)
+				.max().getAsDouble();
+		return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 	}
 
 	/**
