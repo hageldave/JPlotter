@@ -96,9 +96,9 @@ public class CoordSysCanvas extends FBOCanvas {
 
 	protected TickMarkGenerator tickMarkGenerator = new ExtendedWilkinson();
 
-	protected Lines axes = new Lines();
-	protected Lines ticks = new Lines();
-	protected Lines guides = new Lines();
+	protected Lines axes = new Lines().setVertexRoundingEnabled(true);
+	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
+	protected Lines guides = new Lines().setVertexRoundingEnabled(true);
 	protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
 	protected Text xAxisLabelText = new Text("", 12, Font.PLAIN, true);
 	protected Text yAxisLabelText = new Text("", 12, Font.PLAIN, true);

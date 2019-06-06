@@ -12,15 +12,14 @@ import hageldave.jplotter.CoordSysCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
-import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
 
 public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	protected CoordSysCanvas canvas;
 	protected CompleteRenderer overlay;
-	protected Lines areaBorder = new Lines();
-	protected TranslatedPoint2D start,end;
+	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
+	protected Point start,end;
 	
 	
 	public CoordSysViewSelector(CoordSysCanvas canvas) {
@@ -40,7 +39,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	@Override
 	public void mousePressed(MouseEvent e) {
 		
-		start = new TranslatedPoint2D(e.getPoint(),.5,.5);
+		start = e.getPoint();
 		overlay.addItemToRender(areaBorder);
 	}
 	
@@ -49,9 +48,9 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		if(start == null)
 			return;
 		
-		end = new TranslatedPoint2D(e.getPoint(),.5,.5);
-		TranslatedPoint2D start_ = Utils.swapYAxis(start, canvas.getHeight());
-		TranslatedPoint2D end_ = Utils.swapYAxis(end, canvas.getHeight());
+		end = e.getPoint();
+		Point start_ = Utils.swapYAxis(start, canvas.getHeight());
+		Point2D end_ = Utils.swapYAxis(end, canvas.getHeight());
 		areaBorder.removeAllSegments()
 		.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY(), 0xff222222)
 		.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY(), 0xff222222)
@@ -66,8 +65,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		areaBorder.removeAllSegments();
 		overlay.lines.removeItemToRender(areaBorder);
 		if(start != null && end != null){
-			Point2D p1 = canvas.transformMouseToCoordSys((Point) start.origin);
-			Point2D p2 = canvas.transformMouseToCoordSys((Point) end.origin);
+			Point2D p1 = canvas.transformMouseToCoordSys(start);
+			Point2D p2 = canvas.transformMouseToCoordSys(end);
 			this.areaSelected(
 					Math.min(p1.getX(), p2.getX()),
 					Math.min(p1.getY(), p2.getY()),

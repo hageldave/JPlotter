@@ -8,6 +8,7 @@ import java.util.Objects;
 import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.globjects.FBO;
 import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.renderers.LinesRenderer;
 
 /**
  * The Lines class is a collection of linear line segments.
@@ -38,6 +39,8 @@ public class Lines implements Renderable {
 	protected boolean isDirty;
 	
 	protected float globalAlphaMultiplier=1;
+	
+	protected boolean useVertexRounding=false;
 
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
@@ -271,6 +274,35 @@ public class Lines implements Renderable {
 	 */
 	public float getThickness() {
 		return thickness;
+	}
+	
+	/**
+	 * @return whether vertex rounding is enabled. This indicates if
+	 * the {@link LinesRenderer}'s shader will round vertex positions of 
+	 * the quad vertices (that a segment is expanded to) to integer values.
+	 * <p>
+	 * This has the effect of sharpening horizontal and vertical lines, but
+	 * can affect differently oriented lines to shrink in thickness or even vanish. 
+	 */
+	public boolean isVertexRoundingEnabled() {
+		return useVertexRounding;
+	}
+	
+	/**
+	 * En/Disables vertex rounding for this Lines object. This indicates if
+	 * the {@link LinesRenderer}'s shader will round vertex positions of 
+	 * the quad vertices (that a segment is expanded to) to integer values.
+	 * <p>
+	 * This has the effect of sharpening horizontal and vertical lines, but
+	 * can affect differently oriented lines to shrink in thickness or even vanish. 
+	 * <p>
+	 * Also this only makes sense when the Lines object is of integer valued thickness.
+	 * @param useVertexRounding will enable if true
+	 * @return this for chaining
+	 */
+	public Lines setVertexRoundingEnabled(boolean useVertexRounding) {
+		this.useVertexRounding = useVertexRounding;
+		return this;
 	}
 	
 	/**

@@ -154,7 +154,9 @@ public class Legend implements Renderable, Renderer {
 			Color color = lineLabel.second.second;
 			if(!thickness2lines.containsKey(thickness)){
 				Lines lines = new Lines();
-				lines.setThickness(thickness.floatValue());
+				lines
+				.setThickness(thickness.floatValue())
+				.setVertexRoundingEnabled(thickness.intValue()==thickness.floatValue());
 				thickness2lines.put(thickness, lines);
 			}
 			Lines lines = thickness2lines.get(thickness);

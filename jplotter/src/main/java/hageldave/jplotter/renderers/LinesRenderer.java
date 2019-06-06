@@ -54,38 +54,48 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(triangle_strip,max_vertices=4) out;"
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform float linewidth;"
+			+ NL + "uniform bool roundposition;"
 			+ NL + "in vec4 vcolor[];"
 			+ NL + "in vec4 vpick[];"
 			+ NL + "out vec4 gcolor;"
 			+ NL + "out vec4 gpick;"
+			
+			+ NL + "float rnd(float f){return float(int(f+0.5));}"
+			
+			+ NL + "vec2 roundToIntegerValuedVec(vec2 v){"
+			+ NL + "   return vec2(rnd(v.x),rnd(v.y));"
+			+ NL + "}"
+			
 			+ NL + "void main() {"
-			+ NL + "   float plus = 0;"
-			+ NL + "   if(int(linewidth)==linewidth && int(linewidth)%2==1){ plus = 0.5;}"
-			+ NL + "   vec2 p1 = gl_in[0].gl_Position.xy+plus;"
-			+ NL + "   vec2 p2 = gl_in[1].gl_Position.xy+plus;"
+			+ NL + "   vec2 p1 = gl_in[0].gl_Position.xy;"
+			+ NL + "   vec2 p2 = gl_in[1].gl_Position.xy;"
 			+ NL + "   vec2 dir = p1-p2;"
 			+ NL + "   vec2 miterDir = normalize(vec2(dir.y, -dir.x))*0.5*linewidth;"
 			+ NL + "   vec2 p;"
 			
 			+ NL + "   p = p1+miterDir;"
+			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[0];"
 			+ NL + "   gpick = vpick[0];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p1-miterDir;"
+			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[0];"
 			+ NL + "   gpick = vpick[0];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p2+miterDir;"
+			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[1];"
 			+ NL + "   gpick = vpick[1];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p2-miterDir;"
+			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[1];"
 			+ NL + "   gpick = vpick[1];"
@@ -159,6 +169,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");
+		GL20.glUniform1f(loc, lines.isVertexRoundingEnabled() ? 1:0);
 		// draw things
 		lines.bindVertexArray();
 		GL11.glDrawArrays(GL11.GL_LINES, 0, lines.numSegments()*2);
