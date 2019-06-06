@@ -546,14 +546,90 @@ public class Contours {
 					}
 					// entirely in between vertices
 					case 0x200:{
-						double x0,y0,x1,y1,x2,y2,x3,y4, m0,m1,m2,m3;
+						double x0,y0,x1,y1,x2,y2,x3,y3, m0,m1,m2,m3;
 						m0 = interpolateToValue(v1, v0, isoValue1);
 						m1 = interpolateToValue(v1, v0, isoValue2);
 						m2 = interpolateToValue(v2, v0, isoValue1);
 						m3 = interpolateToValue(v2, v0, isoValue2);
-						//TODO
+						x0 = tx1+m0*(tx0-tx1); y0 = ty1+m0*(ty0-ty1);
+						x1 = tx1+m1*(tx0-tx1); y1 = ty1+m1*(ty0-ty1);
+						x2 = tx2+m2*(tx0-tx2); y2 = ty2+m2*(ty0-ty2);
+						x3 = tx2+m3*(tx0-tx2); y3 = ty2+m3*(ty0-ty2);
+						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						break;
 					}
-					// missing trapezoid cases: 200,020,002,220,202,022
+					case 0x020:{
+						double x0,y0,x1,y1,x2,y2,x3,y3, m0,m1,m2,m3;
+						m0 = interpolateToValue(v0, v1, isoValue1);
+						m1 = interpolateToValue(v0, v1, isoValue2);
+						m2 = interpolateToValue(v2, v1, isoValue1);
+						m3 = interpolateToValue(v2, v1, isoValue2);
+						x0 = tx0+m0*(tx1-tx0); y0 = ty0+m0*(ty1-ty0);
+						x1 = tx0+m1*(tx1-tx0); y1 = ty0+m1*(ty1-ty0);
+						x2 = tx2+m2*(tx1-tx2); y2 = ty2+m2*(ty1-ty2);
+						x3 = tx2+m3*(tx1-tx2); y3 = ty2+m3*(ty1-ty2);
+						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						break;
+					}
+					case 0x002:{
+						double x0,y0,x1,y1,x2,y2,x3,y3, m0,m1,m2,m3;
+						m0 = interpolateToValue(v0, v2, isoValue1);
+						m1 = interpolateToValue(v0, v2, isoValue2);
+						m2 = interpolateToValue(v1, v2, isoValue1);
+						m3 = interpolateToValue(v1, v2, isoValue2);
+						x0 = tx0+m0*(tx2-tx0); y0 = ty0+m0*(ty2-ty0);
+						x1 = tx0+m1*(tx2-tx0); y1 = ty0+m1*(ty2-ty0);
+						x2 = tx1+m2*(tx2-tx1); y2 = ty1+m2*(ty2-ty1);
+						x3 = tx1+m3*(tx2-tx1); y3 = ty1+m3*(ty2-ty1);
+						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						break;
+					}
+					case 0x220:{
+						double x0,y0,x1,y1,x2,y2,x3,y3, m0,m1,m2,m3;
+						m0 = interpolateToValue(v2, v0, isoValue1);
+						m1 = interpolateToValue(v2, v0, isoValue2);
+						m2 = interpolateToValue(v2, v1, isoValue1);
+						m3 = interpolateToValue(v2, v1, isoValue2);
+						x0 = tx2-m0*(tx2-tx0); y0 = ty2-m0*(ty2-ty0);
+						x1 = tx2-m1*(tx2-tx0); y1 = ty2-m1*(ty2-ty0);
+						x2 = tx2-m2*(tx2-tx1); y2 = ty2-m2*(ty2-ty1);
+						x3 = tx2-m3*(tx2-tx1); y3 = ty2-m3*(ty2-ty1);
+						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						break;
+					}
+					case 0x202:{
+						double x0,y0,x1,y1,x2,y2,x3,y3, m0,m1,m2,m3;
+						m0 = interpolateToValue(v1, v0, isoValue1);
+						m1 = interpolateToValue(v1, v0, isoValue2);
+						m2 = interpolateToValue(v1, v2, isoValue1);
+						m3 = interpolateToValue(v1, v2, isoValue2);
+						x0 = tx1-m0*(tx1-tx0); y0 = ty1-m0*(ty1-ty0);
+						x1 = tx1-m1*(tx1-tx0); y1 = ty1-m1*(ty1-ty0);
+						x2 = tx1-m2*(tx1-tx2); y2 = ty1-m2*(ty1-ty2);
+						x3 = tx1-m3*(tx1-tx2); y3 = ty1-m3*(ty1-ty2);
+						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						break;
+					}
+					case 0x022:{
+						double x0,y0,x1,y1,x2,y2,x3,y3, m0,m1,m2,m3;
+						m0 = interpolateToValue(v0, v1, isoValue1);
+						m1 = interpolateToValue(v0, v1, isoValue2);
+						m2 = interpolateToValue(v0, v2, isoValue1);
+						m3 = interpolateToValue(v0, v2, isoValue2);
+						x0 = tx0-m0*(tx0-tx1); y0 = ty0-m0*(ty0-ty1);
+						x1 = tx0-m1*(tx0-tx1); y1 = ty0-m1*(ty0-ty1);
+						x2 = tx0-m2*(tx0-tx2); y2 = ty0-m2*(ty0-ty2);
+						x3 = tx0-m3*(tx0-tx2); y3 = ty0-m3*(ty0-ty2);
+						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						break;
+					}
+					// missing trapezoid cases: 
 					// missing pentagon cases: 012,102,120,210,201,021
 					default:
 //						throw new RuntimeException(Integer.toHexString(celltype));

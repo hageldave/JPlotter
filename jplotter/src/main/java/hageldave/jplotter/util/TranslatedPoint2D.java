@@ -1,7 +1,6 @@
 package hageldave.jplotter.util;
 
 import java.awt.geom.Point2D;
-import java.util.Locale;
 
 /**
  * The TranslatedPoint2D is an implementation of {@link Point2D}
