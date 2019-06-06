@@ -118,7 +118,7 @@ public class StatLogViz {
 		footer.add(slider);
 		footer.add(Box.createGlue());
 
-		new CoordSysPanning(canvas).register();
+		new CoordSysPanning(canvas){{extModifierMask=0;}}.register();
 		new CoordSysScrollZoom(canvas).setZoomFactor(1.5).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();

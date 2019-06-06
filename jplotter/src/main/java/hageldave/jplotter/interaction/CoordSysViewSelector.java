@@ -1,12 +1,15 @@
 package hageldave.jplotter.interaction;
 
 import java.awt.Point;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
+
+import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.CoordSysCanvas;
 import hageldave.jplotter.renderables.Lines;
@@ -20,6 +23,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
+	protected int extModifierMask = InputEvent.SHIFT_DOWN_MASK;
 	
 	
 	public CoordSysViewSelector(CoordSysCanvas canvas) {
@@ -38,14 +42,15 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		
-		start = e.getPoint();
-		overlay.addItemToRender(areaBorder);
+		if(SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) == extModifierMask){
+			start = e.getPoint();
+			overlay.addItemToRender(areaBorder);
+		}
 	}
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(start == null)
+		if(start == null || (e.getModifiersEx()&extModifierMask) != extModifierMask)
 			return;
 		
 		end = e.getPoint();

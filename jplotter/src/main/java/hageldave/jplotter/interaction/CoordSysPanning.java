@@ -1,6 +1,7 @@
 package hageldave.jplotter.interaction;
 
 import java.awt.Point;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -16,9 +17,15 @@ import hageldave.jplotter.CoordSysCanvas;
  * and {@link MouseMotionListener} that realize panning functionality
  * for the coordinate view of the {@link CoordSysCanvas}.
  * When registering this with a CoordSysCanvas dragging with the left mouse
- * button over the Canvas will set the coordinate view accordingly.
+ * button over the Canvas while holding down CTRL will set the coordinate view accordingly.
  * <p>
  * Intended use: {@code CoordSysPanning pan = new CoordSysPanning(canvas).register(); }
+ * <p>
+ * Per default the extended modifier mask for a dragging mouse event to trigger
+ * panning is {@link InputEvent#CTRL_DOWN_MASK}. 
+ * If this is undesired the {@link #extModifierMask} has to be overridden.<br>
+ * For example to not need to press any key:
+ * <pre>new CoordSysPanning(canvas){{extModifierMask=0;}}.register();</pre>
  * 
  * @author hageldave
  */
@@ -26,6 +33,7 @@ public class CoordSysPanning implements MouseListener, MouseMotionListener {
 	
 	protected Point startPoint;
 	protected CoordSysCanvas canvas;
+	protected int extModifierMask = InputEvent.CTRL_DOWN_MASK;
 	
 	/**
 	 * Creates a new {@link CoordSysPanning} for the specified canvas.
@@ -43,7 +51,7 @@ public class CoordSysPanning implements MouseListener, MouseMotionListener {
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(SwingUtilities.isLeftMouseButton(e)){
+		if(SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) == extModifierMask){
 			Point dragPoint = e.getPoint();
 			double mouseTx = dragPoint.getX()-startPoint.getX();
 			double mouseTy = dragPoint.getY()-startPoint.getY();
