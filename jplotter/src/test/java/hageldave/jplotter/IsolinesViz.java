@@ -13,6 +13,7 @@ import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Triangles;
@@ -30,11 +31,14 @@ public class IsolinesViz {
 		CoordSysCanvas canvas = new CoordSysCanvas();
 		CompleteRenderer content = new CompleteRenderer();
 		canvas.setContent(content);
+		Legend legend = new Legend();
+		canvas.setLegendRight(legend);
+		canvas.setLegendRightWidth(50);
 
 		// setup content
 		DoubleBinaryOperator f1 = (x,y)->Math.exp(-(x*x+y*y));
 		DoubleBinaryOperator f2 = (x,y)->(x*y)-(y+1)*y;
-		final int resolution = 100;
+		final int resolution = 200;
 		double[][] X = new double[resolution][resolution];
 		double[][] Y = new double[resolution][resolution];
 		double[][] Z = new double[resolution][resolution];
@@ -69,9 +73,10 @@ public class IsolinesViz {
 				0xffff9966,
 				0xffffcc88,
 		};
-		for(int i = 0; i < isoValues.length; i++) {
+		for(int i = isoValues.length-1; i >= 0; i--) {
 			List<SegmentDetails> contours = Contours.computeContourLines(X, Y, Z, isoValues[i], isoColors[i]);
 			contourlines.getSegments().addAll(contours);
+			legend.addLineLabel(1, new Color(isoColors[i]), isoValues[i] < 0 ? ""+isoValues[i]:" "+isoValues[i]);
 		}
 		for(int i = 0; i < isoValues.length-1; i++) {
 			List<TriangleDetails> contours = Contours.computeContourBands(X, Y, Z, isoValues[i], isoValues[i+1], isoColors[i], isoColors[i+1]);
