@@ -4,6 +4,14 @@ import org.joml.Matrix3fc;
 
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
+/**
+ * The chained renderer is used to realize the methods {@link Renderer#withAppended(Renderer)}
+ * and {@link Renderer#withPrepended(Renderer)}.
+ * It consists of two other {@link Renderer}s which it executes after each other.
+ * All {@link Renderer} and {@link AdaptableView} method calls are delegated to both.
+ * 
+ * @author hageldave
+ */
 public class ChainedRenderer implements Renderer, AdaptableView {
 
 	protected Renderer r1,r2;

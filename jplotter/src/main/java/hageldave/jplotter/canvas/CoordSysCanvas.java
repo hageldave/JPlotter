@@ -554,6 +554,9 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * or broken renderings due to floating point precision.
 	 * <p>
 	 * This method also sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
+	 * <p>
+	 * When {@link CoordinateViewListener} are registered to this canvas, they will be notified
+	 * before this method returns.
 	 * 
 	 * @param minX minimum x coordinate visible in the coordinate system
 	 * @param minY minimum y coordinate visible in the coordinate system
@@ -574,6 +577,13 @@ public class CoordSysCanvas extends FBOCanvas {
 		return this;
 	}
 
+	/**
+	 * Adds a {@link CoordinateViewListener} to this canvas which will be notified
+	 * whenever the coordinate view changes 
+	 * (i.e. when {@link #setCoordinateView(double, double, double, double)} is called)
+	 * @param l listener
+	 * @return this for chaining
+	 */
 	synchronized public CoordSysCanvas addCoordinateViewListener(CoordinateViewListener l){
 		if(l==null)
 			return this;
@@ -581,6 +591,11 @@ public class CoordSysCanvas extends FBOCanvas {
 		return this;
 	}
 
+	/**
+	 * Removes the specified {@link CoordinateViewListener} from this canvas.
+	 * @param l listener
+	 * @return this for chaining
+	 */
 	synchronized public CoordSysCanvas removeActionListener(CoordinateViewListener l){
 		if(l==null)
 			return this;

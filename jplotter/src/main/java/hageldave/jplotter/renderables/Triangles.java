@@ -310,6 +310,14 @@ public class Triangles implements Renderable {
 		return this.addQuad(bl.getX(), bl.getY(), tl.getX(), tl.getY(), tr.getX(), tr.getY(), br.getX(), br.getY());
 	}
 	
+	/**
+	 * Adds two triangles that form the specified rectangle.
+	 * Sets the {@link #isDirty()} state to true.
+	 * @param rect rectangle
+	 * @param color color of the rectangle
+	 * @param picking picking color of the rectangle
+	 * @return this for chaining
+	 */
 	public Triangles addQuad(Rectangle2D rect, Color color, int picking){
 		return this.addQuad(
 				rect.getMinX(), rect.getMinY(), 
@@ -318,6 +326,7 @@ public class Triangles implements Renderable {
 				rect.getMaxX(), rect.getMinY(), 
 				color, picking);
 	}
+	
 	
 	/**
 	 * Adds a series of triangles called a triangle strip to {@link Triangles} object.

@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
@@ -203,6 +204,17 @@ public class Text implements Renderable {
 	 */
 	public Rectangle2D getBounds() {
 		return new Rectangle2D.Double(origin.getX(), origin.getY(), textSize.getWidth(), textSize.getHeight());
+	}
+	
+	/**
+	 * @return the bounding rectangle of this text with its rotation taken into account.
+	 */
+	public Rectangle2D getBoundsWithRotation() {
+		Rectangle2D bounds = new Rectangle2D.Double(0, 0, getTextSize().width, getTextSize().height);
+		AffineTransform transform = new AffineTransform();
+		transform.rotate(angle);
+		transform.translate(origin.getX(), origin.getY());
+		return transform.createTransformedShape(bounds).getBounds2D();
 	}
 
 	/**
