@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.CoordSysCanvas;
+import hageldave.jplotter.canvas.CoordSysCanvas;
 
 /**
  * The CoordSysPanning class implements a {@link MouseListener}

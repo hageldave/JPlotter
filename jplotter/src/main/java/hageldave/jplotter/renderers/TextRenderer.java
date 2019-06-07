@@ -9,11 +9,11 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.Shader;
-import hageldave.jplotter.renderables.CharacterAtlas;
+import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}

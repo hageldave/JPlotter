@@ -20,10 +20,10 @@ import javax.swing.SwingUtilities;
 
 import org.joml.Math;
 
-import hageldave.jplotter.CoordSysCanvas;
+import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
-import hageldave.jplotter.renderables.DefaultGlyph;
+import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;

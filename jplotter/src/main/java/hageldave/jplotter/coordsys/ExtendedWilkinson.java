@@ -1,9 +1,11 @@
-package hageldave.jplotter.util;
+package hageldave.jplotter.coordsys;
 
 import static java.lang.Math.*;
 
 import java.util.Arrays;
 import java.util.Locale;
+
+import hageldave.jplotter.util.Pair;
 
 /**
  * Implementation of the extended Wilkinson algorithm for tick label positioning.

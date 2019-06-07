@@ -5,10 +5,10 @@ import java.util.Objects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.Shader;
+import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Triangles;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}

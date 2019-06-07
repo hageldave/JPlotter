@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.FBO;
-import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.util.Utils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The Lines class is a collection of linear line segments.

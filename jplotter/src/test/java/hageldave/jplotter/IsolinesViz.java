@@ -18,8 +18,10 @@ import javax.swing.SwingUtilities;
 
 import org.joml.Math;
 
+import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
+import hageldave.jplotter.misc.Contours;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
@@ -27,7 +29,6 @@ import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
-import hageldave.jplotter.util.Contours;
 
 public class IsolinesViz {
 

@@ -1,9 +1,9 @@
-package hageldave.jplotter.renderables;
+package hageldave.jplotter.misc;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
 
-import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.PointsRenderer;
 
 /**

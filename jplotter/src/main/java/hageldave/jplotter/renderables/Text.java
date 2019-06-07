@@ -9,11 +9,12 @@ import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import hageldave.imagingkit.core.Pixel;
-import hageldave.jplotter.FBOCanvas;
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.FBO;
-import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.renderers.TextRenderer;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * Abstract class for {@link Renderable}s representing text that can be rendered using the

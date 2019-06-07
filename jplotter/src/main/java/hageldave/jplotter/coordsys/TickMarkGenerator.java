@@ -1,6 +1,7 @@
-package hageldave.jplotter.util;
+package hageldave.jplotter.coordsys;
 
-import hageldave.jplotter.CoordSysCanvas;
+import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.util.Pair;
 
 /**
  * The TickMarkGenerator interface provides the

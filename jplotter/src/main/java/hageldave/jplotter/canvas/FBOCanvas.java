@@ -1,4 +1,4 @@
-package hageldave.jplotter;
+package hageldave.jplotter.canvas;
 
 import java.awt.Color;
 import java.awt.event.ComponentAdapter;
@@ -19,14 +19,14 @@ import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
 import org.lwjgl.opengl.awt.PlatformGLCanvas;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.FBO;
-import hageldave.jplotter.globjects.Shader;
-import hageldave.jplotter.globjects.VertexArray;
-import hageldave.jplotter.renderables.CharacterAtlas;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The FBOCanvas is an {@link AWTGLCanvas} which uses a FrameBufferObject ({@link FBO}) 

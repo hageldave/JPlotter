@@ -17,7 +17,8 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.renderables.DefaultGlyph;
+import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;

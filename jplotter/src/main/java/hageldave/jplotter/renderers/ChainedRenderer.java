@@ -2,7 +2,7 @@ package hageldave.jplotter.renderers;
 
 import org.joml.Matrix3fc;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 public class ChainedRenderer implements Renderer, AdaptableView {
 

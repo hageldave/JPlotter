@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.FBO;
-import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Utils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The Triangles class is a collection of 2D triangles.

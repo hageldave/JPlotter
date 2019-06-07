@@ -1,9 +1,9 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.FBO;
-import hageldave.jplotter.globjects.Shader;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The Renderer interface defines methods to 

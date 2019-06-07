@@ -1,4 +1,4 @@
-package hageldave.jplotter.util;
+package hageldave.jplotter.misc;
 
 import static hageldave.jplotter.util.Utils.interpolateColor;
 

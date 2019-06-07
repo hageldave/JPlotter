@@ -1,4 +1,4 @@
-package hageldave.jplotter;
+package hageldave.jplotter.util;
 
 import static java.lang.annotation.ElementType.*;
 
@@ -6,8 +6,6 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Target;
 
 import org.lwjgl.opengl.awt.AWTGLCanvas;
-
-import hageldave.jplotter.util.Utils;
 
 public final class Annotations {
 	private Annotations(){}

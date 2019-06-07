@@ -1,4 +1,4 @@
-package hageldave.jplotter.globjects;
+package hageldave.jplotter.gl;
 
 import static org.lwjgl.opengl.GL11.GL_DOUBLE;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
@@ -19,7 +19,7 @@ import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import static org.lwjgl.opengl.GL30.glVertexAttribIPointer;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The VertexArray class encapsulates a GL vertex array object together with 

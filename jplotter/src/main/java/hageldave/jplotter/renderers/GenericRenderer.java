@@ -6,10 +6,10 @@ import java.util.Objects;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4f;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.Shader;
+import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.util.GLUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The GenericRenderer class is an abstract {@link Renderer} intended

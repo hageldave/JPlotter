@@ -1,12 +1,12 @@
-package hageldave.jplotter.globjects;
+package hageldave.jplotter.gl;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils.GLRuntimeException;
 
 /**

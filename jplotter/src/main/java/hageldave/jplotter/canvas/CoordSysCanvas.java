@@ -1,4 +1,4 @@
-package hageldave.jplotter;
+package hageldave.jplotter.canvas;
 
 import java.awt.AWTEventMulticaster;
 import java.awt.Color;
@@ -16,11 +16,12 @@ import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.awt.GLData;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.Annotations.GLCoordinates;
+import hageldave.jplotter.coordsys.ExtendedWilkinson;
+import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
-import hageldave.jplotter.renderables.CharacterAtlas;
+import hageldave.jplotter.interaction.CoordinateViewListener;
+import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Text;
@@ -28,12 +29,12 @@ import hageldave.jplotter.renderers.AdaptableView;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.renderers.TextRenderer;
-import hageldave.jplotter.util.ExtendedWilkinson;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
-import hageldave.jplotter.util.TickMarkGenerator;
 import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Annotations.GLCoordinates;
 
 /**
  * The CoordSysCanvas is an {@link FBOCanvas} that displays a coordinate system.
@@ -65,7 +66,9 @@ import hageldave.jplotter.util.Utils;
  * The legend area size can be partially controlled by {@link #setLegendBottomHeight(int)}
  * and {@link #setLegendRightWidth(int)} if this is needed.
  * <p>
- * 
+ * The overlay renderer ({@link #setOverlay(Renderer)}) can be used to finally draw over all
+ * of the canvas viewport.
+ * <p>
  * For interacting with this CoordSysCanvas there already exist implementations of MouseListeners
  * for panning and zooming (see {@link CoordSysPanning} and {@link CoordSysScrollZoom}).
  * 
@@ -224,18 +227,30 @@ public class CoordSysCanvas extends FBOCanvas {
 		return old;
 	}
 
+	/**
+	 * @return overlay. see {@link #setOverlay(Renderer)}
+	 */
 	public Renderer getOverlay() {
 		return overlay;
 	}
 
+	/**
+	 * @return bottom legend. see {@link #setLegendBottom(Renderer)}
+	 */
 	public Renderer getLegendBottom() {
 		return legendBottom;
 	}
 
+	/**
+	 * @return right legend. see {@link #setLegendRight(Renderer)}
+	 */
 	public Renderer getLegendRight() {
 		return legendRight;
 	}
 
+	/**
+	 * @return content. see {@link #setContent(Renderer)}
+	 */
 	public Renderer getContent() {
 		return content;
 	}
@@ -599,8 +614,9 @@ public class CoordSysCanvas extends FBOCanvas {
 	}
 
 	/**
-	 * Transforms a mouse location (in AWT coords) on this Canvas to the corresponding
-	 * coordinates in the coordinate system view (in GL coords).
+	 * Transforms a location in AWT coordinates (y axis extends to bottom) 
+	 * on this Canvas to the corresponding coordinates in the coordinate 
+	 * system view (in GL coords).
 	 * @param awtPoint to be transformed
 	 * @return transformed location
 	 */
@@ -609,6 +625,12 @@ public class CoordSysCanvas extends FBOCanvas {
 		return transformGL2CoordSys(awtPoint);
 	}
 	
+	/**
+	 * Transforms a location in GL coordinates on this canvas to the 
+	 * corresponding coordinates in the coordinate system view.
+	 * @param point to be transformed
+	 * @return transformed location
+	 */
 	@GLCoordinates
 	public Point2D transformGL2CoordSys(Point2D point){
 		Rectangle2D coordSysArea = getCoordSysArea();
@@ -622,6 +644,12 @@ public class CoordSysCanvas extends FBOCanvas {
 		return new Point2D.Double(x, y);
 	}
 	
+	/**
+	 * Transforms a location in coordinates of the current coordinate view
+	 * to corresponding coordinates of this canvas (in GL coords).
+	 * @param point to be transformed
+	 * @return transformed location
+	 */
 	@GLCoordinates
 	public Point2D transformCoordSys2GL(Point2D point){
 		Rectangle2D coordSysArea = getCoordSysArea();
@@ -635,6 +663,13 @@ public class CoordSysCanvas extends FBOCanvas {
 		return new Point2D.Double(x, y);
 	}
 	
+	/**
+	 * Transforms a location in coordinates of the current coordinate view
+	 * to corresponding coordinates of this canvas in AWT coordinates 
+	 * (where y axis extends to bottom).
+	 * @param point to be transformed
+	 * @return transformed location
+	 */
 	public Point2D transformCoordSys2AWT(Point2D point){
 		Point2D glPoint = transformCoordSys2GL(point);
 		return Utils.swapYAxis(glPoint, getHeight());
@@ -673,20 +708,6 @@ public class CoordSysCanvas extends FBOCanvas {
 		legendBottom = null;
 		overlay = null;
 		super.close();
-	}
-
-	public static interface CoordinateViewListener extends ActionListener {
-
-		@Override
-		default void actionPerformed(ActionEvent e) {
-			if(e.getSource() instanceof CoordSysCanvas){
-				CoordSysCanvas canvas = (CoordSysCanvas) e.getSource();
-				coordinateViewChanged(canvas,canvas.getCoordinateView());
-			}
-		}
-
-		void coordinateViewChanged(CoordSysCanvas src, Rectangle2D view);
-
 	}
 
 }

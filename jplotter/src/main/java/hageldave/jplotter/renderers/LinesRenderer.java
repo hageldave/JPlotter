@@ -6,10 +6,10 @@ import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.Shader;
+import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The LinesRenderer is an implementation of the {@link GenericRenderer}

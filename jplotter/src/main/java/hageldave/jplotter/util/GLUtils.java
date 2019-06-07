@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import hageldave.imagingkit.core.Img;
-import hageldave.jplotter.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * Utility class containing methods for Open GL specific tasks.

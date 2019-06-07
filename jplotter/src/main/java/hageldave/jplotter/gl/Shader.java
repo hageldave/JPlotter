@@ -1,10 +1,10 @@
-package hageldave.jplotter.globjects;
+package hageldave.jplotter.gl;
 
 import java.io.PrintStream;
 import java.util.Objects;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils.GLRuntimeException;
 
 import static org.lwjgl.opengl.GL20.*;

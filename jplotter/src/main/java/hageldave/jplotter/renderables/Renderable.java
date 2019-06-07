@@ -1,9 +1,9 @@
 package hageldave.jplotter.renderables;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.GenericRenderer;
 import hageldave.jplotter.renderers.Renderer;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * Interface for an object that can be rendered by a {@link Renderer} e.g. the {@link GenericRenderer}.

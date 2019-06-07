@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
 
-import hageldave.jplotter.renderables.CharacterAtlas;
+import hageldave.jplotter.misc.CharacterAtlas;
 
 /**
  * The GenericKey class can be used as key in {@link HashMap}s when

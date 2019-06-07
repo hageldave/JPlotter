@@ -7,10 +7,10 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL31;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.Shader;
+import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The PointsRenderer is an implementation of the {@link GenericRenderer}

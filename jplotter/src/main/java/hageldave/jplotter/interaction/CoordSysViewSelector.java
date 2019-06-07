@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.CoordSysCanvas;
+import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;

@@ -1,10 +1,10 @@
-package hageldave.jplotter;
+package hageldave.jplotter.canvas;
 
 import java.util.Objects;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderers.Renderer;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The BlankCanvas is an {@link FBOCanvas} that uses a single {@link Renderer} 

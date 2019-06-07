@@ -8,10 +8,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
+import hageldave.jplotter.misc.CharacterAtlas;
+import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Pair;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The Legend class is {@link Renderable} and its own {@link Renderer} at once.

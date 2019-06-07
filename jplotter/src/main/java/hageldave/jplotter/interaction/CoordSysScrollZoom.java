@@ -4,7 +4,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.Arrays;
 
-import hageldave.jplotter.CoordSysCanvas;
+import hageldave.jplotter.canvas.CoordSysCanvas;
 
 /**
  * The CoordSysScrollZoom class implements a {@link MouseWheelListener}

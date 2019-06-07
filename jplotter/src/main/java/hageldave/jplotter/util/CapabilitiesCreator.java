@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 
-import hageldave.jplotter.FBOCanvas;
+import hageldave.jplotter.canvas.FBOCanvas;
 
 /**
  * This class provides the {@link #create()} method that makes sure that 

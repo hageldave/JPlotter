@@ -1,4 +1,4 @@
-package hageldave.jplotter.renderables;
+package hageldave.jplotter.misc;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -17,11 +17,11 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.system.Platform;
 
 import hageldave.imagingkit.core.Img;
-import hageldave.jplotter.FBOCanvas;
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.GenericKey;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The CharacterAtlas class is a texture atlas for looking up character textures.

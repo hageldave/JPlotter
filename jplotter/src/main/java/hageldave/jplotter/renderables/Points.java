@@ -8,10 +8,11 @@ import java.util.Objects;
 
 import org.lwjgl.opengl.GL33;
 
-import hageldave.jplotter.Annotations.GLContextRequired;
-import hageldave.jplotter.globjects.FBO;
-import hageldave.jplotter.globjects.VertexArray;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.util.Utils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The Points class is a collection of 2D points that are to be represented
