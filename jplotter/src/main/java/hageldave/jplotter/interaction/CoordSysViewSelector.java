@@ -7,6 +7,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 
 import javax.swing.SwingUtilities;
@@ -17,6 +18,10 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
 
+/**
+ * 
+ * @author hageldave
+ */
 public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	protected CoordSysCanvas canvas;
@@ -42,7 +47,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if(SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) == extModifierMask){
+		if(isTriggerMouseEvent(e, MouseEvent.MOUSE_PRESSED)){
 			start = e.getPoint();
 			overlay.addItemToRender(areaBorder);
 		}
@@ -50,10 +55,17 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(start == null || (e.getModifiersEx()&extModifierMask) != extModifierMask)
+		if(start == null || !isTriggerMouseEvent(e, MouseEvent.MOUSE_DRAGGED)){	
 			return;
-		
-		end = e.getPoint();
+		}
+		{
+			Rectangle2D coordSysArea = Utils.swapYAxis(canvas.getCoordSysArea(),canvas.getHeight());
+			Point end = e.getPoint();
+			// clamp end point to area
+			double endX = Utils.clamp(coordSysArea.getMinX(), end.getX(), coordSysArea.getMaxX());
+			double endY = Utils.clamp(coordSysArea.getMinY(), end.getY(), coordSysArea.getMaxY());
+			this.end = new Point((int)endX, (int)endY);
+		}
 		Point start_ = Utils.swapYAxis(start, canvas.getHeight());
 		Point2D end_ = Utils.swapYAxis(end, canvas.getHeight());
 		areaBorder.removeAllSegments()
@@ -82,6 +94,17 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		canvas.repaint();
 		start = null;
 		end = null;
+	}
+	
+	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
+		if(!SwingUtilities.isLeftMouseButton(e))
+			return false;
+		if((e.getModifiersEx()&extModifierMask) == 0)
+			return false;
+		if(method == MouseEvent.MOUSE_PRESSED){
+			return canvas.getCoordSysArea().contains( Utils.swapYAxis(e.getPoint(), canvas.getHeight()) );
+		}
+		return true;
 	}
 	
 	/**

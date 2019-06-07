@@ -120,4 +120,8 @@ public class Utils {
 		return parallel ? stream.parallel():stream;
 	}
 	
+	public static double clamp(double lower, double v, double upper){
+		return Math.max(lower, Math.min(upper, v));
+	}
+	
 }

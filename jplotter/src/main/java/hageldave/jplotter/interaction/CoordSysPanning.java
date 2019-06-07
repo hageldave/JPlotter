@@ -2,6 +2,7 @@ package hageldave.jplotter.interaction;
 
 import java.awt.Point;
 import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -29,7 +30,7 @@ import hageldave.jplotter.canvas.CoordSysCanvas;
  * 
  * @author hageldave
  */
-public class CoordSysPanning implements MouseListener, MouseMotionListener {
+public class CoordSysPanning extends MouseAdapter {
 	
 	protected Point startPoint;
 	protected CoordSysCanvas canvas;
@@ -45,13 +46,13 @@ public class CoordSysPanning implements MouseListener, MouseMotionListener {
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if(SwingUtilities.isLeftMouseButton(e))
+		if(isTriggerMouseEvent(e, MouseEvent.MOUSE_PRESSED))
 			this.startPoint = e.getPoint();
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) == extModifierMask){
+		if(isTriggerMouseEvent(e, MouseEvent.MOUSE_DRAGGED)){
 			Point dragPoint = e.getPoint();
 			double mouseTx = dragPoint.getX()-startPoint.getX();
 			double mouseTy = dragPoint.getY()-startPoint.getY();
@@ -74,28 +75,12 @@ public class CoordSysPanning implements MouseListener, MouseMotionListener {
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		if(SwingUtilities.isLeftMouseButton(e))
-			startPoint = null;
+		startPoint = null;
 	}
-
-	@Override
-	public void mouseMoved(MouseEvent e) {
-		// NOOP
-	}
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		// NOOP
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// NOOP
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// NOOP
+	
+	
+	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
+		return SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) != 0;
 	}
 
 	/**
