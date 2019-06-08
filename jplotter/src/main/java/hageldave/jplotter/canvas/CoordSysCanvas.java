@@ -218,8 +218,9 @@ public class CoordSysCanvas extends FBOCanvas {
 	/**
 	 * Sets the overlay renderer that will draw at last in the sequence and thus
 	 * overlays the whole rendering.
-	 * @param overlayRenderer
-	 * @return
+	 * @param overlayRenderer renderer responsible for the overlay
+	 * @return the previous overlay renderer (which may need to be closed to free GL resources),
+	 * null if none was set
 	 */
 	public Renderer setOverlay(Renderer overlayRenderer) {
 		Renderer old = overlayRenderer;
@@ -459,7 +460,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	/**
 	 * Sets the specified {@link TickMarkGenerator} for this {@link CoordSysCanvas}.
 	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
-	 * @param tickMarkGenerator
+	 * @param tickMarkGenerator to be used for determining tick locations 
+	 * and corresponding labels
 	 */
 	public void setTickMarkGenerator(TickMarkGenerator tickMarkGenerator) {
 		this.tickMarkGenerator = tickMarkGenerator;

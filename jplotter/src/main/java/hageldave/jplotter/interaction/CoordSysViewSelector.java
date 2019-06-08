@@ -163,7 +163,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	/**
 	 * Removes this {@link CoordSysViewSelector} from the associated canvas'
 	 * mouse and mouse motion listeners.
-	 * @return
+	 * @return this for chaining
 	 */
 	public CoordSysViewSelector deRegister(){
 		canvas.removeMouseListener(this);

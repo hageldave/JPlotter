@@ -99,7 +99,7 @@ public class CoordSysPanning extends MouseAdapter {
 	/**
 	 * Removes this {@link CoordSysPanning} from the associated canvas'
 	 * mouse and mouse motion listeners.
-	 * @return
+	 * @return this for chaining
 	 */
 	public CoordSysPanning deRegister(){
 		canvas.removeMouseListener(this);

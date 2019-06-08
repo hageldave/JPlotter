@@ -102,7 +102,7 @@ public class Triangles implements Renderable {
 	 * @param x2 x coordinate of the third triangle vertex
 	 * @param y2 y coordinate of the third triangle vertex
 	 * @param color of the triangle
-	 * @param pick picking color of the triangle
+	 * @param pickColor picking color of the triangle
 	 * @return this for chaining
 	 */
 	public Triangles addTriangle(
@@ -355,6 +355,7 @@ public class Triangles implements Renderable {
 	 * Make sure that the first vertex is the one that is not shared with the second triangle in the strip.
 	 * The triangles will be colored with 0xffaaaaaa.
 	 * Sets the {@link #isDirty()} state to true.
+	 * @param color color of the triangle strip
 	 * @param points the vertices (at least 3)
 	 * @return this for chaining
 	 * @throws IllegalArgumentException when less than 3 vertices were specified
@@ -370,7 +371,7 @@ public class Triangles implements Renderable {
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param color of the triangles in the strip
 	 * @param pickColor picking color of the strip
-	 * @param coordinates the coordinates of the triangle vertices, a series of (x,y) pairs.
+	 * @param coords the coordinates of the triangle vertices, a series of (x,y) pairs.
 	 * Need at least 6 coordinates (3 pairs) and has to be an even number of coordinates.
 	 * @return this for chaining
 	 * @throws IllegalArgumentException when less than 3 vertices were specified or an odd number of coordinates

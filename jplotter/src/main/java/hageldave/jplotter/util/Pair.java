@@ -19,8 +19,8 @@ public class Pair<T1,T2> {
 	
 	/**
 	 * Creates a pair
-	 * @param first 
-	 * @param second
+	 * @param first part of pair
+	 * @param second part of pair
 	 */
 	public Pair(T1 first, T2 second) {
 		this.first = first;
@@ -29,9 +29,12 @@ public class Pair<T1,T2> {
 	
 	/**
 	 * syntactic sugar
-	 * @param first
-	 * @param second
+	 * @param first part of pair
+	 * @param second part of pair
 	 * @return a new Pair
+	 * 
+	 * @param <T1> type 1
+	 * @param <T2> type 2
 	 */
 	public static <T1,T2> Pair<T1, T2> of(T1 first, T2 second){
 		return new Pair<>(first, second);

@@ -29,7 +29,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * </li>
  * </ul>
  * Apart from these per point attributes, this {@link Points} class features a global scaling parameter by which all
- * point instances of this collection will be scaled at rendering ({@link #setGlobalScaling(float)}).
+ * point instances of this collection will be scaled at rendering ({@link #setGlobalScaling(double)}).
  * Also a global alpha multiplier which scales every points color alpha value, which can be used to introduce transparency
  * for all points of this collection, which may come in handy to visualize density when plotting a huge amount of points.
  * 
@@ -178,7 +178,6 @@ public class Points implements Renderable {
 	 * @param rot rotation of the glyph for the point in radian
 	 * @param scale scaling of the glyph for the point
 	 * @param color of the glyph for the point
-	 * @param pick picking color of the point (see {@link Points} for details)
 	 * @return this for chaining
 	 */
 	public Points addPoint(double px, double py, double rot, double scale, Color color){

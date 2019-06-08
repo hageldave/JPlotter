@@ -18,10 +18,10 @@ public class GLUtils {
 
 	/**
 	 * Creates an empty 2D texture. The texture has mipmap level 0.
-	 * @param width
-	 * @param height
-	 * @param internalformat
-	 * @param format
+	 * @param width of texture
+	 * @param height of texture
+	 * @param internalformat of texture
+	 * @param format of texture
 	 * @param filter the filter for GL_TEXTURE_MIN_FILTER and GL_TEXTURE_MAG_FILTER e.g. GL11.GL_LINEAR
 	 * @param wrap the wrapping for GL_TEXTURE_WRAP_S and GL_TEXTURE_WRAP_T e.g. GL12.GL_CLAMP_TO_EDGE
 	 * @return GL object name of the created texture (texture id)
@@ -54,10 +54,10 @@ public class GLUtils {
 	
 	/**
 	 * Creates a multisampled 2D texture with fixed sample locations. 
-	 * @param width
-	 * @param height
-	 * @param internalformat
-	 * @param numSamples
+	 * @param width of texture
+	 * @param height of texture
+	 * @param internalformat of texture
+	 * @param numSamples to use for multisampling
 	 * @return GL object name of the created texture (texture id)
 	 */
 	@GLContextRequired
@@ -162,10 +162,10 @@ public class GLUtils {
 	 * Creates (or fills) an array that contains an orthographic
 	 * projection matrix in column major order.
 	 * @param buffer null or array of length 16
-	 * @param left 
-	 * @param right
-	 * @param bottom
-	 * @param top
+	 * @param left boundary of the projection area
+	 * @param right boundary of the projection area
+	 * @param bottom boundary of the projection area
+	 * @param top boundary of the projection area
 	 * @return the specified array or a new array if null was specified.
 	 */
 	public static float[] orthoMX(float[] buffer, float left, float right, float bottom, float top) {

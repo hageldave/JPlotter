@@ -1,9 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	
 	<groupId>com.github.hageldave</groupId>
 	<artifactId>jplotter</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	
+	<name>JPlotter</name>
+	<url>https://github.com/hageldave/JPlotter</url>
+	<description>
+		The jplotter artifact provides a framework for scientific 2D
+		visualizations such as scatter plots, contour lines, line graphs
+		or vector field 'quiver' plots.
+		It is using OpenGL and integrates into the AWT environment for
+		graphical user interfaces.
+	</description>
 
 	<build>
 		<plugins>
@@ -36,5 +47,85 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<!-- Release Artifact to Nexus -->
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<!-- include source in jar -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.4</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- include javadocs in jar -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.10.3</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- gpg signing -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- nexus staging -->
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.3</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	
+	<scm>
+		<url>https://github.com/hageldave/JPlotter.git</url>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>hageldave</id>
+			<name>David Haegele</name>
+			<email>haegele.david@gmail.com</email>
+		</developer>
+	</developers>
 
 </project>

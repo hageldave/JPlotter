@@ -29,8 +29,8 @@ public class PointeredPoint2D extends Point2D {
 	
 	/**
 	 * Creates point at (x,y)
-	 * @param x
-	 * @param y
+	 * @param x coordinate
+	 * @param y coordinate
 	 */
 	public PointeredPoint2D(double x, double y) {
 		this();
@@ -39,8 +39,8 @@ public class PointeredPoint2D extends Point2D {
 	
 	/**
 	 * Creates point using the specified arrays as pointers for this point's coordinates
-	 * @param xptr
-	 * @param yptr
+	 * @param xptr array to use as pointer to x coordinate
+	 * @param yptr array to use as pointer to y coordinate
 	 */
 	public PointeredPoint2D(double[] xptr, double[] yptr){
 		x = xptr;

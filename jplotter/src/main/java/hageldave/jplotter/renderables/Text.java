@@ -82,7 +82,7 @@ public class Text implements Renderable {
 	/**
 	 * Sets the color of this text in integer packed ARGB format.
 	 * e.g. 0xff00ff00 for opaque green.
-	 * @param argb to set
+	 * @param argb integer packed ARGB color value
 	 * @return this for chaining
 	 */
 	public Text setColor(int argb) {
@@ -108,7 +108,7 @@ public class Text implements Renderable {
 	/**
 	 * Sets the background color of the text, per default this is
 	 * transparent black (0x00000000) which wont be visible.
-	 * @param background color
+	 * @param argb integer packed ARGB color value
 	 */
 	public void setBackground(int argb) {
 		this.background = new Color(argb, true);

@@ -19,7 +19,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * to render.
  * There is an third glyph scaling parameter in this renderer that is multiplied
  * to the existing 2 scalings of a single point instance
- * (see {@link Points#setGlobalScaling(float)}) to control the scaling on a
+ * (see {@link Points#setGlobalScaling(double)}) to control the scaling on a
  * per renderer basis.
  * <br>
  * Its fragment shader draws the picking color into the second render buffer

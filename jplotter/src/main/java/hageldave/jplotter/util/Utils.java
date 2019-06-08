@@ -53,6 +53,8 @@ public class Utils {
 	 * casts the copy to the class of the original.
 	 * @param r rectangle to copy
 	 * @return the copied rectangle
+	 * 
+	 * @param <T> type of RectangularShape
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends RectangularShape> T copy(T r){
@@ -94,6 +96,8 @@ public class Utils {
 	 * @param point to swap the y axis of
 	 * @param height of the component or viewport
 	 * @return point in coordinates of the other reference coordinate system.
+	 * 
+	 * @param <P> type of Point2D
 	 */
 	public static <P extends Point2D> P swapYAxis(P point, int height){
 		P copy = copy(point);
@@ -109,7 +113,9 @@ public class Utils {
 	 * @param rect rectangle to swap the y axis of
 	 * @param height of the component or viewport
 	 * @return rectangle in coordinates of the other reference coordinate system.
-	 */
+	 *
+	 * @param <R> type of Rectangle2D
+	 */	
 	public static <R extends Rectangle2D> R swapYAxis(R rect, int height){
 		R copy = copy(rect);
 		copy.setRect(copy.getX(), height-1-copy.getMaxY(), copy.getWidth(), copy.getHeight());
@@ -121,6 +127,8 @@ public class Utils {
 	 * @param stream to make parallel
 	 * @param parallel whether to make parallel or not
 	 * @return stream.parallel() if true
+	 * 
+	 * @param <T> element type of stream
 	 */
 	public static <T> Stream<T> parallelize(Stream<T> stream, boolean parallel){
 		return parallel ? stream.parallel():stream;

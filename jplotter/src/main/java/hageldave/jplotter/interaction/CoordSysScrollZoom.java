@@ -74,7 +74,7 @@ public class CoordSysScrollZoom implements MouseWheelListener {
 	/**
 	 * Removes this {@link CoordSysScrollZoom} from the associated canvas'
 	 * mouse wheel listeners.
-	 * @return
+	 * @return this for chaining
 	 */
 	public CoordSysScrollZoom deRegister(){
 		canvas.removeMouseWheelListener(this);
