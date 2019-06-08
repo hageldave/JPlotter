@@ -80,7 +80,7 @@ public class CoordSysPanning extends MouseAdapter {
 	
 	
 	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
-		return SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) != 0;
+		return SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) == extModifierMask;
 	}
 
 	/**

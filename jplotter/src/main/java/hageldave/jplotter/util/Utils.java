@@ -116,10 +116,23 @@ public class Utils {
 		return copy;
 	}
 	
+	/**
+	 * Syntactic sugar for conditional stream.parallel().
+	 * @param stream to make parallel
+	 * @param parallel whether to make parallel or not
+	 * @return stream.parallel() if true
+	 */
 	public static <T> Stream<T> parallelize(Stream<T> stream, boolean parallel){
 		return parallel ? stream.parallel():stream;
 	}
 	
+	/**
+	 * Clamps value between specified bounds
+	 * @param lower minimum value
+	 * @param v value to clamp
+	 * @param upper maximum value
+	 * @return max(lower,min(upper,v))
+	 */
 	public static double clamp(double lower, double v, double upper){
 		return Math.max(lower, Math.min(upper, v));
 	}

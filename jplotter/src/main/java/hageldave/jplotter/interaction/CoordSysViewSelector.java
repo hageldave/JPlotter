@@ -19,6 +19,36 @@ import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
 
 /**
+ * The CoordSysViewSelector class realizes a rectangular 
+ * selection tool for {@link CoordSysCanvas}.
+ * This enables to drag a selection region within the
+ * coordinate area of a {@link CoordSysCanvas} using SHIFT+LMB.
+ * The action to be performed with the selected region is up to
+ * the implementation of the methods {@link #areaSelected(double, double, double, double)}
+ * and {@link #areaSelectedOnGoing(double, double, double, double)}.
+ * <p>
+ * Intended use, (for example rectangular zooming):
+ * <pre>
+ * new CoordSysViewSelector(canvas) {
+ *    public void areaSelected(double minX, double minY, double maxX, double maxY) {
+ *       canvas.setCoordinateView(minX, minY, maxX, maxY);
+ *    }
+ * }.register();
+ * </pre>
+ * <p>
+ * Per default the extended modifier mask for a dragging mouse event to trigger
+ * selection is {@link InputEvent#SHIFT_DOWN_MASK}. 
+ * If this is undesired the {@link #extModifierMask} has to be overridden.<br>
+ * For example to not need to press any key:
+ * <pre>
+ * new CoordSysViewSelector(canvas) {
+ *    {extModifierMask=0;}
+ *    
+ *    public void areaSelected(double minX, double minY, double maxX, double maxY) {
+ *       canvas.setCoordinateView(minX, minY, maxX, maxY);
+ *    }
+ * }.register();
+ * </pre>
  * 
  * @author hageldave
  */
@@ -74,6 +104,16 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		.addSegment(start_.getX(), start_.getY(), end_.getX(), start_.getY(), 0xff222222)
 		.addSegment(start_.getX(), end_.getY(), end_.getX(), end_.getY(), 0xff222222)
 		;
+		
+		Point2D p1 = canvas.transformAWT2CoordSys(start);
+		Point2D p2 = canvas.transformAWT2CoordSys(end);
+		this.areaSelectedOnGoing(
+				Math.min(p1.getX(), p2.getX()),
+				Math.min(p1.getY(), p2.getY()),
+				Math.max(p1.getX(), p2.getX()),
+				Math.max(p1.getY(), p2.getY())
+		);
+		
 		canvas.repaint();
 	}
 	
@@ -99,7 +139,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
 		if(!SwingUtilities.isLeftMouseButton(e))
 			return false;
-		if((e.getModifiersEx()&extModifierMask) == 0)
+		if((e.getModifiersEx()&extModifierMask) != extModifierMask)
 			return false;
 		if(method == MouseEvent.MOUSE_PRESSED){
 			return canvas.getCoordSysArea().contains( Utils.swapYAxis(e.getPoint(), canvas.getHeight()) );
@@ -131,7 +171,27 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		return this;
 	}
 	
+	/**
+	 * Reports on the area currently selected during dragging.
+	 * When selection is finished (mouse button released),
+	 * {@link #areaSelected(double, double, double, double)}
+	 * will be called.
+	 * @param minX left boundary of selection
+	 * @param minY bottom boundary of selection
+	 * @param maxX right boundary of selection
+	 * @param maxY top boundary of selection
+	 */
+	public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY){
+		
+	}
 	
+	/**
+	 * Will be called when selection is done (mouse button released).
+	 * @param minX left boundary of selection
+	 * @param minY bottom boundary of selection
+	 * @param maxX right boundary of selection
+	 * @param maxY top boundary of selection
+	 */
 	public abstract void areaSelected(double minX, double minY, double maxX, double maxY);
 	
 }

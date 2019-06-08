@@ -85,7 +85,6 @@ public class Viz {
 		CompleteRenderer overlay = new CompleteRenderer();
 		canvas.setOverlay(overlay);
 		new CoordSysViewSelector(canvas) {
-			
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
 				canvas.setCoordinateView(minX, minY, maxX, maxY);
