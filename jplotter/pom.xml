@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<groupId>com.github.hageldave</groupId>
 	<artifactId>jplotter</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	
+	<version>0.1.0</version>
+
 	<name>JPlotter</name>
 	<url>https://github.com/hageldave/JPlotter</url>
 	<description>
@@ -15,6 +15,18 @@
 		It is using OpenGL and integrates into the AWT environment for
 		graphical user interfaces.
 	</description>
+
+	<licenses>
+		<license>
+			<name>GNU GENERAL PUBLIC LICENSE, VERSION 2 (GPLv2)</name>
+			<url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
 	<build>
 		<plugins>
@@ -115,7 +127,18 @@
 			</build>
 		</profile>
 	</profiles>
-	
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
 	<scm>
 		<url>https://github.com/hageldave/JPlotter.git</url>
 	</scm>
