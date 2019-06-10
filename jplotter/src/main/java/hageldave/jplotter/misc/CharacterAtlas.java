@@ -55,7 +55,7 @@ public class CharacterAtlas implements AutoCloseable {
 
 	public static final float charTexWidth = 1.0f/CHARACTERS.length();
 	
-	private static String FONT_NAME;
+	public static final String FONT_NAME;
 
 	protected static final Img FONTMETRIC_IMG = new Img(32, 32);
 

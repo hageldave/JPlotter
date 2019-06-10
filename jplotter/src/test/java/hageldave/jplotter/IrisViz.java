@@ -3,9 +3,13 @@ package hageldave.jplotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -16,12 +20,14 @@ import java.util.Scanner;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -82,7 +88,7 @@ public class IrisViz {
 		// add legend on top
 		BlankCanvas legendCanvas = new BlankCanvas();
 		canvasCollection.add(legendCanvas);
-		legendCanvas.setPreferredSize(new Dimension(300, 16));
+		legendCanvas.setPreferredSize(new Dimension(400, 16));
 		Legend legend = new Legend();
 		for(int c=0; c<3; c++){
 			legend.addGlyphLabel(perClassGlyphs[c], new Color(perClassColors[c]), perClassNames[c]);
@@ -90,17 +96,23 @@ public class IrisViz {
 		legendCanvas.setRenderer(legend);
 		header.add(Box.createHorizontalStrut(30));
 		header.add(legendCanvas);
+		JLabel pointInfo = new JLabel("");
+		pointInfo.setFont(new Font(CharacterAtlas.FONT_NAME,Font.PLAIN,10));
+		pointInfo.setPreferredSize(new Dimension(300, pointInfo.getPreferredSize().height));
+		header.add(pointInfo);
+		
+		ArrayList<Points[]> allPoints = new ArrayList<>();
 		
 		// make scatter plot matrix
 		for(int j = 0; j < 4; j++){
 			for(int i = 0; i < 4; i++){
 				CoordSysCanvas canvas = new CoordSysCanvas();
+				canvasCollection.add(canvas);
 				canvas.setPreferredSize(new Dimension(250, 250));
 				gridPane.add(canvas);
 				canvas.setxAxisLabel(j==0 ? dimNames[i] : "");
 				canvas.setyAxisLabel(i==3 ? dimNames[j] : "");
 				CompleteRenderer content = new CompleteRenderer();
-				canvas.setContent(content);
 
 				double maxX,minX,maxY,minY;
 				maxX = maxY = Double.NEGATIVE_INFINITY;
@@ -136,6 +148,7 @@ public class IrisViz {
 							new Points(perClassGlyphs[1]),
 							new Points(perClassGlyphs[2])
 					};
+					allPoints.add(perClassPoints);
 					content
 					.addItemToRender(perClassPoints[0].setGlobalAlphaMultiplier(0.6f))
 					.addItemToRender(perClassPoints[1].setGlobalAlphaMultiplier(0.6f))
@@ -159,7 +172,74 @@ public class IrisViz {
 						minY = Math.min(minY, y);
 					}
 				}
+				canvas.setContent(content);
 				canvas.setCoordinateView(minX, minY, maxX, maxY);
+				// hovering over point
+				canvas.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseClicked(MouseEvent e) {
+						Point2D location = canvas.transformAWT2CoordSys(e.getPoint());
+						if(!canvas.getCoordinateView().contains(location)){
+							pointInfo.setText("");
+							recolorAll();
+							return;
+						}
+						int pixel = canvas.getPixel(e.getX(), e.getY(), true, 1);
+						if((pixel&0x00ffffff)==0){
+							pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+						}
+						if((pixel&0x00ffffff)==0){
+							pointInfo.setText("");
+							recolorAll();
+							return;
+						}
+						int dataSetinstanceIDX = (pixel & 0x00ffffff)-1;
+						double[] instance = dataset.get(dataSetinstanceIDX);
+						pointInfo.setForeground(new Color(perClassColors[(int)instance[4]]));
+						pointInfo.setText(""
+								+ perClassNames[(int)instance[4]] 
+								+ "  s.l=" + instance[0]
+								+ "  s.w=" + instance[1]
+								+ "  p.l=" + instance[2]
+								+ "  p.w=" + instance[3]
+						);
+						desaturateExcept(pixel|0xff000000);
+					}
+					
+					void recolorAll() {
+						for(Points[] points:allPoints){
+							for(int c=0; c<3; c++){
+								int color = perClassColors[c];
+								points[c].getPointDetails().forEach(p->{
+									p.color = color;
+									p.scale = 1;
+								});
+								points[c].setGlobalAlphaMultiplier(0.6).setDirty();
+							}
+						}
+						canvasCollection.forEach(cnvs->cnvs.repaint());
+					}
+					
+					void desaturateExcept(int pick){
+						for(Points[] points:allPoints){
+							for(int c=0; c<3; c++){
+								int color = perClassColors[c];
+								int desat = 0x33aaaaaa;
+								points[c].getPointDetails().forEach(p->{
+									p.color = p.pickColor==pick ? color:desat;
+									p.scale = p.pickColor==pick ? 1.2f:1;
+								});
+								// bring picked point to front by sorting
+								points[c].getPointDetails().sort((p1,p2)->{
+									if(p1.pickColor==p2.pickColor) return 0;
+									return p1.pickColor==pick ? 1:-1;
+								});
+								points[c].setGlobalAlphaMultiplier(1).setDirty();
+							}
+						}
+						canvasCollection.forEach(cnvs->cnvs.repaint());
+					}
+				});
 			}
 		}
 		
