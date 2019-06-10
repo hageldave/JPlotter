@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -107,7 +108,9 @@ public class IrisViz {
 		header.add(pointInfo);
 		
 		ArrayList<Points[]> allPoints = new ArrayList<>();
-		
+		ArrayList<Triangles[]> allTris = new ArrayList<>();
+		ArrayList<Lines[]> allLines = new ArrayList<>();
+ 		
 		// make scatter plot matrix
 		for(int j = 0; j < 4; j++){
 			for(int i = 0; i < 4; i++){
@@ -126,20 +129,22 @@ public class IrisViz {
 					// make histo when same dimension on x and y axis
 					int numBuckets = 20;
 					double[][] histo = mkHistogram(dataset, i, numBuckets);
-					Lines lines = new Lines();
-					lines.setThickness(1.5f);
-					lines.addLineStrip(perClassColors[0], histo[3], histo[0]);
-					lines.addLineStrip(perClassColors[1], histo[3], histo[1]);
-					lines.addLineStrip(perClassColors[2], histo[3], histo[2]);
-					content.addItemToRender(lines);
-					Triangles tris = new Triangles();
+					Lines[] lines = new Lines[]{new Lines(), new Lines(), new Lines()};
+					allLines.add(lines);
+					for(int c = 0; c < 3; c++){
+						lines[c].setThickness(1.5f).addLineStrip(perClassColors[c], histo[3], histo[c]);
+						content.addItemToRender(lines[c]);
+					}
+					Triangles[] perClassTris = new Triangles[]{new Triangles(),new Triangles(),new Triangles()};
+					allTris.add(perClassTris);
 					for(int k = 0; k < numBuckets-1; k++){
 						for(int c = 0; c < 3; c++){
-							tris.addQuad(histo[3][k], 0, histo[3][k], histo[c][k], histo[3][k+1], histo[c][k+1], histo[3][k+1], 0, new Color(perClassColors[c]));
+							perClassTris[c].addQuad(histo[3][k], 0, histo[3][k], histo[c][k], histo[3][k+1], histo[c][k+1], histo[3][k+1], 0, new Color(perClassColors[c]));
 						}
 					}
-					tris.setGlobalAlphaMultiplier(0.1f);
-					content.addItemToRender(tris);
+					for(int c = 0; c < 3; c++){
+						content.addItemToRender(perClassTris[c].setGlobalAlphaMultiplier(0.1f));
+					}
 					minX = Arrays.stream(histo[3]).min().getAsDouble();
 					maxX = Arrays.stream(histo[3]).max().getAsDouble();
 					maxY = Math.max(maxY, Arrays.stream(histo[0]).max().getAsDouble());
@@ -220,10 +225,27 @@ public class IrisViz {
 									points[c].setGlobalAlphaMultiplier(0.6).setDirty();
 								}
 							}
+							for(Triangles[] tris:allTris){
+								for(int c=0; c<3; c++){
+									int color = perClassColors[c];
+									tris[c].setDirty().getTriangleDetails().forEach(t->{
+										t.c0=t.c1=t.c2 = color;
+									});
+								}
+							}
+							for(Lines[] lines:allLines){
+								for(int c=0; c<3; c++){
+									int color = perClassColors[c];
+									lines[c].setDirty().getSegments().forEach(s->{
+										s.color0=s.color1=color;
+									});
+								}
+							}
 							canvasCollection.forEach(cnvs->cnvs.repaint());
 						}
 						
 						void desaturateExcept(int pick){
+							int clazz = (int)dataset.get((pick&0x00ffffff)-1)[4];
 							for(Points[] points:allPoints){
 								for(int c=0; c<3; c++){
 									int color = perClassColors[c];
@@ -240,10 +262,26 @@ public class IrisViz {
 									points[c].setGlobalAlphaMultiplier(1).setDirty();
 								}
 							}
+							for(Triangles[] tris:allTris){
+								for(int c=0; c<3; c++){
+									int color = c==clazz ? perClassColors[c]:0xff777777;
+									tris[c].setDirty().getTriangleDetails().forEach(t->{
+										t.c0=t.c1=t.c2 = color;
+									});
+								}
+							}
+							for(Lines[] lines:allLines){
+								for(int c=0; c<3; c++){
+									int color = c==clazz ? perClassColors[c]:0xff777777;
+									lines[c].setDirty().getSegments().forEach(s->{
+										s.color0=s.color1=color;
+									});
+								}
+							}
 							canvasCollection.forEach(cnvs->cnvs.repaint());
 						}
 					});
-					
+					// selecting points (brush & link)
 					new CoordSysViewSelector(canvas) {
 						{extModifierMask=0;/* no shift needed */}
 						public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
@@ -262,6 +300,11 @@ public class IrisViz {
 									.filter(p->isinselection.test(p.location))
 									.map(p->p.pickColor)
 									.collect(Collectors.toCollection(TreeSet::new));
+							Set<Integer> clazzes = pickIDs.stream()
+									.map(id->(id&0x00ffffff)-1)
+									.map(dataset::get)
+									.map(inst->(int)inst[4])
+									.collect(Collectors.toSet());
 							for(Points[] points:allPoints){
 								for(int c=0; c<3; c++){
 									int color = perClassColors[c];
@@ -275,6 +318,22 @@ public class IrisViz {
 										return pickIDs.contains(p1.pickColor) ? 1:-1;
 									});
 									points[c].setGlobalAlphaMultiplier(1).setDirty();
+								}
+							}
+							for(Triangles[] tris:allTris){
+								for(int c=0; c<3; c++){
+									int color = clazzes.contains(c) ? perClassColors[c]:0xff777777;
+									tris[c].setDirty().getTriangleDetails().forEach(t->{
+										t.c0=t.c1=t.c2 = color;
+									});
+								}
+							}
+							for(Lines[] lines:allLines){
+								for(int c=0; c<3; c++){
+									int color = clazzes.contains(c) ? perClassColors[c]:0xff777777;
+									lines[c].setDirty().getSegments().forEach(s->{
+										s.color0=s.color1=color;
+									});
 								}
 							}
 							canvasCollection.forEach(cnvs->cnvs.repaint());
