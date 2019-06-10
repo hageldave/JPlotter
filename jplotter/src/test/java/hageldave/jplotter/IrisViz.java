@@ -10,12 +10,16 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.TreeSet;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -27,6 +31,7 @@ import javax.swing.SwingUtilities;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
@@ -171,75 +176,113 @@ public class IrisViz {
 						minX = Math.min(minX, x);
 						minY = Math.min(minY, y);
 					}
+					
+					// hovering over point
+					canvas.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent e) {
+							Point2D location = canvas.transformAWT2CoordSys(e.getPoint());
+							if(!canvas.getCoordinateView().contains(location)){
+								pointInfo.setText("");
+								recolorAll();
+								return;
+							}
+							int pixel = canvas.getPixel(e.getX(), e.getY(), true, 1);
+							if((pixel&0x00ffffff)==0){
+								pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+							}
+							if((pixel&0x00ffffff)==0){
+								pointInfo.setText("");
+								recolorAll();
+								return;
+							}
+							int dataSetinstanceIDX = (pixel & 0x00ffffff)-1;
+							double[] instance = dataset.get(dataSetinstanceIDX);
+							pointInfo.setForeground(new Color(perClassColors[(int)instance[4]]));
+							pointInfo.setText(""
+									+ perClassNames[(int)instance[4]] 
+									+ "  s.l=" + instance[0]
+									+ "  s.w=" + instance[1]
+									+ "  p.l=" + instance[2]
+									+ "  p.w=" + instance[3]
+							);
+							desaturateExcept(pixel|0xff000000);
+						}
+						
+						void recolorAll() {
+							for(Points[] points:allPoints){
+								for(int c=0; c<3; c++){
+									int color = perClassColors[c];
+									points[c].getPointDetails().forEach(p->{
+										p.color = color;
+										p.scale = 1;
+									});
+									points[c].setGlobalAlphaMultiplier(0.6).setDirty();
+								}
+							}
+							canvasCollection.forEach(cnvs->cnvs.repaint());
+						}
+						
+						void desaturateExcept(int pick){
+							for(Points[] points:allPoints){
+								for(int c=0; c<3; c++){
+									int color = perClassColors[c];
+									int desat = 0x33aaaaaa;
+									points[c].getPointDetails().forEach(p->{
+										p.color = p.pickColor==pick ? color:desat;
+										p.scale = p.pickColor==pick ? 1.2f:1;
+									});
+									// bring picked point to front by sorting
+									points[c].getPointDetails().sort((p1,p2)->{
+										if(p1.pickColor==p2.pickColor) return 0;
+										return p1.pickColor==pick ? 1:-1;
+									});
+									points[c].setGlobalAlphaMultiplier(1).setDirty();
+								}
+							}
+							canvasCollection.forEach(cnvs->cnvs.repaint());
+						}
+					});
+					
+					new CoordSysViewSelector(canvas) {
+						{extModifierMask=0;/* no shift needed */}
+						public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
+							pointInfo.setText("");
+							desaturateExcept(minX, minY, maxX, maxY);
+						}
+						public void areaSelected(double minX, double minY, double maxX, double maxY) {
+							pointInfo.setText("");
+							desaturateExcept(minX, minY, maxX, maxY);
+						}
+						void desaturateExcept(double minX, double minY, double maxX, double maxY){
+							Rectangle2D r = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+							Predicate<Point2D> isinselection = r::contains;
+							TreeSet<Integer> pickIDs = Arrays.stream(perClassPoints)
+									.flatMap(points->points.getPointDetails().stream())
+									.filter(p->isinselection.test(p.location))
+									.map(p->p.pickColor)
+									.collect(Collectors.toCollection(TreeSet::new));
+							for(Points[] points:allPoints){
+								for(int c=0; c<3; c++){
+									int color = perClassColors[c];
+									int desat = 0x33aaaaaa;
+									points[c].getPointDetails().forEach(p->{
+										p.color = pickIDs.contains(p.pickColor) ? color:desat;
+									});
+									// bring picked point to front by sorting
+									points[c].getPointDetails().sort((p1,p2)->{
+										if(pickIDs.contains(p1.pickColor)==pickIDs.contains(p2.pickColor)) return 0;
+										return pickIDs.contains(p1.pickColor) ? 1:-1;
+									});
+									points[c].setGlobalAlphaMultiplier(1).setDirty();
+								}
+							}
+							canvasCollection.forEach(cnvs->cnvs.repaint());
+						}
+					}.register();
 				}
 				canvas.setContent(content);
 				canvas.setCoordinateView(minX, minY, maxX, maxY);
-				// hovering over point
-				canvas.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mouseClicked(MouseEvent e) {
-						Point2D location = canvas.transformAWT2CoordSys(e.getPoint());
-						if(!canvas.getCoordinateView().contains(location)){
-							pointInfo.setText("");
-							recolorAll();
-							return;
-						}
-						int pixel = canvas.getPixel(e.getX(), e.getY(), true, 1);
-						if((pixel&0x00ffffff)==0){
-							pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
-						}
-						if((pixel&0x00ffffff)==0){
-							pointInfo.setText("");
-							recolorAll();
-							return;
-						}
-						int dataSetinstanceIDX = (pixel & 0x00ffffff)-1;
-						double[] instance = dataset.get(dataSetinstanceIDX);
-						pointInfo.setForeground(new Color(perClassColors[(int)instance[4]]));
-						pointInfo.setText(""
-								+ perClassNames[(int)instance[4]] 
-								+ "  s.l=" + instance[0]
-								+ "  s.w=" + instance[1]
-								+ "  p.l=" + instance[2]
-								+ "  p.w=" + instance[3]
-						);
-						desaturateExcept(pixel|0xff000000);
-					}
-					
-					void recolorAll() {
-						for(Points[] points:allPoints){
-							for(int c=0; c<3; c++){
-								int color = perClassColors[c];
-								points[c].getPointDetails().forEach(p->{
-									p.color = color;
-									p.scale = 1;
-								});
-								points[c].setGlobalAlphaMultiplier(0.6).setDirty();
-							}
-						}
-						canvasCollection.forEach(cnvs->cnvs.repaint());
-					}
-					
-					void desaturateExcept(int pick){
-						for(Points[] points:allPoints){
-							for(int c=0; c<3; c++){
-								int color = perClassColors[c];
-								int desat = 0x33aaaaaa;
-								points[c].getPointDetails().forEach(p->{
-									p.color = p.pickColor==pick ? color:desat;
-									p.scale = p.pickColor==pick ? 1.2f:1;
-								});
-								// bring picked point to front by sorting
-								points[c].getPointDetails().sort((p1,p2)->{
-									if(p1.pickColor==p2.pickColor) return 0;
-									return p1.pickColor==pick ? 1:-1;
-								});
-								points[c].setGlobalAlphaMultiplier(1).setDirty();
-							}
-						}
-						canvasCollection.forEach(cnvs->cnvs.repaint());
-					}
-				});
 			}
 		}
 		
