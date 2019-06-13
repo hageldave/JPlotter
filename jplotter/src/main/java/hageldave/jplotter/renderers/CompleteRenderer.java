@@ -1,6 +1,6 @@
 package hageldave.jplotter.renderers;
 
-import org.joml.Matrix3fc;
+import java.awt.geom.Rectangle2D;
 
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
@@ -73,11 +73,11 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	 * Sets the view matrix for each of the renderers
 	 */
 	@Override
-	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx) {
-		triangles.setViewMX(viewmx, scalemx, transmx);
-		lines.setViewMX(viewmx, scalemx, transmx);
-		points.setViewMX(viewmx, scalemx, transmx);
-		text.setViewMX(viewmx, scalemx, transmx);
+	public void setView(Rectangle2D rect) {
+		triangles.setView(rect);
+		lines.setView(rect);
+		points.setView(rect);
+		text.setView(rect);
 	}
 
 	/**

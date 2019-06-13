@@ -2,7 +2,6 @@ package hageldave.jplotter.renderers;
 
 import java.util.Objects;
 
-import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
@@ -31,8 +30,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 0) in vec2 in_position;"
 			+ NL + "layout(location = 1) in uint in_color;"
 			+ NL + "layout(location = 2) in uint in_pick;"
-			+ NL + "uniform mat4 viewMX;"
-			+ NL + "uniform mat3 modelMX;"
+			+ NL + "uniform vec4 viewTransform;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
 
@@ -42,7 +40,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "}"
 			
 			+ NL + "void main() {"
-			+ NL + "   gl_Position = viewMX*vec4(modelMX*vec3(in_position,1),1);"
+			+ NL + "   vec3 pos = vec3(in_position,1);"
+			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
+			+ NL + "   gl_Position = vec4(pos,1);"
 			+ NL + "   vcolor = unpackARGB(in_color);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "}"
@@ -120,11 +121,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			;
 	
 	
-	protected Matrix3f modelMX = new Matrix3f();
-	protected float[] viewmxarray = new float[16];
-	protected float[] modelmxarray = new float[9];
-	
-	
 	/**
 	 * Creates the shader if not already created and 
 	 * calls {@link Renderable#initGL()} for all items 
@@ -152,6 +148,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
+		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}
 
 	@Override
@@ -161,12 +165,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidth");
 		GL20.glUniform1f(loc, lines.getThickness());
 		// set projection matrix in shader
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-		GL20.glUniformMatrix4fv(loc, false, orthoMX);
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
-		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
-		GL20.glUniformMatrix3fv(loc, false, modelMX.get(modelmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");

@@ -1,6 +1,6 @@
 package hageldave.jplotter.renderers;
 
-import org.joml.Matrix3fc;
+import java.awt.geom.Rectangle2D;
 
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
@@ -22,11 +22,11 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 	}
 	
 	@Override
-	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx) {
+	public void setView(Rectangle2D rect) {
 		if(r1 instanceof AdaptableView)
-			((AdaptableView) r1).setViewMX(viewmx, scalemx, transmx);
+			((AdaptableView) r1).setView(rect);
 		if(r2 instanceof AdaptableView)
-			((AdaptableView) r2).setViewMX(viewmx, scalemx, transmx);
+			((AdaptableView) r2).setView(rect);
 	}
 
 	@Override

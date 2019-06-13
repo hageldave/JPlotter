@@ -2,7 +2,6 @@ package hageldave.jplotter.renderers;
 
 import java.util.Objects;
 
-import org.joml.Matrix3fc;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL31;
@@ -37,8 +36,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "layout(location = 2) in vec2 in_rotAndScale;"
 			+ NL + "layout(location = 3) in uvec2 in_colors;"
 			+ NL + "uniform mat4 projMX;"
-			+ NL + "uniform mat4 viewMX;"
-			+ NL + "uniform mat2 modelMX;"
+			+ NL + "uniform vec4 viewTransform;"
+			+ NL + "uniform vec2 modelScaling;"
 			+ NL + "uniform float globalScaling;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
@@ -60,7 +59,10 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "void main() {"
 			+ NL + "   mat2 rotMX = rotationMatrix(in_rotAndScale.x);"
 			+ NL + "   mat2 scaleMX = scalingMatrix(in_rotAndScale.y);"
-			+ NL + "   gl_Position = projMX*viewMX*vec4(globalScaling*(modelMX*scaleMX*rotMX*in_position)+in_pointpos, 1,1);"
+			+ NL + "   vec3 pos = vec3(globalScaling*(scaleMX*rotMX*in_position)*modelScaling+in_pointpos, 1);"
+			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
+			+ NL + "   gl_Position = projMX*vec4(pos,1);"
 			+ NL + "   vColor = unpackARGB(in_colors.x);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
@@ -80,8 +82,6 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL
 			;
 
-	protected float[] viewmxarray = new float[16];
-	protected float[] modelmxarray = new float[]{1,0,0,1};
 	protected float glyphScaling = 1f;
 
 	/**
@@ -143,6 +143,16 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
+		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelScaling");
+		GL20.glUniform2f(loc, (float)(1/scaleX), (float)(1/scaleY));
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}
 
 	@Override
@@ -152,12 +162,6 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			return;
 		}
 		int loc;
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-		GL20.glUniformMatrix4fv(loc, false, orthoMX);
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
-		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
-		GL20.glUniformMatrix2fv(loc, false, modelmxarray);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "globalScaling");
 		GL20.glUniform1f(loc, this.glyphScaling * item.glyph.pixelSize() * item.getGlobalScaling());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
@@ -181,20 +185,6 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	protected void renderEnd() {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-	}
-	
-	/**
-	 * Sets the view matrix of this renderer.
-	 * In order to not zoom the glyphs an inverse scaling
-	 * is derived as model matrix for the glyphs to counteract
-	 * the view matrix.
-	 */
-	@Override
-	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx) {
-		super.setViewMX(viewmx, scalemx, transmx);
-		this.modelmxarray[0] = 1f/scalemx.m00();
-		this.modelmxarray[1] = this.modelmxarray[2] = 0;
-		this.modelmxarray[3] = 1f/scalemx.m11();
 	}
 
 }

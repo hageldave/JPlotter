@@ -27,7 +27,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "layout(location = 0) in vec2 in_position;"
 			+ NL + "layout(location = 1) in uvec2 in_colors;"
 			+ NL + "uniform mat4 projMX;"
-			+ NL + "uniform mat4 viewMX;"
+			+ NL + "uniform vec4 viewTransform;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
@@ -37,7 +37,10 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "}"
 
 			+ NL + "void main() {"
-			+ NL + "   gl_Position = projMX*viewMX*vec4((in_position), 1,1);"
+			+ NL + "   vec3 pos = vec3(in_position,1);"
+			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
+			+ NL + "   gl_Position = projMX*vec4(pos,1);"
 			+ NL + "   vColor = unpackARGB(in_colors.x);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
@@ -56,8 +59,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "}"
 			+ NL
 			;
-	
-	protected float[] viewmxarray = new float[16];
 
 	/**
 	 * Creates the shader if not already created and 
@@ -100,6 +101,14 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
+		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}
 
 	@Override
@@ -108,12 +117,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		if(item.numTriangles() < 1){
 			return;
 		}
-		
 		int loc;
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-		GL20.glUniformMatrix4fv(loc, false, orthoMX);
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
-		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, item.getGlobalAlphaMultiplier());
 		// draw things

@@ -3,8 +3,6 @@ package hageldave.jplotter.renderers;
 import java.awt.Color;
 import java.util.Objects;
 
-import org.joml.Matrix3f;
-import org.joml.Matrix3fc;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -35,8 +33,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "layout(location = 0) in vec2 in_position;"
 			+ NL + "layout(location = 1) in vec2 in_texcoords;"
 			+ NL + "uniform mat4 projMX;"
-			+ NL + "uniform mat4 viewMX;"
-			+ NL + "uniform mat2 modelMX;"
+			+ NL + "uniform vec4 viewTransform;"
+			+ NL + "uniform vec2 modelScaling;"
 			+ NL + "uniform vec2 origin;"
 			+ NL + "uniform float rot;"
 			+ NL + "out vec2 tex_Coords;"
@@ -48,8 +46,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 			
 			+ NL + "void main() {"
 			+ NL + "   mat2 rotMX = rotationMatrix(rot);"
-			+ NL + "   vec4 pos = viewMX*vec4((modelMX*rotMX*in_position)+origin, 1,1);"
-			+ NL + "   gl_Position = projMX*vec4(int(pos.x), int(pos.y), pos.z, pos.w);"
+			+ NL + "   vec3 pos = vec3((rotMX*in_position)*modelScaling+origin, 1);"
+			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
+			+ NL + "   gl_Position = projMX*vec4(int(pos.x), int(pos.y), pos.z, 1);"
 			+ NL + "   tex_Coords = in_texcoords;"
 			+ NL + "}"
 			+ NL
@@ -72,10 +72,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "   pick_color = pickColorToUse;"
 			+ NL + "}"
 			;
-	
-	protected Matrix3f transMX = new Matrix3f();
-	protected float[] viewmxarray = new float[16];
-	protected float[] modelmxarray = new float[]{1,0,0,1};
 	
 	
 	/**
@@ -107,6 +103,16 @@ public class TextRenderer extends GenericRenderer<Text> {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
+		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelScaling");
+		GL20.glUniform2f(loc, (float)(1/scaleX), (float)(1/scaleY));
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}
 
 	@Override
@@ -117,12 +123,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 		
 		// draw background if bg color is not 0
 		if(txt.getBackground().getRGB() !=0){
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-			GL20.glUniformMatrix4fv(loc, false, orthoMX);
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
-			GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
-			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
-			GL20.glUniformMatrix2fv(loc, false, modelmxarray);
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "origin");
 			GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "rot");
@@ -141,12 +141,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 		GL13.glBindTexture(GL11.GL_TEXTURE_2D, txt.getTextureID());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
 		GL20.glUniform1i(loc, 0);
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-		GL20.glUniformMatrix4fv(loc, false, orthoMX);
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewMX");
-		GL20.glUniformMatrix4fv(loc, false, viewMX.get(viewmxarray));
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelMX");
-		GL20.glUniformMatrix2fv(loc, false, modelmxarray);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "origin");
 		GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "rot");
@@ -174,20 +168,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		
-	}
-
-	/**
-	 * Sets the view matrix of this renderer.
-	 * In order to not zoom the glyphs an inverse scaling
-	 * is derived as model matrix for the glyphs to counteract
-	 * the view matrix.
-	 */
-	@Override
-	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx) {
-		super.setViewMX(viewmx, scalemx, transmx);
-		this.modelmxarray[0] = 1f/scalemx.m00();
-		this.modelmxarray[1] = this.modelmxarray[2] = 0;
-		this.modelmxarray[3] = 1f/scalemx.m11();
 	}
 	
 	/**

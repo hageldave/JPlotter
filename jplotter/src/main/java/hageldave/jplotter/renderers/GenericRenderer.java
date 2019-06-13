@@ -1,15 +1,14 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 import java.util.Objects;
 
-import org.joml.Matrix3fc;
-import org.joml.Matrix4f;
-
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
-import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.GLUtils;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The GenericRenderer class is an abstract {@link Renderer} intended
@@ -29,7 +28,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	protected LinkedList<T> itemsToRender = new LinkedList<>();
 	protected Shader shader;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
-	protected Matrix4f viewMX = new Matrix4f();
+	protected Rectangle2D view = null;
 	
 	/**
 	 * Executes the rendering procedure IF this {@link Renderer}s shader 
@@ -160,8 +159,8 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	 * Sets this renderers {@link #viewMX}.
 	 */
 	@Override
-	public void setViewMX(Matrix3fc viewmx, Matrix3fc scalemx, Matrix3fc transmx){
-		this.viewMX.set(viewmx);
+	public void setView(Rectangle2D view){
+		this.view = Objects.isNull(view) ? null:Utils.copy(view);
 	}
 	
 }

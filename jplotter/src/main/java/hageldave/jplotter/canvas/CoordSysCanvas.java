@@ -14,7 +14,6 @@ import java.util.Objects;
 
 import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.awt.GLData;
 
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
@@ -29,12 +28,12 @@ import hageldave.jplotter.renderers.AdaptableView;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.renderers.TextRenderer;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Annotations.GLCoordinates;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
 import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Annotations.GLCoordinates;
 
 /**
  * The CoordSysCanvas is an {@link FBOCanvas} that displays a coordinate system.
@@ -144,8 +143,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected ActionListener coordviewListener;
 
 
-	protected CoordSysCanvas(GLData data) {
-		super(data);
+	public CoordSysCanvas() {
+		super();
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB, Color.BLACK);
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT, Color.BLACK);
 		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT, Color.GRAY);
@@ -158,10 +157,6 @@ public class CoordSysCanvas extends FBOCanvas {
 		.addItemToRender(xAxisLabelText)
 		.addItemToRender(yAxisLabelText);
 		this.postContentLinesR.addItemToRender(axes);
-	}
-
-	public CoordSysCanvas() {
-		this(new GLData());
 	}
 
 	/**
@@ -511,11 +506,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
 			GL11.glViewport(viewPortX,viewPortY,viewPortW,viewPortH);
 			if(content instanceof AdaptableView){
-				double scaleX = viewPortW/coordinateView.getWidth();
-				double scaleY = viewPortH/coordinateView.getHeight();
-				coordSysScaleMX.set((float)scaleX,0,0,  0,(float)scaleY,0,  0,0,1);
-				coordSysTransMX.set(1,0,0,  0,1,0, -(float)coordinateView.getX(),-(float)coordinateView.getY(),1);
-				((AdaptableView) content).setViewMX(coordSysScaleMX.mul(coordSysTransMX,coordSysViewMX), coordSysScaleMX, coordSysTransMX);
+				((AdaptableView) content).setView(coordinateView);
 			}
 			content.render(viewPortW, viewPortH);
 			GL11.glViewport(0, 0, w, h);

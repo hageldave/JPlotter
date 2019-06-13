@@ -17,6 +17,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -79,8 +80,8 @@ public class Viz {
 		legend.addGlyphLabel(DefaultGlyph.ARROW, new Color(0xff377eb8), "-(x,y)");
 		legend.addLineLabel(2, new Color(0xffff00ff), "sin(x)");
 		legend.addLineLabel(2, new Color(0xff00ff00), "x=y");
-		canvas.setLegendRight(legend);
-		canvas.setLegendRightWidth(80);
+//		canvas.setLegendRight(legend);
+//		canvas.setLegendRightWidth(80);
 		
 		CompleteRenderer overlay = new CompleteRenderer();
 		canvas.setOverlay(overlay);
@@ -118,6 +119,20 @@ public class Viz {
 			frame.setVisible(true);
 			frame.transferFocus();
 		});
+		
+		{
+			BlankCanvas bc = new BlankCanvas();
+			bc.setPreferredSize(new Dimension(100,200));
+			JFrame f2 = new JFrame("f2");
+			f2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			f2.getContentPane().add(bc);
+			bc.setRenderer(legend);
+			SwingUtilities.invokeLater(()->{
+				f2.pack();
+				f2.setVisible(true);
+				f2.transferFocus();
+			});
+		}
 	}
 
 }
