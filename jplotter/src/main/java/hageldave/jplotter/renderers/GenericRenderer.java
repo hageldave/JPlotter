@@ -156,7 +156,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	}
 	
 	/**
-	 * Sets this renderers {@link #viewMX}.
+	 * Sets this renderers {@link #view}.
 	 */
 	@Override
 	public void setView(Rectangle2D view){

@@ -23,10 +23,10 @@ import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.CharacterAtlas;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The FBOCanvas is an {@link AWTGLCanvas} which uses a FrameBufferObject ({@link FBO}) 
@@ -73,8 +73,11 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	private static final long serialVersionUID = 1L;
 	
-	public static final AtomicInteger ATOMIC_COUNTER = new AtomicInteger(0);
+	public static final AtomicInteger ATOMIC_COUNTER = new AtomicInteger(1);
 	public static int CURRENTLY_ACTIVE_CANVAS = 0;
+	
+	
+
 
 	private static final char NL = '\n';
 	private static final String blitVertexShaderSrc = ""
@@ -154,23 +157,18 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 * its value as this canvas' {@link #canvasID}.
 	 * It also registers a {@link ComponentListener} that
 	 * calls the {@link #repaint()} method when resizing.
-	 * 
-	 * @param data GLData object for creating the GL context.
 	 */
-	protected FBOCanvas(GLData data){
-		super(data);
-		this.canvasID = ATOMIC_COUNTER.incrementAndGet();
+	protected FBOCanvas(){
+		super(GLContextShareCanvas.isSet() ? GLContextShareCanvas.getGLData():new GLData());
+		if(!GLContextShareCanvas.isSet())
+			GLContextShareCanvas.set(this);
+		this.canvasID = ATOMIC_COUNTER.get();//incrementAndGet();
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
 				repaint();
 			}
 		});
-	}
-
-	/** Calls {@link #FBOCanvas(GLData)} with default {@link GLData}. */
-	protected FBOCanvas() {
-		this(new GLData());
 	}
 	
 	/**
@@ -181,6 +179,9 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 */
 	@Override
 	protected void beforeRender() {
+		if(this.data.shareContext != null){
+			this.data.shareContext.runInContext(()->{});
+		}
 		CURRENTLY_ACTIVE_CANVAS = this.canvasID;
 		super.beforeRender();
 	}
