@@ -3,6 +3,7 @@ package hageldave.jplotter.renderers;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.svg.SVGRenderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -22,7 +23,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * 
  * @author hageldave
  */
-public interface Renderer extends AutoCloseable {
+public interface Renderer extends AutoCloseable, SVGRenderer {
 
 	/**
 	 * Initializes this renderer, i.e. allocates GL resources such as a 

@@ -1,5 +1,7 @@
 package hageldave.jplotter.canvas;
 
+import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
+
 import java.awt.Color;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -10,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -18,11 +21,15 @@ import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
 import org.lwjgl.opengl.awt.PlatformGLCanvas;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.CharacterAtlas;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
@@ -379,6 +386,32 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 */
 	@GLContextRequired
 	protected abstract void paintToFBO(int width, int height);
+	
+	
+	public Document paintSVG(){
+		DOMImplementation domImplementation = SVGDOMImplementation.getDOMImplementation();
+		Document document = domImplementation.createDocument(SVG_NAMESPACE_URI, "svg", null);
+		
+		int w,h;
+		if((w=getWidth()) >0 && (h=getHeight()) >0){
+			Element root = document.getDocumentElement();
+			root.setAttributeNS(null,"width",""+w);
+			root.setAttributeNS(null, "height", ""+h);
+			root.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
+			
+			Element defs = SVGUtils.createSVGElement(document, "defs");
+			root.appendChild(defs);
+			
+			Element rootGroup = SVGUtils.createSVGElement(document, "g");
+			root.appendChild(rootGroup);
+			
+			
+			paintToSVG(document, rootGroup, w,h);
+		}
+		return document;
+	}
+	
+	protected void paintToSVG(Document doc, Element parent, int w, int h){}
 
 	/**
 	 * Disposes of this {@link FBOCanvas} GL resources, i.e. closes the shaders, 

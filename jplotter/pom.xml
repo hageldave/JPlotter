@@ -57,6 +57,17 @@
 			<artifactId>joml</artifactId>
 			<version>1.9.14</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-anim</artifactId>
+			<version>1.11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-transcoder</artifactId>
+			<version>1.11</version>
+		</dependency>
+
 	</dependencies>
 
 	<profiles>

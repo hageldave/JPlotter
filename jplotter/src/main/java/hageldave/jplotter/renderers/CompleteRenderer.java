@@ -2,6 +2,9 @@ package hageldave.jplotter.renderers;
 
 import java.awt.geom.Rectangle2D;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Renderable;
@@ -142,6 +145,14 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 			);
 		}
 		return this;
+	}
+	
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		rendererLUT[renderOrder[0]].renderSVG(doc, parent, w, h);
+		rendererLUT[renderOrder[1]].renderSVG(doc, parent, w, h);
+		rendererLUT[renderOrder[2]].renderSVG(doc, parent, w, h);
+		rendererLUT[renderOrder[3]].renderSVG(doc, parent, w, h);
 	}
 
 }

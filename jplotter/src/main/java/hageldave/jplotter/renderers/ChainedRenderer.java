@@ -2,6 +2,9 @@ package hageldave.jplotter.renderers;
 
 import java.awt.geom.Rectangle2D;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -51,6 +54,12 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 		if(r2 != null)
 			r2.close();
 		r1=r2=null;
+	}
+	
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		r1.renderSVG(doc, parent, w, h);
+		r2.renderSVG(doc, parent, w, h);
 	}
 	
 	

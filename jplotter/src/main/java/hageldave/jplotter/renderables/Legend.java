@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderers.CompleteRenderer;
@@ -236,6 +239,11 @@ public class Legend implements Renderable, Renderer {
 			updateGL();
 		}
 		delegate.render(w, h);
+	}
+	
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		delegate.renderSVG(doc, parent, w, h);
 	}
 
 }
