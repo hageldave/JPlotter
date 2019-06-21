@@ -27,6 +27,15 @@ public class SVGUtils {
 		return doc.createElementNS(SVG_NAMESPACE_URI, element);
 	}
 	
+	public static Element createSVGRect(Document doc, double x, double y, double w, double h){
+		Element rect = createSVGElement(doc, "rect");
+		rect.setAttributeNS(null, "x", ""+x);
+		rect.setAttributeNS(null, "y", ""+y);
+		rect.setAttributeNS(null, "width", ""+w);
+		rect.setAttributeNS(null, "height", ""+h);
+		return rect;
+	}
+	
 	public static String svgRGB(int argb){
 		return '#'+Integer.toHexString(0xff000000 | argb).substring(2);
 	}

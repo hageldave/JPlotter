@@ -209,9 +209,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
-		if(Objects.nonNull(view)){
-			// TODO: set view transformation
-		}
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
 		for(Lines lines : getItemsToRender()){
 			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
 			linesGroup.setAttributeNS(null, "stroke-width", ""+lines.getThickness());
@@ -221,6 +224,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				linesGroup.appendChild(segment);
 				double x1,y1,x2,y2;
 				x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
+				
+				x1-=translateX; x2-=translateX;
+				y1-=translateY; y2-=translateY;
+				x1*=scaleX; x2*=scaleX;
+				y1*=scaleY; y2*=scaleY;
+				
 				segment.setAttributeNS(null, "points", ""+x1+","+y1+","+x2+","+y2);
 				if(seg.color0 == seg.color1){
 					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGB(seg.color0));
