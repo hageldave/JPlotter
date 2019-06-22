@@ -201,24 +201,35 @@ public class TextRenderer extends GenericRenderer<Text> {
 			Element textGroup = SVGUtils.createSVGElement(doc, "g");
 			mainGroup.appendChild(textGroup);
 			{
-				Element text = SVGUtils.createSVGElement(doc, "text");
-				textGroup.appendChild(text);
-				double x1,y1,x2,y2;
+				double x1,y1;
 				x1 = txt.getOrigin().getX();
 				y1 = txt.getOrigin().getY();
-				x2=y2=0;
 				
-				x1-=translateX; x2-=translateX;
-				y1-=translateY; y2-=translateY;
-				x1*=scaleX; x2*=scaleX;
-				y1*=scaleY; y2*=scaleY;
+				x1-=translateX;
+				y1-=translateY;
+				x1*=scaleX;
+				y1*=scaleY;
 				
-				//TODO: text backgound rectangle
+				if(txt.getBackground().getRGB() != 0){
+					Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getTextSize().width,txt.getTextSize().height);
+					textGroup.appendChild(backgroundRect);
+					backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+					backgroundRect.setAttributeNS(null, "fill-opacity", ""+Pixel.a_normalized(txt.getBackground().getRGB()));
+					if(txt.getAngle() != 0){
+						backgroundRect.setAttributeNS(null, "transform", "translate("+x1+","+y1+") rotate("+(txt.getAngle()*180/Math.PI)+")");
+					} else {
+						backgroundRect.setAttributeNS(null, "transform", "translate("+x1+","+y1+")");
+					}
+				}
+				
+				Element text = SVGUtils.createSVGElement(doc, "text");
+				textGroup.appendChild(text);
+				
 				text.setTextContent(txt.getTextString());
 				String fontfamily = CharacterAtlas.FONT_NAME.equals("Monospaced") ? "Monospaced":CharacterAtlas.FONT_NAME+",Monospaced";
 				text.setAttributeNS(null, "style",
 						"font-family:"+fontfamily+";font-size:"+txt.fontsize+";"+SVGUtils.fontStyleAndWeightCSS(txt.style));
-				text.setAttributeNS(null, "fill", SVGUtils.svgRGB(txt.getColor().getRGB()));
+				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
 				if(txt.getColorA() != 1){
 					text.setAttributeNS(null, "fill-opacity", ""+txt.getColorA());
 				}

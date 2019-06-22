@@ -20,6 +20,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import hageldave.imagingkit.core.Pixel;
+
 public class SVGUtils {
 	
 	private static final AtomicLong defIdCounter = new AtomicLong();
@@ -37,8 +39,16 @@ public class SVGUtils {
 		return rect;
 	}
 	
-	public static String svgRGB(int argb){
+	public static String svgRGBhex(int argb){
 		return '#'+Integer.toHexString(0xff000000 | argb).substring(2);
+	}
+	
+	public static String cssRGBA(int argb){
+		return "rgba("
+				+Pixel.r_normalized(argb)+","
+				+Pixel.g_normalized(argb)+","
+				+Pixel.b_normalized(argb)+","
+				+Pixel.a_normalized(argb)+")";
 	}
 	
 	public static String documentToXMLString(Document doc){
@@ -99,6 +109,5 @@ public class SVGUtils {
 		default:
 			return "font-style:normal;font-weight:normal;";
 		}
-		
 	}
 }

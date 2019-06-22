@@ -407,11 +407,10 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			background.setAttributeNS(null, "id", "background");
 			background.setAttributeNS(null, "width", "100%");
 			background.setAttributeNS(null, "height", "100%");
-			background.setAttributeNS(null, "fill", SVGUtils.svgRGB(getBackground().getRGB()));
+			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(getBackground().getRGB()));
 			
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
 			root.appendChild(rootGroup);
-			
 			
 			paintToSVG(document, rootGroup, w,h);
 		}

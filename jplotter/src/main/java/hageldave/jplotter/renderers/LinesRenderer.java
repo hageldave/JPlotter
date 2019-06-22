@@ -232,7 +232,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				
 				segment.setAttributeNS(null, "points", ""+x1+","+y1+","+x2+","+y2);
 				if(seg.color0 == seg.color1){
-					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGB(seg.color0));
+					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0));
 					segment.setAttributeNS(null, "stroke-opacity", ""+(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
 				} else {
 					// create gradient for line
@@ -250,13 +250,13 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					gradient.appendChild(stop1);
 					stop1.setAttributeNS(null, "offset", "0%");
 					stop1.setAttributeNS(null, "style", 
-							"stop-color:"+SVGUtils.svgRGB(seg.color0)+";"+
+							"stop-color:"+SVGUtils.svgRGBhex(seg.color0)+";"+
 							"stop-opacity:"+(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
 					Element stop2 = SVGUtils.createSVGElement(doc, "stop");
 					gradient.appendChild(stop2);
 					stop2.setAttributeNS(null, "offset", "100%");
 					stop2.setAttributeNS(null, "style", 
-							"stop-color:"+SVGUtils.svgRGB(seg.color1)+";"+
+							"stop-color:"+SVGUtils.svgRGBhex(seg.color1)+";"+
 							"stop-opacity:"+(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1)));
 					
 					// use gradient for line stroke
