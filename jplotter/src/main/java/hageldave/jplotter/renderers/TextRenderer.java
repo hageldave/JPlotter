@@ -6,11 +6,15 @@ import java.util.Objects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
+import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -167,7 +171,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 		GL13.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		
 	}
 	
 	/**
@@ -181,6 +184,53 @@ public class TextRenderer extends GenericRenderer<Text> {
 		if(Objects.nonNull(shader))
 			shader.close();
 		deleteAllItems();
+	}
+	
+	
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
+		parent.appendChild(mainGroup);
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		for(Text txt: getItemsToRender()){
+			Element textGroup = SVGUtils.createSVGElement(doc, "g");
+			mainGroup.appendChild(textGroup);
+			{
+				Element text = SVGUtils.createSVGElement(doc, "text");
+				textGroup.appendChild(text);
+				double x1,y1,x2,y2;
+				x1 = txt.getOrigin().getX();
+				y1 = txt.getOrigin().getY();
+				x2=y2=0;
+				
+				x1-=translateX; x2-=translateX;
+				y1-=translateY; y2-=translateY;
+				x1*=scaleX; x2*=scaleX;
+				y1*=scaleY; y2*=scaleY;
+				
+				//TODO: text backgound rectangle
+				text.setTextContent(txt.getTextString());
+				String fontfamily = CharacterAtlas.FONT_NAME.equals("Monospaced") ? "Monospaced":CharacterAtlas.FONT_NAME+",Monospaced";
+				text.setAttributeNS(null, "style",
+						"font-family:"+fontfamily+";font-size:"+txt.fontsize+";"+SVGUtils.fontStyleAndWeightCSS(txt.style));
+				text.setAttributeNS(null, "fill", SVGUtils.svgRGB(txt.getColor().getRGB()));
+				if(txt.getColorA() != 1){
+					text.setAttributeNS(null, "fill-opacity", ""+txt.getColorA());
+				}
+				text.setAttributeNS(null, "x", ""+0);
+				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
+				if(txt.getAngle() != 0){
+					text.setAttributeNS(null, "transform", "translate("+x1+","+y1+") rotate("+(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+				} else {
+					text.setAttributeNS(null, "transform", "translate("+x1+","+y1+") scale(1,-1)");
+				}
+			}
+		}
 	}
 
 }

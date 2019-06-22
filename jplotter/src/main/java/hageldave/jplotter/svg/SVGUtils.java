@@ -2,6 +2,7 @@ package hageldave.jplotter.svg;
 
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
+import java.awt.Font;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -87,4 +88,17 @@ public class SVGUtils {
 		return "def_"+Long.toString(defIdCounter.incrementAndGet(), 32);
 	}
 	
+	public static String fontStyleAndWeightCSS(int style){
+		switch(style){
+		case Font.ITALIC:
+			return "font-style:italic;font-weight:normal;";
+		case Font.BOLD:
+			return "font-style:normal;font-weight:bold;";
+		case Font.ITALIC|Font.BOLD:
+			return "font-style:italic;font-weight:bold;";
+		default:
+			return "font-style:normal;font-weight:normal;";
+		}
+		
+	}
 }
