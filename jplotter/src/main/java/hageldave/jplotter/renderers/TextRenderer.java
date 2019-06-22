@@ -198,8 +198,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 
 		for(Text txt: getItemsToRender()){
-			Element textGroup = SVGUtils.createSVGElement(doc, "g");
-			mainGroup.appendChild(textGroup);
 			{
 				double x1,y1;
 				x1 = txt.getOrigin().getX();
@@ -210,15 +208,26 @@ public class TextRenderer extends GenericRenderer<Text> {
 				x1*=scaleX;
 				y1*=scaleY;
 				
+				// test if inside of view port
+				if(x1+txt.getTextSize().width < 0 || x1-txt.getTextSize().width > w){
+					continue;
+				}
+				if(y1+txt.getTextSize().width < 0 || y1-txt.getTextSize().width > h){
+					continue;
+				}
+				
+				Element textGroup = SVGUtils.createSVGElement(doc, "g");
+				mainGroup.appendChild(textGroup);
+				
 				if(txt.getBackground().getRGB() != 0){
 					Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getTextSize().width,txt.getTextSize().height);
 					textGroup.appendChild(backgroundRect);
 					backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-					backgroundRect.setAttributeNS(null, "fill-opacity", ""+Pixel.a_normalized(txt.getBackground().getRGB()));
+					backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
 					if(txt.getAngle() != 0){
-						backgroundRect.setAttributeNS(null, "transform", "translate("+x1+","+y1+") rotate("+(txt.getAngle()*180/Math.PI)+")");
+						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+")");
 					} else {
-						backgroundRect.setAttributeNS(null, "transform", "translate("+x1+","+y1+")");
+						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")");
 					}
 				}
 				
@@ -231,14 +240,14 @@ public class TextRenderer extends GenericRenderer<Text> {
 						"font-family:"+fontfamily+";font-size:"+txt.fontsize+";"+SVGUtils.fontStyleAndWeightCSS(txt.style));
 				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
 				if(txt.getColorA() != 1){
-					text.setAttributeNS(null, "fill-opacity", ""+txt.getColorA());
+					text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
 				}
 				text.setAttributeNS(null, "x", ""+0);
 				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
 				if(txt.getAngle() != 0){
-					text.setAttributeNS(null, "transform", "translate("+x1+","+y1+") rotate("+(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
 				} else {
-					text.setAttributeNS(null, "transform", "translate("+x1+","+y1+") scale(1,-1)");
+					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
 				}
 			}
 		}

@@ -110,4 +110,12 @@ public class SVGUtils {
 			return "font-style:normal;font-weight:normal;";
 		}
 	}
+	
+	public static String svgNumber(double x){
+		String s = ""+x;
+		if(s.contains(".")){
+			s = s.substring(0, Math.min(s.length(), s.indexOf('.')+4));
+		}
+		return s;
+	}
 }

@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
@@ -215,13 +216,13 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+		
 		for(Lines lines : getItemsToRender()){
 			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
 			linesGroup.setAttributeNS(null, "stroke-width", ""+lines.getThickness());
 			mainGroup.appendChild(linesGroup);
 			for(SegmentDetails seg : lines.getSegments()){
-				Element segment = SVGUtils.createSVGElement(doc, "polygon");
-				linesGroup.appendChild(segment);
 				double x1,y1,x2,y2;
 				x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
 				
@@ -230,7 +231,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				x1*=scaleX; x2*=scaleX;
 				y1*=scaleY; y2*=scaleY;
 				
-				segment.setAttributeNS(null, "points", ""+x1+","+y1+","+x2+","+y2);
+				if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
+					continue;
+				}
+				
+				Element segment = SVGUtils.createSVGElement(doc, "polygon");
+				linesGroup.appendChild(segment);
+				
+				segment.setAttributeNS(null, "points", SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+","+SVGUtils.svgNumber(x2)+","+SVGUtils.svgNumber(y2));
 				if(seg.color0 == seg.color1){
 					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0));
 					segment.setAttributeNS(null, "stroke-opacity", ""+(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
@@ -241,23 +249,23 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					defs.appendChild(gradient);
 					String defID = SVGUtils.newDefId();
 					gradient.setAttributeNS(null, "id", defID);
-					gradient.setAttributeNS(null, "x1", ""+x1);
-					gradient.setAttributeNS(null, "y1", ""+y1);
-					gradient.setAttributeNS(null, "x2", ""+x2);
-					gradient.setAttributeNS(null, "y2", ""+y2);
+					gradient.setAttributeNS(null, "x1", SVGUtils.svgNumber(x1));
+					gradient.setAttributeNS(null, "y1", SVGUtils.svgNumber(y1));
+					gradient.setAttributeNS(null, "x2", SVGUtils.svgNumber(x2));
+					gradient.setAttributeNS(null, "y2", SVGUtils.svgNumber(y2));
 					gradient.setAttributeNS(null, "gradientUnits", "userSpaceOnUse");
 					Element stop1 = SVGUtils.createSVGElement(doc, "stop");
 					gradient.appendChild(stop1);
 					stop1.setAttributeNS(null, "offset", "0%");
 					stop1.setAttributeNS(null, "style", 
 							"stop-color:"+SVGUtils.svgRGBhex(seg.color0)+";"+
-							"stop-opacity:"+(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
+							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
 					Element stop2 = SVGUtils.createSVGElement(doc, "stop");
 					gradient.appendChild(stop2);
 					stop2.setAttributeNS(null, "offset", "100%");
 					stop2.setAttributeNS(null, "style", 
 							"stop-color:"+SVGUtils.svgRGBhex(seg.color1)+";"+
-							"stop-opacity:"+(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1)));
+							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1)));
 					
 					// use gradient for line stroke
 					segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
