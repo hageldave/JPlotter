@@ -234,6 +234,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 				Element text = SVGUtils.createSVGElement(doc, "text");
 				textGroup.appendChild(text);
 				
+				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 				text.setTextContent(txt.getTextString());
 				String fontfamily = CharacterAtlas.FONT_NAME.equals("Monospaced") ? "Monospaced":CharacterAtlas.FONT_NAME+",Monospaced";
 				text.setAttributeNS(null, "style",
