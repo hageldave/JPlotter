@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -21,6 +22,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.misc.Glyph;
 
 public class SVGUtils {
 	
@@ -36,6 +38,24 @@ public class SVGUtils {
 		rect.setAttributeNS(null, "y", ""+y);
 		rect.setAttributeNS(null, "width", ""+w);
 		rect.setAttributeNS(null, "height", ""+h);
+		return rect;
+	}
+	
+	public static String svgPoints(double...coords){
+		String s = "";
+		for(int i=0; i < coords.length/2; i++){
+			s += svgNumber(coords[i*2+0]);
+			s += ",";
+			s += svgNumber(coords[i*2+1]);
+			if(i < (coords.length/2)-1)
+				s+= " ";
+		}
+		return s;
+	}
+	
+	public static Element createSVGTriangle(Document doc, double x0, double y0, double x1, double y1, double x2, double y2){
+		Element rect = createSVGElement(doc, "polygon");
+		rect.setAttributeNS(null, "points", svgPoints(x0,y0,x1,y1,x2,y2));
 		return rect;
 	}
 	
@@ -82,7 +102,8 @@ public class SVGUtils {
 				OutputStreamWriter osfw = new OutputStreamWriter(fos, "UTF-8");
 		){
 			TranscoderOutput output = new TranscoderOutput(osfw);
-			new SVGTranscoder().transcode(input, output);
+			SVGTranscoder svgTranscoder = new SVGTranscoder();
+			svgTranscoder.transcode(input, output);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (TranscoderException e) {
@@ -117,5 +138,21 @@ public class SVGUtils {
 			s = s.substring(0, Math.min(s.length(), s.indexOf('.')+4));
 		}
 		return s;
+	}
+	
+	public static String createGlyphSymbolDef(Document doc, Glyph glyph, String defId){
+		if(doc.getElementById(defId)==null){
+			Node defs = getDefs(doc);
+			Element symbol = createSVGElement(doc, "symbol");
+			symbol.setAttributeNS(null, "id", defId);
+			defs.appendChild(symbol);
+			List<Element> glyphSVG = glyph.createSVGElements(doc);
+			for(Element e:glyphSVG){
+				e.setAttributeNS(null, "vector-effect", "non-scaling-stroke");
+				symbol.appendChild(e);
+			}
+			symbol.setAttributeNS(null, "overflow", "visible");
+		}
+		return defId;
 	}
 }

@@ -1,7 +1,11 @@
 package hageldave.jplotter.misc;
 
+import java.util.List;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.PointsRenderer;
@@ -58,4 +62,11 @@ public interface Glyph {
 	 * A {@link Glyph} implementation has to guarantee for that.
 	 */
 	public boolean useElementsDrawCall();
+
+	
+	public List<Element> createSVGElements(Document doc);
+	
+	public String glyphName();
+	
+	public boolean isFilled();
 }

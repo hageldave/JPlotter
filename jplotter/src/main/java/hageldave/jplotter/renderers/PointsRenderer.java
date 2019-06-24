@@ -1,14 +1,21 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL31;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
+import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -185,6 +192,61 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	protected void renderEnd() {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+	}
+	
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
+		parent.appendChild(mainGroup);
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+		
+		for(Points points : getItemsToRender()){
+			Element pointsGroup = SVGUtils.createSVGElement(doc, "g");
+			mainGroup.appendChild(pointsGroup);
+			Glyph glyph = points.glyph;
+			String symbolID = SVGUtils.createGlyphSymbolDef(doc, glyph, "glyph_"+glyph.glyphName());
+			for(PointDetails point : points.getPointDetails()){
+				double x1,y1;
+				x1=point.location.getX(); y1=point.location.getY();
+				
+				x1-=translateX;
+				y1-=translateY;
+				x1*=scaleX;
+				y1*=scaleY;
+				
+				if(!viewportRect.contains(x1, y1)){
+					continue;
+				}
+				
+				Element pointElement = SVGUtils.createSVGElement(doc, "use");
+				pointsGroup.appendChild(pointElement);
+				pointElement.setAttributeNS(null, "xlink:href", "#"+symbolID);
+				pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(point.color));
+				pointElement.setAttributeNS(null, "stroke-opacity", ""+(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color)));
+				if(glyph.isFilled()){
+					pointElement.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(point.color));
+					pointElement.setAttributeNS(null, "fill-opacity", ""+(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color)));
+				} else {
+					pointElement.setAttributeNS(null, "fill-opacity", "0");
+				}
+				String transform = "";
+				transform += "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")";
+				if(glyphScaling*point.scale != 1){
+					transform += "scale("+SVGUtils.svgPoints(glyphScaling*point.scale, glyphScaling*point.scale)+")";
+				}
+				if(point.rot != 0){
+					transform += "rotate("+(point.rot*180/Math.PI)+")";
+				}
+				
+				pointElement.setAttributeNS(null, "transform", transform);
+			}
+		}
 	}
 
 }

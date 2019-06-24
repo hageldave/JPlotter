@@ -397,7 +397,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			Element root = document.getDocumentElement();
 			root.setAttributeNS(null,"width",""+w);
 			root.setAttributeNS(null, "height", ""+h);
-			root.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
 			
 			Element defs = SVGUtils.createSVGElement(document, "defs");
 			root.appendChild(defs);
@@ -411,6 +410,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
 			root.appendChild(rootGroup);
+			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
 			
 			paintToSVG(document, rootGroup, w,h);
 		}
