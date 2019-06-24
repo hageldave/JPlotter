@@ -238,10 +238,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				Element segment = SVGUtils.createSVGElement(doc, "polyline");
 				linesGroup.appendChild(segment);
 				
-				segment.setAttributeNS(null, "points", SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+" "+SVGUtils.svgNumber(x2)+","+SVGUtils.svgNumber(y2));
+				segment.setAttributeNS(null, "points", SVGUtils.svgPoints(x1,y1,x2,y2));
 				if(seg.color0 == seg.color1){
 					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0));
-					segment.setAttributeNS(null, "stroke-opacity", ""+(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
+					segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
 				} else {
 					// create gradient for line
 					Node defs = SVGUtils.getDefs(doc);

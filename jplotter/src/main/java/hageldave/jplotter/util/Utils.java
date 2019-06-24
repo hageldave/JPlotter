@@ -8,6 +8,8 @@ import java.util.stream.Stream;
 
 import javax.swing.SwingUtilities;
 
+import org.joml.Vector2d;
+
 import hageldave.imagingkit.core.Pixel;
 
 /**
@@ -143,6 +145,19 @@ public class Utils {
 	 */
 	public static double clamp(double lower, double v, double upper){
 		return Math.max(lower, Math.min(upper, v));
+	}
+	
+	public static Point2D perpendicularFootOfTri(double x0, double y0, double x1, double y1, double x2, double y2){
+		// calculate perpendicular foot on segment 02
+		Vector2d v02 = new Vector2d(x2-x0, y2-y0).normalize();
+		Vector2d v01 = new Vector2d(x1-x0, y1-y0);
+		double alpha = v02.angle(v01);
+		v02 = v02.mul(Math.cos(alpha)*v01.length());
+		return new Point2D.Double(x0+v02.x, y0+v02.y);
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(""+perpendicularFootOfTri(-1, 0, 0, 1, 1, 0).getX());
 	}
 	
 }

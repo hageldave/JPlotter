@@ -1,13 +1,22 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
+import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Triangles;
+import hageldave.jplotter.renderables.Triangles.TriangleDetails;
+import hageldave.jplotter.renderables.Lines.SegmentDetails;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -135,6 +144,79 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	protected void renderEnd() {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+	}
+	
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
+		parent.appendChild(mainGroup);
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+		
+		for(Triangles tris : getItemsToRender()){
+			Element trianglesGroup = SVGUtils.createSVGElement(doc, "g");
+			mainGroup.appendChild(trianglesGroup);
+			for(TriangleDetails tri : tris.getTriangleDetails()){
+				double x0,y0, x1,y1, x2,y2;
+				x0=tri.x0; y0=tri.y0; x1=tri.x1; y1=tri.y1; x2=tri.x2; y2=tri.y2;
+				
+				x0-=translateX; x1-=translateX; x2-=translateX;
+				y0-=translateY; y1-=translateY; y2-=translateY;
+				x0*=scaleX; x1*=scaleX; x2*=scaleX;
+				y0*=scaleY; y1*=scaleY; y2*=scaleY;
+				
+				if( !(
+						viewportRect.intersectsLine(x0, y0, x1, y1) || 
+						viewportRect.intersectsLine(x0, y0, x2, y2) ||
+						viewportRect.intersectsLine(x2, y2, x1, y1)))
+				{
+					continue;
+				}
+				
+				Element triangle = SVGUtils.createSVGElement(doc, "polyline");
+				trianglesGroup.appendChild(triangle);
+				
+				triangle.setAttributeNS(null, "points", SVGUtils.svgPoints(x0,y0,x1,y1,x2,y2));
+				if(tri.c0 == tri.c1 && tri.c1 == tri.c2){
+					triangle.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(tri.c0));
+					if(tris.getGlobalAlphaMultiplier()*Pixel.a_normalized(tri.c0) != 1){
+						triangle.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(tris.getGlobalAlphaMultiplier()*Pixel.a_normalized(tri.c0)));
+					}
+				} else {
+//					// create gradient for line
+//					Node defs = SVGUtils.getDefs(doc);
+//					Element gradient = SVGUtils.createSVGElement(doc, "linearGradient");
+//					defs.appendChild(gradient);
+//					String defID = SVGUtils.newDefId();
+//					gradient.setAttributeNS(null, "id", defID);
+//					gradient.setAttributeNS(null, "x1", SVGUtils.svgNumber(x1));
+//					gradient.setAttributeNS(null, "y1", SVGUtils.svgNumber(y1));
+//					gradient.setAttributeNS(null, "x2", SVGUtils.svgNumber(x2));
+//					gradient.setAttributeNS(null, "y2", SVGUtils.svgNumber(y2));
+//					gradient.setAttributeNS(null, "gradientUnits", "userSpaceOnUse");
+//					Element stop1 = SVGUtils.createSVGElement(doc, "stop");
+//					gradient.appendChild(stop1);
+//					stop1.setAttributeNS(null, "offset", "0%");
+//					stop1.setAttributeNS(null, "style", 
+//							"stop-color:"+SVGUtils.svgRGBhex(seg.color0)+";"+
+//							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
+//					Element stop2 = SVGUtils.createSVGElement(doc, "stop");
+//					gradient.appendChild(stop2);
+//					stop2.setAttributeNS(null, "offset", "100%");
+//					stop2.setAttributeNS(null, "style", 
+//							"stop-color:"+SVGUtils.svgRGBhex(seg.color1)+";"+
+//							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1)));
+//					
+//					// use gradient for line stroke
+//					triangle.setAttributeNS(null, "stroke", "url(#"+defID+")");
+				}
+			}
+		}
 	}
 
 }

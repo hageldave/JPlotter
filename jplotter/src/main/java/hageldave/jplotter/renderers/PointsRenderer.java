@@ -227,12 +227,12 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				Element pointElement = SVGUtils.createSVGElement(doc, "use");
 				pointsGroup.appendChild(pointElement);
 				pointElement.setAttributeNS(null, "xlink:href", "#"+symbolID);
-				pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(point.color));
-				pointElement.setAttributeNS(null, "stroke-opacity", ""+(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color)));
 				if(glyph.isFilled()){
 					pointElement.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(point.color));
 					pointElement.setAttributeNS(null, "fill-opacity", ""+(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color)));
 				} else {
+					pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(point.color));
+					pointElement.setAttributeNS(null, "stroke-opacity", ""+(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color)));
 					pointElement.setAttributeNS(null, "fill-opacity", "0");
 				}
 				String transform = "";

@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -133,9 +134,14 @@ public class SVGUtils {
 	}
 	
 	public static String svgNumber(double x){
-		String s = ""+x;
+		if(x==(int)x){
+			return ""+((int)x);
+		}
+		String s = String.format(Locale.US, "%.3f", x);
 		if(s.contains(".")){
-			s = s.substring(0, Math.min(s.length(), s.indexOf('.')+4));
+			s = s.replace('0', ' ').trim().replace(' ', '0');
+			s = s.startsWith(".") ? "0"+s:s;
+			s = s.endsWith(".") ? s.substring(0, s.length()-1):s;
 		}
 		return s;
 	}
@@ -154,5 +160,9 @@ public class SVGUtils {
 			symbol.setAttributeNS(null, "overflow", "visible");
 		}
 		return defId;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(svgNumber(10.0101));
 	}
 }
