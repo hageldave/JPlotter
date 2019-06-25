@@ -156,8 +156,16 @@ public class Utils {
 		return new Point2D.Double(x0+v02.x, y0+v02.y);
 	}
 	
-	public static void main(String[] args) {
-		System.out.println(""+perpendicularFootOfTri(-1, 0, 0, 1, 1, 0).getX());
+	public static int averageColor(int...argbValues){
+		int a,r,g,b; a=r=g=b=0;
+		for(int argb : argbValues){
+			a += Pixel.a(argb);
+			r += Pixel.r(argb);
+			g += Pixel.g(argb);
+			b += Pixel.b(argb);
+		}
+		int n = argbValues.length;
+		return Pixel.argb_bounded(a/n, r/n, g/n, b/n);
 	}
 	
 }

@@ -7,17 +7,15 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
-import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
-import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -148,6 +146,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
+		String svgTriangleStrategy = "AVG_COLOR";
+		
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
 		
@@ -178,16 +178,29 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					continue;
 				}
 				
-				Element triangle = SVGUtils.createSVGElement(doc, "polyline");
+				Element triangle = SVGUtils.createSVGElement(doc, "path");
 				trianglesGroup.appendChild(triangle);
 				
-				triangle.setAttributeNS(null, "points", SVGUtils.svgPoints(x0,y0,x1,y1,x2,y2));
+				triangle.setAttributeNS(null, "d", "M "+SVGUtils.svgPoints(x0,y0) +" L "+SVGUtils.svgPoints(x1,y1,x2,y2)+" Z");
 				if(tri.c0 == tri.c1 && tri.c1 == tri.c2){
 					triangle.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(tri.c0));
 					if(tris.getGlobalAlphaMultiplier()*Pixel.a_normalized(tri.c0) != 1){
-						triangle.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(tris.getGlobalAlphaMultiplier()*Pixel.a_normalized(tri.c0)));
+						triangle.setAttributeNS(null, "fill-opacity", 
+								SVGUtils.svgNumber(tris.getGlobalAlphaMultiplier()*Pixel.a_normalized(tri.c0)));
 					}
 				} else {
+					switch (svgTriangleStrategy) {
+					case "AVG_COLOR":
+						int color = Utils.averageColor(tri.c0,tri.c1,tri.c2);
+						triangle.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(color));
+						if(tris.getGlobalAlphaMultiplier()*Pixel.a_normalized(color) != 1){
+							triangle.setAttributeNS(null, "fill-opacity", 
+									SVGUtils.svgNumber(tris.getGlobalAlphaMultiplier()*Pixel.a_normalized(color)));
+						}
+						break;
+					default:
+						break;
+					}
 //					// create gradient for line
 //					Node defs = SVGUtils.getDefs(doc);
 //					Element gradient = SVGUtils.createSVGElement(doc, "linearGradient");
