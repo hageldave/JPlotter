@@ -80,10 +80,8 @@ public class SVGUtils {
 		){
 			TranscoderOutput output = new TranscoderOutput(osw);
 			new SVGTranscoder().transcode(input, output);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (TranscoderException e) {
-			e.printStackTrace();
+		} catch (IOException | TranscoderException e) {
+			throw new RuntimeException(e);
 		}
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 		String xml = "";
@@ -105,10 +103,8 @@ public class SVGUtils {
 			TranscoderOutput output = new TranscoderOutput(osfw);
 			SVGTranscoder svgTranscoder = new SVGTranscoder();
 			svgTranscoder.transcode(input, output);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (TranscoderException e) {
-			e.printStackTrace();
+		} catch (IOException | TranscoderException e) {
+			throw new RuntimeException(e);
 		}
 	}
 	

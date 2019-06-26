@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
