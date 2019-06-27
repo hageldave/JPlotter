@@ -74,6 +74,11 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * GL context is currently active.
  * <br><b> For this to work properly it is essential that all GL calls are happening on the AWT event dispatch
  * thread </b>(see https://docs.oracle.com/javase/tutorial/uiswing/concurrency/dispatch.html).
+ * <p>
+ * The FBOCanvas also provides the ability of scalable vector graphics (SVG) export with the
+ * {@link #paintSVG()} method.
+ * An implementing class therefore has to implement the {@link #paintToSVG(Document, Element, int, int)}
+ * method when it is able to express its contents in terms of SVG elements.
  * 
  * @author hageldave
  */
@@ -387,7 +392,12 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	@GLContextRequired
 	protected abstract void paintToFBO(int width, int height);
 	
-	
+	/**
+	 * Creates a new SVG {@link Document} and renders this canvas as SVG elements.
+	 * Will call {@link #paintToSVG(Document, Element, int, int)} after setting up
+	 * the document and creating the initial elements.
+	 * @return the created document
+	 */
 	public Document paintSVG(){
 		DOMImplementation domImplementation = SVGDOMImplementation.getDOMImplementation();
 		Document document = domImplementation.createDocument(SVG_NAMESPACE_URI, "svg", null);
@@ -417,6 +427,18 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		return document;
 	}
 	
+	/**
+	 * Renders this {@link FBOCanvas} in terms of SVG elements
+	 * to the specified parent element of the specified SVG document.
+	 * <p>
+	 * This method has to be overridden when the implementing
+	 * class can express its contents in terms of SVG.
+	 * 
+	 * @param doc document to create svg elements with
+	 * @param parent to append svg elements to
+	 * @param w width of the viewport (the width of this Canvas)
+	 * @param h height of the viewport (the height of this Canvas)
+	 */
 	protected void paintToSVG(Document doc, Element parent, int w, int h){}
 
 	/**
