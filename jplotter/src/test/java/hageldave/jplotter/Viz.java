@@ -20,7 +20,6 @@ import javax.swing.SwingUtilities;
 
 import org.w3c.dom.Document;
 
-import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -42,6 +41,7 @@ public class Viz {
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
 		CoordSysCanvas canvas = new CoordSysCanvas();
+		canvas.setyAxisLabel("Y-Axis");
 		CompleteRenderer content = new CompleteRenderer();
 		content.setRenderOrder(PNT, LIN, TRI, TXT);
 		canvas.setContent(content);
