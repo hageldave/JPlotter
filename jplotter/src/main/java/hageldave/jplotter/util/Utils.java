@@ -147,7 +147,9 @@ public class Utils {
 		return Math.max(lower, Math.min(upper, v));
 	}
 	
-	public static Point2D perpendicularFootOfTri(double x0, double y0, double x1, double y1, double x2, double y2){
+	
+	@SuppressWarnings("unused") // not yet used, is intended for svg triangle gradient things
+	private static Point2D perpendicularFootOfTri(double x0, double y0, double x1, double y1, double x2, double y2){
 		// calculate perpendicular foot on segment 02
 		Vector2d v02 = new Vector2d(x2-x0, y2-y0).normalize();
 		Vector2d v01 = new Vector2d(x1-x0, y1-y0);
@@ -156,6 +158,12 @@ public class Utils {
 		return new Point2D.Double(x0+v02.x, y0+v02.y);
 	}
 	
+	/**
+	 * Calculates the average (arithmetic mean) color of the
+	 * specified colors. Each channel (ARGB) is treated separately.
+	 * @param argbValues ARGB color values
+	 * @return color consisting of ARGB channel means
+	 */
 	public static int averageColor(int...argbValues){
 		int a,r,g,b; a=r=g=b=0;
 		for(int argb : argbValues){
@@ -165,7 +173,7 @@ public class Utils {
 			b += Pixel.b(argb);
 		}
 		int n = argbValues.length;
-		return Pixel.argb_bounded(a/n, r/n, g/n, b/n);
+		return Pixel.argb_fast(a/n, r/n, g/n, b/n);
 	}
 	
 }

@@ -8,14 +8,13 @@ import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
+import hageldave.jplotter.svg.SVGTriangleRendering;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -66,6 +65,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "}"
 			+ NL
 			;
+	
+	protected String svgTriangleStrategy=null;
 
 	/**
 	 * Creates the shader if not already created and 
@@ -146,7 +147,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
-		String svgTriangleStrategy = "SUBDIVIDE";
+		String svgTriangleStrategy = getSvgTriangleStrategy();
 		
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
@@ -170,131 +171,41 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				x0*=scaleX; x1*=scaleX; x2*=scaleX;
 				y0*=scaleY; y1*=scaleY; y2*=scaleY;
 				
-				addSVGTriangle(doc, trianglesGroup, new double[]{x0,y0,x1,y1,x2,y2}, new int[]{tri.c0,tri.c1,tri.c2}, tris.getGlobalAlphaMultiplier(), svgTriangleStrategy, viewportRect);
+				SVGTriangleRendering.addSVGTriangle(doc, trianglesGroup, new double[]{x0,y0,x1,y1,x2,y2}, new int[]{tri.c0,tri.c1,tri.c2}, tris.getGlobalAlphaMultiplier(), svgTriangleStrategy, viewportRect);
 			}
 		}
 	}
-	
-	static void addSVGTriangle(
-			Document doc, 
-			Element trianglesGroup, 
-			double[] coords, 
-			int[] colors, 
-			float alphaMultiplier, 
-			String strategy,
-			Rectangle2D viewportRect)
-	{
-		int c0=colors[0], c1=colors[1], c2=colors[2];
-		double x0,y0, x1,y1, x2,y2;
-		{
-			int i=0;
-			x0=coords[i++]; y0=coords[i++]; x1=coords[i++]; y1=coords[i++]; x2=coords[i++]; y2=coords[i++];
-			if( !(
-					viewportRect.intersectsLine(x0, y0, x1, y1) || 
-					viewportRect.intersectsLine(x0, y0, x2, y2) ||
-					viewportRect.intersectsLine(x2, y2, x1, y1) ||
-					triangleMayContain(x0, y0, x1, y1, x2, y2, viewportRect)
-				)
-			){
-				return;
-			}
+
+	private String getSvgTriangleStrategy() {
+		String strategy = this.svgTriangleStrategy;
+		if(Objects.isNull(strategy)){
+			strategy = System.getProperty("SVG_TRIANGLE_STRATEGY");
 		}
-		
-		if(c0==c1 && c1==c2){
-			strategy = "";
-		}
-		
-		switch (strategy) {
-		case "SUBDIVIDE":{
-			// test if subdivision is needed
-			int edge = getSubdivisionEdge(x0, y0, x1, y1, x2, y2);
-			if(edge==0){
-				coords = new double[6];
-				int c = Utils.interpolateColor(c0, c1, 0.5);
-				// first subdivided triangle
-				int i=0;
-				coords[i++]=x0;coords[i++]=y0; coords[i++]=x0+(x1-x0)/2;coords[i++]=y0+(y1-y0)/2; coords[i++]=x2;coords[i++]=y2;
-				colors[0]=c0; colors[1]=c; colors[2]=c2;
-				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "SUBDIVIDE", viewportRect);
-				// second subdivided triangle
-				i=0;
-				coords[i++]=x1;coords[i++]=y1; coords[i++]=x0+(x1-x0)/2;coords[i++]=y0+(y1-y0)/2; coords[i++]=x2;coords[i++]=y2;
-				colors[0]=c1; colors[1]=c; colors[2]=c2;
-				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "SUBDIVIDE", viewportRect);
-			} else if(edge==1){
-				coords = new double[6];
-				int c = Utils.interpolateColor(c1, c2, 0.5);
-				// first subdivided triangle
-				int i=0;
-				coords[i++]=x0;coords[i++]=y0; coords[i++]=x1+(x2-x1)/2;coords[i++]=y1+(y2-y1)/2; coords[i++]=x1;coords[i++]=y1;
-				colors[0]=c0; colors[1]=c; colors[2]=c1;
-				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "SUBDIVIDE", viewportRect);
-				// second subdivided triangle
-				i=0;
-				coords[i++]=x0;coords[i++]=y0; coords[i++]=x1+(x2-x1)/2;coords[i++]=y1+(y2-y1)/2; coords[i++]=x2;coords[i++]=y2;
-				colors[0]=c0; colors[1]=c; colors[2]=c2;
-				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "SUBDIVIDE", viewportRect);
-			} else if(edge==2){
-				coords = new double[6];
-				int c = Utils.interpolateColor(c0, c2, 0.5);
-				// first subdivided triangle
-				int i=0;
-				coords[i++]=x1;coords[i++]=y1; coords[i++]=x0+(x2-x0)/2;coords[i++]=y0+(y2-y0)/2; coords[i++]=x0;coords[i++]=y0;
-				colors[0]=c1; colors[1]=c; colors[2]=c0;
-				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "SUBDIVIDE", viewportRect);
-				// second subdivided triangle
-				i=0;
-				coords[i++]=x1;coords[i++]=y1; coords[i++]=x0+(x2-x0)/2;coords[i++]=y0+(y2-y0)/2; coords[i++]=x2;coords[i++]=y2;
-				colors[0]=c1; colors[1]=c; colors[2]=c2;
-				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "SUBDIVIDE", viewportRect);
-			} else {
-				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "AVG_COLOR", viewportRect);
-			}
-		}
-		break;
-		case "AVG_COLOR":{
-			int c = Utils.averageColor(c0,c1,c2);
-			addSVGTriangle(doc, trianglesGroup, coords, new int[]{c,c,c}, alphaMultiplier, "", viewportRect);
-		}
-		break;
-		default:
-			Element triangle = SVGUtils.createSVGElement(doc, "path");
-			trianglesGroup.appendChild(triangle);
-			triangle.setAttributeNS(null, "d", "M "+SVGUtils.svgPoints(x0,y0) +" L "+SVGUtils.svgPoints(x1,y1,x2,y2)+" Z");
-			triangle.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(c0));
-			if(alphaMultiplier*Pixel.a_normalized(c0) != 1){
-				triangle.setAttributeNS(null, "fill-opacity", 
-						SVGUtils.svgNumber(alphaMultiplier*Pixel.a_normalized(c0)));
-			}
-		}
+		return Objects.nonNull(strategy) ? strategy:"SUBDIVIDE";
 	}
 	
-	static int getSubdivisionEdge(double x0,double y0, double x1,double y1, double x2,double y2){
-		double e0 = Math.hypot(x0-x1, y0-y1);
-		double e1 = Math.hypot(x2-x1, y2-y1);
-		double e2 = Math.hypot(x2-x0, y2-y0);
-		double max = e0;
-		int edge = 0;
-		if(e1 > max){
-			max = e1;
-			edge = 1;
-		}
-		if(e2 > max){
-			max = e2;
-			edge = 2;
-		}
-		if(10 > max){
-			edge = 3;
-		}
-		return edge;
-	}
-	
-	static boolean triangleMayContain(double x0,double y0, double x1,double y1, double x2,double y2, Rectangle2D rect){
-		double minx = Math.min(Math.min(x0, x1), x2);
-		double miny = Math.min(Math.min(y0, y1), y2);
-		double maxx = Math.max(Math.max(x0, x1), x2);
-		double maxy = Math.max(Math.max(y0, y1), y2);
-		return new Rectangle2D.Double(minx, miny, maxx-minx, maxy-miny).intersects(rect);
+	/**
+	 * Sets the strategy used for SVG triangle rendering.
+	 * <p>
+	 * Since SVG does not support for barycentric interpolation of colors
+	 * in triangles, a {@link TriangleDetails} object cannot be expressed
+	 * correctly in SVG if a triangle has different colors per vertex.
+	 * <p>
+	 * To address this issue, there are the following strategies:
+	 * <ul>
+	 * <li>{@code "AVG_COLOR"} - averages all three vertex colors and creates a monochrome SVG triangle</li>
+	 * <li>{@code "SUBDIVIDE"} - if a triangle's edge exceeds the threshold length (10px in screen coordinates)
+	 * the triangle is subdivided until all resulting triangle edges conform to the threshold length.
+	 * The resulting sub triangles will be rendered with the AVG_COLOR strategy.
+	 * If a triangles vertex colors only differ by a small amount (maximum of 6 per 8bit channel)
+	 * it will not be further subdivided since the small color deviation will not be discernible by
+	 * human eye.
+	 * </li>
+	 * </ul>
+	 * @param svgTriangleStrategy
+	 */
+	public void setSvgTriangleStrategy(String svgTriangleStrategy) {
+		this.svgTriangleStrategy = svgTriangleStrategy;
 	}
 
 }

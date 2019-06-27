@@ -47,11 +47,22 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	@GLContextRequired
 	public void close();
 	
-	
+	/**
+	 * Creates a {@link ChainedRenderer} with this as first and the
+	 * specified as second renderer in sequence.
+	 * @param r the renderer subsequent to this in the chain
+	 * @return new ChainedRenderer with the specified renderer following this.
+	 */
 	public default ChainedRenderer withAppended(Renderer r){
 		return new ChainedRenderer(this, r);
 	}
 	
+	/**
+	 * Creates a {@link ChainedRenderer} with the specified as first and this
+	 * as second renderer in sequence.
+	 * @param r the renderer preceding this in the chain
+	 * @return new ChainedRenderer with the specified renderer preceding this.
+	 */
 	public default ChainedRenderer withPrepended(Renderer r){
 		return new ChainedRenderer(r, this);
 	}
