@@ -1,7 +1,11 @@
 package hageldave.jplotter.misc;
 
+import java.util.List;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.PointsRenderer;
@@ -58,4 +62,25 @@ public interface Glyph {
 	 * A {@link Glyph} implementation has to guarantee for that.
 	 */
 	public boolean useElementsDrawCall();
+
+	/**
+	 * Creates SVG elements that represent this Glyph in an
+	 * SVG context. This is used to create an SVG {@code symbol}.
+	 * The {@link #isFilled()} method determines whether the "fill"
+	 * or "stroke" attribute is used for coloring an instance of the symbol.
+	 * @param doc to create the elements with.
+	 * @return list of SVG elements.
+	 */
+	public List<Element> createSVGElements(Document doc);
+	
+	/**
+	 * @return name of this Glyph, used as part of an SVG identifier for
+	 * the corresponding symbol definition.
+	 */
+	public String glyphName();
+	
+	/**
+	 * @return whether this glyph is filled or not, e.g. a cross is not filled but a circle can.
+	 */
+	public boolean isFilled();
 }

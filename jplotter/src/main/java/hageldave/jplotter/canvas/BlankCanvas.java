@@ -2,6 +2,9 @@ package hageldave.jplotter.canvas;
 
 import java.util.Objects;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -27,6 +30,11 @@ public class BlankCanvas extends FBOCanvas {
 			renderer.glInit();
 			renderer.render(width, height);
 		}
+	}
+	
+	@Override
+	protected void paintToSVG(Document doc, Element parent, int w, int h) {
+		renderer.renderSVG(doc, parent, w, h);
 	}
 
 	@Override

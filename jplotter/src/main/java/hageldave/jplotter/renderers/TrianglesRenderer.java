@@ -1,13 +1,19 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Triangles;
+import hageldave.jplotter.renderables.Triangles.TriangleDetails;
+import hageldave.jplotter.svg.SVGTriangleRendering;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -59,6 +65,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "}"
 			+ NL
 			;
+	
+	protected String svgTriangleStrategy=null;
 
 	/**
 	 * Creates the shader if not already created and 
@@ -135,6 +143,73 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	protected void renderEnd() {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+	}
+	
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		String svgTriangleStrategy = getSvgTriangleStrategy();
+		
+		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
+		parent.appendChild(mainGroup);
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+		
+		for(Triangles tris : getItemsToRender()){
+			Element trianglesGroup = SVGUtils.createSVGElement(doc, "g");
+			mainGroup.appendChild(trianglesGroup);
+			for(TriangleDetails tri : tris.getTriangleDetails()){
+				double x0,y0, x1,y1, x2,y2;
+				x0=tri.x0; y0=tri.y0; x1=tri.x1; y1=tri.y1; x2=tri.x2; y2=tri.y2;
+				
+				x0-=translateX; x1-=translateX; x2-=translateX;
+				y0-=translateY; y1-=translateY; y2-=translateY;
+				x0*=scaleX; x1*=scaleX; x2*=scaleX;
+				y0*=scaleY; y1*=scaleY; y2*=scaleY;
+				
+				SVGTriangleRendering.addSVGTriangle(doc, trianglesGroup, new double[]{x0,y0,x1,y1,x2,y2}, new int[]{tri.c0,tri.c1,tri.c2}, tris.getGlobalAlphaMultiplier(), svgTriangleStrategy, viewportRect);
+			}
+		}
+	}
+
+	protected String getSvgTriangleStrategy() {
+		String strategy = this.svgTriangleStrategy;
+		if(Objects.isNull(strategy)){
+			strategy = System.getProperty("jplotter_svg_triangle_strategy");
+		}
+		return Objects.nonNull(strategy) ? strategy:"SUBDIVIDE";
+	}
+	
+	/**
+	 * Sets the strategy used for SVG triangle rendering.
+	 * <p>
+	 * Since SVG does not support for barycentric interpolation of colors
+	 * in triangles, a {@link TriangleDetails} object cannot be expressed
+	 * correctly in SVG if a triangle has different colors per vertex.
+	 * <p>
+	 * To address this issue, there are the following strategies:
+	 * <ul>
+	 * <li>{@code "AVG_COLOR"} - averages all three vertex colors and creates a monochrome SVG triangle</li>
+	 * <li>{@code "SUBDIVIDE"} - if a triangle's edge exceeds the threshold length (10px in screen coordinates)
+	 * the triangle is subdivided until all resulting triangle edges conform to the threshold length.
+	 * The resulting sub triangles will be rendered with the AVG_COLOR strategy.
+	 * If a triangles vertex colors only differ by a small amount (maximum of 6 per 8bit channel)
+	 * it will not be further subdivided since the small color deviation will not be discernible by
+	 * human eye.
+	 * </li>
+	 * </ul>
+	 * If this is set to null (=default) the strategy is read from the system property
+	 * {@code "jplotter_svg_triangle_strategy"} and if the system property is not set,
+	 * the strategy defaults to {@code "SUBDIVIDE"}.
+	 * 
+	 * @param svgTriangleStrategy the strategy to set, either {@code "AVG_COLOR"} or {@code "SUBDIVIDE"}
+	 */
+	public void setSvgTriangleStrategy(String svgTriangleStrategy) {
+		this.svgTriangleStrategy = svgTriangleStrategy;
 	}
 
 }

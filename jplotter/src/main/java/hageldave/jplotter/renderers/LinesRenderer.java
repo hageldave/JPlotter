@@ -1,13 +1,20 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
+import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -197,6 +204,74 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		if(Objects.nonNull(shader))
 			shader.close();
 		deleteAllItems();
+	}
+	
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
+		parent.appendChild(mainGroup);
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+		
+		for(Lines lines : getItemsToRender()){
+			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
+			linesGroup.setAttributeNS(null, "stroke-width", ""+lines.getThickness());
+			mainGroup.appendChild(linesGroup);
+			for(SegmentDetails seg : lines.getSegments()){
+				double x1,y1,x2,y2;
+				x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
+				
+				x1-=translateX; x2-=translateX;
+				y1-=translateY; y2-=translateY;
+				x1*=scaleX; x2*=scaleX;
+				y1*=scaleY; y2*=scaleY;
+				
+				if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
+					continue;
+				}
+				
+				Element segment = SVGUtils.createSVGElement(doc, "polyline");
+				linesGroup.appendChild(segment);
+				
+				segment.setAttributeNS(null, "points", SVGUtils.svgPoints(x1,y1,x2,y2));
+				if(seg.color0 == seg.color1){
+					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0));
+					segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
+				} else {
+					// create gradient for line
+					Node defs = SVGUtils.getDefs(doc);
+					Element gradient = SVGUtils.createSVGElement(doc, "linearGradient");
+					defs.appendChild(gradient);
+					String defID = SVGUtils.newDefId();
+					gradient.setAttributeNS(null, "id", defID);
+					gradient.setAttributeNS(null, "x1", SVGUtils.svgNumber(x1));
+					gradient.setAttributeNS(null, "y1", SVGUtils.svgNumber(y1));
+					gradient.setAttributeNS(null, "x2", SVGUtils.svgNumber(x2));
+					gradient.setAttributeNS(null, "y2", SVGUtils.svgNumber(y2));
+					gradient.setAttributeNS(null, "gradientUnits", "userSpaceOnUse");
+					Element stop1 = SVGUtils.createSVGElement(doc, "stop");
+					gradient.appendChild(stop1);
+					stop1.setAttributeNS(null, "offset", "0%");
+					stop1.setAttributeNS(null, "style", 
+							"stop-color:"+SVGUtils.svgRGBhex(seg.color0)+";"+
+							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
+					Element stop2 = SVGUtils.createSVGElement(doc, "stop");
+					gradient.appendChild(stop2);
+					stop2.setAttributeNS(null, "offset", "100%");
+					stop2.setAttributeNS(null, "style", 
+							"stop-color:"+SVGUtils.svgRGBhex(seg.color1)+";"+
+							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1)));
+					
+					// use gradient for line stroke
+					segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
+				}
+			}
+		}
 	}
 	
 }

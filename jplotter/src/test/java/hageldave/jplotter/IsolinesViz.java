@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
 
@@ -17,6 +18,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.joml.Math;
+import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysPanning;
@@ -29,6 +31,7 @@ import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.svg.SVGUtils;
 
 public class IsolinesViz {
 
@@ -131,6 +134,17 @@ public class IsolinesViz {
 		};
 		canvas.addMouseListener(contourPlacer);
 		canvas.addMouseMotionListener(contourPlacer);
+		
+		canvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(SwingUtilities.isRightMouseButton(e)){
+					Document doc = canvas.paintSVG();
+					SVGUtils.documentToXMLFile(doc, new File("svgtest.svg"));
+					System.out.println("svg exported.");
+				}
+			}
+		});
 
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {

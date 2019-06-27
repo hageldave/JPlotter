@@ -12,10 +12,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
+import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
@@ -27,6 +30,7 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.svg.SVGUtils;
 
 public class Viz {
 
@@ -80,8 +84,8 @@ public class Viz {
 		legend.addGlyphLabel(DefaultGlyph.ARROW, new Color(0xff377eb8), "-(x,y)");
 		legend.addLineLabel(2, new Color(0xffff00ff), "sin(x)");
 		legend.addLineLabel(2, new Color(0xff00ff00), "x=y");
-//		canvas.setLegendRight(legend);
-//		canvas.setLegendRightWidth(80);
+		canvas.setLegendRight(legend);
+		canvas.setLegendRightWidth(80);
 		
 		CompleteRenderer overlay = new CompleteRenderer();
 		canvas.setOverlay(overlay);
@@ -119,20 +123,31 @@ public class Viz {
 			frame.setVisible(true);
 			frame.transferFocus();
 		});
+		canvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(SwingUtilities.isRightMouseButton(e)){
+					Document doc = canvas.paintSVG();
+					SVGUtils.documentToXMLFile(doc, new File("svgtest.svg"));
+					System.out.println("svg exported:");
+					System.out.println(SVGUtils.documentToXMLString(doc));
+				}
+			}
+		});
 		
-		{
-			BlankCanvas bc = new BlankCanvas();
-			bc.setPreferredSize(new Dimension(100,200));
-			JFrame f2 = new JFrame("f2");
-			f2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			f2.getContentPane().add(bc);
-			bc.setRenderer(legend);
-			SwingUtilities.invokeLater(()->{
-				f2.pack();
-				f2.setVisible(true);
-				f2.transferFocus();
-			});
-		}
+//		{
+//			BlankCanvas bc = new BlankCanvas();
+//			bc.setPreferredSize(new Dimension(100,200));
+//			JFrame f2 = new JFrame("f2");
+//			f2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+//			f2.getContentPane().add(bc);
+//			bc.setRenderer(legend);
+//			SwingUtilities.invokeLater(()->{
+//				f2.pack();
+//				f2.setVisible(true);
+//				f2.transferFocus();
+//			});
+//		}
 	}
 
 }

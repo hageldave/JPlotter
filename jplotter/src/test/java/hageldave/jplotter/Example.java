@@ -2,12 +2,19 @@ package hageldave.jplotter;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.function.DoubleUnaryOperator;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+
+import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
@@ -17,6 +24,7 @@ import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.svg.SVGUtils;
 
 public class Example {
 
@@ -100,6 +108,23 @@ public class Example {
 				canvas.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}.register();
+		
+		// add a pop up menu (on right click) for exporting to SVG
+		PopupMenu menu = new PopupMenu();
+		canvas.add(menu);
+		MenuItem svgExport = new MenuItem("SVG export");
+		menu.add(svgExport);
+		svgExport.addActionListener(e->{
+			Document svg = canvas.paintSVG();
+			SVGUtils.documentToXMLFile(svg, new File("example_export.svg"));
+		});
+		canvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(SwingUtilities.isRightMouseButton(e))
+					menu.show(canvas, e.getX(), e.getY());
+			}
+		});
 		
 		// lets put a JFrame around it all and launch
 		JFrame frame = new JFrame("Example Viz");

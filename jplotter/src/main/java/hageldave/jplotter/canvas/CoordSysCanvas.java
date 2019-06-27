@@ -14,6 +14,9 @@ import java.util.Objects;
 
 import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
@@ -28,6 +31,7 @@ import hageldave.jplotter.renderers.AdaptableView;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.renderers.TextRenderer;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Annotations.GLCoordinates;
 import hageldave.jplotter.util.Pair;
@@ -516,13 +520,13 @@ public class CoordSysCanvas extends FBOCanvas {
 
 		// draw legends
 		if(Objects.nonNull(legendRight)){
-			legendRight.glInit();;
+			legendRight.glInit();
 			GL11.glViewport(legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
 			legendRight.render(legendRightViewPort.width, legendRightViewPort.height);
 			GL11.glViewport(0, 0, w, h);
 		}
 		if(Objects.nonNull(legendBottom)){
-			legendBottom.glInit();;
+			legendBottom.glInit();
 			GL11.glViewport(legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			legendBottom.render(legendBottomViewPort.width, legendBottomViewPort.height);
 			GL11.glViewport(0, 0, w, h);
@@ -532,6 +536,73 @@ public class CoordSysCanvas extends FBOCanvas {
 		if(Objects.nonNull(overlay)){
 			overlay.glInit();
 			overlay.render(w,h);
+		}
+	}
+	
+	@Override
+	protected void paintToSVG(Document doc, Element parent, int w, int h) {
+		preContentLinesR.renderSVG(doc, parent, w, h);
+		preContentTextR.renderSVG(doc, parent, w, h);
+		if(content != null){
+			int viewPortX = (int)coordsysAreaLB.getX();
+			int viewPortY = (int)coordsysAreaLB.getY();
+			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
+			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
+			if(content instanceof AdaptableView){
+				((AdaptableView) content).setView(coordinateView);
+			}
+			// create a new group for the content
+			Element contentGroup = SVGUtils.createSVGElement(doc, "g");
+			parent.appendChild(contentGroup);
+			// define the clipping rectangle for the content (rect of vieport size)
+			Node defs = SVGUtils.getDefs(doc);
+			Element clip = SVGUtils.createSVGElement(doc, "clipPath");
+			String clipDefID = SVGUtils.newDefId();
+			clip.setAttributeNS(null, "id", clipDefID);
+			clip.appendChild(SVGUtils.createSVGRect(doc, 0, 0, viewPortW, viewPortH));
+			defs.appendChild(clip);
+			// transform the group according to the viewport position and clip it
+			contentGroup.setAttributeNS(null, "transform", "translate("+(viewPortX)+","+(viewPortY)+")");
+			contentGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
+			// render the content into the group
+			content.renderSVG(doc, contentGroup, viewPortW, viewPortH);
+		}
+		postContentLinesR.renderSVG(doc, parent, w, h);
+		postContentTextR.renderSVG(doc, parent, w, h);
+		// draw legends
+		if(Objects.nonNull(legendRight)){
+			// create a new group for the content
+			Element legendGroup = SVGUtils.createSVGElement(doc, "g");
+			parent.appendChild(legendGroup);
+			// define the clipping rectangle for the content (rect of vieport size)
+			Node defs = SVGUtils.getDefs(doc);
+			Element clip = SVGUtils.createSVGElement(doc, "clipPath");
+			String clipDefID = SVGUtils.newDefId();
+			clip.setAttributeNS(null, "id", clipDefID);
+			clip.appendChild(SVGUtils.createSVGRect(doc, 0, 0, legendRightViewPort.width, legendRightViewPort.height));
+			defs.appendChild(clip);
+			// transform the group according to the viewport position and clip it
+			legendGroup.setAttributeNS(null, "transform", "translate("+(legendRightViewPort.x)+","+(legendRightViewPort.y)+")");
+			legendGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
+			// render the content into the group
+			legendRight.renderSVG(doc, legendGroup, legendRightViewPort.width, legendRightViewPort.height);
+		}
+		if(Objects.nonNull(legendBottom)){
+			// create a new group for the content
+			Element legendGroup = SVGUtils.createSVGElement(doc, "g");
+			parent.appendChild(legendGroup);
+			// define the clipping rectangle for the content (rect of vieport size)
+			Node defs = SVGUtils.getDefs(doc);
+			Element clip = SVGUtils.createSVGElement(doc, "clipPath");
+			String clipDefID = SVGUtils.newDefId();
+			clip.setAttributeNS(null, "id", clipDefID);
+			clip.appendChild(SVGUtils.createSVGRect(doc, 0, 0, legendBottomViewPort.width, legendBottomViewPort.height));
+			defs.appendChild(clip);
+			// transform the group according to the viewport position and clip it
+			legendGroup.setAttributeNS(null, "transform", "translate("+(legendBottomViewPort.x)+","+(legendBottomViewPort.y)+")");
+			legendGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
+			// render the content into the group
+			legendBottom.renderSVG(doc, legendGroup, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
 	}
 
