@@ -6,10 +6,44 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.renderables.Triangles.TriangleDetails;
+import hageldave.jplotter.renderers.TrianglesRenderer;
 import hageldave.jplotter.util.Utils;
 
+/**
+ * Utility class that handles SVG triangle rendering for the {@link TrianglesRenderer}.
+ * @author hageldave
+ */
 public class SVGTriangleRendering {
 
+	/**
+	 * Adds the specified triangle (or sub triangles) to the specified element
+	 * of the specified document.
+	 * <p>
+	 * Since SVG does not support for barycentric interpolation of colors
+	 * in triangles, a {@link TriangleDetails} object cannot be expressed
+	 * correctly in SVG if a triangle has different colors per vertex.
+	 * <p>
+	 * To address this issue, there are the following strategies:
+	 * <ul>
+	 * <li>{@code "AVG_COLOR"} - averages all three vertex colors and creates a monochrome SVG triangle</li>
+	 * <li>{@code "SUBDIVIDE"} - if a triangle's edge exceeds the threshold length (10px in screen coordinates)
+	 * the triangle is subdivided until all resulting triangle edges conform to the threshold length.
+	 * The resulting sub triangles will be rendered with the AVG_COLOR strategy.
+	 * If a triangles vertex colors only differ by a small amount (maximum of 6 per 8bit channel)
+	 * it will not be further subdivided since the small color deviation will not be discernible by
+	 * human eye.
+	 * </li>
+	 * </ul>
+	 * 
+	 * @param doc the containing svg document to create elements with
+	 * @param trianglesGroup the parent element (a group) to which elements are to be appended
+	 * @param coords triangles coordinates [x0,y0, x1,y1, x2,y2]
+	 * @param colors per vertex integer packed ARGB colors [color0, color1, color2]
+	 * @param alphaMultiplier opcaity multiplication factor for all vertex colors of the triangle
+	 * @param strategy the strategy to render with, either {@code "AVG_COLOR"} or {@code "SUBDIVIDE"}
+	 * @param viewportRect the view port rectangle used to discard out of range triangles
+	 */
 	public static void addSVGTriangle(
 			Document doc, 
 			Element trianglesGroup, 

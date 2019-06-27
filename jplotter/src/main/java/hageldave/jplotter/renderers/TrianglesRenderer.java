@@ -176,10 +176,10 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		}
 	}
 
-	private String getSvgTriangleStrategy() {
+	protected String getSvgTriangleStrategy() {
 		String strategy = this.svgTriangleStrategy;
 		if(Objects.isNull(strategy)){
-			strategy = System.getProperty("SVG_TRIANGLE_STRATEGY");
+			strategy = System.getProperty("jplotter_svg_triangle_strategy");
 		}
 		return Objects.nonNull(strategy) ? strategy:"SUBDIVIDE";
 	}
@@ -202,7 +202,11 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	 * human eye.
 	 * </li>
 	 * </ul>
-	 * @param svgTriangleStrategy
+	 * If this is set to null (=default) the strategy is read from the system property
+	 * {@code "jplotter_svg_triangle_strategy"} and if the system property is not set,
+	 * the strategy defaults to {@code "SUBDIVIDE"}.
+	 * 
+	 * @param svgTriangleStrategy the strategy to set, either {@code "AVG_COLOR"} or {@code "SUBDIVIDE"}
 	 */
 	public void setSvgTriangleStrategy(String svgTriangleStrategy) {
 		this.svgTriangleStrategy = svgTriangleStrategy;
