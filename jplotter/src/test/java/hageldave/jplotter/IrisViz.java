@@ -5,12 +5,15 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -29,6 +32,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import org.w3c.dom.Document;
+
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.canvas.FBOCanvas;
@@ -41,6 +46,7 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.svg.SVGUtils;
 
 public class IrisViz {
 
@@ -186,6 +192,9 @@ public class IrisViz {
 					canvas.addMouseListener(new MouseAdapter() {
 						@Override
 						public void mouseClicked(MouseEvent e) {
+							if(SwingUtilities.isRightMouseButton(e)){
+								return;
+							}
 							Point2D location = canvas.transformAWT2CoordSys(e.getPoint());
 							if(!canvas.getCoordinateView().contains(location)){
 								pointInfo.setText("");
@@ -343,6 +352,26 @@ public class IrisViz {
 				canvas.setContent(content);
 				canvas.setCoordinateView(minX, minY, maxX, maxY);
 			}
+		}
+		
+		for(FBOCanvas cnvs:canvasCollection){
+			// add a pop up menu (on right click) for exporting to SVG
+			PopupMenu menu = new PopupMenu();
+			MenuItem svgExport = new MenuItem("SVG export");
+			menu.add(svgExport);
+			svgExport.addActionListener(e->{
+				Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+				SVGUtils.documentToXMLFile(svg, new File("iris_export.svg"));
+				System.out.println("exported iris_export.svg");
+			});
+			cnvs.add(menu);
+			cnvs.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if(SwingUtilities.isRightMouseButton(e))
+						menu.show(cnvs, e.getX(), e.getY());
+				}
+			});
 		}
 		
 		frame.addWindowListener(new WindowAdapter() {

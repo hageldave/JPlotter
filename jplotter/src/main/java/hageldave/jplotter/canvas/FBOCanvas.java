@@ -151,7 +151,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected Shader fillShader=null;
 	protected VertexArray vertexArray=null;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
-	protected boolean useBitBlit = false;
 	protected Color screenClearColor = Color.BLACK;
 	protected boolean useMSAA = true;
 	public final int canvasID;
@@ -395,29 +394,33 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 * @return the created document
 	 */
 	public Document paintSVG(){
+		Document document = SVGUtils.createSVGDocument(getWidth(), getHeight());
+		paintSVG(document, document.getDocumentElement());
+		return document;
+	}
+	
+	public void paintSVG(Document document, Element parent){
 		int w,h;
-		Document document = SVGUtils.createSVGDocument((w=getWidth()), (h=getHeight()));
-		if(w >0 && h >0){
-			Element root = document.getDocumentElement();
+		if((w=getWidth()) >0 && (h=getHeight()) >0){
 			if(SVGUtils.getDefs(document) == null){
 				Element defs = SVGUtils.createSVGElement(document, "defs");
-				root.appendChild(defs);
+				defs.setAttributeNS(null, "id", "JPlotterDefs");
+				document.getDocumentElement().appendChild(defs);
 			}
 			
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
-			root.appendChild(rootGroup);
+			parent.appendChild(rootGroup);
 			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
 			
 			Element background = SVGUtils.createSVGElement(document, "rect");
 			rootGroup.appendChild(background);
 			background.setAttributeNS(null, "id", "background"+"@"+hashCode());
-			background.setAttributeNS(null, "width", "100%");
-			background.setAttributeNS(null, "height", "100%");
+			background.setAttributeNS(null, "width", ""+w);
+			background.setAttributeNS(null, "height", ""+h);
 			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(getBackground().getRGB()));
 			
 			paintToSVG(document, rootGroup, w,h);
 		}
-		return document;
 	}
 	
 	/**

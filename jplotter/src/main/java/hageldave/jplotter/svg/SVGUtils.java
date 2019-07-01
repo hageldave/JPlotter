@@ -2,6 +2,7 @@ package hageldave.jplotter.svg;
 
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import java.io.BufferedOutputStream;
@@ -11,12 +12,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.swing.SwingUtilities;
 
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.transcoder.TranscoderException;
@@ -29,6 +29,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.misc.Glyph;
 
 /**
@@ -188,7 +189,8 @@ public class SVGUtils {
 	 * @return the {@code defs} node or null if not existent.
 	 */
 	public static Node getDefs(Document doc){
-		return doc.getElementsByTagName("defs").item(0);
+		Element element = doc.getElementById("JPlotterDefs");
+		return element != null ? element : doc.getElementsByTagName("defs").item(0);
 	}
 	
 	/**
@@ -278,5 +280,33 @@ public class SVGUtils {
 		root.setAttributeNS(null, "height", ""+h);
 		return document;
 	}
+	
+	public static Document containerToSVG(Container c){
+		Document document = createSVGDocument(c.getWidth(), c.getHeight());
+		containerToSVG(c, document, document.getDocumentElement());
+		return document;
+	}
+	
+	private static void containerToSVG(Container c, Document doc, Element parent){
+		for(Component comp:c.getComponents()){
+			if(comp instanceof FBOCanvas){
+				@SuppressWarnings("resource") /* I'm not creating a canvas so there is no leak */
+				FBOCanvas canvas = (FBOCanvas)comp;
+				Element group = SVGUtils.createSVGElement(doc, "g");
+				group.setAttributeNS(null, "transform", 
+						"translate("+(canvas.getX())+","+(canvas.getY())+")");
+				parent.appendChild(group);
+				canvas.paintSVG(doc, group);
+			} else if(comp instanceof Container){
+				Element group = SVGUtils.createSVGElement(doc, "g");
+				group.setAttributeNS(null, "transform", 
+						"translate("+(comp.getX())+","+(comp.getY())+")");
+				parent.appendChild(group);
+				containerToSVG((Container)comp, doc, group);
+			}
+		}
+	}
+	
+	
 	
 }
