@@ -1,7 +1,5 @@
 package hageldave.jplotter.canvas;
 
-import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
-
 import java.awt.Color;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -12,7 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingUtilities;
 
-import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -21,7 +18,6 @@ import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
 import org.lwjgl.opengl.awt.PlatformGLCanvas;
-import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -30,10 +26,10 @@ import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The FBOCanvas is an {@link AWTGLCanvas} which uses a FrameBufferObject ({@link FBO}) 
@@ -399,28 +395,25 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 * @return the created document
 	 */
 	public Document paintSVG(){
-		DOMImplementation domImplementation = SVGDOMImplementation.getDOMImplementation();
-		Document document = domImplementation.createDocument(SVG_NAMESPACE_URI, "svg", null);
-		
 		int w,h;
-		if((w=getWidth()) >0 && (h=getHeight()) >0){
+		Document document = SVGUtils.createSVGDocument((w=getWidth()), (h=getHeight()));
+		if(w >0 && h >0){
 			Element root = document.getDocumentElement();
-			root.setAttributeNS(null,"width",""+w);
-			root.setAttributeNS(null, "height", ""+h);
-			
-			Element defs = SVGUtils.createSVGElement(document, "defs");
-			root.appendChild(defs);
-			
-			Element background = SVGUtils.createSVGElement(document, "rect");
-			root.appendChild(background);
-			background.setAttributeNS(null, "id", "background");
-			background.setAttributeNS(null, "width", "100%");
-			background.setAttributeNS(null, "height", "100%");
-			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(getBackground().getRGB()));
+			if(SVGUtils.getDefs(document) == null){
+				Element defs = SVGUtils.createSVGElement(document, "defs");
+				root.appendChild(defs);
+			}
 			
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
 			root.appendChild(rootGroup);
 			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
+			
+			Element background = SVGUtils.createSVGElement(document, "rect");
+			rootGroup.appendChild(background);
+			background.setAttributeNS(null, "id", "background"+"@"+hashCode());
+			background.setAttributeNS(null, "width", "100%");
+			background.setAttributeNS(null, "height", "100%");
+			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(getBackground().getRGB()));
 			
 			paintToSVG(document, rootGroup, w,h);
 		}

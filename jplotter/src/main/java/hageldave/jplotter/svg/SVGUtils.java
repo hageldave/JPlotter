@@ -2,6 +2,7 @@ package hageldave.jplotter.svg;
 
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
+import java.awt.Container;
 import java.awt.Font;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -15,10 +16,14 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.swing.SwingUtilities;
+
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
+import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -263,6 +268,15 @@ public class SVGUtils {
 			symbol.setAttributeNS(null, "overflow", "visible");
 		}
 		return defId;
+	}
+	
+	public static Document createSVGDocument(int w, int h){
+		DOMImplementation domImplementation = SVGDOMImplementation.getDOMImplementation();
+		Document document = domImplementation.createDocument(SVG_NAMESPACE_URI, "svg", null);
+		Element root = document.getDocumentElement();
+		root.setAttributeNS(null,"width",""+w);
+		root.setAttributeNS(null, "height", ""+h);
+		return document;
 	}
 	
 }
