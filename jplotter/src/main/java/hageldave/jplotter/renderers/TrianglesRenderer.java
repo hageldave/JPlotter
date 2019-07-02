@@ -151,6 +151,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
+		mainGroup.setAttributeNS(null, "shape-rendering", "crispEdges");
 		
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
