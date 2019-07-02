@@ -399,6 +399,14 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		return document;
 	}
 	
+	/**
+	 * Renders this canvas as SVG elements under the specified parent element.
+	 * Will call {@link #paintToSVG(Document, Element, int, int)} after creating 
+	 * the initial elements.
+	 * @param document document to create SVG elements with
+	 * @param parent the parent node to which this canvas is supposed to be rendered
+	 * to.
+	 */
 	public void paintSVG(Document document, Element parent){
 		int w,h;
 		if((w=getWidth()) >0 && (h=getHeight()) >0){

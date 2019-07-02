@@ -272,6 +272,13 @@ public class SVGUtils {
 		return defId;
 	}
 
+	/**
+	 * Creates an SVG document that has the {@link SVGDOMImplementation#SVG_NAMESPACE_URI}
+	 * with the specified width and height for the root svg element.
+	 * @param w width
+	 * @param h height
+	 * @return SVG document
+	 */
 	public static Document createSVGDocument(int w, int h){
 		DOMImplementation domImplementation = SVGDOMImplementation.getDOMImplementation();
 		Document document = domImplementation.createDocument(SVG_NAMESPACE_URI, "svg", null);
@@ -281,6 +288,17 @@ public class SVGUtils {
 		return document;
 	}
 
+	/**
+	 * Draws all components of a {@link Container} to
+	 * an SVG document.
+	 * For this an {@link SVGGraphics2D} object is used that will
+	 * create the SVG DOM for the specified container and its children.
+	 * Instances of {@link FBOCanvas} will be treated separately by
+	 * using their {@link FBOCanvas#paintSVG(Document, Element)} method
+	 * to create their part of the DOM that cannot be generated from {@link SVGGraphics2D}.
+	 * @param c container to be converted to SVG
+	 * @return SVG document representing the specified container.
+	 */
 	public static Document containerToSVG(Container c){
 		Document document = createSVGDocument(c.getWidth(), c.getHeight());
 		// make jplotter defs
@@ -298,7 +316,6 @@ public class SVGUtils {
 	}
 
 	private static void containerToSVG(Container c, Document doc, Element parent){
-		
 		for(Component comp:c.getComponents()){
 			if(comp instanceof FBOCanvas){
 				@SuppressWarnings("resource") /* I'm not creating a canvas so there is no leak */
