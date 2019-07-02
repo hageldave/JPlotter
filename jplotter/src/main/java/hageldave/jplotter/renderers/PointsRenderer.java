@@ -220,7 +220,12 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				x1*=scaleX;
 				y1*=scaleY;
 				
-				if(!viewportRect.contains(x1, y1)){
+				if(!viewportRect.intersects(
+						x1-glyph.pixelSize()/2, 
+						y1-glyph.pixelSize()/2, 
+						glyph.pixelSize(), 
+						glyph.pixelSize()))
+				{
 					continue;
 				}
 				
@@ -237,11 +242,11 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				}
 				String transform = "";
 				transform += "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")";
-				if(glyphScaling*point.scale != 1){
-					transform += "scale("+SVGUtils.svgPoints(glyphScaling*point.scale, glyphScaling*point.scale)+")";
-				}
 				if(point.rot != 0){
-					transform += "rotate("+(point.rot*180/Math.PI)+")";
+					transform += " rotate("+SVGUtils.svgNumber(point.rot*180/Math.PI)+")";
+				}
+				if(glyphScaling*point.scale != 1){
+					transform += " scale("+SVGUtils.svgPoints(glyphScaling*point.scale, glyphScaling*point.scale)+")";
 				}
 				
 				pointElement.setAttributeNS(null, "transform", transform);

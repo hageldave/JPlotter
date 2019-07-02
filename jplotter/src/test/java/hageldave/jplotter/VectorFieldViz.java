@@ -3,11 +3,15 @@ package hageldave.jplotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.MenuItem;
 import java.awt.Point;
+import java.awt.PopupMenu;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.function.DoubleBinaryOperator;
 
@@ -17,11 +21,14 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 
+import org.w3c.dom.Document;
+
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Utils;
 
 public class VectorFieldViz {
@@ -63,11 +70,13 @@ public class VectorFieldViz {
 		content.lines.addItemToRender(trajectorySegments);
 		MouseAdapter trajectoryInteraction = new MouseAdapter() {
 			public void mousePressed(java.awt.event.MouseEvent e) {
-				calcTrajectory(e.getPoint());
+				if(SwingUtilities.isLeftMouseButton(e))
+					calcTrajectory(e.getPoint());
 			}
 			
 			public void mouseDragged(java.awt.event.MouseEvent e) {
-				calcTrajectory(e.getPoint());
+				if(SwingUtilities.isLeftMouseButton(e))
+					calcTrajectory(e.getPoint());
 			}
 			
 			void calcTrajectory(Point mousePoint){
@@ -119,6 +128,25 @@ public class VectorFieldViz {
 				canvas.runInContext(()->canvas.close());
 			}
 		});
+		
+		// add a pop up menu (on right click) for exporting to SVG
+		PopupMenu menu = new PopupMenu();
+		canvas.add(menu);
+		MenuItem svgExport = new MenuItem("SVG export");
+		menu.add(svgExport);
+		svgExport.addActionListener(e->{
+			Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+			SVGUtils.documentToXMLFile(svg, new File("vectorfield_export.svg"));
+			System.out.println("exported vectorfield_export.svg");
+		});
+		canvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(SwingUtilities.isRightMouseButton(e))
+					menu.show(canvas, e.getX(), e.getY());
+			}
+		});
+		
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);
