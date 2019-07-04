@@ -11,7 +11,10 @@ This renderer will then be allowed to draw into the viewport of the coordinate s
 To a `PointsRenderer` or `LinesRenderer` for example, a set of points or line segments can be added which will then appear
 in the coordinate system (only those whose coordinates match the current view of course).
 
+JPlotter is also capable of exporting plots as Scalable Vector Graphics (SVG) through [Apache Batik](https://xmlgraphics.apache.org/batik/).
+
 ## Maven
+JPlotter is available as Maven artifact at the Central Maven Repository.
 ```xml
 <dependency>
   <groupId>com.github.hageldave.jplotter</groupId>
