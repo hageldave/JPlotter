@@ -296,6 +296,10 @@ public class SVGUtils {
 	 * Instances of {@link FBOCanvas} will be treated separately by
 	 * using their {@link FBOCanvas#paintSVG(Document, Element)} method
 	 * to create their part of the DOM that cannot be generated from {@link SVGGraphics2D}.
+	 * <p>
+	 * For drawing a single FBOCanvas to SVG the method {@link FBOCanvas#paintSVG()} 
+	 * can be used instead of this method.
+	 * 
 	 * @param c container to be converted to SVG
 	 * @return SVG document representing the specified container.
 	 */

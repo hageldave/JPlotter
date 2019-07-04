@@ -109,23 +109,6 @@ public class Example {
 			}
 		}.register();
 		
-		// add a pop up menu (on right click) for exporting to SVG
-		PopupMenu menu = new PopupMenu();
-		canvas.add(menu);
-		MenuItem svgExport = new MenuItem("SVG export");
-		menu.add(svgExport);
-		svgExport.addActionListener(e->{
-			Document svg = canvas.paintSVG();
-			SVGUtils.documentToXMLFile(svg, new File("example_export.svg"));
-		});
-		canvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isRightMouseButton(e))
-					menu.show(canvas, e.getX(), e.getY());
-			}
-		});
-		
 		// lets put a JFrame around it all and launch
 		JFrame frame = new JFrame("Example Viz");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -146,7 +129,23 @@ public class Example {
 			frame.setVisible(true);
 		});
 		
-		
+		// add a pop up menu (on right click) for exporting to SVG
+		PopupMenu menu = new PopupMenu();
+		canvas.add(menu);
+		MenuItem svgExport = new MenuItem("SVG export");
+		menu.add(svgExport);
+		svgExport.addActionListener(e->{
+			Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+			SVGUtils.documentToXMLFile(svg, new File("example_export.svg"));
+			System.out.println("exported SVG.");
+		});
+		canvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(SwingUtilities.isRightMouseButton(e))
+					menu.show(canvas, e.getX(), e.getY());
+			}
+		});
 		
 	}
 }

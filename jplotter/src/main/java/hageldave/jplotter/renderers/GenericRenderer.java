@@ -155,9 +155,6 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 		return itemsToRender;
 	}
 	
-	/**
-	 * Sets this renderers {@link #viewMX}.
-	 */
 	@Override
 	public void setView(Rectangle2D view){
 		this.view = Objects.isNull(view) ? null:Utils.copy(view);

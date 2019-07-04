@@ -44,6 +44,8 @@ public class Utils {
 	 * casts the copy to the class of the original.
 	 * @param p point to copy
 	 * @return the copied point
+	 * 
+	 * @param <T> type of Point2D
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends Point2D> T copy(T p){

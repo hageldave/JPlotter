@@ -27,7 +27,7 @@ public interface AdaptableView {
 	 * E.g. coordinates (40,40) will be (40,40) on the viewport, as if the
 	 * view rectangles size was coupled to the viewport size.
 	 * 
-	 * @param rect the view rectangle (can be null)
+	 * @param view the view rectangle (can be null)
 	 */
 	public void setView(Rectangle2D view);
 	
