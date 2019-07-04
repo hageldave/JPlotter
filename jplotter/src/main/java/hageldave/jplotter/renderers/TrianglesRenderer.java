@@ -151,7 +151,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
-		mainGroup.setAttributeNS(null, "shape-rendering", "crispEdges");
 		
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
@@ -163,6 +162,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		for(Triangles tris : getItemsToRender()){
 			Element trianglesGroup = SVGUtils.createSVGElement(doc, "g");
 			mainGroup.appendChild(trianglesGroup);
+			if(tris.isCrispEdgesForSVGEnabled()){
+				trianglesGroup.setAttributeNS(null, "shape-rendering", "crispEdges");
+			}
 			for(TriangleDetails tri : tris.getTriangleDetails()){
 				double x0,y0, x1,y1, x2,y2;
 				x0=tri.x0; y0=tri.y0; x1=tri.x1; y1=tri.y1; x2=tri.x2; y2=tri.y2;

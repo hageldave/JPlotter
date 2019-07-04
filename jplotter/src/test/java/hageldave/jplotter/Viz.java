@@ -30,6 +30,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Utils;
 
 public class Viz {
 
@@ -58,7 +59,7 @@ public class Viz {
 				double y1 = Math.sin(x1);
 				double y2 = Math.sin(x2);
 				lines.addSegment(x1, y1, x2, y2, 0xffff00ff,0xffff00ff, 0xbabe01);
-				lines.addSegment(i, i, i+1, i+1, 0xff00ff00);
+				lines.addSegment(i, i, i+1, i+1, Utils.interpolateColor(0xff00ff00, 0xff00ffff, i/99.0));
 				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0, triColor);
 			}
 			tris.setGlobalAlphaMultiplier(0.2);

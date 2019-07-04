@@ -36,6 +36,7 @@ public class Triangles implements Renderable {
 	protected boolean isDirty;
 	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<TriangleDetails> triangles = new ArrayList<>();
+	protected boolean useCrispEdgesForSVG = true;
 	
 	/**
 	 * @return the number of triangles in this collection.
@@ -592,6 +593,29 @@ public class Triangles implements Renderable {
 	 */
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1);
+	}
+	
+	/**
+	 * Returns true when crisp edge rendering for triangles in SVG should be used (=default).
+	 * <p>
+	 * Especially for triangle grids this option is of use as it clears the tiny space that
+	 * will be visible otherwise between adjacent triangles in SVG. 
+	 * When triangles are not connected this option should be set to false 
+	 * ({@link #enableCrispEdgesForSVG(boolean)}) in order to have nice anti aliased edges of 
+	 * the triangles in SVG.
+	 * @return true when enabled.
+	 */
+	public boolean isCrispEdgesForSVGEnabled() {
+		return useCrispEdgesForSVG;
+	}
+	
+	/**
+	 * En/Disables crisp edge rendering in SVG for this {@link Triangles} object.
+	 * See {@link #isCrispEdgesForSVGEnabled()} for details.
+	 * @param enable true when enabling
+	 */
+	public void enableCrispEdgesForSVG(boolean enable) {
+		this.useCrispEdgesForSVG = enable;
 	}
 	
 }
