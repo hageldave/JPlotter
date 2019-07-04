@@ -19,7 +19,7 @@ JPlotter is available as Maven artifact at the Central Maven Repository.
 <dependency>
   <groupId>com.github.hageldave.jplotter</groupId>
   <artifactId>jplotter</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
 </dependency>
 ```
 
@@ -131,6 +131,25 @@ frame.addWindowListener(new WindowAdapter() {
 SwingUtilities.invokeLater(()->{
    frame.pack();
    frame.setVisible(true);
+});
+```
+We can also add a pop up menu for exporting to SVG.
+```java
+PopupMenu menu = new PopupMenu();
+canvas.add(menu);
+MenuItem svgExport = new MenuItem("SVG export");
+menu.add(svgExport);
+svgExport.addActionListener(e->{
+   Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+   SVGUtils.documentToXMLFile(svg, new File("example_export.svg"));
+   System.out.println("exported SVG.");
+});
+canvas.addMouseListener(new MouseAdapter() {
+   @Override
+   public void mouseClicked(MouseEvent e) {
+      if(SwingUtilities.isRightMouseButton(e))
+         menu.show(canvas, e.getX(), e.getY());
+   }
 });
 ```
 ![Example Viz](https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/example_viz.png)
