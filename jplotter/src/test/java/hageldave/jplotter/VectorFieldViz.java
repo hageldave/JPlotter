@@ -98,6 +98,9 @@ public class VectorFieldViz {
 					double v3 = fv.applyAsDouble(x+u2*h, y+v2*h);
 					x = x + h*(u0 + 2*u1 + 2*u2 + u3)/6;
 					y = y + h*(v0 + 2*v1 + 2*v2 + v3)/6;
+					if(Double.isNaN(x) || Double.isNaN(y) || Math.abs(x) > 1e+3 || Math.abs(y) > 1e+3){
+						break;
+					}
 					point = new Point2D.Double(x,y);
 					trajectory.add(point);
 				}
