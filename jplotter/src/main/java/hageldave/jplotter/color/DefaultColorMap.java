@@ -4,9 +4,9 @@ public enum DefaultColorMap implements ColorMap {
 	BLACK_WHITE(0xff_000000,0xff_ffffff),
 	GRAY_WHITE(0xff_888888,0xff_ffffff),
 	BLACK_GRAY(0xff_000000,0xff_888888),
-	BLACK_WHITE_BLACK(0xff000000,0xff_ffffff, 0xff_000000),
-	BLACK_GRAY_BLACK(0xff_000000,0xff_888888, 0xff_000000),
-	GRAY_WHITE_GRAY(0xff_888888,0xff_ffffff, 0xff_888888),
+	BLACK_WHITE_BLACK(0xff000000, 0xff_ffffff, 0xff_000000),
+	BLACK_GRAY_BLACK(0xff_000000, 0xff_888888, 0xff_000000),
+	GRAY_WHITE_GRAY(0xff_888888, 0xff_ffffff, 0xff_888888),
 	RAINBOW(0xff_dd00dd,
 			0xff_8800ee,
 			0xff_0000ff, 
@@ -33,6 +33,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_dd6644,
 			0xff_b40426
 			),
+	
 	;
 	
 	final ColorMap map;

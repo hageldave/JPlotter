@@ -92,6 +92,32 @@ public interface ColorMap {
 				.andThen(ColorSpaceTransformation.HSV_2_RGB));
 	}
 	
+	public static ColorGrader raiseLuminance(double delta){
+		return gradeAsPixels(ColorSpaceTransformation.RGB_2_HSV
+				.andThen(px->px.setB_fromDouble(px.b_asDouble()+delta))
+				.andThen(ColorSpaceTransformation.HSV_2_RGB));
+	}
+	
+	public static ColorGrader invert() {
+		return gradeAsPixels(px->{
+			px	.setR_fromDouble(1-px.r_asDouble())
+				.setG_fromDouble(1-px.g_asDouble())
+				.setB_fromDouble(1-px.b_asDouble());
+		});
+	}
+	
+	public static ColorGrader raiseContrast(double m, double mid){
+		return gradeAsPixels(px->{
+			double r = px.r_asDouble();
+			double g = px.g_asDouble();
+			double b = px.b_asDouble();
+			r = r+(r-mid)*m;
+			g = g+(g-mid)*m;
+			b = b+(b-mid)*m;
+			px.setRGB_fromDouble_preserveAlpha(r, g, b);
+		});
+	}
+	
 	public static ColorGrader gradeAsImg(Consumer<Img> consumer){
 		return colors -> consumer.accept(new Img(colors.length, 1, colors));
 	}
@@ -102,7 +128,7 @@ public interface ColorMap {
 	
 	public static void main(String[] args) {
 		ColorMap map1 = DefaultColorMap.COOL_WARM;
-		ColorMap map2 = DefaultColorMap.COOL_WARM.colorGrade(saturate(0),colorize(0xff_987895));
+		ColorMap map2 = DefaultColorMap.BLACK_GRAY_BLACK;
 		Img img = new Img(200, 100);
 		img.forEach(px->px.setValue((px.getYnormalized()<0.5?map1:map2).interpolate(px.getXnormalized())));
 		ImageFrame.display(img);
