@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 import javax.swing.SwingUtilities;
@@ -176,6 +177,17 @@ public class Utils {
 		}
 		int n = argbValues.length;
 		return Pixel.argb_fast(a/n, r/n, g/n, b/n);
+	}
+	
+	public static <T extends Comparable<T>> boolean isSorted(Iterator<T> iter){
+		T prev = iter.next();
+		while(iter.hasNext()){
+			T next = iter.next();
+			if(next.compareTo(prev) < 0){
+				return false;
+			}
+		}
+		return true;
 	}
 	
 }
