@@ -6,7 +6,6 @@ import java.util.stream.IntStream;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.PixelBase;
-import hageldave.imagingkit.core.io.ImageLoader;
 import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.jplotter.util.Utils;
@@ -128,18 +127,11 @@ public interface ColorMap {
 	}
 	
 	public static void main(String[] args) {
-		ColorMap map1 = DefaultColorMap.ROMANIAN_PERMUTATION;
-		ColorMap map2 = DefaultColorMap.IRELAND;
+		ColorMap map1 = DefaultColorMap.Q_8_SET2;
+		ColorMap map2 = DefaultColorMap.Q_8_DARK2;
 		Img img = new Img(200, 100);
 		img.forEach(px->px.setValue((px.getYnormalized()<0.5?map1:map2).interpolate(px.getXnormalized())));
 		ImageFrame.display(img);
-		
-		Img loaded = ImageLoader.loadImgFromURL("file:///home/david/Downloads/diverging.png");
-		for(int i = 0; i < 7; i++){
-			double m = i/6.0;
-			int rgb = loaded.interpolateARGB(m, 8/11.0);
-			System.out.format("0x%x,\n",rgb);
-		}
 	}
 	
 }
