@@ -37,6 +37,8 @@ import org.w3c.dom.Document;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -94,7 +96,7 @@ public class IrisViz {
 		LinkedList<FBOCanvas> canvasCollection = new LinkedList<>();
 		String[] dimNames = new String[]{"sepal length","sepal width","petal length","petal width"};
 		String[] perClassNames = new String[]{"Setosa", "Versicolor", "Virginica"};
-		int[] perClassColors = new int[]{0xff66c2a5,0xfffc8d62,0xff8da0cb};
+		ColorMap perClassColors = DefaultColorMap.Q_8_SET2;
 		Glyph[] perClassGlyphs = new Glyph[]{DefaultGlyph.CIRCLE_F, DefaultGlyph.SQUARE_F, DefaultGlyph.TRIANGLE_F};
 		
 		// add legend on top
@@ -103,7 +105,7 @@ public class IrisViz {
 		legendCanvas.setPreferredSize(new Dimension(400, 16));
 		Legend legend = new Legend();
 		for(int c=0; c<3; c++){
-			legend.addGlyphLabel(perClassGlyphs[c], new Color(perClassColors[c]), perClassNames[c]);
+			legend.addGlyphLabel(perClassGlyphs[c], new Color(perClassColors.getColor(c)), perClassNames[c]);
 		}
 		legendCanvas.setRenderer(legend);
 		header.add(Box.createHorizontalStrut(30));
@@ -138,14 +140,14 @@ public class IrisViz {
 					Lines[] lines = new Lines[]{new Lines(), new Lines(), new Lines()};
 					allLines.add(lines);
 					for(int c = 0; c < 3; c++){
-						lines[c].setThickness(1.5f).addLineStrip(perClassColors[c], histo[3], histo[c]);
+						lines[c].setThickness(1.5f).addLineStrip(perClassColors.getColor(c), histo[3], histo[c]);
 						content.addItemToRender(lines[c]);
 					}
 					Triangles[] perClassTris = new Triangles[]{new Triangles(),new Triangles(),new Triangles()};
 					allTris.add(perClassTris);
 					for(int k = 0; k < numBuckets-1; k++){
 						for(int c = 0; c < 3; c++){
-							perClassTris[c].addQuad(histo[3][k], 0, histo[3][k], histo[c][k], histo[3][k+1], histo[c][k+1], histo[3][k+1], 0, new Color(perClassColors[c]));
+							perClassTris[c].addQuad(histo[3][k], 0, histo[3][k], histo[c][k], histo[3][k+1], histo[c][k+1], histo[3][k+1], 0, new Color(perClassColors.getColor(c)));
 						}
 					}
 					for(int c = 0; c < 3; c++){
@@ -179,7 +181,7 @@ public class IrisViz {
 								y,
 								0, 
 								1, 
-								perClassColors[clazz], 
+								perClassColors.getColor(clazz), 
 								k+1
 								);
 						maxX = Math.max(maxX, x);
@@ -212,7 +214,7 @@ public class IrisViz {
 							}
 							int dataSetinstanceIDX = (pixel & 0x00ffffff)-1;
 							double[] instance = dataset.get(dataSetinstanceIDX);
-							pointInfo.setForeground(new Color(perClassColors[(int)instance[4]]));
+							pointInfo.setForeground(new Color(perClassColors.getColor((int)instance[4])));
 							pointInfo.setText(""
 									+ perClassNames[(int)instance[4]] 
 									+ "  s.l=" + instance[0]
@@ -226,7 +228,7 @@ public class IrisViz {
 						void recolorAll() {
 							for(Points[] points:allPoints){
 								for(int c=0; c<3; c++){
-									int color = perClassColors[c];
+									int color = perClassColors.getColor(c);
 									points[c].getPointDetails().forEach(p->{
 										p.color = color;
 										p.scale = 1;
@@ -236,7 +238,7 @@ public class IrisViz {
 							}
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<3; c++){
-									int color = perClassColors[c];
+									int color = perClassColors.getColor(c);
 									tris[c].setDirty().getTriangleDetails().forEach(t->{
 										t.c0=t.c1=t.c2 = color;
 									});
@@ -244,7 +246,7 @@ public class IrisViz {
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<3; c++){
-									int color = perClassColors[c];
+									int color = perClassColors.getColor(c);
 									lines[c].setDirty().getSegments().forEach(s->{
 										s.color0=s.color1=color;
 									});
@@ -257,7 +259,7 @@ public class IrisViz {
 							int clazz = (int)dataset.get((pick&0x00ffffff)-1)[4];
 							for(Points[] points:allPoints){
 								for(int c=0; c<3; c++){
-									int color = perClassColors[c];
+									int color = perClassColors.getColor(c);
 									int desat = 0x33aaaaaa;
 									points[c].getPointDetails().forEach(p->{
 										p.color = p.pickColor==pick ? color:desat;
@@ -273,7 +275,7 @@ public class IrisViz {
 							}
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<3; c++){
-									int color = c==clazz ? perClassColors[c]:0xff777777;
+									int color = c==clazz ? perClassColors.getColor(c):0xff777777;
 									tris[c].setDirty().getTriangleDetails().forEach(t->{
 										t.c0=t.c1=t.c2 = color;
 									});
@@ -281,7 +283,7 @@ public class IrisViz {
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<3; c++){
-									int color = c==clazz ? perClassColors[c]:0xff777777;
+									int color = c==clazz ? perClassColors.getColor(c):0xff777777;
 									lines[c].setDirty().getSegments().forEach(s->{
 										s.color0=s.color1=color;
 									});
@@ -316,7 +318,7 @@ public class IrisViz {
 									.collect(Collectors.toSet());
 							for(Points[] points:allPoints){
 								for(int c=0; c<3; c++){
-									int color = perClassColors[c];
+									int color = perClassColors.getColor(c);
 									int desat = 0x33aaaaaa;
 									points[c].getPointDetails().forEach(p->{
 										p.color = pickIDs.contains(p.pickColor) ? color:desat;
@@ -331,7 +333,7 @@ public class IrisViz {
 							}
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<3; c++){
-									int color = clazzes.contains(c) ? perClassColors[c]:0xff777777;
+									int color = clazzes.contains(c) ? perClassColors.getColor(c):0xff777777;
 									tris[c].setDirty().getTriangleDetails().forEach(t->{
 										t.c0=t.c1=t.c2 = color;
 									});
@@ -339,7 +341,7 @@ public class IrisViz {
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<3; c++){
-									int color = clazzes.contains(c) ? perClassColors[c]:0xff777777;
+									int color = clazzes.contains(c) ? perClassColors.getColor(c):0xff777777;
 									lines[c].setDirty().getSegments().forEach(s->{
 										s.color0=s.color1=color;
 									});

@@ -21,6 +21,8 @@ import org.joml.Math;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.misc.Contours;
@@ -78,22 +80,14 @@ public class IsolinesViz {
 			1,
 			2,
 		};
-		int[] isoColors = new int[] {
-				0xff000000,
-				0xff330000,
-				0xff660000,
-				0xff993322,
-				0xffcc6644,
-				0xffff9966,
-				0xffffcc88,
-		};
+		ColorMap isoColors = DefaultColorMap.S_COPPER;
 		for(int i = isoValues.length-1; i >= 0; i--) {
-			List<SegmentDetails> contours = Contours.computeContourLines(X, Y, Z, isoValues[i], isoColors[i]);
+			List<SegmentDetails> contours = Contours.computeContourLines(X, Y, Z, isoValues[i], isoColors.getColor(i));
 			contourlines.getSegments().addAll(contours);
-			legend.addLineLabel(1, new Color(isoColors[i]), isoValues[i] < 0 ? ""+isoValues[i]:" "+isoValues[i]);
+			legend.addLineLabel(1, new Color(isoColors.getColor(i)), isoValues[i] < 0 ? ""+isoValues[i]:" "+isoValues[i]);
 		}
 		for(int i = 0; i < isoValues.length-1; i++) {
-			List<TriangleDetails> contours = Contours.computeContourBands(X, Y, Z, isoValues[i], isoValues[i+1], isoColors[i], isoColors[i+1]);
+			List<TriangleDetails> contours = Contours.computeContourBands(X, Y, Z, isoValues[i], isoValues[i+1], isoColors.getColor(i), isoColors.getColor(i+1));
 			contourbands.getTriangleDetails().addAll(contours);
 		}
 		content.addItemToRender(contourlines).addItemToRender(contourbands);

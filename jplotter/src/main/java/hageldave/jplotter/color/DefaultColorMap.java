@@ -65,9 +65,19 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_ff9966,
 			0xff_ffcc88
 			),
-	S_ROMANIAN_PERMUTATION(
-			new int[]{0xff_00277c, 0xff_cf0326, 0xff_fdd339},
-			new double[]{       0,         0.6,           1}),
+	S_TERRAIN(
+			0xff_333399,
+			0xff_1075db,
+			0xff_00b1b4,
+			0xff_31d56f,
+			0xff_95e983,
+			0xff_fdfe98,
+			0xff_ccbd7d,
+			0xff_9a7d62,
+			0xff_977a74,
+			0xff_cabbb8,
+			0xff_fdfcfc
+			),
 	D_BLACK_WHITE_BLACK(0xff000000, 0xff_ffffff, 0xff_000000),
 	D_BLACK_GRAY_BLACK(0xff_000000, 0xff_888888, 0xff_000000),
 	D_GRAY_WHITE_GRAY(0xff_888888, 0xff_ffffff, 0xff_888888),
@@ -209,6 +219,11 @@ public enum DefaultColorMap implements ColorMap {
 	@Override
 	public int getColor(int index) {
 		return map.getColor(index);
+	}
+	
+	@Override
+	public int[] getColors() {
+		return map.getColors();
 	}
 
 	@Override

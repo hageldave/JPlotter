@@ -41,6 +41,10 @@ public class SimpleColorMap implements ColorMap {
 		return colors[index];
 	}
 	
+	public int[] getColors(){
+		return colors;
+	}
+	
 	public double getLocation(int index){
 		return locations[index];
 	}

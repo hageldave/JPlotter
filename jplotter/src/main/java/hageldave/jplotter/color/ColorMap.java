@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.PixelBase;
 import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.util.ImageFrame;
@@ -15,6 +16,8 @@ public interface ColorMap {
 	public int numColors();
 	
 	public int getColor(int index);
+	
+	public int[] getColors();
 	
 	public double getLocation(int index);
 	
@@ -36,9 +39,7 @@ public interface ColorMap {
 	}
 	
 	public default SimpleColorMap copy(){
-		int[] colors = IntStream.range(0, numColors())
-				.map(this::getColor)
-				.toArray();
+		int[] colors = getColors().clone();
 		double[] locations = getLocations().clone();
 		return new SimpleColorMap(colors, locations);
 	}
@@ -61,6 +62,18 @@ public interface ColorMap {
 		return copy;
 	}
 	
+	public default SimpleColorMap resample(int numSamples, double start, double end){
+		start = Utils.clamp(0, start, 1);
+		end = Utils.clamp(0, end, 1);
+		double range = end-start;
+		int[] colors = new int[numSamples];
+		for(int i = 0; i < numSamples; i++){
+			double m = (i*range)/(numSamples-1) + start;
+			colors[i] = interpolate(m);
+		}
+		return new SimpleColorMap(colors);
+	}
+	
 	// MAP GRADING UTILITY METHODS
 	
 	public static interface ColorGrader {
@@ -77,10 +90,14 @@ public interface ColorMap {
 	}
 	
 	public static ColorGrader colorize(int color){
-		return gradeAsImg(img->img.forEach(px->px.setValue(px.getValue() & color)));
+		Pixel colorPx = new Img(1, 1, new int[]{color}).getPixel();
+		ColorSpaceTransformation.RGB_2_HSV.accept(colorPx);
+		return gradeAsPixels(ColorSpaceTransformation.RGB_2_HSV
+				.andThen(px->px.setR_fromDouble(colorPx.r_asDouble()).setG_fromDouble(colorPx.g_asDouble()))
+				.andThen(ColorSpaceTransformation.HSV_2_RGB));
 	}
 	
-	public static ColorGrader saturate(double m){
+	public static ColorGrader saturpxate(double m){
 		return gradeAsPixels(ColorSpaceTransformation.RGB_2_HSV
 				.andThen(px->px.setG_fromDouble(px.g_asDouble()*m))
 				.andThen(ColorSpaceTransformation.HSV_2_RGB));
@@ -127,11 +144,11 @@ public interface ColorMap {
 	}
 	
 	public static void main(String[] args) {
-		ColorMap map1 = DefaultColorMap.Q_8_SET2;
-		ColorMap map2 = DefaultColorMap.Q_8_DARK2;
+		ColorMap map1 = DefaultColorMap.D_FRANCE;
+		ColorMap map2 = DefaultColorMap.S_TERRAIN;
 		Img img = new Img(200, 100);
 		img.forEach(px->px.setValue((px.getYnormalized()<0.5?map1:map2).interpolate(px.getXnormalized())));
-		ImageFrame.display(img);
+		ImageFrame.display(img);		
 	}
 	
 }

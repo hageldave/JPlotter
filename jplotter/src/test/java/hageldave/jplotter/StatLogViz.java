@@ -21,6 +21,8 @@ import javax.swing.SwingUtilities;
 import org.joml.Math;
 
 import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -41,23 +43,15 @@ public class StatLogViz {
 
 		// setup content
 		Points[] pointclasses = new Points[]{
-				new Points(DefaultGlyph.CROSS),
 				new Points(DefaultGlyph.CIRCLE),
 				new Points(DefaultGlyph.CIRCLE_F),
 				new Points(DefaultGlyph.SQUARE),
 				new Points(DefaultGlyph.SQUARE_F),
 				new Points(DefaultGlyph.TRIANGLE),
-				new Points(DefaultGlyph.TRIANGLE_F)
+				new Points(DefaultGlyph.TRIANGLE_F),
+				new Points(DefaultGlyph.CROSS)
 		};
-		int[] classcolors = new int[]{
-				0xff1b9e77,
-				0xffd95f02,
-				0xff7570b3,
-				0xffe7298a,
-				0xff66a61e,
-				0xffe6ab02,
-				0xffa6761d
-		};
+		ColorMap classcolors = DefaultColorMap.Q_12_PAIRED;
 		String[] classLabels = new String[]{
 				 "Rad Flow",
 				 "Fpv Close",
@@ -84,7 +78,7 @@ public class StatLogViz {
 				int pclass = Integer.parseInt(fields[9])-1;
 				int x = Integer.parseInt(fields[6]);
 				int y = Integer.parseInt(fields[7]);
-				pointclasses[pclass].addPoint(x, y, 0,1,classcolors[pclass],i++);
+				pointclasses[pclass].addPoint(x, y, 0,1,classcolors.getColor(pclass),i++);
 				minX = Math.min(minX, x);
 				minY = Math.min(minY, y);
 				maxX = Math.max(maxX, x);
@@ -97,7 +91,7 @@ public class StatLogViz {
 		canvas.setyAxisLabel("Feature 8");
 		Legend legend = new Legend();
 		for(int i = 0; i < classLabels.length; i++){
-			legend.addGlyphLabel(pointclasses[i].glyph, new Color(classcolors[i]), classLabels[i]);
+			legend.addGlyphLabel(pointclasses[i].glyph, new Color(classcolors.getColor(i)), classLabels[i]);
 		}
 		canvas.setLegendBottom(legend);
 		canvas.setLegendBottomHeight(35);

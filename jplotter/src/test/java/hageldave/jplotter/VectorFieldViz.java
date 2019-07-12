@@ -24,6 +24,7 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
@@ -47,7 +48,7 @@ public class VectorFieldViz {
 		DoubleBinaryOperator fv = (x,y)->(x*y)-(y+1)*y;
 		// make quiver plot
 		Points quiver = new Points(DefaultGlyph.ARROW);
-		Color color = new Color(0xff377eb8);
+		Color color = new Color(DefaultColorMap.Q_9_SET1.getColor(1));
 		final int resolution = 21;
 		for(int j = 0; j < resolution; j++){
 			double y = j*2.0/(resolution-1) -1.0;
@@ -106,7 +107,7 @@ public class VectorFieldViz {
 				}
 				Utils.execOnAWTEventDispatch(()->{
 					trajectorySegments.removeAllSegments();
-					trajectorySegments.addLineStrip(new Color(0xffe41a1c), trajectory.toArray(new Point2D[0]));
+					trajectorySegments.addLineStrip(new Color(DefaultColorMap.Q_9_SET1.getColor(0)), trajectory.toArray(new Point2D[0]));
 					canvas.repaint();
 				});
 			}
