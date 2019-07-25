@@ -299,6 +299,21 @@ public class Triangles implements Renderable {
 	
 	/**
 	 * Adds two triangles that form the specified quad.
+	 * Sets the {@link #isDirty()} state to true.
+	 * @param bl bottom left vertex
+	 * @param tl top left vertex
+	 * @param tr top right vertex
+	 * @param br bottom right vertex
+	 * @param color of the quad
+	 * @param pickColor picking color of the quad
+	 * @return this for chaining
+	 */
+	public Triangles addQuad(Point2D bl, Point2D tl, Point2D tr, Point2D br, Color color, int pickColor){
+		return this.addQuad(bl.getX(), bl.getY(), tl.getX(), tl.getY(), tr.getX(), tr.getY(), br.getX(), br.getY(), color, pickColor);
+	}
+	
+	/**
+	 * Adds two triangles that form the specified quad.
 	 * The quad will be colored with 0xffaaaaaa.
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param bl bottom left vertex
