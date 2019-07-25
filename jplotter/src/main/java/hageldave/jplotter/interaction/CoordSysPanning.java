@@ -30,11 +30,12 @@ import hageldave.jplotter.canvas.CoordSysCanvas;
  * 
  * @author hageldave
  */
-public class CoordSysPanning extends MouseAdapter {
+public class CoordSysPanning extends MouseAdapter implements InteractionConstants {
 	
 	protected Point startPoint;
 	protected CoordSysCanvas canvas;
 	protected int extModifierMask = InputEvent.CTRL_DOWN_MASK;
+	protected int axes = X_AXIS | Y_AXIS;
 	
 	/**
 	 * Creates a new {@link CoordSysPanning} for the specified canvas.
@@ -54,8 +55,12 @@ public class CoordSysPanning extends MouseAdapter {
 	public void mouseDragged(MouseEvent e) {
 		if(isTriggerMouseEvent(e, MouseEvent.MOUSE_DRAGGED)){
 			Point dragPoint = e.getPoint();
-			double mouseTx = dragPoint.getX()-startPoint.getX();
-			double mouseTy = dragPoint.getY()-startPoint.getY();
+			double mouseTx = 0;
+			double mouseTy = 0;
+			if((axes & X_AXIS) != 0)
+				mouseTx = dragPoint.getX()-startPoint.getX();
+			if((axes & Y_AXIS) != 0)
+				mouseTy = dragPoint.getY()-startPoint.getY();
 			startPoint = dragPoint;
 			Rectangle2D coordSysFrame = canvas.getCoordSysArea();
 			Rectangle2D coordinateArea = canvas.getCoordinateView();
@@ -81,6 +86,25 @@ public class CoordSysPanning extends MouseAdapter {
 	
 	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
 		return SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) == extModifierMask;
+	}
+	
+	/**
+	 * Sets the axes to which this panning is applied. 
+	 * Default are both x and y axis.
+	 * @param axes {@link InteractionConstants#X_AXIS}, {@link InteractionConstants#Y_AXIS} or {@code X_AXIS|Y_AXIS}
+	 * @return this for chaining
+	 */
+	public CoordSysPanning setPannedAxes(int axes){
+		this.axes = axes;
+		return this;
+	}
+	
+	/**
+	 * @return the axes this panning applies to, i.e.
+	 * {@link InteractionConstants#X_AXIS}, {@link InteractionConstants#Y_AXIS} or {@code X_AXIS|Y_AXIS}
+	 */
+	public int getPannedAxes() {
+		return axes;
 	}
 
 	/**

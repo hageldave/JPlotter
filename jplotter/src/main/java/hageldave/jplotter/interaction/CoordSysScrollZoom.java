@@ -17,10 +17,11 @@ import hageldave.jplotter.canvas.CoordSysCanvas;
  * 
  * @author hageldave
  */
-public class CoordSysScrollZoom implements MouseWheelListener {
+public class CoordSysScrollZoom implements MouseWheelListener, InteractionConstants {
 
 	protected CoordSysCanvas canvas;
 	protected double zoomFactor = 2;
+	protected int axes = X_AXIS | Y_AXIS;
 	
 	public CoordSysScrollZoom(CoordSysCanvas canvas) {
 		this.canvas = canvas;
@@ -34,8 +35,10 @@ public class CoordSysScrollZoom implements MouseWheelListener {
 		double centerY = canvas.getCoordinateView().getCenterY();
 		double width = canvas.getCoordinateView().getWidth();
 		double height = canvas.getCoordinateView().getHeight();
-		width *= zoom;
-		height *= zoom;
+		if((axes & X_AXIS) != 0) 
+			width *= zoom;
+		if((axes & Y_AXIS) != 0)
+			height *= zoom;
 		canvas.setCoordinateView(
 				centerX-width/2,
 				centerY-height/2,
@@ -69,6 +72,25 @@ public class CoordSysScrollZoom implements MouseWheelListener {
 		if( ! Arrays.asList(canvas.getMouseWheelListeners()).contains(this))
 			canvas.addMouseWheelListener(this);
 		return this;
+	}
+	
+	/**
+	 * Sets the axes to which this scroll zoom is applied. 
+	 * Default are both x and y axis.
+	 * @param axes {@link InteractionConstants#X_AXIS}, {@link InteractionConstants#Y_AXIS} or {@code X_AXIS|Y_AXIS}
+	 * @return this for chaining
+	 */
+	public CoordSysScrollZoom setZoomedAxes(int axes){
+		this.axes = axes;
+		return this;
+	}
+	
+	/**
+	 * @return the axes this scroll zoom applies to, i.e.
+	 * {@link InteractionConstants#X_AXIS}, {@link InteractionConstants#Y_AXIS} or {@code X_AXIS|Y_AXIS}
+	 */
+	public int getZoomedAxes() {
+		return axes;
 	}
 	
 	/**
