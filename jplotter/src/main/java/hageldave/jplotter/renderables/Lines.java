@@ -5,7 +5,9 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
@@ -342,6 +344,13 @@ public class Lines implements Renderable {
 				.filter(seg->rect.intersectsLine(seg.p0.getX(), seg.p0.getY(), seg.p1.getX(), seg.p1.getY()))
 				.findAny()
 				.isPresent();
+	}
+	
+	public List<SegmentDetails> getIntersectingSegments(Rectangle2D rect) {
+		boolean useParallelStreaming = numSegments() > 1000;
+		return Utils.parallelize(getSegments().stream(), useParallelStreaming)
+				.filter(seg->rect.intersectsLine(seg.p0.getX(), seg.p0.getY(), seg.p1.getX(), seg.p1.getY()))
+				.collect(Collectors.toList());
 	}
 
 	/**

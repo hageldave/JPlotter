@@ -1,6 +1,5 @@
 package hageldave.jplotter.util;
 
-import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
@@ -206,37 +205,45 @@ public class Utils {
 	}
 	
 	
-	public static boolean rectIntersectsOrIsContainedInTri(Rectangle2D rect, double x0, double y0, double x1, double y1, double x2, double y2){
-//		double minX = Utils.min3(x0, tri.x1, tri.x2);
-//		double maxX = Utils.max3(x0, tri.x1, tri.x2);
-//		double minY = Utils.min3(tri.y0, tri.y1, tri.y2);
-//		double maxY = Utils.max3(tri.y0, tri.y1, tri.y2);
-//		if(!rect.intersects(minX, minY, maxX-minX, maxY-minY)){
-//			if(new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY).intersects(rect)){
-//				return true;
-//			}
-//		}
+	public static boolean rectIntersectsOrIsContainedInTri(
+			Rectangle2D rect, 
+			double x0, double y0, 
+			double x1, double y1, 
+			double x2, double y2)
+	{
 		
-//		float sign (fPoint p1, fPoint p2, fPoint p3)
-//		{
-//		    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
-//		}
-//
-//		bool PointInTriangle (fPoint pt, fPoint v1, fPoint v2, fPoint v3)
-//		{
-//		    float d1, d2, d3;
-//		    bool has_neg, has_pos;
-//
-//		    d1 = sign(pt, v1, v2);
-//		    d2 = sign(pt, v2, v3);
-//		    d3 = sign(pt, v3, v1);
-//
-//		    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-//		    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-//
-//		    return !(has_neg && has_pos);
-//		}
-		
-		return false;
+		return 
+				rect.intersectsLine(x0, y0, x1, y1) || 
+				rect.intersectsLine(x0, y0, x2, y2) ||
+				rect.intersectsLine(x2, y2, x1, y1) ||
+				pointInTri(rect.getX(), rect.getY(), x0, y0, x1, y1, x2, y2);
+	}
+	
+	
+	private static double sign (
+			double x1, double y1, 
+			double x2, double y2, 
+			double x3, double y3)
+	{
+	    return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3);
+	}
+	
+	private static boolean pointInTri(
+			double px, double py, 
+			double x0, double y0, 
+			double x1, double y1, 
+			double x2, double y2)
+	{
+		double d1, d2, d3;
+	    boolean has_neg, has_pos;
+
+	    d1 = sign(px,py, x0,y0, x1,y1);
+	    d2 = sign(px,py, x1,y1, x2,y2);
+	    d3 = sign(px,py, x2,y2, x0,y0);
+
+	    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+	    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+	    return !(has_neg && has_pos);
 	}
 }

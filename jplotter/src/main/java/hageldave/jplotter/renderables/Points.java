@@ -4,7 +4,9 @@ import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL33;
 
@@ -296,6 +298,13 @@ public class Points implements Renderable {
 				.filter(p->rect.contains(p.location))
 				.findAny()
 				.isPresent();
+	}
+	
+	public List<PointDetails> getIntersectingPoints(Rectangle2D rect) {
+		boolean useParallelStreaming = numPoints() > 10000;
+		return Utils.parallelize(getPointDetails().stream(), useParallelStreaming)
+				.filter(p->rect.contains(p.location))
+				.collect(Collectors.toList());
 	}
 
 	/**

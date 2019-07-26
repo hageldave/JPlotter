@@ -58,13 +58,7 @@ public class SVGTriangleRendering {
 		{
 			int i=0;
 			x0=coords[i++]; y0=coords[i++]; x1=coords[i++]; y1=coords[i++]; x2=coords[i++]; y2=coords[i++];
-			if( !(
-					viewportRect.intersectsLine(x0, y0, x1, y1) || 
-					viewportRect.intersectsLine(x0, y0, x2, y2) ||
-					viewportRect.intersectsLine(x2, y2, x1, y1) ||
-					triangleMayContain(x0, y0, x1, y1, x2, y2, viewportRect)
-				)
-			){
+			if( ! Utils.rectIntersectsOrIsContainedInTri(viewportRect, x0, y0, x1, y1, x2, y2) ){
 				return;
 			}
 		}
@@ -158,14 +152,6 @@ public class SVGTriangleRendering {
 			edge = 3;
 		}
 		return edge;
-	}
-	
-	private static boolean triangleMayContain(double x0,double y0, double x1,double y1, double x2,double y2, Rectangle2D rect){
-		double minx = Math.min(Math.min(x0, x1), x2);
-		double miny = Math.min(Math.min(y0, y1), y2);
-		double maxx = Math.max(Math.max(x0, x1), x2);
-		double maxy = Math.max(Math.max(y0, y1), y2);
-		return new Rectangle2D.Double(minx, miny, maxx-minx, maxy-miny).intersects(rect);
 	}
 	
 	private static int maxARGBChannelDiff(int c1, int c2){

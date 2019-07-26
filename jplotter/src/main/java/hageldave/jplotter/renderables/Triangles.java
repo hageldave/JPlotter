@@ -1,17 +1,18 @@
 package hageldave.jplotter.renderables;
 
 import java.awt.Color;
-import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The Triangles class is a collection of 2D triangles.
@@ -543,16 +544,27 @@ public class Triangles implements Renderable {
 		return Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
 				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
 						rect, 
-						tri.x0, 
-						tri.y0, 
-						tri.x1, 
-						tri.y1, 
-						tri.x2, 
-						tri.y2
+						tri.x0, tri.y0, 
+						tri.x1, tri.y1, 
+						tri.x2, tri.y2
 						))
 				.findAny()
 				.isPresent();
 	}
+	
+	
+	public List<TriangleDetails> getIntersectingTriangles(Rectangle2D rect){
+		boolean useParallelStreaming = numTriangles() > 1000;
+		return Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
+				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
+						rect, 
+						tri.x0, tri.y0, 
+						tri.x1, tri.y1, 
+						tri.x2, tri.y2
+						))
+				.collect(Collectors.toList());
+	}
+	
 
 	/**
 	 * Specification of a triangle which comprises vertex locations, colors and picking color.
