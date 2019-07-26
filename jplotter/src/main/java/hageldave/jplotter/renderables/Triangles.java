@@ -1,6 +1,7 @@
 package hageldave.jplotter.renderables;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -533,6 +534,24 @@ public class Triangles implements Renderable {
 				.mapToDouble(Float::floatValue)
 				.max().getAsDouble();
 		return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+	}
+	
+	
+	@Override
+	public boolean intersects(Rectangle2D rect) {
+		boolean useParallelStreaming = numTriangles() > 1000;
+		return Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
+				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
+						rect, 
+						tri.x0, 
+						tri.y0, 
+						tri.x1, 
+						tri.y1, 
+						tri.x2, 
+						tri.y2
+						))
+				.findAny()
+				.isPresent();
 	}
 
 	/**

@@ -353,6 +353,17 @@ public class Text implements Renderable {
 		this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontsize, style, antialiased).getBounds().getSize();
 		return setDirty();
 	}
+	
+	@Override
+	public boolean intersects(Rectangle2D rect) {
+		if(getAngle()==0){
+			Rectangle2D bounds = getBounds();
+			return rect.intersects(bounds) || bounds.intersects(rect);
+		} else {
+			Rectangle2D bounds = getBoundsWithRotation();
+			return rect.intersects(bounds) || bounds.intersects(rect);
+		}
+	}
 
 
 	/**

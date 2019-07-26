@@ -1,5 +1,6 @@
 package hageldave.jplotter.util;
 
+import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
@@ -149,6 +150,28 @@ public class Utils {
 	}
 	
 	/**
+	 * Returns the minimum of 3 values
+	 * @param v0 value
+	 * @param v1 value
+	 * @param v2 value
+	 * @return minimum
+	 */
+	public static double min3(double v0, double v1, double v2){
+		return Math.min(Math.min(v0, v1), v2);
+	}
+	
+	/**
+	 * Returns the maximum of 3 values
+	 * @param v0 value
+	 * @param v1 value
+	 * @param v2 value
+	 * @return maximum
+	 */
+	public static double max3(double v0, double v1, double v2){
+		return Math.max(Math.max(v0, v1), v2);
+	}
+	
+	/**
 	 * Calculates the average (arithmetic mean) color of the
 	 * specified colors. Each channel (ARGB) is treated separately.
 	 * @param argbValues ARGB color values
@@ -166,6 +189,11 @@ public class Utils {
 		return Pixel.argb_fast(a/n, r/n, g/n, b/n);
 	}
 	
+	/**
+	 * Checks if specified iterator is sorted according to natural ordering.
+	 * @param iter iterator
+	 * @return true if sorted, false otherwise
+	 */
 	public static <T extends Comparable<T>> boolean isSorted(Iterator<T> iter){
 		T prev = iter.next();
 		while(iter.hasNext()){
@@ -177,4 +205,38 @@ public class Utils {
 		return true;
 	}
 	
+	
+	public static boolean rectIntersectsOrIsContainedInTri(Rectangle2D rect, double x0, double y0, double x1, double y1, double x2, double y2){
+//		double minX = Utils.min3(x0, tri.x1, tri.x2);
+//		double maxX = Utils.max3(x0, tri.x1, tri.x2);
+//		double minY = Utils.min3(tri.y0, tri.y1, tri.y2);
+//		double maxY = Utils.max3(tri.y0, tri.y1, tri.y2);
+//		if(!rect.intersects(minX, minY, maxX-minX, maxY-minY)){
+//			if(new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY).intersects(rect)){
+//				return true;
+//			}
+//		}
+		
+//		float sign (fPoint p1, fPoint p2, fPoint p3)
+//		{
+//		    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+//		}
+//
+//		bool PointInTriangle (fPoint pt, fPoint v1, fPoint v2, fPoint v3)
+//		{
+//		    float d1, d2, d3;
+//		    bool has_neg, has_pos;
+//
+//		    d1 = sign(pt, v1, v2);
+//		    d2 = sign(pt, v2, v3);
+//		    d3 = sign(pt, v3, v1);
+//
+//		    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+//		    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+//
+//		    return !(has_neg && has_pos);
+//		}
+		
+		return false;
+	}
 }

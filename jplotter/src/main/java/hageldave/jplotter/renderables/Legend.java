@@ -3,6 +3,7 @@ package hageldave.jplotter.renderables;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -244,6 +245,15 @@ public class Legend implements Renderable, Renderer {
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		delegate.renderSVG(doc, parent, w, h);
+	}
+	
+	
+	/**
+	 * Always return false.
+	 */
+	@Override
+	public boolean intersects(Rectangle2D rect) {
+		return false;
 	}
 
 }

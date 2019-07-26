@@ -1,5 +1,7 @@
 package hageldave.jplotter.renderables;
 
+import java.awt.geom.Rectangle2D;
+
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.GenericRenderer;
 import hageldave.jplotter.renderers.Renderer;
@@ -43,5 +45,8 @@ public interface Renderable extends AutoCloseable {
 	 */
 	@GLContextRequired
 	public void close();
+	
+	
+	public boolean intersects(Rectangle2D rect);
 	
 }

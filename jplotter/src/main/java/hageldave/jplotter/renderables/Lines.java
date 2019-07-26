@@ -334,6 +334,15 @@ public class Lines implements Renderable {
 				.max().getAsDouble();
 		return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 	}
+	
+	@Override
+	public boolean intersects(Rectangle2D rect) {
+		boolean useParallelStreaming = numSegments() > 1000;
+		return Utils.parallelize(getSegments().stream(), useParallelStreaming)
+				.filter(seg->rect.intersectsLine(seg.p0.getX(), seg.p0.getY(), seg.p1.getX(), seg.p1.getY()))
+				.findAny()
+				.isPresent();
+	}
 
 	/**
 	 * Specification of a line segment which comprises vertex locations, colors and picking color.

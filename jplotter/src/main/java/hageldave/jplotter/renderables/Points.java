@@ -288,6 +288,15 @@ public class Points implements Renderable {
 				.max().getAsDouble();
 		return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 	}
+	
+	@Override
+	public boolean intersects(Rectangle2D rect) {
+		boolean useParallelStreaming = numPoints() > 10000;
+		return Utils.parallelize(getPointDetails().stream(), useParallelStreaming)
+				.filter(p->rect.contains(p.location))
+				.findAny()
+				.isPresent();
+	}
 
 	/**
 	 * Class for storing all the details of a single point to be rendered.

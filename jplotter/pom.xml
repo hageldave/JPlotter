@@ -60,6 +60,12 @@
 			<artifactId>batik-all</artifactId>
 			<version>1.11</version>
 		</dependency>
+		<!-- Range Tree (R-Tree) -->
+		<dependency>
+			<groupId>com.github.davidmoten</groupId>
+			<artifactId>rtree2</artifactId>
+			<version>0.9-RC1</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>
