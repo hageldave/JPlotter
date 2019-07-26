@@ -17,7 +17,6 @@ import java.util.function.DoubleBinaryOperator;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.joml.Math;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.CoordSysCanvas;

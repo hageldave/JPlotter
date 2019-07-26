@@ -18,8 +18,6 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 
-import org.joml.Math;
-
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;

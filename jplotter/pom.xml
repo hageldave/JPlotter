@@ -42,27 +42,24 @@
 	</build>
 
 	<dependencies>
+		<!-- OpenGL -->
 		<dependency>
 			<groupId>org.lwjglx</groupId>
 			<artifactId>lwjgl3-awt</artifactId>
 			<version>0.1.5</version>
 		</dependency>
+		<!-- Image manipulation and creation -->
 		<dependency>
 			<groupId>com.github.hageldave.imagingkit</groupId>
 			<artifactId>imagingkit-core</artifactId>
 			<version>2.0</version>
 		</dependency>
-		<dependency>
-			<groupId>org.joml</groupId>
-			<artifactId>joml</artifactId>
-			<version>1.9.14</version>
-		</dependency>
+		<!-- Scalable Vector Graphics -->
 		<dependency>
 			<groupId>org.apache.xmlgraphics</groupId>
 			<artifactId>batik-all</artifactId>
 			<version>1.11</version>
 		</dependency>
-
 	</dependencies>
 
 	<profiles>

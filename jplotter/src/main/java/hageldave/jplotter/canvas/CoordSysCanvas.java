@@ -12,7 +12,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 import java.util.Objects;
 
-import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL11;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -131,15 +130,6 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected PointeredPoint2D coordsysAreaLT = new PointeredPoint2D(coordsysAreaLB.x, coordsysAreaRT.y);
 	@GLCoordinates
 	protected PointeredPoint2D coordsysAreaRB = new PointeredPoint2D(coordsysAreaRT.x, coordsysAreaLB.y);
-
-	protected Matrix3f coordSysScaleMX = new Matrix3f();
-	protected Matrix3f coordSysTransMX = new Matrix3f();
-	/** 
-	 * The transform that corresponds to this coordinate systems {@link #coordinateView}.
-	 * coordSysViewMX = {@link #coordSysScaleMX} * {@link #coordSysTransMX}
-	 * which is passed to the content renderer.
-	 */
-	protected Matrix3f coordSysViewMX = new Matrix3f();
 
 	protected String xAxisLabel = null;
 	protected String yAxisLabel = null;
