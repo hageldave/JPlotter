@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.Locale;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
@@ -150,6 +149,7 @@ public class StatLogSPLOMViz {
 		for(int j = 0; j < 9; j++){
 			for(int i = 0; i < 9; i++){
 				CoordSysCanvas canvas = new CoordSysCanvas(){
+					private static final long serialVersionUID = 1L;
 					{
 						leftPadding=rightPadding=topPadding=botPadding=2;
 					}
@@ -171,14 +171,18 @@ public class StatLogSPLOMViz {
 					Lines[] lines = IntStream.range(0, 7).mapToObj(n->new Lines()).toArray(Lines[]::new);
 					allLines.add(lines);
 					for(int c = 0; c < 7; c++){
-						lines[c].setThickness(1.5f).addLineStrip(perClassColors[c], histo[7], histo[c]);
+						int color = perClassColors[c];
+						lines[c].setThickness(1.5f).addLineStrip(histo[7], histo[c])
+							.forEach(seg->seg.setColor(color));
 						content.addItemToRender(lines[c]);
 					}
 					Triangles[] perClassTris = IntStream.range(0, 7).mapToObj(n->new Triangles()).toArray(Triangles[]::new);
 					allTris.add(perClassTris);
 					for(int k = 0; k < numBuckets-1; k++){
 						for(int c = 0; c < 7; c++){
-							perClassTris[c].addQuad(histo[7][k], 0, histo[7][k], histo[c][k], histo[7][k+1], histo[c][k+1], histo[7][k+1], 0, new Color(perClassColors[c]));
+							int color = perClassColors[c];
+							perClassTris[c].addQuad(histo[7][k], 0, histo[7][k], histo[c][k], histo[7][k+1], histo[c][k+1], histo[7][k+1], 0)
+								.forEach(t->t.setColor(color));
 						}
 					}
 					for(int c = 0; c < 7; c++){
@@ -215,14 +219,9 @@ public class StatLogSPLOMViz {
 						int clazz = (int)instance[9];
 						double x =instance[i];
 						double y = instance[j];
-						perClassPoints[clazz].addPoint(
-								x,
-								y,
-								0, 
-								1, 
-								perClassColors[clazz], 
-								k+1
-								);
+						perClassPoints[clazz].addPoint(x,y)
+								.setColor(perClassColors[clazz])
+								.setPickColor(k+1);
 						maxX = Math.max(maxX, x);
 						maxY = Math.max(maxY, y);
 						minX = Math.min(minX, x);
@@ -282,28 +281,23 @@ public class StatLogSPLOMViz {
 							for(Points[] points:allPoints){
 								for(int c=0; c<7; c++){
 									int color = perClassColors[c];
-									points[c].getPointDetails().forEach(p->{
-										p.color = color;
-										p.scale = 1;
-									});
+									points[c].getPointDetails().forEach(p->p
+										.setColor(color)
+										.setScaling(1));
 									points[c].setGlobalAlphaMultiplier(0.4).setDirty();
 								}
 							}
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<7; c++){
 									int color = perClassColors[c];
-									tris[c].getTriangleDetails().forEach(t->{
-										t.c0=t.c1=t.c2 = color;
-									});
+									tris[c].getTriangleDetails().forEach(t->t.setColor(color));
 									tris[c].setDirty();
 								}
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<7; c++){
 									int color = perClassColors[c];
-									lines[c].getSegments().forEach(s->{
-										s.color0=s.color1=color;
-									});
+									lines[c].getSegments().forEach(s->s.setColor(color));
 									lines[c].setDirty();
 								}
 							}
@@ -316,10 +310,10 @@ public class StatLogSPLOMViz {
 								for(int c=0; c<7; c++){
 									int color = perClassColors[c];
 									int desat = 0x33aaaaaa;
-									points[c].getPointDetails().forEach(p->{
-										p.color = p.pickColor==pick ? color:desat;
-										p.scale = p.pickColor==pick ? 1.2f:1;
-									});
+									points[c].getPointDetails().forEach(p->p
+										.setColor( p.pickColor==pick ? color:desat)
+										.setScaling(p.pickColor==pick ? 1.2f:1)
+									);
 									// bring picked point to front by sorting
 									points[c].getPointDetails().sort((p1,p2)->{
 										if(p1.pickColor==p2.pickColor) return 0;
@@ -331,17 +325,13 @@ public class StatLogSPLOMViz {
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<7; c++){
 									int color = c==clazz ? perClassColors[c]:0xff777777;
-									tris[c].setDirty().getTriangleDetails().forEach(t->{
-										t.c0=t.c1=t.c2 = color;
-									});
+									tris[c].setDirty().getTriangleDetails().forEach(t->t.setColor(color));
 								}
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<7; c++){
 									int color = c==clazz ? perClassColors[c]:0xff777777;
-									lines[c].setDirty().getSegments().forEach(s->{
-										s.color0=s.color1=color;
-									});
+									lines[c].setDirty().getSegments().forEach(s->s.setColor(color));
 								}
 							}
 							canvasCollection.forEach(cnvs->cnvs.repaint());
@@ -375,9 +365,7 @@ public class StatLogSPLOMViz {
 								for(int c=0; c<7; c++){
 									int color = perClassColors[c];
 									int desat = 0x33aaaaaa;
-									points[c].getPointDetails().forEach(p->{
-										p.color = pickIDs.contains(p.pickColor) ? color:desat;
-									});
+									points[c].getPointDetails().forEach(p->p.setColor(pickIDs.contains(p.pickColor) ? color:desat));
 									// bring picked point to front by sorting
 									points[c].getPointDetails().sort((p1,p2)->{
 										if(pickIDs.contains(p1.pickColor)==pickIDs.contains(p2.pickColor)) return 0;
@@ -389,17 +377,13 @@ public class StatLogSPLOMViz {
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<7; c++){
 									int color = clazzes.contains(c) ? perClassColors[c]:0xff777777;
-									tris[c].setDirty().getTriangleDetails().forEach(t->{
-										t.c0=t.c1=t.c2 = color;
-									});
+									tris[c].setDirty().getTriangleDetails().forEach(t->t.setColor(color));
 								}
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<7; c++){
 									int color = clazzes.contains(c) ? perClassColors[c]:0xff777777;
-									lines[c].setDirty().getSegments().forEach(s->{
-										s.color0=s.color1=color;
-									});
+									lines[c].setDirty().getSegments().forEach(s->s.setColor(color));
 								}
 							}
 							canvasCollection.forEach(cnvs->cnvs.repaint());

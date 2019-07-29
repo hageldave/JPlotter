@@ -59,7 +59,9 @@ public class Example {
 		// the sine samples should be visualized as a line in a kind of red color
 		Lines sineLine = new Lines();
 		int sineColor = 0xff66c2a5;
-		sineLine.addLineStrip(sineColor, curveX, curveY).setThickness(2);
+		sineLine.setThickness(2)
+			.addLineStrip(curveX, curveY)
+			.forEach(segment -> segment.setColor(sineColor));
 		
 		// the random samples should be visualized as points, but lets make 3 classes
 		// class 1: y(x) < sin(x)-0.5  
@@ -71,11 +73,11 @@ public class Example {
 		int c1Color = 0xff8da0cb, c2Color = sineColor, c3Color = 0xfffc8d62;
 		for(int i=0; i<numPointSamples; i++){
 			if(diffToCurve[i] < -0.5){
-				pointsC1.addPoint(pointsX[i], pointsY[i], new Color(c1Color));
+				pointsC1.addPoint(pointsX[i], pointsY[i]).setColor(c1Color);
 			} else if(diffToCurve[i] > 0.5) {
-				pointsC3.addPoint(pointsX[i], pointsY[i], new Color(c3Color));
+				pointsC3.addPoint(pointsX[i], pointsY[i]).setColor(c3Color);
 			} else {
-				pointsC2.addPoint(pointsX[i], pointsY[i], new Color(c2Color));
+				pointsC2.addPoint(pointsX[i], pointsY[i]).setColor(c2Color);
 			}
 		}
 		

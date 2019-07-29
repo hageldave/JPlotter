@@ -140,14 +140,18 @@ public class IrisViz {
 					Lines[] lines = new Lines[]{new Lines(), new Lines(), new Lines()};
 					allLines.add(lines);
 					for(int c = 0; c < 3; c++){
-						lines[c].setThickness(1.5f).addLineStrip(perClassColors.getColor(c), histo[3], histo[c]);
+						int color = perClassColors.getColor(c);
+						lines[c].setThickness(1.5f).addLineStrip(histo[3], histo[c])
+							.forEach(seg->seg.setColor(color));
 						content.addItemToRender(lines[c]);
 					}
 					Triangles[] perClassTris = new Triangles[]{new Triangles(),new Triangles(),new Triangles()};
 					allTris.add(perClassTris);
 					for(int k = 0; k < numBuckets-1; k++){
 						for(int c = 0; c < 3; c++){
-							perClassTris[c].addQuad(histo[3][k], 0, histo[3][k], histo[c][k], histo[3][k+1], histo[c][k+1], histo[3][k+1], 0, new Color(perClassColors.getColor(c)));
+							int color = perClassColors.getColor(c);
+							perClassTris[c].addQuad(histo[3][k], 0, histo[3][k], histo[c][k], histo[3][k+1], histo[c][k+1], histo[3][k+1], 0)
+								.forEach(tri->tri.setColor(color));
 						}
 					}
 					for(int c = 0; c < 3; c++){
@@ -176,14 +180,9 @@ public class IrisViz {
 						int clazz = (int)instance[4];
 						double x =instance[i];
 						double y = instance[j];
-						perClassPoints[clazz].addPoint(
-								x,
-								y,
-								0, 
-								1, 
-								perClassColors.getColor(clazz), 
-								k+1
-								);
+						perClassPoints[clazz].addPoint(x,y)
+							.setColor(perClassColors.getColor(clazz))
+							.setPickColor(k+1);
 						maxX = Math.max(maxX, x);
 						maxY = Math.max(maxY, y);
 						minX = Math.min(minX, x);
@@ -229,27 +228,22 @@ public class IrisViz {
 							for(Points[] points:allPoints){
 								for(int c=0; c<3; c++){
 									int color = perClassColors.getColor(c);
-									points[c].getPointDetails().forEach(p->{
-										p.color = color;
-										p.scale = 1;
-									});
+									points[c].getPointDetails().forEach(p->p
+											.setColor(color)
+											.setScaling(1));
 									points[c].setGlobalAlphaMultiplier(0.6).setDirty();
 								}
 							}
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<3; c++){
 									int color = perClassColors.getColor(c);
-									tris[c].setDirty().getTriangleDetails().forEach(t->{
-										t.c0=t.c1=t.c2 = color;
-									});
+									tris[c].setDirty().getTriangleDetails().forEach(tri->tri.setColor(color));
 								}
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<3; c++){
 									int color = perClassColors.getColor(c);
-									lines[c].setDirty().getSegments().forEach(s->{
-										s.color0=s.color1=color;
-									});
+									lines[c].setDirty().getSegments().forEach(seg->seg.setColor(color));
 								}
 							}
 							canvasCollection.forEach(cnvs->cnvs.repaint());
@@ -261,10 +255,9 @@ public class IrisViz {
 								for(int c=0; c<3; c++){
 									int color = perClassColors.getColor(c);
 									int desat = 0x33aaaaaa;
-									points[c].getPointDetails().forEach(p->{
-										p.color = p.pickColor==pick ? color:desat;
-										p.scale = p.pickColor==pick ? 1.2f:1;
-									});
+									points[c].getPointDetails().forEach(p->p
+										.setColor(p.pickColor==pick ? color:desat)
+										.setScaling(p.pickColor==pick ? 1.2f:1));
 									// bring picked point to front by sorting
 									points[c].getPointDetails().sort((p1,p2)->{
 										if(p1.pickColor==p2.pickColor) return 0;
@@ -276,17 +269,13 @@ public class IrisViz {
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<3; c++){
 									int color = c==clazz ? perClassColors.getColor(c):0xff777777;
-									tris[c].setDirty().getTriangleDetails().forEach(t->{
-										t.c0=t.c1=t.c2 = color;
-									});
+									tris[c].setDirty().getTriangleDetails().forEach(t->t.setColor(color));
 								}
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<3; c++){
 									int color = c==clazz ? perClassColors.getColor(c):0xff777777;
-									lines[c].setDirty().getSegments().forEach(s->{
-										s.color0=s.color1=color;
-									});
+									lines[c].setDirty().getSegments().forEach(s->s.setColor(color));
 								}
 							}
 							canvasCollection.forEach(cnvs->cnvs.repaint());
@@ -320,9 +309,7 @@ public class IrisViz {
 								for(int c=0; c<3; c++){
 									int color = perClassColors.getColor(c);
 									int desat = 0x33aaaaaa;
-									points[c].getPointDetails().forEach(p->{
-										p.color = pickIDs.contains(p.pickColor) ? color:desat;
-									});
+									points[c].getPointDetails().forEach(p->p.setColor(pickIDs.contains(p.pickColor) ? color:desat));
 									// bring picked point to front by sorting
 									points[c].getPointDetails().sort((p1,p2)->{
 										if(pickIDs.contains(p1.pickColor)==pickIDs.contains(p2.pickColor)) return 0;
@@ -334,17 +321,13 @@ public class IrisViz {
 							for(Triangles[] tris:allTris){
 								for(int c=0; c<3; c++){
 									int color = clazzes.contains(c) ? perClassColors.getColor(c):0xff777777;
-									tris[c].setDirty().getTriangleDetails().forEach(t->{
-										t.c0=t.c1=t.c2 = color;
-									});
+									tris[c].setDirty().getTriangleDetails().forEach(t->t.setColor(color));
 								}
 							}
 							for(Lines[] lines:allLines){
 								for(int c=0; c<3; c++){
 									int color = clazzes.contains(c) ? perClassColors.getColor(c):0xff777777;
-									lines[c].setDirty().getSegments().forEach(s->{
-										s.color0=s.color1=color;
-									});
+									lines[c].setDirty().getSegments().forEach(s->s.setColor(color));
 								}
 							}
 							canvasCollection.forEach(cnvs->cnvs.repaint());

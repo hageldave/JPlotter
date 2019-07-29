@@ -57,12 +57,10 @@ public class VectorFieldViz {
 				double u = fu.applyAsDouble(x, y);
 				double v = fv.applyAsDouble(x, y);
 				double magnitude = Math.sqrt(u*u+v*v);
-				quiver.addPoint(
-						x,y, 
-						Math.atan2(v, u), 
-						magnitude != 0 ? (2+magnitude)*0.3 : 0, 
-						color
-				);
+				quiver.addPoint(x,y)
+					.setRotation(Math.atan2(v, u))
+					.setScaling(magnitude != 0 ? (2+magnitude)*0.3 : 0)
+					.setColor(color);
 			}
 		}
 		content.points.addItemToRender(quiver);
@@ -107,7 +105,8 @@ public class VectorFieldViz {
 				}
 				Utils.execOnAWTEventDispatch(()->{
 					trajectorySegments.removeAllSegments();
-					trajectorySegments.addLineStrip(new Color(DefaultColorMap.Q_9_SET1.getColor(0)), trajectory.toArray(new Point2D[0]));
+					trajectorySegments.addLineStrip(trajectory.toArray(new Point2D[0]))
+						.forEach(seg->seg.setColor(DefaultColorMap.Q_9_SET1.getColor(0)));
 					canvas.repaint();
 				});
 			}

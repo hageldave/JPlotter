@@ -174,7 +174,14 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				x0*=scaleX; x1*=scaleX; x2*=scaleX;
 				y0*=scaleY; y1*=scaleY; y2*=scaleY;
 				
-				SVGTriangleRendering.addSVGTriangle(doc, trianglesGroup, new double[]{x0,y0,x1,y1,x2,y2}, new int[]{tri.c0,tri.c1,tri.c2}, tris.getGlobalAlphaMultiplier(), svgTriangleStrategy, viewportRect);
+				SVGTriangleRendering.addSVGTriangle(
+						doc, 
+						trianglesGroup, 
+						new double[]{x0,y0,x1,y1,x2,y2}, 
+						new int[]{tri.c0.getAsInt(), tri.c1.getAsInt(), tri.c2.getAsInt()}, 
+						tris.getGlobalAlphaMultiplier(), 
+						svgTriangleStrategy, 
+						viewportRect);
 			}
 		}
 	}
