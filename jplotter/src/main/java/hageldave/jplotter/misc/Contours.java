@@ -331,7 +331,7 @@ public class Contours {
 						tris.add(new TriangleDetails(tx0,ty0, tx1,ty1, tx2,ty2)
 								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)))
 								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
-								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
 						);
 						break;
 					}
