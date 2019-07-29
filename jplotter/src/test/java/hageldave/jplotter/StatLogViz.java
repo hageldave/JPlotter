@@ -76,7 +76,9 @@ public class StatLogViz {
 				int pclass = Integer.parseInt(fields[9])-1;
 				int x = Integer.parseInt(fields[6]);
 				int y = Integer.parseInt(fields[7]);
-				pointclasses[pclass].addPoint(x, y, 0,1,classcolors.getColor(pclass),i++);
+				pointclasses[pclass].addPoint(x, y)
+					.setColor(classcolors.getColor(pclass))
+					.setPickColor(i++);
 				minX = Math.min(minX, x);
 				minY = Math.min(minY, y);
 				maxX = Math.max(maxX, x);

@@ -233,20 +233,22 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				pointsGroup.appendChild(pointElement);
 				pointElement.setAttributeNS(null, "xlink:href", "#"+symbolID);
 				if(glyph.isFilled()){
-					pointElement.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(point.color));
-					pointElement.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color)));
+					pointElement.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(point.color.getAsInt()));
+					pointElement.setAttributeNS(null, "fill-opacity", 
+							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color.getAsInt())));
 				} else {
-					pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(point.color));
-					pointElement.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color)));
+					pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(point.color.getAsInt()));
+					pointElement.setAttributeNS(null, "stroke-opacity", 
+							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color.getAsInt())));
 					pointElement.setAttributeNS(null, "fill-opacity", "0");
 				}
 				String transform = "";
 				transform += "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")";
-				if(point.rot != 0){
-					transform += " rotate("+SVGUtils.svgNumber(point.rot*180/Math.PI)+")";
+				if(point.rot.getAsDouble() != 0){
+					transform += " rotate("+SVGUtils.svgNumber(point.rot.getAsDouble()*180/Math.PI)+")";
 				}
-				if(glyphScaling*point.scale != 1){
-					transform += " scale("+SVGUtils.svgPoints(glyphScaling*point.scale, glyphScaling*point.scale)+")";
+				if(glyphScaling*point.scale.getAsDouble() != 1){
+					transform += " scale("+SVGUtils.svgPoints(glyphScaling*point.scale.getAsDouble(), glyphScaling*point.scale.getAsDouble())+")";
 				}
 				
 				pointElement.setAttributeNS(null, "transform", transform);

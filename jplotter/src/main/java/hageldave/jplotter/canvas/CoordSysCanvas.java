@@ -139,10 +139,10 @@ public class CoordSysCanvas extends FBOCanvas {
 
 	public CoordSysCanvas() {
 		super();
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB, Color.BLACK);
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT, Color.BLACK);
-		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT, Color.GRAY);
-		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT, Color.GRAY);
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(Color.BLACK);
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(Color.BLACK);
+		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(Color.GRAY);
+		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT).setColor(Color.GRAY);
 		this.axes.setThickness(2);
 		this.preContentLinesR
 		.addItemToRender(guides)
@@ -347,7 +347,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			double m = (xticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
 			double x = coordsysAreaLB.getX()+m*xAxisWidth;
 			Point2D onaxis = new Point2D.Double(x,coordsysAreaLB.getY());
-			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4), tickColor);
+			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
 			// label
 			Text label = new Text(xticklabels[i], tickfontSize, style, antialiased);
 			Dimension textSize = label.getTextSize();
@@ -356,21 +356,21 @@ public class CoordSysCanvas extends FBOCanvas {
 					(int)(onaxis.getY()-6-textSize.getHeight()));
 			tickMarkLabels.add(label);
 			// guide
-			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, yAxisHeight), guideColor);
+			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, yAxisHeight)).setColor(guideColor);
 		}
 		// yaxis ticks
 		for(int i=0; i<yticks.length; i++){
 			// tick
 			double m = (yticks[i]-coordinateView.getMinY())/coordinateView.getHeight();
 			Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, m*yAxisHeight);
-			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0), tickColor);
+			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
 			// label
 			Text label = new Text(yticklabels[i], tickfontSize, style, antialiased);
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -textSize.getHeight()/2.0));
 			tickMarkLabels.add(label);
 			// guide
-			guides.addSegment(onaxis, new TranslatedPoint2D(coordsysAreaRB, 0, m*yAxisHeight), guideColor);
+			guides.addSegment(onaxis, new TranslatedPoint2D(coordsysAreaRB, 0, m*yAxisHeight)).setColor(guideColor);
 		}
 		for(Text txt: tickMarkLabels){
 			preContentTextR.addItemToRender(txt);

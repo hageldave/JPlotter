@@ -240,8 +240,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				
 				segment.setAttributeNS(null, "points", SVGUtils.svgPoints(x1,y1,x2,y2));
 				if(seg.color0 == seg.color1){
-					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0));
-					segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
+					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
+					segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
 				} else {
 					// create gradient for line
 					Node defs = SVGUtils.getDefs(doc);
@@ -258,14 +258,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					gradient.appendChild(stop1);
 					stop1.setAttributeNS(null, "offset", "0%");
 					stop1.setAttributeNS(null, "style", 
-							"stop-color:"+SVGUtils.svgRGBhex(seg.color0)+";"+
-							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0)));
+							"stop-color:"+SVGUtils.svgRGBhex(seg.color0.getAsInt())+";"+
+							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
 					Element stop2 = SVGUtils.createSVGElement(doc, "stop");
 					gradient.appendChild(stop2);
 					stop2.setAttributeNS(null, "offset", "100%");
 					stop2.setAttributeNS(null, "style", 
-							"stop-color:"+SVGUtils.svgRGBhex(seg.color1)+";"+
-							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1)));
+							"stop-color:"+SVGUtils.svgRGBhex(seg.color1.getAsInt())+";"+
+							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1.getAsInt())));
 					
 					// use gradient for line stroke
 					segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
