@@ -573,11 +573,12 @@ public class Triangles implements Renderable {
 	public static class TriangleDetails {
 		public float x0,x1,x2, y0,y1,y2;
 		public int c0,c1,c2, pick;
+		
 		public TriangleDetails(
 				float x0, float y0, int c0, 
 				float x1, float y1, int c1, 
 				float x2, float y2, int c2,
-				int pick) 
+				int pick)
 		{
 			this.x0 = x0;
 			this.x1 = x1;

@@ -6,6 +6,8 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
+import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL33;
@@ -97,9 +99,9 @@ public class Points implements Renderable {
 				PointDetails pd = points.get(i);
 				position[i*2+0] = (float)pd.location.getX();
 				position[i*2+1] = (float)pd.location.getY();
-				rotAndScale[i*2+0] = pd.rot;
-				rotAndScale[i*2+1] = pd.scale;
-				colors[i*2+0] = pd.color;
+				rotAndScale[i*2+0] = (float) pd.rot.getAsDouble();
+				rotAndScale[i*2+1] = (float) pd.scale.getAsDouble();
+				colors[i*2+0] = pd.color.getAsInt();
 				colors[i*2+1] = pd.pickColor;
 			}
 			va.setBuffer(1, 2, position);
@@ -131,82 +133,28 @@ public class Points implements Renderable {
 	 * {@link #setDirty()} needs to be called in order for this {@link Points}
 	 * object to update and reflect the changed location.
 	 * @param p point location
-	 * @param rot rotation of the glyph for the point in radian
-	 * @param scale scaling of the glyph for the point
-	 * @param color integer packed ARGB color value of the glyph for the point (e.g. 0xff00ff00 = opaque green)
-	 * @param pick picking color of the point (see {@link Points} for details)
-	 * @return this for chaining
+	 * @return added PointDetails
 	 */
-	public Points addPoint(Point2D p, double rot, double scale, int color, int pick){
-		this.points.add(new PointDetails(p, (float)rot, (float)scale, color, pick));
-		return setDirty();
+	public PointDetails addPoint(Point2D p){
+		PointDetails pd = new PointDetails(p);
+		this.points.add(pd);
+		setDirty();
+		return pd;
 	}
-
+	
 	/**
 	 * Adds a point to this {@link Points} object.
 	 * This sets the {@link #isDirty()} state to true.
-	 * @param px x coordinate of point
-	 * @param py y coordinate of point
-	 * @param rot rotation of the glyph for the point in radian
-	 * @param scale scaling of the glyph for the point
-	 * @param color integer packed ARGB color value of the glyph for the point (e.g. 0xff00ff00 = opaque green)
-	 * @param pick picking color of the point (see {@link Points} for details)
-	 * @return this for chaining
+	 * <p>
+	 * When keeping a reference to the location and changing it later on,
+	 * {@link #setDirty()} needs to be called in order for this {@link Points}
+	 * object to update and reflect the changed location.
+	 * @param x coordinate of point
+	 * @param y coordinate of point
+	 * @return added PointDetails
 	 */
-	public Points addPoint(double px, double py, double rot, double scale, int color, int pick){
-		return addPoint(new Point2D.Double(px, py), rot, scale, color, pick);
-	}
-
-	/**
-	 * Adds a point to this {@link Points} object.
-	 * This sets the {@link #isDirty()} state to true.
-	 * @param px x coordinate of point
-	 * @param py y coordinate of point
-	 * @param rot rotation of the glyph for the point in radian
-	 * @param scale scaling of the glyph for the point
-	 * @param color integer packed ARGB color value of the glyph for the point (e.g. 0xff00ff00 = opaque green)
-	 * @return this for chaining
-	 */
-	public Points addPoint(double px, double py, double rot, double scale, int color){
-		return addPoint(px, py, rot, scale, color, 0);
-	}
-
-
-	/**
-	 * Adds a point to this {@link Points} object.
-	 * This sets the {@link #isDirty()} state to true.
-	 * @param px x coordinate of point
-	 * @param py y coordinate of point
-	 * @param rot rotation of the glyph for the point in radian
-	 * @param scale scaling of the glyph for the point
-	 * @param color of the glyph for the point
-	 * @return this for chaining
-	 */
-	public Points addPoint(double px, double py, double rot, double scale, Color color){
-		return addPoint(px, py, rot, scale, color.getRGB(), 0);
-	}
-
-	/**
-	 * Adds a point to this {@link Points} object.
-	 * This sets the {@link #isDirty()} state to true.
-	 * @param px x coordinate of point
-	 * @param py y coordinate of point
-	 * @param color of the glyph for the point
-	 * @return this for chaining
-	 */
-	public Points addPoint(double px, double py, Color color){
-		return addPoint(px, py, 0, 1, color.getRGB(), 0);
-	}
-
-	/**
-	 * Adds a point to this {@link Points} object.
-	 * This sets the {@link #isDirty()} state to true.
-	 * @param px x coordinate of point
-	 * @param py y coordinate of point
-	 * @return this for chaining
-	 */
-	public Points addPoint(double px, double py){
-		return addPoint(px, py, 0, 1, 0xff555555, 0);
+	public PointDetails addPoint(double x, double y){
+		return addPoint(new Point2D.Double(x, y));
 	}
 
 	/**
@@ -314,19 +262,95 @@ public class Points implements Renderable {
 	 */
 	public static class PointDetails {
 		public Point2D location;
-		public float rot;
-		public float scale;
-		public int color;
+		public DoubleSupplier rot;
+		public DoubleSupplier scale;
+		public IntSupplier color;
 		public int pickColor;
 		
-		public PointDetails(Point2D location, float rot, float scale, int color, int pickColor) {
+		public PointDetails(Point2D location) {
 			this.location = location;
-			this.rot = rot;
+			this.rot = ()->0;
+			this.scale = ()->1;
+			this.color = ()->0xff555555;
+		}
+		
+		/**
+		 * Sets the rotation of the glyph for this point
+		 * @param rot rotation in radian
+		 * @return this for chaining
+		 */
+		public PointDetails setRotation(double rot){
+			return setRotation(()->rot);
+		}
+		
+		/**
+		 * Sets the rotation of the glyph for this point
+		 * @param rotation in radian
+		 * @return this for chaining
+		 */
+		public PointDetails setRotation(DoubleSupplier rotation){
+			this.rot = rotation;
+			return this;
+		}
+		
+		/**
+		 * Sets the scaling of this point's glyph		
+		 * @param scale scaling
+		 * @return this for chaining
+		 */
+		public PointDetails setScaling(DoubleSupplier scale){
 			this.scale = scale;
+			return this;
+		}
+		
+		/**
+		 * Sets the scaling of this point's glyph		
+		 * @param scale scaling
+		 * @return this for chaining
+		 */
+		public PointDetails setScaling(double scale){
+			return setScaling(()->scale);
+		}
+		
+		/**
+		 * Sets this point's color
+		 * @param color integer packed ARGB color value of the glyph for the point (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public PointDetails setColor(IntSupplier color){
 			this.color = color;
-			if(pickColor != 0)
-				pickColor = pickColor | 0xff000000;
-			this.pickColor = pickColor;
+			return this;
+		}
+		
+		/**
+		 * Sets this point's color
+		 * @param color integer packed ARGB color value of the glyph for the point (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public PointDetails setColor(int color){
+			return setColor(()->color);
+		}
+		
+		/**
+		 * Sets this point's color
+		 * @param color of this point's glyph
+		 * @return this for chaining
+		 */
+		public PointDetails setColor(Color color){
+			return setColor(color.getRGB());
+		}
+		
+		/**
+		 * Sets the picking color.
+		 * When a non 0 transparent color is specified its alpha channel will be set to 0xff to make it opaque.
+		 * @param pickID picking color of the point (see {@link Points} for details)
+		 * @return this for chaining
+		 */
+		public PointDetails setPickColor(int pickID){
+			if(pickID != 0)
+				pickID = pickID | 0xff000000;
+			this.pickColor = pickID;
+			return this;
 		}
 	}
 	
