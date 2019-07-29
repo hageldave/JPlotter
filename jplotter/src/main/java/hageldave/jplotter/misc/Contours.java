@@ -173,7 +173,7 @@ public class Contours {
 						y0 = ty0+m0*(ty1-ty0);
 						x1 = tx0+m1*(tx2-tx0);
 						y1 = ty0+m1*(ty2-ty0);
-						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), color,color,0));
+						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1)).setColor(color));
 						break;
 					}
 					case 0b010:{
@@ -184,7 +184,7 @@ public class Contours {
 						y0 = ty1+m0*(ty0-ty1);
 						x1 = tx1+m1*(tx2-tx1);
 						y1 = ty1+m1*(ty2-ty1);
-						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), color,color,0));
+						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1)).setColor(color));
 						break;
 					}
 					case 0b001:{
@@ -195,7 +195,7 @@ public class Contours {
 						y0 = ty2+m0*(ty0-ty2);
 						x1 = tx2+m1*(tx1-tx2);
 						y1 = ty2+m1*(ty1-ty2);
-						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), color,color,0));
+						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1)).setColor(color));
 						break;
 					}
 					case 0b011:{
@@ -206,7 +206,7 @@ public class Contours {
 						y0 = ty0+m0*(ty1-ty0);
 						x1 = tx0+m1*(tx2-tx0);
 						y1 = ty0+m1*(ty2-ty0);
-						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), color,color,0));
+						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1)).setColor(color));
 						break;
 					}
 					case 0b101:{
@@ -217,7 +217,7 @@ public class Contours {
 						y0 = ty1+m0*(ty0-ty1);
 						x1 = tx1+m1*(tx2-tx1);
 						y1 = ty1+m1*(ty2-ty1);
-						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), color,color,0));
+						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1)).setColor(color));
 						break;
 					}
 					case 0b110:{
@@ -228,7 +228,7 @@ public class Contours {
 						y0 = ty2+m0*(ty0-ty2);
 						x1 = tx2+m1*(tx1-tx2);
 						y1 = ty2+m1*(ty1-ty2);
-						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), color,color,0));
+						cntrLineSegments.add(new SegmentDetails(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1)).setColor(color));
 						break;
 					}
 					default:
@@ -328,11 +328,10 @@ public class Contours {
 					case 0x222: // no intersection of isoline in this cell
 						break;
 					case 0x111:{
-						tris.add(new TriangleDetails(
-								tx0, ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)), 
-								tx1, ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)), 
-								tx2, ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								0)
+						tris.add(new TriangleDetails(tx0,ty0, tx1,ty1, tx2,ty2)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)))
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
 						);
 						break;
 					}
@@ -345,10 +344,11 @@ public class Contours {
 						y0 = ty0+m0*(ty1-ty0);
 						x1 = tx0+m1*(tx2-tx0);
 						y1 = ty0+m1*(ty2-ty0);
-						tris.add(new TriangleDetails(
-								tx0, ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)), 
-								x0, y0, c1, 
-								x1, y1, c1,0));
+						tris.add(new TriangleDetails(tx0,ty0, x0,y0, x1,y1)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0))) 
+								.setColor1(c1) 
+								.setColor2(c1)
+						);
 						break;
 					}
 					case 0x122:{
@@ -359,10 +359,10 @@ public class Contours {
 						y0 = ty0+m0*(ty1-ty0);
 						x1 = tx0+m1*(tx2-tx0);
 						y1 = ty0+m1*(ty2-ty0);
-						tris.add(new TriangleDetails(
-								tx0, ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)), 
-								x0, y0, c2, 
-								x1, y1, c2,0));
+						tris.add(new TriangleDetails(tx0,ty0, x0,y0, x1,y1)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)))
+								.setColor1(c2) 
+								.setColor2(c2));
 						break;
 					}
 					case 0x010:{
@@ -373,10 +373,10 @@ public class Contours {
 						y0 = ty1+m0*(ty0-ty1);
 						x1 = tx1+m1*(tx2-tx1);
 						y1 = ty1+m1*(ty2-ty1);
-						tris.add(new TriangleDetails(
-								x0, y0, c1, 
-								tx1, ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)), 
-								x1, y1, c1,0));
+						tris.add(new TriangleDetails(x0,y0, tx1,ty1, x1,y1)
+								.setColor0(c1) 
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+								.setColor2(c1));
 						break;
 					}
 					case 0x212:{
@@ -387,10 +387,10 @@ public class Contours {
 						y0 = ty1+m0*(ty0-ty1);
 						x1 = tx1+m1*(tx2-tx1);
 						y1 = ty1+m1*(ty2-ty1);
-						tris.add(new TriangleDetails(
-								x0, y0, c2, 
-								tx1, ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)), 
-								x1, y1, c2,0));
+						tris.add(new TriangleDetails(x0,y0, tx1,ty1, x1,y1)
+								.setColor0(c2) 
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1))) 
+								.setColor2(c2));
 						break;
 					}
 					case 0x001:{
@@ -401,10 +401,10 @@ public class Contours {
 						y0 = ty2+m0*(ty0-ty2);
 						x1 = tx2+m1*(tx1-tx2);
 						y1 = ty2+m1*(ty1-ty2);
-						tris.add(new TriangleDetails(
-								x0, y0, c1,  
-								x1, y1, c1,
-								tx2, ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, tx2,ty2)
+								.setColor0(c1)  
+								.setColor1(c1)
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2))));
 						break;
 					}
 					case 0x221:{
@@ -415,10 +415,10 @@ public class Contours {
 						y0 = ty2+m0*(ty0-ty2);
 						x1 = tx2+m1*(tx1-tx2);
 						y1 = ty2+m1*(ty1-ty2);
-						tris.add(new TriangleDetails(
-								x0, y0, c2,  
-								x1, y1, c2,
-								tx2, ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, tx2,ty2)
+								.setColor0(c2)  
+								.setColor1(c2)
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2))));
 						break;
 					}
 					
@@ -432,16 +432,16 @@ public class Contours {
 						y0 = ty0+m0*(ty1-ty0);
 						x1 = tx0+m1*(tx2-tx0);
 						y1 = ty0+m1*(ty2-ty0);
-						tris.add(new TriangleDetails(
-								tx1,ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)),
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								x0,y0, c1
-								,0));
-						tris.add(new TriangleDetails(
-								x1,y1, c1,
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								x0,y0, c1
-								,0));
+						tris.add(new TriangleDetails(tx1,ty1, tx2,ty2, x0,y0)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(c1)
+						);
+						tris.add(new TriangleDetails(x1,y1, tx2,ty2, x0,y0)
+								.setColor0(c1)
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(c1)
+						);
 						break;
 					}
 					case 0x211:{
@@ -452,16 +452,16 @@ public class Contours {
 						y0 = ty0+m0*(ty1-ty0);
 						x1 = tx0+m1*(tx2-tx0);
 						y1 = ty0+m1*(ty2-ty0);
-						tris.add(new TriangleDetails(
-								tx1,ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)),
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								x0,y0, c2
-								,0));
-						tris.add(new TriangleDetails(
-								x1,y1, c2,
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								x0,y0, c2
-								,0));
+						tris.add(new TriangleDetails(tx1,ty1, tx2,ty2, x0,y0)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(c2)
+						);
+						tris.add(new TriangleDetails(x1,y1, tx2,ty2, x0,y0)
+								.setColor0(c2)
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(c2)
+						);
 						break;
 					}
 					case 0x101:{
@@ -472,16 +472,16 @@ public class Contours {
 						y0 = ty1+m0*(ty0-ty1);
 						x1 = tx1+m1*(tx2-tx1);
 						y1 = ty1+m1*(ty2-ty1);
-						tris.add(new TriangleDetails(
-								tx0,ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)),
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								x0,y0, c1
-								,0));
-						tris.add(new TriangleDetails(
-								x1,y1, c1,
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								x0,y0, c1
-								,0));
+						tris.add(new TriangleDetails(tx0,ty0, tx2,ty2, x0,y0)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)))
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(c1)
+						);
+						tris.add(new TriangleDetails(x1,y1, tx2,ty2, x0,y0)
+								.setColor0(c1)
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(c1)
+						);
 						break;
 					}
 					case 0x121:{
@@ -492,16 +492,16 @@ public class Contours {
 						y0 = ty1+m0*(ty0-ty1);
 						x1 = tx1+m1*(tx2-tx1);
 						y1 = ty1+m1*(ty2-ty1);
-						tris.add(new TriangleDetails(
-								tx0,ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)),
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								x0,y0, c2
-								,0));
-						tris.add(new TriangleDetails(
-								x1,y1, c2,
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)),
-								x0,y0, c2
-								,0));
+						tris.add(new TriangleDetails(tx0,ty0, tx2,ty2, x0,y0)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)))
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(c2)
+						);
+						tris.add(new TriangleDetails(x1,y1, tx2,ty2, x0,y0)
+								.setColor0(c2)
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+								.setColor2(c2)
+						);
 						break;
 					}
 					case 0x110:{
@@ -512,16 +512,16 @@ public class Contours {
 						y0 = ty2+m0*(ty0-ty2);
 						x1 = tx2+m1*(tx1-tx2);
 						y1 = ty2+m1*(ty1-ty2);
-						tris.add(new TriangleDetails(
-								tx0,ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)),
-								tx1,ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)),
-								x0,y0, c1
-								,0));
-						tris.add(new TriangleDetails(
-								x1,y1, c1,
-								tx1,ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)),
-								x0,y0, c1
-								,0));
+						tris.add(new TriangleDetails(tx0,ty0, tx1,ty1, x0,y0)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)))
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+								.setColor2(c1)
+						);
+						tris.add(new TriangleDetails(x1,y1, tx1,ty1, x0,y0)
+								.setColor0(c1)
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+								.setColor2(c1)
+						);
 						break;
 					}
 					case 0x112:{
@@ -532,16 +532,16 @@ public class Contours {
 						y0 = ty2+m0*(ty0-ty2);
 						x1 = tx2+m1*(tx1-tx2);
 						y1 = ty2+m1*(ty1-ty2);
-						tris.add(new TriangleDetails(
-								tx0,ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)),
-								tx1,ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)),
-								x0,y0, c2
-								,0));
-						tris.add(new TriangleDetails(
-								x1,y1, c2,
-								tx1,ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)),
-								x0,y0, c2
-								,0));
+						tris.add(new TriangleDetails(tx0,ty0, tx1,ty1, x0,y0)
+								.setColor0(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)))
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+								.setColor2(c2)
+						);
+						tris.add(new TriangleDetails(x1,y1, tx1,ty1, x0,y0)
+								.setColor0(c2)
+								.setColor1(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+								.setColor2(c2)
+						);
 						break;
 					}
 					// entirely in between vertices
@@ -555,8 +555,14 @@ public class Contours {
 						x1 = tx1+m1*(tx0-tx1); y1 = ty1+m1*(ty0-ty1);
 						x2 = tx2+m2*(tx0-tx2); y2 = ty2+m2*(ty0-ty2);
 						x3 = tx2+m3*(tx0-tx2); y3 = ty2+m3*(ty0-ty2);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
 						break;
 					}
 					case 0x020:{
@@ -569,8 +575,14 @@ public class Contours {
 						x1 = tx0+m1*(tx1-tx0); y1 = ty0+m1*(ty1-ty0);
 						x2 = tx2+m2*(tx1-tx2); y2 = ty2+m2*(ty1-ty2);
 						x3 = tx2+m3*(tx1-tx2); y3 = ty2+m3*(ty1-ty2);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
 						break;
 					}
 					case 0x002:{
@@ -583,8 +595,14 @@ public class Contours {
 						x1 = tx0+m1*(tx2-tx0); y1 = ty0+m1*(ty2-ty0);
 						x2 = tx1+m2*(tx2-tx1); y2 = ty1+m2*(ty2-ty1);
 						x3 = tx1+m3*(tx2-tx1); y3 = ty1+m3*(ty2-ty1);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
 						break;
 					}
 					case 0x220:{
@@ -597,8 +615,14 @@ public class Contours {
 						x1 = tx2-m1*(tx2-tx0); y1 = ty2-m1*(ty2-ty0);
 						x2 = tx2-m2*(tx2-tx1); y2 = ty2-m2*(ty2-ty1);
 						x3 = tx2-m3*(tx2-tx1); y3 = ty2-m3*(ty2-ty1);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
 						break;
 					}
 					case 0x202:{
@@ -611,8 +635,14 @@ public class Contours {
 						x1 = tx1-m1*(tx1-tx0); y1 = ty1-m1*(ty1-ty0);
 						x2 = tx1-m2*(tx1-tx2); y2 = ty1-m2*(ty1-ty2);
 						x3 = tx1-m3*(tx1-tx2); y3 = ty1-m3*(ty1-ty2);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
 						break;
 					}
 					case 0x022:{
@@ -625,8 +655,14 @@ public class Contours {
 						x1 = tx0-m1*(tx0-tx1); y1 = ty0-m1*(ty0-ty1);
 						x2 = tx0-m2*(tx0-tx2); y2 = ty0-m2*(ty0-ty2);
 						x3 = tx0-m3*(tx0-tx2); y3 = ty0-m3*(ty0-ty2);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
 						break;
 					}
 					// mixed cases (pentagons)
@@ -640,13 +676,19 @@ public class Contours {
 						x1 = tx0+m1*(tx2-tx0); y1 = ty0+m1*(ty2-ty0);
 						x2 = tx0+m2*(tx1-tx0); y2 = ty0+m2*(ty1-ty0);
 						x3 = tx1+m3*(tx2-tx1); y3 = ty1+m3*(ty2-ty1);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(
-								x3, y3, c2, 
-								x2, y2, c1, 
-								tx1,ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)), 
-								0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x2,y2, tx1,ty1)
+								.setColor0(c2) 
+								.setColor1(c1)
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+						);
 						break;
 					}
 					case 0x102:{
@@ -659,13 +701,19 @@ public class Contours {
 						x1 = tx1+m1*(tx2-tx1); y1 = ty1+m1*(ty2-ty1);
 						x2 = tx1+m2*(tx0-tx1); y2 = ty1+m2*(ty0-ty1);
 						x3 = tx0+m3*(tx2-tx0); y3 = ty0+m3*(ty2-ty0);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(
-								x3, y3, c2, 
-								x2, y2, c1, 
-								tx0,ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)), 
-								0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x2,y2, tx0,ty0)
+								.setColor0(c2)
+								.setColor1(c1) 
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0))) 
+						);
 						break;
 					}
 					case 0x120:{
@@ -678,13 +726,19 @@ public class Contours {
 						x1 = tx2+m1*(tx1-tx2); y1 = ty2+m1*(ty1-ty2);
 						x2 = tx2+m2*(tx0-tx2); y2 = ty2+m2*(ty0-ty2);
 						x3 = tx0+m3*(tx1-tx0); y3 = ty0+m3*(ty1-ty0);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(
-								x3, y3, c2, 
-								x2, y2, c1, 
-								tx0,ty0, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0)), 
-								0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x2,y2, tx0,ty0)
+								.setColor0(c2) 
+								.setColor1(c1) 
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v0))) 
+						);
 						break;
 					}
 					case 0x210:{
@@ -697,13 +751,19 @@ public class Contours {
 						x1 = tx2+m1*(tx0-tx2); y1 = ty2+m1*(ty0-ty2);
 						x2 = tx2+m2*(tx1-tx2); y2 = ty2+m2*(ty1-ty2);
 						x3 = tx1+m3*(tx0-tx1); y3 = ty1+m3*(ty0-ty1);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(
-								x3, y3, c2, 
-								x2, y2, c1, 
-								tx1,ty1, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)), 
-								0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x2,y2, tx1,ty1)
+								.setColor0(c2) 
+								.setColor1(c1) 
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v1)))
+						);
 						break;
 					}
 					case 0x201:{
@@ -716,13 +776,19 @@ public class Contours {
 						x1 = tx1+m1*(tx0-tx1); y1 = ty1+m1*(ty0-ty1);
 						x2 = tx1+m2*(tx2-tx1); y2 = ty1+m2*(ty2-ty1);
 						x3 = tx2+m3*(tx0-tx2); y3 = ty2+m3*(ty0-ty2);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(
-								x3, y3, c2, 
-								x2, y2, c1, 
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)), 
-								0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x2,y2, tx2,ty2)
+								.setColor0(c2) 
+								.setColor1(c1)
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+						);
 						break;
 					}
 					case 0x021:{
@@ -735,17 +801,22 @@ public class Contours {
 						x1 = tx0+m1*(tx1-tx0); y1 = ty0+m1*(ty1-ty0);
 						x2 = tx0+m2*(tx2-tx0); y2 = ty0+m2*(ty2-ty0);
 						x3 = tx2+m3*(tx1-tx2); y3 = ty2+m3*(ty1-ty2);
-						tris.add(new TriangleDetails(x0, y0, c1, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(x3, y3, c2, x1, y1, c2, x2, y2, c1, 0));
-						tris.add(new TriangleDetails(
-								x3, y3, c2, 
-								x2, y2, c1, 
-								tx2,ty2, interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)), 
-								0));
+						tris.add(new TriangleDetails(x0,y0, x1,y1, x2,y2)
+								.setColor0(c1)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x1,y1, x2,y2)
+								.setColor0(c2)
+								.setColor1(c2)
+								.setColor2(c1));
+						tris.add(new TriangleDetails(x3,y3, x2,y2, tx2,ty2)
+								.setColor0(c2) 
+								.setColor1(c1) 
+								.setColor2(interpolateColor(c1, c2, interpolateToValue(isoValue1, isoValue2, v2)))
+						);
 						break;
 					}
 					
-					// missing pentagon cases: ,021
 					default:
 //						throw new RuntimeException(Integer.toHexString(celltype));
 //						break;

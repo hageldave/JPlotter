@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
 import hageldave.jplotter.gl.FBO;
@@ -58,154 +59,28 @@ public class Triangles implements Renderable {
 	 * @param c1 integer packed ARGB color value of the second triangle vertex
 	 * @param x2 x coordinate of the third triangle vertex
 	 * @param y2 y coordinate of the third triangle vertex
-	 * @param c2 integer packed ARGB color value of the third triangle vertex
-	 * @param pick picking color of the triangle
-	 * @return this for chaining
+	 * @return added triangles
 	 */
-	public Triangles addTriangle(
-			double x0, double y0, int c0, 
-			double x1, double y1, int c1, 
-			double x2, double y2, int c2,
-			int pick
-	){
-		this.triangles.add(new TriangleDetails((float)x0, (float)y0, c0, (float)x1, (float)y1, c1, (float)x2, (float)y2, c2, pick));
-		setDirty();
-		return this;
-	}
-	
-	/**
-	 * Adds a triangle to this collection.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param x0 x coordinate of the first triangle vertex
-	 * @param y0 y coordinate of the first triangle vertex
-	 * @param c0 integer packed ARGB color value of the first triangle vertex (0xff00ff00 = opaque green)
-	 * @param x1 x coordinate of the second triangle vertex
-	 * @param y1 y coordinate of the second triangle vertex
-	 * @param c1 integer packed ARGB color value of the second triangle vertex
-	 * @param x2 x coordinate of the third triangle vertex
-	 * @param y2 y coordinate of the third triangle vertex
-	 * @param c2 integer packed ARGB color value of the third triangle vertex
-	 * @return this for chaining
-	 */
-	public Triangles addTriangle(
-			double x0, double y0, int c0, 
-			double x1, double y1, int c1, 
-			double x2, double y2, int c2
-	){
-		return this.addTriangle(x0, y0, c0, x1, y1, c1, x2, y2, c2, 0);
-	}
-	
-	/**
-	 * Adds a triangle to this collection.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param x0 x coordinate of the first triangle vertex
-	 * @param y0 y coordinate of the first triangle vertex
-	 * @param x1 x coordinate of the second triangle vertex
-	 * @param y1 y coordinate of the second triangle vertex
-	 * @param x2 x coordinate of the third triangle vertex
-	 * @param y2 y coordinate of the third triangle vertex
-	 * @param color of the triangle
-	 * @param pickColor picking color of the triangle
-	 * @return this for chaining
-	 */
-	public Triangles addTriangle(
-			double x0, double y0, 
-			double x1, double y1, 
-			double x2, double y2,
-			Color color, int pickColor
-	){
-		int c = color.getRGB();
-		return this.addTriangle(x0, y0, c, x1, y1, c, x2, y2, c, pickColor);
-	}
-	
-	/**
-	 * Adds a triangle to this collection.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param x0 x coordinate of the first triangle vertex
-	 * @param y0 y coordinate of the first triangle vertex
-	 * @param x1 x coordinate of the second triangle vertex
-	 * @param y1 y coordinate of the second triangle vertex
-	 * @param x2 x coordinate of the third triangle vertex
-	 * @param y2 y coordinate of the third triangle vertex
-	 * @param color of the triangle
-	 * @return this for chaining
-	 */
-	public Triangles addTriangle(
-			double x0, double y0, 
-			double x1, double y1, 
-			double x2, double y2,
-			Color color
-	){
-		int c = color.getRGB();
-		return this.addTriangle(x0, y0, c, x1, y1, c, x2, y2, c);
-	}
-	
-	/**
-	 * Adds a triangle to this collection.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param p0 first vertex of the triangle
-	 * @param p1 second vertex of the triangle
-	 * @param p2 third vertex of the triangle
-	 * @param color of the triangle
-	 * @param pickColor picking color of the triangle
-	 * @return this for chaining
-	 */
-	public Triangles addTriangle(
-			Point2D p0, Point2D p1,Point2D p2,
-			Color color, int pickColor
-	){
-		int c = color.getRGB();
-		return this.addTriangle(p0.getX(), p0.getY(), c, p1.getX(), p1.getY(), c, p2.getX(), p2.getY(), c, pickColor);
-	}
-	
-	/**
-	 * Adds a triangle to this collection.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param p0 first vertex of the triangle
-	 * @param p1 second vertex of the triangle
-	 * @param p2 third vertex of the triangle
-	 * @param color of the triangle
-	 * @return this for chaining
-	 */
-	public Triangles addTriangle(
-			Point2D p0, Point2D p1,Point2D p2,
-			Color color
-	){
-		int c = color.getRGB();
-		return this.addTriangle(p0.getX(), p0.getY(), c, p1.getX(), p1.getY(), c, p2.getX(), p2.getY(), c);
-	}
-	
-	/**
-	 * Adds a triangle to this collection.
-	 * Triangle will be colored with 0xffaaaaaa.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param x0 x coordinate of the first triangle vertex
-	 * @param y0 y coordinate of the first triangle vertex
-	 * @param x1 x coordinate of the second triangle vertex
-	 * @param y1 y coordinate of the second triangle vertex
-	 * @param x2 x coordinate of the third triangle vertex
-	 * @param y2 y coordinate of the third triangle vertex
-	 * @return this for chaining
-	 */
-	public Triangles addTriangle(
-			double x0, double y0, 
+	public TriangleDetails addTriangle(
+			double x0, double y0,
 			double x1, double y1, 
 			double x2, double y2
 	){
-		int c = 0xffaaaaaa;
-		return this.addTriangle(x0, y0, c, x1, y1, c, x2, y2, c);
+		TriangleDetails tri = new TriangleDetails(x0, y0, x1, y1, x2, y2);
+		this.triangles.add(tri);
+		setDirty();
+		return tri;
 	}
 	
 	/**
 	 * Adds a triangle to this collection.
-	 * Triangle will be colored with 0xffaaaaaa.
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param p0 first vertex of the triangle
 	 * @param p1 second vertex of the triangle
 	 * @param p2 third vertex of the triangle
-	 * @return this for chaining
+	 * @return added triangle
 	 */
-	public Triangles addTriangle(Point2D p0, Point2D p1,Point2D p2){
+	public TriangleDetails addTriangle(Point2D p0, Point2D p1, Point2D p2){
 		return this.addTriangle(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY());
 	}
 	
@@ -220,69 +95,18 @@ public class Triangles implements Renderable {
 	 * @param yTR top right y
 	 * @param xBR bottom right x
 	 * @param yBR bottom right y
-	 * @param color of the quad
-	 * @param pickColor picking color of the quad
-	 * @return this for chaining
+	 * @return added triangles
 	 */
-	public Triangles addQuad(
-			double xBL, double yBL,
-			double xTL, double yTL,
-			double xTR, double yTR,
-			double xBR, double yBR,
-			Color color, int pickColor
-	){
-		return this
-				.addTriangle(xBL, yBL, xTL, yTL, xTR, yTR, color, pickColor)
-				.addTriangle(xBL, yBL, xTR, yTR, xBR, yBR, color, pickColor);
-	}
-	
-	/**
-	 * Adds two triangles that form the specified quad.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param xBL bottom left x
-	 * @param yBL bottom left y
-	 * @param xTL top left x
-	 * @param yTL top left y
-	 * @param xTR top right x
-	 * @param yTR top right y
-	 * @param xBR bottom right x
-	 * @param yBR bottom right y
-	 * @param color of the quad
-	 * @return this for chaining
-	 */
-	public Triangles addQuad(
-			double xBL, double yBL,
-			double xTL, double yTL,
-			double xTR, double yTR,
-			double xBR, double yBR,
-			Color color
-	){
-		return this.addQuad(xBL, yBL, xTL, yTL, xTR, yTR, xBR, yBR, color, 0);
-	}
-	
-	/**
-	 * Adds two triangles that form the specified quad.
-	 * The quad will be colored with 0xffaaaaaa.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param xBL bottom left x
-	 * @param yBL bottom left y
-	 * @param xTL top left x
-	 * @param yTL top left y
-	 * @param xTR top right x
-	 * @param yTR top right y
-	 * @param xBR bottom right x
-	 * @param yBR bottom right y
-	 * @return this for chaining
-	 */
-	public Triangles addQuad(
+	public ArrayList<TriangleDetails> addQuad(
 			double xBL, double yBL,
 			double xTL, double yTL,
 			double xTR, double yTR,
 			double xBR, double yBR
 	){
-		return this
-				.addTriangle(xBL, yBL, xTL, yTL, xTR, yTR)
-				.addTriangle(xBL, yBL, xTR, yTR, xBR, yBR);
+		ArrayList<TriangleDetails> tris = new ArrayList<>(2);
+		tris.add( this.addTriangle(xBL, yBL, xTL, yTL, xTR, yTR) );
+		tris.add( this.addTriangle(xBL, yBL, xTR, yTR, xBR, yBR) );
+		return tris;
 	}
 	
 	/**
@@ -292,39 +116,9 @@ public class Triangles implements Renderable {
 	 * @param tl top left vertex
 	 * @param tr top right vertex
 	 * @param br bottom right vertex
-	 * @param color of the quad
-	 * @return this for chaining
+	 * @return added triangles
 	 */
-	public Triangles addQuad(Point2D bl, Point2D tl, Point2D tr, Point2D br, Color color){
-		return this.addQuad(bl.getX(), bl.getY(), tl.getX(), tl.getY(), tr.getX(), tr.getY(), br.getX(), br.getY(), color);
-	}
-	
-	/**
-	 * Adds two triangles that form the specified quad.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param bl bottom left vertex
-	 * @param tl top left vertex
-	 * @param tr top right vertex
-	 * @param br bottom right vertex
-	 * @param color of the quad
-	 * @param pickColor picking color of the quad
-	 * @return this for chaining
-	 */
-	public Triangles addQuad(Point2D bl, Point2D tl, Point2D tr, Point2D br, Color color, int pickColor){
-		return this.addQuad(bl.getX(), bl.getY(), tl.getX(), tl.getY(), tr.getX(), tr.getY(), br.getX(), br.getY(), color, pickColor);
-	}
-	
-	/**
-	 * Adds two triangles that form the specified quad.
-	 * The quad will be colored with 0xffaaaaaa.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param bl bottom left vertex
-	 * @param tl top left vertex
-	 * @param tr top right vertex
-	 * @param br bottom right vertex
-	 * @return this for chaining
-	 */
-	public Triangles addQuad(Point2D bl, Point2D tl, Point2D tr, Point2D br){
+	public ArrayList<TriangleDetails> addQuad(Point2D bl, Point2D tl, Point2D tr, Point2D br){
 		return this.addQuad(bl.getX(), bl.getY(), tl.getX(), tl.getY(), tr.getX(), tr.getY(), br.getX(), br.getY());
 	}
 	
@@ -334,15 +128,14 @@ public class Triangles implements Renderable {
 	 * @param rect rectangle
 	 * @param color color of the rectangle
 	 * @param picking picking color of the rectangle
-	 * @return this for chaining
+	 * @return added triangles
 	 */
-	public Triangles addQuad(Rectangle2D rect, Color color, int picking){
+	public ArrayList<TriangleDetails> addQuad(Rectangle2D rect){
 		return this.addQuad(
 				rect.getMinX(), rect.getMinY(), 
 				rect.getMinX(), rect.getMaxY(), 
 				rect.getMaxX(), rect.getMaxY(), 
-				rect.getMaxX(), rect.getMinY(), 
-				color, picking);
+				rect.getMaxX(), rect.getMinY());
 	}
 	
 	
@@ -351,35 +144,20 @@ public class Triangles implements Renderable {
 	 * Each vertex forms a new triangle together with the two preceding vertices.
 	 * Make sure that the first vertex is the one that is not shared with the second triangle in the strip.
 	 * Sets the {@link #isDirty()} state to true.
-	 * @param color of the triangles in the strip
-	 * @param pickColor picking color of the strip
 	 * @param points the vertices (at least 3)
-	 * @return this for chaining
+	 * @return added triangles
 	 * @throws IllegalArgumentException when less than 3 vertices were specified
 	 */
-	public Triangles addStrip(Color color, int pickColor, Point2D ... points){
+	public ArrayList<TriangleDetails> addStrip(Point2D ... points){
 		if(points.length < 3){
 			throw new IllegalArgumentException("not enough points for triangle strip, need at least 3 but got " + points.length);
 		}
+		ArrayList<TriangleDetails> tris = new ArrayList<>(points.length-2);
 		for(int i = 0; i < points.length-2; i++){
-			addTriangle(points[i], points[i+1], points[i+2], color, pickColor);
+			TriangleDetails tri = addTriangle(points[i], points[i+1], points[i+2]);
+			tris.add(tri);
 		}
-		return this;
-	}
-	
-	/**
-	 * Adds a series of triangles called a triangle strip to {@link Triangles} object.
-	 * Each vertex forms a new triangle together with the two preceding vertices.
-	 * Make sure that the first vertex is the one that is not shared with the second triangle in the strip.
-	 * The triangles will be colored with 0xffaaaaaa.
-	 * Sets the {@link #isDirty()} state to true.
-	 * @param color color of the triangle strip
-	 * @param points the vertices (at least 3)
-	 * @return this for chaining
-	 * @throws IllegalArgumentException when less than 3 vertices were specified
-	 */
-	public Triangles addStrip(Color color, Point2D ... points){
-		return this.addStrip(color, 0, points);
+		return tris;
 	}
 	
 	/**
@@ -395,17 +173,19 @@ public class Triangles implements Renderable {
 	 * @throws IllegalArgumentException when less than 3 vertices were specified or an odd number of coordinates
 	 * was specified.
 	 */
-	public Triangles addStrip(Color color, int pickColor, double... coords){
+	public ArrayList<TriangleDetails> addStrip(double... coords){
 		if(coords.length < 6){
 			throw new IllegalArgumentException("not enough coordinates for triangle strip, need at least 6 ( 3x {x,y} ) but got " + coords.length);
 		}
 		if(coords.length % 2 != 0){
 			throw new IllegalArgumentException("need an even number of coordinates for triangle strip ({x,y} pairs), but got " + coords.length);
 		}
+		ArrayList<TriangleDetails> tris = new ArrayList<>(coords.length/2-2);
 		for(int i = 0; i < coords.length/2-2; i++){
-			addTriangle(coords[i*2+0], coords[i*2+1], coords[i*2+2], coords[i*2+3], coords[i*2+4], coords[i*2+5], color, pickColor);
+			TriangleDetails tri = addTriangle(coords[i*2+0], coords[i*2+1], coords[i*2+2], coords[i*2+3], coords[i*2+4], coords[i*2+5]);
+			tris.add(tri);
 		}
-		return this;
+		return tris;
 	}
 	
 	/**
@@ -483,12 +263,12 @@ public class Triangles implements Renderable {
 				vertices[i*6+4] = tri.x2;
 				vertices[i*6+5] = tri.y2;
 
-				vColors[i*6+0] = tri.c0;
-				vColors[i*6+1] = tri.pick;
-				vColors[i*6+2] = tri.c1;
-				vColors[i*6+3] = tri.pick;
-				vColors[i*6+4] = tri.c2;
-				vColors[i*6+5] = tri.pick;
+				vColors[i*6+0] = tri.c0.getAsInt();
+				vColors[i*6+1] = tri.pickColor;
+				vColors[i*6+2] = tri.c1.getAsInt();
+				vColors[i*6+3] = tri.pickColor;
+				vColors[i*6+4] = tri.c2.getAsInt();
+				vColors[i*6+5] = tri.pickColor;
 			}
 			va.setBuffer(0, 2, vertices);
 			va.setBuffer(1, 2, false, vColors);
@@ -572,13 +352,13 @@ public class Triangles implements Renderable {
 	 */
 	public static class TriangleDetails {
 		public float x0,x1,x2, y0,y1,y2;
-		public int c0,c1,c2, pick;
+		public IntSupplier c0,c1,c2; 
+		public int pickColor;
 		
 		public TriangleDetails(
-				float x0, float y0, int c0, 
-				float x1, float y1, int c1, 
-				float x2, float y2, int c2,
-				int pick)
+				float x0, float y0,
+				float x1, float y1,
+				float x2, float y2)
 		{
 			this.x0 = x0;
 			this.x1 = x1;
@@ -586,20 +366,139 @@ public class Triangles implements Renderable {
 			this.y0 = y0;
 			this.y1 = y1;
 			this.y2 = y2;
-			this.c0 = c0;
-			this.c1 = c1;
-			this.c2 = c2;
-			if(pick != 0)
-				pick = pick | 0xff000000;
-			this.pick = pick;
+			this.c0 = c1 = c2 = ()->0xffaaaaaa;
 		}
 		public TriangleDetails(
-				double x0, double y0, int c0, 
-				double x1, double y1, int c1, 
-				double x2, double y2, int c2,
-				int pick) 
+				double x0, double y0, 
+				double x1, double y1,
+				double x2, double y2)
 		{
-			this((float)x0, (float)y0, c0, (float)x1, (float)y1, c1, (float)x2, (float)y2, c2, pick);
+			this((float)x0, (float)y0, (float)x1, (float)y1, (float)x2, (float)y2);
+		}
+		
+		/**
+		 * Sets the picking color.
+		 * When a non 0 transparent color is specified its alpha channel will be set to 0xff to make it opaque.
+		 * @param pickID picking color of the triangle (see {@link Triangles} for details)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setPickColor(int pickID){
+			if(pickID != 0)
+				pickID = pickID | 0xff000000;
+			this.pickColor = pickID;
+			return this;
+		}
+		
+		/**
+		 * Sets the color for vertex 0
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor0(IntSupplier color){
+			this.c0 = color;
+			return this;
+		}
+		
+		/**
+		 * Sets the color for vertex 1
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor1(IntSupplier color){
+			this.c1 = color;
+			return this;
+		}
+		
+		/**
+		 * Sets the color for vertex 2
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor2(IntSupplier color){
+			this.c2 = color;
+			return this;
+		}
+		
+		/**
+		 * Sets the color of the triangle (all vertices)
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor(IntSupplier color){
+			this.c0 = this.c1 = this.c2 = color;
+			return this;
+		}
+		
+		/**
+		 * Sets the color of vertex 0
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor0(int color){
+			return setColor0(()->color);
+		}
+		
+		/**
+		 * Sets the color of vertex 1
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor1(int color){
+			return setColor1(()->color);
+		}
+		
+		/**
+		 * Sets the color of vertex 2
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor2(int color){
+			return setColor2(()->color);
+		}
+		
+		/**
+		 * Sets the color of the triangle (all vertices)
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor(int color){
+			return setColor(()->color);
+		}
+		
+		/**
+		 * Sets the color of vertex 0
+		 * @param color of v0
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor0(Color color){
+			return setColor0(color.getRGB());
+		}
+		
+		/**
+		 * Sets the color of vertex 1
+		 * @param color of v1
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor1(Color color){
+			return setColor1(color.getRGB());
+		}
+		
+		/**
+		 * Sets the color of vertex 2
+		 * @param color of v2
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor2(Color color){
+			return setColor2(color.getRGB());
+		}
+		
+		/**
+		 * Sets the color the triangle (all vertices)
+		 * @param color of the triangle
+		 * @return this for chaining
+		 */
+		public TriangleDetails setColor(Color color){
+			return setColor(color.getRGB());
 		}
 	}
 	
