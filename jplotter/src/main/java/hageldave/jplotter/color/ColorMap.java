@@ -11,18 +11,57 @@ import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.jplotter.util.Utils;
 
+/**
+ * The ColorMap interface defines discrete mapping from a fixed integer 
+ * interval [0..N-1] to colors through the {@link #getColor(int)} method.
+ * It also defines a continuous mapping from the unit interval [0,1] to 
+ * colors through the {@link #interpolate(double)} method.
+ * For this each of the discrete colors is mapped to a location within
+ * the unit interval [0,1] with the first color mapping to 0 and the last
+ * mapping to 1.
+ * The colors in between have arbitrary but ascending locations within ]0,1[
+ * which can be accessed using {@link #getLocation(int)}.
+ * 
+ * @author hageldave
+ */
 public interface ColorMap {
 	
+	/**
+	 * @return the number of discrete colors in this {@link ColorMap}
+	 */
 	public int numColors();
 	
-	public int getColor(int index);
+	/**
+	 * Returns the ith color
+	 * @param i index of the color
+	 * @return ith color in integer packed ARGB format (0xff00ff00 is opaque green)
+	 */
+	public int getColor(int i);
 	
+	/**
+	 * @return all discrete colors in this {@link ColorMap} 
+	 * in integer packed ARGB format (0xff00ff00 is opaque green)
+	 */
 	public int[] getColors();
 	
-	public double getLocation(int index);
+	/**
+	 * Returns the location of the ith color within the unit interval.
+	 * @param i index of the location/color
+	 * @return location within [0,1]
+	 */
+	public double getLocation(int i);
 	
+	/**
+	 * @return all locations of the discrete colors in this {@link ColorMap}
+	 */
 	public double[] getLocations();
 	
+	/**
+	 * linearly interpolates colors for the specified location of the unit interval.
+	 * @param m location within [0,1]
+	 * @return the interpolated color for specified location
+	 * in integer packed ARGB format (0xff00ff00 is opaque green)
+	 */
 	public default int interpolate(double m){
 		m = Utils.clamp(0, m, 1);
 		int idx = Arrays.binarySearch(getLocations(), (float)m);
@@ -38,12 +77,20 @@ public interface ColorMap {
 		}
 	}
 	
+	/**
+	 * @return copy of this color map
+	 */
 	public default SimpleColorMap copy(){
 		int[] colors = getColors().clone();
 		double[] locations = getLocations().clone();
 		return new SimpleColorMap(colors, locations);
 	}
 	
+	/**
+	 * Returns a reversed version of this color map, where
+	 * the order of colors and locations is reversed.
+	 * @return reversed color map 
+	 */
 	public default SimpleColorMap reversed(){
 		int[] colors = IntStream.range(0, numColors())
 				.map(i->getColor(numColors()-1-i))
@@ -55,6 +102,16 @@ public interface ColorMap {
 		return new SimpleColorMap(colors, locations);
 	}
 	
+	/**
+	 * Returns a copy of this map where the specified color transformation
+	 * (color grading) has been applied to each of the discrete colors.
+	 * <p>
+	 * A few {@link ColorGrader}s have been defined as static methods
+	 * in the {@link ColorMap} interface.
+	 * 
+	 * @param colorGraders the color transformation
+	 * @return color graded map
+	 */
 	public default SimpleColorMap colorGrade(ColorGrader... colorGraders){
 		SimpleColorMap copy = copy();
 		for(ColorGrader grader:colorGraders)
@@ -62,6 +119,14 @@ public interface ColorMap {
 		return copy;
 	}
 	
+	/**
+	 * Returns a uniformly sampled version of this map with the specified
+	 * number of samples within the specified interval.
+	 * @param numSamples number of uniform samples
+	 * @param start of sampling interval within [0,1[
+	 * @param end of sampling interval within ]0,1]
+	 * @return re-sampled map
+	 */
 	public default SimpleColorMap resample(int numSamples, double start, double end){
 		start = Utils.clamp(0, start, 1);
 		end = Utils.clamp(0, end, 1);
@@ -76,10 +141,25 @@ public interface ColorMap {
 	
 	// MAP GRADING UTILITY METHODS
 	
+	/**
+	 * The ColorGrading interface defines a color transformation 
+	 * on a sequence of colors.
+	 * @author hageldave
+	 */
 	public static interface ColorGrader {
+		/**
+		 * applies the grading
+		 * @param colors sequence of colors 
+		 * in integer packed ARGB format (0xff00ff00 is opaque green)
+		 */
 		public void applyTo(int[] colors);
 	}
 	
+	/**
+	 * {@link ColorGrader} for shifting hue in HSV color space.
+	 * @param degree the angle by which hue is shifted within [0,360]
+	 * @return hue shifting grader
+	 */
 	public static ColorGrader hueShift(double degree){
 		double shift = degree/360;
 		return gradeAsPixels(
@@ -89,6 +169,13 @@ public interface ColorMap {
 			);
 	}
 	
+	/**
+	 * {@link ColorGrader} that copies the hue and saturation of the
+	 * specified color in HSV color space to the colorized sequence.
+	 * The value (as in HSV) is preserved.
+	 * @param color in integer packed ARGB format (0xff00ff00 is opaque green)
+	 * @return colorizing grader
+	 */
 	public static ColorGrader colorize(int color){
 		Pixel colorPx = new Img(1, 1, new int[]{color}).getPixel();
 		ColorSpaceTransformation.RGB_2_HSV.accept(colorPx);
@@ -97,7 +184,14 @@ public interface ColorMap {
 				.andThen(ColorSpaceTransformation.HSV_2_RGB));
 	}
 	
-	public static ColorGrader saturpxate(double m){
+	/**
+	 * {@link ColorGrader} that multiplies the saturation of a color
+	 * by the specified factor. Desaturation will occur when factor is
+	 * less than 1.
+	 * @param m saturation factor in [0,infty[
+	 * @return saturating grader
+	 */
+	public static ColorGrader saturate(double m){
 		return gradeAsPixels(ColorSpaceTransformation.RGB_2_HSV
 				.andThen(px->px.setG_fromDouble(px.g_asDouble()*m))
 				.andThen(ColorSpaceTransformation.HSV_2_RGB));
@@ -141,14 +235,6 @@ public interface ColorMap {
 	
 	public static ColorGrader gradeAsPixels(Consumer<PixelBase> consumer){
 		return gradeAsImg(img->img.forEach(consumer));
-	}
-	
-	public static void main(String[] args) {
-		ColorMap map1 = DefaultColorMap.D_FRANCE;
-		ColorMap map2 = DefaultColorMap.S_TERRAIN;
-		Img img = new Img(200, 100);
-		img.forEach(px->px.setValue((px.getYnormalized()<0.5?map1:map2).interpolate(px.getXnormalized())));
-		ImageFrame.display(img);		
 	}
 	
 }
