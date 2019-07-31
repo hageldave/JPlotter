@@ -1,5 +1,22 @@
 package hageldave.jplotter.color;
 
+/**
+ * The {@link DefaultColorMap} enum provides predefined {@link ColorMap}s
+ * for different usecases.
+ * Each {@link DefaultColorMap} has a name starting with either of the
+ * followig letters which indicate the type of color map
+ * <ul>
+ * <li> S - sequential color map for mapping de-/increasing values, e.g.
+ * {@link #S_PLASMA}.
+ * <li> D - diverging color map for mapping values around a pivot value, e.g.
+ * {@link #D_COOL_WARM}.
+ * <li> Q - qualitative color map for mapping categorical values. Qualitative
+ * color map names also specify for how many categories they are suited, e.g.
+ * {@link #Q_12_PAIRED} has discrete colors for up to 12 categories.
+ * </ul>
+ * 
+ * @author hageldave
+ */
 public enum DefaultColorMap implements ColorMap {
 	S_BLACK_WHITE(0xff_000000,0xff_ffffff),
 	S_GRAY_WHITE(0xff_888888,0xff_ffffff),

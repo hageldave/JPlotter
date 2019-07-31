@@ -8,7 +8,6 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.PixelBase;
 import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
-import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.jplotter.util.Utils;
 
 /**
@@ -197,18 +196,34 @@ public interface ColorMap {
 				.andThen(ColorSpaceTransformation.HSV_2_RGB));
 	}
 	
+	/**
+	 * {@link ColorGrader} that multiplies the value (as in HSV) of a color
+	 * by the specified factor, thus raising or lowering the luminance.
+	 * @param m illumination factor in [0,infty[
+	 * @return illuminating grader
+	 */
 	public static ColorGrader illuminate(double m){
 		return gradeAsPixels(ColorSpaceTransformation.RGB_2_HSV
 				.andThen(px->px.setB_fromDouble(px.b_asDouble()*m))
 				.andThen(ColorSpaceTransformation.HSV_2_RGB));
 	}
 	
+	/**
+	 * {@link ColorGrader} that adds the specified delta to the
+	 * value (as in HSV) of a color, thus raising or lowering the luminance.
+	 * @param delta value to add
+	 * @return illumination raising grader
+	 */
 	public static ColorGrader raiseLuminance(double delta){
 		return gradeAsPixels(ColorSpaceTransformation.RGB_2_HSV
 				.andThen(px->px.setB_fromDouble(px.b_asDouble()+delta))
 				.andThen(ColorSpaceTransformation.HSV_2_RGB));
 	}
 	
+	/**
+	 * {@link ColorGrader} that will invert colors in RGB color space
+	 * @return inverting grader
+	 */
 	public static ColorGrader invert() {
 		return gradeAsPixels(px->{
 			px	.setR_fromDouble(1-px.r_asDouble())
@@ -217,6 +232,14 @@ public interface ColorMap {
 		});
 	}
 	
+	/**
+	 * {@link ColorGrader} that spreads RGB values around a
+	 * specified mid point by a specified factor which results
+	 * in raising or lowering the contrast of a color sequence
+	 * @param m spread factor
+	 * @param mid point to spread RGB from in [0,1]
+	 * @return contrast raising grader
+	 */
 	public static ColorGrader raiseContrast(double m, double mid){
 		return gradeAsPixels(px->{
 			double r = px.r_asDouble();
@@ -228,6 +251,7 @@ public interface ColorMap {
 			px.setRGB_fromDouble_preserveAlpha(r, g, b);
 		});
 	}
+	
 	
 	public static ColorGrader gradeAsImg(Consumer<Img> consumer){
 		return colors -> consumer.accept(new Img(colors.length, 1, colors));
