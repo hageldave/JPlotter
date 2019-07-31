@@ -2,6 +2,8 @@ package hageldave.jplotter.svg;
 
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Font;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -15,15 +17,19 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.batik.anim.dom.SVGDOMImplementation;
+import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
+import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.misc.Glyph;
 
 /**
@@ -32,7 +38,7 @@ import hageldave.jplotter.misc.Glyph;
  * @author hageldave
  */
 public class SVGUtils {
-	
+
 	private static final AtomicLong defIdCounter = new AtomicLong();
 
 	/**
@@ -44,7 +50,7 @@ public class SVGUtils {
 	public static Element createSVGElement(Document doc, String element){
 		return doc.createElementNS(SVG_NAMESPACE_URI, element);
 	}
-	
+
 	/**
 	 * Creates a {@code rect} element of specified size and location, i.e.
 	 * sets the "x","y","width" and "height" attributes.
@@ -63,7 +69,7 @@ public class SVGUtils {
 		rect.setAttributeNS(null, "height", ""+h);
 		return rect;
 	}
-	
+
 	/**
 	 * Returns the specified coordinate values as would be specified
 	 * in a "points" attribute. E.g. "0,0 1.3,2 2.03,4.3"
@@ -81,7 +87,7 @@ public class SVGUtils {
 		}
 		return s;
 	}
-	
+
 	/**
 	 * Creates a {@code polygon} element with the specified triangle vertices,
 	 * i.e. sets the polygon's "points" attribute.
@@ -99,7 +105,7 @@ public class SVGUtils {
 		rect.setAttributeNS(null, "points", svgPoints(x0,y0,x1,y1,x2,y2));
 		return rect;
 	}
-	
+
 	/**
 	 * Returns an html like hexadecimal RGB color string
 	 * from the specified integer packed ARGB value.
@@ -110,7 +116,7 @@ public class SVGUtils {
 	public static String svgRGBhex(int argb){
 		return '#'+Integer.toHexString(0xff000000 | argb).substring(2);
 	}
-	
+
 	/**
 	 * Returns a CSS rgba color definition string
 	 * for the specified integer packed ARGB color value.
@@ -125,7 +131,7 @@ public class SVGUtils {
 				+svgNumber(Pixel.b_normalized(argb))+","
 				+svgNumber(Pixel.a_normalized(argb))+")";
 	}
-	
+
 	/**
 	 * Serializes the specified document as xml formatted string.
 	 * @param doc to serialize
@@ -138,7 +144,7 @@ public class SVGUtils {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try(
 				OutputStreamWriter osw = new OutputStreamWriter(baos, "UTF-8");
-		){
+				){
 			TranscoderOutput output = new TranscoderOutput(osw);
 			new SVGTranscoder().transcode(input, output);
 		} catch (IOException | TranscoderException e) {
@@ -154,7 +160,7 @@ public class SVGUtils {
 		}
 		return xml.toString();
 	}
-	
+
 	/**
 	 * Writes the specified document to file in xml format.
 	 * @param doc document to serialize
@@ -168,7 +174,7 @@ public class SVGUtils {
 				FileOutputStream fos = new FileOutputStream(file);
 				BufferedOutputStream bos = new BufferedOutputStream(fos);
 				OutputStreamWriter osfw = new OutputStreamWriter(bos, "UTF-8");
-		){
+				){
 			TranscoderOutput output = new TranscoderOutput(osfw);
 			SVGTranscoder svgTranscoder = new SVGTranscoder();
 			svgTranscoder.transcode(input, output);
@@ -176,16 +182,17 @@ public class SVGUtils {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	/**
 	 * Returns the {@code defs} element of the specified document.
 	 * @param doc to retrieve the definitions element from
 	 * @return the {@code defs} node or null if not existent.
 	 */
 	public static Node getDefs(Document doc){
-		return doc.getElementsByTagName("defs").item(0);
+		Element element = doc.getElementById("JPlotterDefs");
+		return element != null ? element : doc.getElementsByTagName("defs").item(0);
 	}
-	
+
 	/**
 	 * A new id string for use within the definitions section.
 	 * A global atomic counter is incremented to retrieve a
@@ -197,7 +204,7 @@ public class SVGUtils {
 	public static String newDefId(){
 		return "def_"+Long.toString(defIdCounter.incrementAndGet(), 32);
 	}
-	
+
 	/**
 	 * Returns a CSS font styling definition from
 	 * a {@link Font} style bit field.
@@ -218,7 +225,7 @@ public class SVGUtils {
 			return "font-style:normal;font-weight:normal;";
 		}
 	}
-	
+
 	/**
 	 * Formats the specified number for SVG, that is
 	 * at most 3 decimal places but preferably less to
@@ -238,7 +245,7 @@ public class SVGUtils {
 		}
 		return s;
 	}
-	
+
 	/**
 	 * Creates an SVG {@code symbol} definition in the specified documents {@code defs} section
 	 * for the specified {@link Glyph}.
@@ -264,5 +271,76 @@ public class SVGUtils {
 		}
 		return defId;
 	}
-	
+
+	/**
+	 * Creates an SVG document that has the {@link SVGDOMImplementation#SVG_NAMESPACE_URI}
+	 * with the specified width and height for the root svg element.
+	 * @param w width
+	 * @param h height
+	 * @return SVG document
+	 */
+	public static Document createSVGDocument(int w, int h){
+		DOMImplementation domImplementation = SVGDOMImplementation.getDOMImplementation();
+		Document document = domImplementation.createDocument(SVG_NAMESPACE_URI, "svg", null);
+		Element root = document.getDocumentElement();
+		root.setAttributeNS(null,"width",""+w);
+		root.setAttributeNS(null, "height", ""+h);
+		return document;
+	}
+
+	/**
+	 * Draws all components of a {@link Container} to
+	 * an SVG document.
+	 * For this an {@link SVGGraphics2D} object is used that will
+	 * create the SVG DOM for the specified container and its children.
+	 * Instances of {@link FBOCanvas} will be treated separately by
+	 * using their {@link FBOCanvas#paintSVG(Document, Element)} method
+	 * to create their part of the DOM that cannot be generated from {@link SVGGraphics2D}.
+	 * <p>
+	 * For drawing a single FBOCanvas to SVG the method {@link FBOCanvas#paintSVG()} 
+	 * can be used instead of this method.
+	 * 
+	 * @param c container to be converted to SVG
+	 * @return SVG document representing the specified container.
+	 */
+	public static Document containerToSVG(Container c){
+		Document document = createSVGDocument(c.getWidth(), c.getHeight());
+		// make jplotter defs
+		Element defs = createSVGElement(document, "defs");
+		defs.setAttributeNS(null, "id", "JPlotterDefs");
+		document.getDocumentElement().appendChild(defs);
+		{ // draw all non FBOCanvas components
+			SVGGraphics2D g2d = new SVGGraphics2D(document);
+			c.paintAll(g2d);
+			document.getDocumentElement().appendChild(g2d.getTopLevelGroup(true));
+		}
+		// draw FBOCanvases
+		containerToSVG(c, document, document.getDocumentElement());
+		return document;
+	}
+
+	private static void containerToSVG(Container c, Document doc, Element parent){
+		for(Component comp:c.getComponents()){
+			if(comp instanceof FBOCanvas){
+				@SuppressWarnings("resource") /* I'm not creating a canvas so there is no leak */
+				FBOCanvas canvas = (FBOCanvas)comp;
+				Element group = SVGUtils.createSVGElement(doc, "g");
+				group.setAttributeNS(null, "transform", 
+						"translate("+(canvas.getX())+","+(canvas.getY())+")");
+				parent.appendChild(group);
+				canvas.paintSVG(doc, group);
+			} else { 
+				if(comp instanceof Container){
+					Element group = SVGUtils.createSVGElement(doc, "g");
+					group.setAttributeNS(null, "transform", 
+							"translate("+(comp.getX())+","+(comp.getY())+")");
+					parent.appendChild(group);
+					containerToSVG((Container)comp, doc, group);
+				}
+			}
+		}
+	}
+
+
+
 }

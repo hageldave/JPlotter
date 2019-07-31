@@ -98,11 +98,11 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		}
 		Point start_ = Utils.swapYAxis(start, canvas.getHeight());
 		Point2D end_ = Utils.swapYAxis(end, canvas.getHeight());
-		areaBorder.removeAllSegments()
-		.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY(), 0xff222222)
-		.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY(), 0xff222222)
-		.addSegment(start_.getX(), start_.getY(), end_.getX(), start_.getY(), 0xff222222)
-		.addSegment(start_.getX(), end_.getY(), end_.getX(), end_.getY(), 0xff222222)
+		areaBorder.removeAllSegments();
+		areaBorder.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY()).setColor(0xff222222);
+		areaBorder.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
+		areaBorder.addSegment(start_.getX(), start_.getY(), end_.getX(), start_.getY()).setColor(0xff222222);
+		areaBorder.addSegment(start_.getX(), end_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
 		;
 		
 		Point2D p1 = canvas.transformAWT2CoordSys(start);

@@ -3,11 +3,15 @@ package hageldave.jplotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.MenuItem;
 import java.awt.Point;
+import java.awt.PopupMenu;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.function.DoubleBinaryOperator;
 
@@ -17,11 +21,15 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 
+import org.w3c.dom.Document;
+
 import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Utils;
 
 public class VectorFieldViz {
@@ -40,7 +48,7 @@ public class VectorFieldViz {
 		DoubleBinaryOperator fv = (x,y)->(x*y)-(y+1)*y;
 		// make quiver plot
 		Points quiver = new Points(DefaultGlyph.ARROW);
-		Color color = new Color(0xff377eb8);
+		Color color = new Color(DefaultColorMap.Q_9_SET1.getColor(1));
 		final int resolution = 21;
 		for(int j = 0; j < resolution; j++){
 			double y = j*2.0/(resolution-1) -1.0;
@@ -49,12 +57,10 @@ public class VectorFieldViz {
 				double u = fu.applyAsDouble(x, y);
 				double v = fv.applyAsDouble(x, y);
 				double magnitude = Math.sqrt(u*u+v*v);
-				quiver.addPoint(
-						x,y, 
-						Math.atan2(v, u), 
-						magnitude != 0 ? (2+magnitude)*0.3 : 0, 
-						color
-				);
+				quiver.addPoint(x,y)
+					.setRotation(Math.atan2(v, u))
+					.setScaling(magnitude != 0 ? (2+magnitude)*0.3 : 0)
+					.setColor(color);
 			}
 		}
 		content.points.addItemToRender(quiver);
@@ -63,11 +69,13 @@ public class VectorFieldViz {
 		content.lines.addItemToRender(trajectorySegments);
 		MouseAdapter trajectoryInteraction = new MouseAdapter() {
 			public void mousePressed(java.awt.event.MouseEvent e) {
-				calcTrajectory(e.getPoint());
+				if(SwingUtilities.isLeftMouseButton(e))
+					calcTrajectory(e.getPoint());
 			}
 			
 			public void mouseDragged(java.awt.event.MouseEvent e) {
-				calcTrajectory(e.getPoint());
+				if(SwingUtilities.isLeftMouseButton(e))
+					calcTrajectory(e.getPoint());
 			}
 			
 			void calcTrajectory(Point mousePoint){
@@ -89,12 +97,16 @@ public class VectorFieldViz {
 					double v3 = fv.applyAsDouble(x+u2*h, y+v2*h);
 					x = x + h*(u0 + 2*u1 + 2*u2 + u3)/6;
 					y = y + h*(v0 + 2*v1 + 2*v2 + v3)/6;
+					if(Double.isNaN(x) || Double.isNaN(y) || Math.abs(x) > 1e+3 || Math.abs(y) > 1e+3){
+						break;
+					}
 					point = new Point2D.Double(x,y);
 					trajectory.add(point);
 				}
 				Utils.execOnAWTEventDispatch(()->{
 					trajectorySegments.removeAllSegments();
-					trajectorySegments.addLineStrip(new Color(0xffe41a1c), trajectory.toArray(new Point2D[0]));
+					trajectorySegments.addLineStrip(trajectory.toArray(new Point2D[0]))
+						.forEach(seg->seg.setColor(DefaultColorMap.Q_9_SET1.getColor(0)));
 					canvas.repaint();
 				});
 			}
@@ -119,6 +131,25 @@ public class VectorFieldViz {
 				canvas.runInContext(()->canvas.close());
 			}
 		});
+		
+		// add a pop up menu (on right click) for exporting to SVG
+		PopupMenu menu = new PopupMenu();
+		canvas.add(menu);
+		MenuItem svgExport = new MenuItem("SVG export");
+		menu.add(svgExport);
+		svgExport.addActionListener(e->{
+			Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+			SVGUtils.documentToXMLFile(svg, new File("vectorfield_export.svg"));
+			System.out.println("exported vectorfield_export.svg");
+		});
+		canvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(SwingUtilities.isRightMouseButton(e))
+					menu.show(canvas, e.getX(), e.getY());
+			}
+		});
+		
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

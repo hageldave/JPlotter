@@ -11,12 +11,15 @@ This renderer will then be allowed to draw into the viewport of the coordinate s
 To a `PointsRenderer` or `LinesRenderer` for example, a set of points or line segments can be added which will then appear
 in the coordinate system (only those whose coordinates match the current view of course).
 
+JPlotter is also capable of exporting plots as Scalable Vector Graphics (SVG) through [Apache Batik](https://xmlgraphics.apache.org/batik/).
+
 ## Maven
+JPlotter is available as Maven artifact at the Central Maven Repository.
 ```xml
 <dependency>
   <groupId>com.github.hageldave.jplotter</groupId>
   <artifactId>jplotter</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
 </dependency>
 ```
 
@@ -128,6 +131,25 @@ frame.addWindowListener(new WindowAdapter() {
 SwingUtilities.invokeLater(()->{
    frame.pack();
    frame.setVisible(true);
+});
+```
+We can also add a pop up menu for exporting to SVG.
+```java
+PopupMenu menu = new PopupMenu();
+canvas.add(menu);
+MenuItem svgExport = new MenuItem("SVG export");
+menu.add(svgExport);
+svgExport.addActionListener(e->{
+   Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+   SVGUtils.documentToXMLFile(svg, new File("example_export.svg"));
+   System.out.println("exported SVG.");
+});
+canvas.addMouseListener(new MouseAdapter() {
+   @Override
+   public void mouseClicked(MouseEvent e) {
+      if(SwingUtilities.isRightMouseButton(e))
+         menu.show(canvas, e.getX(), e.getY());
+   }
 });
 ```
 ![Example Viz](https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/example_viz.png)

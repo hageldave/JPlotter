@@ -4,7 +4,7 @@
 
 	<groupId>com.github.hageldave.jplotter</groupId>
 	<artifactId>jplotter</artifactId>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>0.2.0-SNAPSHOT</version>
 
 	<name>JPlotter</name>
 	<url>https://github.com/hageldave/JPlotter</url>
@@ -42,32 +42,30 @@
 	</build>
 
 	<dependencies>
+		<!-- OpenGL -->
 		<dependency>
 			<groupId>org.lwjglx</groupId>
 			<artifactId>lwjgl3-awt</artifactId>
 			<version>0.1.5</version>
 		</dependency>
+		<!-- Image manipulation and creation -->
 		<dependency>
 			<groupId>com.github.hageldave.imagingkit</groupId>
 			<artifactId>imagingkit-core</artifactId>
 			<version>2.0</version>
 		</dependency>
-		<dependency>
-			<groupId>org.joml</groupId>
-			<artifactId>joml</artifactId>
-			<version>1.9.14</version>
-		</dependency>
+		<!-- Scalable Vector Graphics -->
 		<dependency>
 			<groupId>org.apache.xmlgraphics</groupId>
-			<artifactId>batik-anim</artifactId>
+			<artifactId>batik-all</artifactId>
 			<version>1.11</version>
 		</dependency>
+		<!-- Range Tree (R-Tree) -->
 		<dependency>
-			<groupId>org.apache.xmlgraphics</groupId>
-			<artifactId>batik-transcoder</artifactId>
-			<version>1.11</version>
+			<groupId>com.github.davidmoten</groupId>
+			<artifactId>rtree2</artifactId>
+			<version>0.9-RC1</version>
 		</dependency>
-
 	</dependencies>
 
 	<profiles>
@@ -157,7 +155,7 @@
 	<developers>
 		<developer>
 			<id>hageldave</id>
-			<name>David Haegele</name>
+			<name>David Hägele</name>
 			<email>haegele.david@gmail.com</email>
 		</developer>
 	</developers>

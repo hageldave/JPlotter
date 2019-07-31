@@ -3,6 +3,7 @@ package hageldave.jplotter.renderables;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -141,7 +142,7 @@ public class Legend implements Renderable, Renderer {
 				glyph2points.put(glyph, new Points(glyph));
 			}
 			Points points = glyph2points.get(glyph);
-			points.addPoint(currentX+5, currentY+fontHeight/2+1, color);
+			points.addPoint(currentX+5, currentY+fontHeight/2+1).setColor(color);
 			currentX += 14;
 			lbltxt.setOrigin(currentX, currentY);
 			currentX += lbltxt.getTextSize().width + fontHeight;
@@ -165,7 +166,7 @@ public class Legend implements Renderable, Renderer {
 				thickness2lines.put(thickness, lines);
 			}
 			Lines lines = thickness2lines.get(thickness);
-			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+10, currentY+fontHeight/2+1, color.getRGB());
+			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+10, currentY+fontHeight/2+1).setColor(color);
 			currentX += 14;
 			lbltxt.setOrigin(currentX, currentY);
 			currentX += lbltxt.getTextSize().width + fontHeight;
@@ -244,6 +245,15 @@ public class Legend implements Renderable, Renderer {
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		delegate.renderSVG(doc, parent, w, h);
+	}
+	
+	
+	/**
+	 * Always return false.
+	 */
+	@Override
+	public boolean intersects(Rectangle2D rect) {
+		return false;
 	}
 
 }

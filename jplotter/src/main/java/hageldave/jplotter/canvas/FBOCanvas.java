@@ -1,7 +1,5 @@
 package hageldave.jplotter.canvas;
 
-import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
-
 import java.awt.Color;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -12,7 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingUtilities;
 
-import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -21,7 +18,6 @@ import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
 import org.lwjgl.opengl.awt.PlatformGLCanvas;
-import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -74,6 +70,11 @@ import hageldave.jplotter.util.Utils;
  * GL context is currently active.
  * <br><b> For this to work properly it is essential that all GL calls are happening on the AWT event dispatch
  * thread </b>(see https://docs.oracle.com/javase/tutorial/uiswing/concurrency/dispatch.html).
+ * <p>
+ * The FBOCanvas also provides the ability of scalable vector graphics (SVG) export with the
+ * {@link #paintSVG()} method.
+ * An implementing class therefore has to implement the {@link #paintToSVG(Document, Element, int, int)}
+ * method when it is able to express its contents in terms of SVG elements.
  * 
  * @author hageldave
  */
@@ -153,7 +154,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected Shader fillShader=null;
 	protected VertexArray vertexArray=null;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
-	protected boolean useBitBlit = false;
 	protected Color screenClearColor = Color.BLACK;
 	protected boolean useMSAA = true;
 	public final int canvasID;
@@ -388,36 +388,62 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	@GLContextRequired
 	protected abstract void paintToFBO(int width, int height);
 	
-	
+	/**
+	 * Creates a new SVG {@link Document} and renders this canvas as SVG elements.
+	 * Will call {@link #paintToSVG(Document, Element, int, int)} after setting up
+	 * the document and creating the initial elements.
+	 * @return the created document
+	 */
 	public Document paintSVG(){
-		DOMImplementation domImplementation = SVGDOMImplementation.getDOMImplementation();
-		Document document = domImplementation.createDocument(SVG_NAMESPACE_URI, "svg", null);
-		
-		int w,h;
-		if((w=getWidth()) >0 && (h=getHeight()) >0){
-			Element root = document.getDocumentElement();
-			root.setAttributeNS(null,"width",""+w);
-			root.setAttributeNS(null, "height", ""+h);
-			
-			Element defs = SVGUtils.createSVGElement(document, "defs");
-			root.appendChild(defs);
-			
-			Element background = SVGUtils.createSVGElement(document, "rect");
-			root.appendChild(background);
-			background.setAttributeNS(null, "id", "background");
-			background.setAttributeNS(null, "width", "100%");
-			background.setAttributeNS(null, "height", "100%");
-			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(getBackground().getRGB()));
-			
-			Element rootGroup = SVGUtils.createSVGElement(document, "g");
-			root.appendChild(rootGroup);
-			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
-			
-			paintToSVG(document, rootGroup, w,h);
-		}
+		Document document = SVGUtils.createSVGDocument(getWidth(), getHeight());
+		paintSVG(document, document.getDocumentElement());
 		return document;
 	}
 	
+	/**
+	 * Renders this canvas as SVG elements under the specified parent element.
+	 * Will call {@link #paintToSVG(Document, Element, int, int)} after creating 
+	 * the initial elements.
+	 * @param document document to create SVG elements with
+	 * @param parent the parent node to which this canvas is supposed to be rendered
+	 * to.
+	 */
+	public void paintSVG(Document document, Element parent){
+		int w,h;
+		if((w=getWidth()) >0 && (h=getHeight()) >0){
+			if(SVGUtils.getDefs(document) == null){
+				Element defs = SVGUtils.createSVGElement(document, "defs");
+				defs.setAttributeNS(null, "id", "JPlotterDefs");
+				document.getDocumentElement().appendChild(defs);
+			}
+			
+			Element rootGroup = SVGUtils.createSVGElement(document, "g");
+			parent.appendChild(rootGroup);
+			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
+			
+			Element background = SVGUtils.createSVGElement(document, "rect");
+			rootGroup.appendChild(background);
+			background.setAttributeNS(null, "id", "background"+"@"+hashCode());
+			background.setAttributeNS(null, "width", ""+w);
+			background.setAttributeNS(null, "height", ""+h);
+			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(getBackground().getRGB()));
+			
+			paintToSVG(document, rootGroup, w,h);
+		}
+	}
+	
+	/**
+	 * Renders this {@link FBOCanvas} in terms of SVG elements
+	 * to the specified parent element of the specified SVG document.
+	 * <p>
+	 * This method has to be overridden when the implementing
+	 * class can express its contents in terms of SVG.
+	 * 
+	 * @param doc document to create svg elements with
+	 * @param parent to append svg elements to
+	 * @param w width of the viewport (the width of this Canvas)
+	 * @param h height of the viewport (the height of this Canvas)
+	 */
 	protected void paintToSVG(Document doc, Element parent, int w, int h){}
 
 	/**

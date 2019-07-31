@@ -20,7 +20,6 @@ import javax.swing.SwingUtilities;
 
 import org.w3c.dom.Document;
 
-import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -31,6 +30,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Utils;
 
 public class Viz {
 
@@ -42,6 +42,7 @@ public class Viz {
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
 		CoordSysCanvas canvas = new CoordSysCanvas();
+		canvas.setyAxisLabel("Y-Axis");
 		CompleteRenderer content = new CompleteRenderer();
 		content.setRenderOrder(PNT, LIN, TRI, TXT);
 		canvas.setContent(content);
@@ -57,9 +58,14 @@ public class Viz {
 				double x2 = (i+1)*scaling;
 				double y1 = Math.sin(x1);
 				double y2 = Math.sin(x2);
-				lines.addSegment(x1, y1, x2, y2, 0xffff00ff,0xffff00ff, 0xbabe01);
-				lines.addSegment(i, i, i+1, i+1, 0xff00ff00);
-				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0, triColor);
+				lines.addSegment(x1, y1, x2, y2)
+					.setColor0(0xffff00ff)
+					.setColor1(0xffff00ff)
+					.setPickColor(0xbabe01);
+				lines.addSegment(i, i, i+1, i+1)
+					.setColor(Utils.interpolateColor(0xff00ff00, 0xff00ffff, i/99.0));
+				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0)
+					.forEach(tri->tri.setColor(triColor));
 			}
 			tris.setGlobalAlphaMultiplier(0.2);
 			lines.setThickness(2);
@@ -72,10 +78,13 @@ public class Viz {
 			Color color1 = new Color(0xffe41a1c);
 			Color color2 = new Color(0xff377eb8);
 			for(int i = 0; i < 100; i++){
-				trianglepoints.addPoint(Math.random(), Math.random(), color1);
+				trianglepoints.addPoint(Math.random(), Math.random()).setColor(color1);
 				double x = Math.random();
 				double y = Math.random();
-				quiver.addPoint(x,y, Math.atan2(-y, -x), Math.sqrt(x*x+y*y), color2);
+				quiver.addPoint(x,y)
+					.setRotation(Math.atan2(-y, -x))
+					.setScaling(Math.sqrt(x*x+y*y))
+					.setColor(color2);
 			}
 			content.points.addItemToRender(trianglepoints).addItemToRender(quiver);
 		}

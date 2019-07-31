@@ -4,11 +4,10 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 import javax.swing.SwingUtilities;
-
-import org.joml.Vector2d;
 
 import hageldave.imagingkit.core.Pixel;
 
@@ -44,6 +43,8 @@ public class Utils {
 	 * casts the copy to the class of the original.
 	 * @param p point to copy
 	 * @return the copied point
+	 * 
+	 * @param <T> type of Point2D
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends Point2D> T copy(T p){
@@ -147,15 +148,26 @@ public class Utils {
 		return Math.max(lower, Math.min(upper, v));
 	}
 	
+	/**
+	 * Returns the minimum of 3 values
+	 * @param v0 value
+	 * @param v1 value
+	 * @param v2 value
+	 * @return minimum
+	 */
+	public static double min3(double v0, double v1, double v2){
+		return Math.min(Math.min(v0, v1), v2);
+	}
 	
-	@SuppressWarnings("unused") // not yet used, is intended for svg triangle gradient things
-	private static Point2D perpendicularFootOfTri(double x0, double y0, double x1, double y1, double x2, double y2){
-		// calculate perpendicular foot on segment 02
-		Vector2d v02 = new Vector2d(x2-x0, y2-y0).normalize();
-		Vector2d v01 = new Vector2d(x1-x0, y1-y0);
-		double alpha = v02.angle(v01);
-		v02 = v02.mul(Math.cos(alpha)*v01.length());
-		return new Point2D.Double(x0+v02.x, y0+v02.y);
+	/**
+	 * Returns the maximum of 3 values
+	 * @param v0 value
+	 * @param v1 value
+	 * @param v2 value
+	 * @return maximum
+	 */
+	public static double max3(double v0, double v1, double v2){
+		return Math.max(Math.max(v0, v1), v2);
 	}
 	
 	/**
@@ -176,4 +188,62 @@ public class Utils {
 		return Pixel.argb_fast(a/n, r/n, g/n, b/n);
 	}
 	
+	/**
+	 * Checks if specified iterator is sorted according to natural ordering.
+	 * @param iter iterator
+	 * @return true if sorted, false otherwise
+	 */
+	public static <T extends Comparable<T>> boolean isSorted(Iterator<T> iter){
+		T prev = iter.next();
+		while(iter.hasNext()){
+			T next = iter.next();
+			if(next.compareTo(prev) < 0){
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	
+	public static boolean rectIntersectsOrIsContainedInTri(
+			Rectangle2D rect, 
+			double x0, double y0, 
+			double x1, double y1, 
+			double x2, double y2)
+	{
+		
+		return 
+				rect.intersectsLine(x0, y0, x1, y1) || 
+				rect.intersectsLine(x0, y0, x2, y2) ||
+				rect.intersectsLine(x2, y2, x1, y1) ||
+				pointInTri(rect.getX(), rect.getY(), x0, y0, x1, y1, x2, y2);
+	}
+	
+	
+	private static double sign (
+			double x1, double y1, 
+			double x2, double y2, 
+			double x3, double y3)
+	{
+	    return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3);
+	}
+	
+	private static boolean pointInTri(
+			double px, double py, 
+			double x0, double y0, 
+			double x1, double y1, 
+			double x2, double y2)
+	{
+		double d1, d2, d3;
+	    boolean has_neg, has_pos;
+
+	    d1 = sign(px,py, x0,y0, x1,y1);
+	    d2 = sign(px,py, x1,y1, x2,y2);
+	    d3 = sign(px,py, x2,y2, x0,y0);
+
+	    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+	    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+	    return !(has_neg && has_pos);
+	}
 }
