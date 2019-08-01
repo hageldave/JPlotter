@@ -118,7 +118,7 @@ public class Lines implements Renderable {
 	 * points.
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param points which are connected by line segments
-	 * @return this for chaining
+	 * @return the added segments
 	 */
 	public ArrayList<SegmentDetails> addLineStrip(Point2D...points){
 		ArrayList<SegmentDetails> segments = new ArrayList<>(points.length-1);
@@ -133,7 +133,7 @@ public class Lines implements Renderable {
 	 * points.
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param coords array of point coordinates, {@code x=coords[i][0]; y=coords[i][1];}
-	 * @return this for chaining
+	 * @return the added segments
 	 */
 	public ArrayList<SegmentDetails> addLineStrip(double[][] coords){
 		ArrayList<SegmentDetails> segments = new ArrayList<>(coords.length-1);
@@ -199,7 +199,8 @@ public class Lines implements Renderable {
 	}
 
 	/**
-	 * @return a copy of the line segments list
+	 * @return the line segments list.
+	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
 	public ArrayList<SegmentDetails> getSegments() {
 		return segments;
@@ -287,6 +288,11 @@ public class Lines implements Renderable {
 				.isPresent();
 	}
 	
+	/**
+	 * Returns the segments that intersect the specified rectangle.
+	 * @param rect rectangle to test intersection
+	 * @return list of intersecting segments
+	 */
 	public List<SegmentDetails> getIntersectingSegments(Rectangle2D rect) {
 		boolean useParallelStreaming = numSegments() > 1000;
 		return Utils.parallelize(getSegments().stream(), useParallelStreaming)
@@ -298,7 +304,7 @@ public class Lines implements Renderable {
 	 * Specification of a line segment which comprises vertex locations, colors and picking color.
 	 * @author hageldave
 	 */
-	public static class SegmentDetails {
+	public static class SegmentDetails implements Cloneable {
 		public Point2D p0;
 		public Point2D p1;
 		public IntSupplier color0;
@@ -309,6 +315,23 @@ public class Lines implements Renderable {
 			this.p0 = p0;
 			this.p1 = p1;
 			this.color0 = this.color1 = ()->0xff555555;
+		}
+		
+		/**
+		 * Returns a shallow copy of this segment with deep copied
+		 * positions {@link #p0} and {@link #p1}.
+		 * @return copy of this segment
+		 */
+		public SegmentDetails copy() {
+			try {
+	            SegmentDetails clone = (SegmentDetails) super.clone();
+	            clone.p0 = Utils.copy(clone.p0);
+	            clone.p1 = Utils.copy(clone.p1);
+	            return clone;
+	        } catch (CloneNotSupportedException e) {
+	            // this shouldn't happen, since we are Cloneable
+	            throw new InternalError(e);
+	        }
 		}
 		
 		/**

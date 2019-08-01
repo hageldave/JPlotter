@@ -332,7 +332,11 @@ public class Triangles implements Renderable {
 				.isPresent();
 	}
 	
-	
+	/**
+	 * Returns the triangles that intersect or contain the specified rectangle.
+	 * @param rect rectangle to test intersection
+	 * @return list of intersecting triangles
+	 */
 	public List<TriangleDetails> getIntersectingTriangles(Rectangle2D rect){
 		boolean useParallelStreaming = numTriangles() > 1000;
 		return Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
@@ -350,9 +354,9 @@ public class Triangles implements Renderable {
 	 * Specification of a triangle which comprises vertex locations, colors and picking color.
 	 * @author hageldave
 	 */
-	public static class TriangleDetails {
+	public static class TriangleDetails implements Cloneable {
 		public float x0,x1,x2, y0,y1,y2;
-		public IntSupplier c0,c1,c2; 
+		public IntSupplier c0,c1,c2;
 		public int pickColor;
 		
 		public TriangleDetails(
@@ -368,12 +372,26 @@ public class Triangles implements Renderable {
 			this.y2 = y2;
 			this.c0 = c1 = c2 = ()->0xffaaaaaa;
 		}
+		
 		public TriangleDetails(
 				double x0, double y0, 
 				double x1, double y1,
 				double x2, double y2)
 		{
 			this((float)x0, (float)y0, (float)x1, (float)y1, (float)x2, (float)y2);
+		}
+		
+		/**
+		 * Returns a shallow copy of this triangle.
+		 * @return copy of this triangle
+		 */
+		public TriangleDetails copy() {
+			try {
+	            return (TriangleDetails) super.clone();
+	        } catch (CloneNotSupportedException e) {
+	            // this shouldn't happen, since we are Cloneable
+	            throw new InternalError(e);
+	        }
 		}
 		
 		/**
