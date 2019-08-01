@@ -53,10 +53,8 @@ public class Triangles implements Renderable {
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param x0 x coordinate of the first triangle vertex
 	 * @param y0 y coordinate of the first triangle vertex
-	 * @param c0 integer packed ARGB color value of the first triangle vertex (0xff00ff00 = opaque green)
 	 * @param x1 x coordinate of the second triangle vertex
 	 * @param y1 y coordinate of the second triangle vertex
-	 * @param c1 integer packed ARGB color value of the second triangle vertex
 	 * @param x2 x coordinate of the third triangle vertex
 	 * @param y2 y coordinate of the third triangle vertex
 	 * @return added triangles
@@ -126,8 +124,6 @@ public class Triangles implements Renderable {
 	 * Adds two triangles that form the specified rectangle.
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param rect rectangle
-	 * @param color color of the rectangle
-	 * @param picking picking color of the rectangle
 	 * @return added triangles
 	 */
 	public ArrayList<TriangleDetails> addQuad(Rectangle2D rect){
@@ -165,8 +161,6 @@ public class Triangles implements Renderable {
 	 * Each vertex forms a new triangle together with the two preceding vertices.
 	 * Make sure that the first vertex is the one that is not shared with the second triangle in the strip.
 	 * Sets the {@link #isDirty()} state to true.
-	 * @param color of the triangles in the strip
-	 * @param pickColor picking color of the strip
 	 * @param coords the coordinates of the triangle vertices, a series of (x,y) pairs.
 	 * Need at least 6 coordinates (3 pairs) and has to be an even number of coordinates.
 	 * @return this for chaining
