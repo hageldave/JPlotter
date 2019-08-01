@@ -1,5 +1,6 @@
 package hageldave.jplotter.color;
 
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -136,6 +137,42 @@ public interface ColorMap {
 			colors[i] = interpolate(m);
 		}
 		return new SimpleColorMap(colors);
+	}
+	
+	/**
+	 * Creates an {@link Img} from this {@link ColorMap} of specified dimensions.
+	 * @param w width of the img
+	 * @param h height of the img
+	 * @param horizontal when true, the color map will shown left to right, 
+	 * otherwise top to bottom.
+	 * @param interpolate when true, the color map's interpolate method will be 
+	 * used to obtain the colors, otherwise the discrete colors will be used
+	 * @return image of the color map
+	 */
+	public default Img toImg(int w, int h, boolean horizontal, boolean interpolate){
+		Img img = new Img(w, h);
+		img.forEach(px->{
+			double m = horizontal ? px.getXnormalized() : px.getYnormalized();
+			if(interpolate){
+				px.setValue(interpolate(m));
+			} else {
+				int numColors = numColors();
+				int idx = Math.min((int)(m*numColors),numColors-1);
+				px.setValue(getColor(idx));
+			}
+		});
+		return img;
+	}
+	
+	/**
+	 * Creates an {@link BufferedImage} from this {@link ColorMap} of specified dimensions.
+	 * @param w width of the image
+	 * @param h height of the image
+	 * @param horizontal when true, the color map will shown left to right, otherwise top to bottom.
+	 * @return image of the color map
+	 */
+	public default BufferedImage toImage(int w, int h, boolean horizontal, boolean interpolate){
+		return toImg(w, h, horizontal, interpolate).getRemoteBufferedImage();
 	}
 	
 	// MAP GRADING UTILITY METHODS

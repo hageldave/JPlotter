@@ -3,6 +3,7 @@ package hageldave.jplotter.color;
 /**
  * The {@link DefaultColorMap} enum provides predefined {@link ColorMap}s
  * for different usecases.
+ * <br>
  * Each {@link DefaultColorMap} has a name starting with either of the
  * followig letters which indicate the type of color map
  * <ul>
@@ -13,7 +14,11 @@ package hageldave.jplotter.color;
  * <li> Q - qualitative color map for mapping categorical values. Qualitative
  * color map names also specify for how many categories they are suited, e.g.
  * {@link #Q_12_PAIRED} has discrete colors for up to 12 categories.
- * </ul>
+ * </ul><br>
+ * For a visual overview see 
+ * <a href="https://github.com/hageldave/JPlotter/wiki/Color-Maps">
+ * github.com/hageldave/JPlotter/wiki/Color-Maps
+ * </a>
  * 
  * @author hageldave
  */
@@ -21,6 +26,54 @@ public enum DefaultColorMap implements ColorMap {
 	S_BLACK_WHITE(0xff_000000,0xff_ffffff),
 	S_GRAY_WHITE(0xff_888888,0xff_ffffff),
 	S_BLACK_GRAY(0xff_000000,0xff_888888),
+	S_RISING_DEEP_PURPLE(
+			0xff_49006a,
+			0xff_8a0179,
+			0xff_cd238e,
+			0xff_f667a0,
+			0xff_faabb8,
+			0xff_fcd6d2,
+			0xff_fff7f3
+			),
+	S_COPPER(
+			0xff_000000,
+			0xff_330000,
+			0xff_660000,
+			0xff_993322,
+			0xff_cc6644,
+			0xff_ff9966,
+			0xff_ffcc88
+			),
+	S_BLACKBODYRAD(
+			new int[]{0xff_000000, 0xff_aa2222, 0xff_dd6605, 0xff_eedd22, 0xff_ffffff},
+			new double[]{       0,        0.39,        0.58,        0.84,           1}
+			),
+	S_PLASMA(
+			0xff_0c0786,
+			0xff_5c00a5,
+			0xff_9b179e,
+			0xff_ca4677,
+			0xff_ec7853,
+			0xff_fdb22e,
+			0xff_eff821
+			),
+	S_VIRIDIS(
+			0xff_440154,
+			0xff_433982,
+			0xff_30678d,
+			0xff_208f8c,
+			0xff_35b778,
+			0xff_8fd643,
+			0xff_fde724
+			),
+	S_BEACH(0xff_081d58,
+			0xff_24419a,
+			0xff_1e80b8,
+			0xff_40b5c3,
+			0xff_97d6b8,
+			0xff_dff2b2,
+			0xff_ffffd9
+			),
 	S_RAINBOW(
 			0xff_dd00dd,
 			0xff_8800ee,
@@ -33,54 +86,6 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_dddd00,
 			0xff_ee8800, 
 			0xff_ff0000
-			),
-	S_BLACKBODYRAD(
-			new int[]{0xff_000000, 0xff_aa2222, 0xff_dd6605, 0xff_eedd22, 0xff_ffffff},
-			new double[]{       0,        0.39,        0.58,        0.84,           1}
-			),
-	S_VIRIDIS(
-			0xff_440154,
-			0xff_433982,
-			0xff_30678d,
-			0xff_208f8c,
-			0xff_35b778,
-			0xff_8fd643,
-			0xff_fde724
-			),
-	S_PLASMA(
-			0xff_0c0786,
-			0xff_5c00a5,
-			0xff_9b179e,
-			0xff_ca4677,
-			0xff_ec7853,
-			0xff_fdb22e,
-			0xff_eff821
-			),
-	S_RISING_DEEP_PURPLE(
-			0xff_49006a,
-			0xff_8a0179,
-			0xff_cd238e,
-			0xff_f667a0,
-			0xff_faabb8,
-			0xff_fcd6d2,
-			0xff_fff7f3
-			),
-	S_BEACH(0xff_081d58,
-			0xff_24419a,
-			0xff_1e80b8,
-			0xff_40b5c3,
-			0xff_97d6b8,
-			0xff_dff2b2,
-			0xff_ffffd9
-			),
-	S_COPPER(
-			0xff_000000,
-			0xff_330000,
-			0xff_660000,
-			0xff_993322,
-			0xff_cc6644,
-			0xff_ff9966,
-			0xff_ffcc88
 			),
 	S_TERRAIN(
 			0xff_333399,
@@ -121,6 +126,68 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_54aeac,
 			0xff_5e4fa2
 			),
+	Q_8_DARK2(
+			0xff_1b9e77,
+			0xff_d95f02,
+			0xff_7570b3,
+			0xff_e7298a,
+			0xff_66a61e,
+			0xff_e6ab02,
+			0xff_a6761d,
+			0xff_666666
+			),
+	Q_8_SET2(
+			0xff_66c2a5,
+			0xff_fc8d62,
+			0xff_8da0cb,
+			0xff_e78ac3,
+			0xff_a6d854,
+			0xff_ffd92f,
+			0xff_e5c494,
+			0xff_b3b3b3
+			),
+	Q_8_PASTEL2(
+			0xff_b3e2cd,
+			0xff_fdcdac,
+			0xff_cbd5e8,
+			0xff_f4cae4,
+			0xff_e6f5c9,
+			0xff_fff2ae,
+			0xff_f1e2cc,
+			0xff_cccccc
+			),
+	Q_8_ACCENT(
+			0xff_7fc97f,
+			0xff_beaed4,
+			0xff_fdc086,
+			0xff_ffff99,
+			0xff_386cb0,
+			0xff_f0027f,
+			0xff_bf5b17,
+			0xff_666666
+			),
+	Q_9_SET1(
+			0xff_e41a1c,
+			0xff_377eb8,
+			0xff_4daf4a,
+			0xff_984ea3,
+			0xff_ff7f00,
+			0xff_ffff33,
+			0xff_a65628,
+			0xff_f781bf,
+			0xff_999999
+			),
+	Q_9_PASTEL1(
+			0xff_fbb4ae,
+			0xff_b3cde3,
+			0xff_ccebc5,
+			0xff_decbe4,
+			0xff_fed9a6,
+			0xff_ffffcc,
+			0xff_e5d8bd,
+			0xff_fddaec,
+			0xff_f2f2f2
+			),
 	Q_12_PAIRED(
 			0xff_a6cee3,
 			0xff_1f78b4,
@@ -148,68 +215,6 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_bc80bd,
 			0xff_ccebc5,
 			0xff_ffed6f
-			),
-	Q_9_PASTEL1(
-			0xff_fbb4ae,
-			0xff_b3cde3,
-			0xff_ccebc5,
-			0xff_decbe4,
-			0xff_fed9a6,
-			0xff_ffffcc,
-			0xff_e5d8bd,
-			0xff_fddaec,
-			0xff_f2f2f2
-			),
-	Q_9_SET1(
-			0xff_e41a1c,
-			0xff_377eb8,
-			0xff_4daf4a,
-			0xff_984ea3,
-			0xff_ff7f00,
-			0xff_ffff33,
-			0xff_a65628,
-			0xff_f781bf,
-			0xff_999999
-			),
-	Q_8_ACCENT(
-			0xff_7fc97f,
-			0xff_beaed4,
-			0xff_fdc086,
-			0xff_ffff99,
-			0xff_386cb0,
-			0xff_f0027f,
-			0xff_bf5b17,
-			0xff_666666
-			),
-	Q_8_DARK2(
-			0xff_1b9e77,
-			0xff_d95f02,
-			0xff_7570b3,
-			0xff_e7298a,
-			0xff_66a61e,
-			0xff_e6ab02,
-			0xff_a6761d,
-			0xff_666666
-			),
-	Q_8_PASTEL2(
-			0xff_b3e2cd,
-			0xff_fdcdac,
-			0xff_cbd5e8,
-			0xff_f4cae4,
-			0xff_e6f5c9,
-			0xff_fff2ae,
-			0xff_f1e2cc,
-			0xff_cccccc
-			),
-	Q_8_SET2(
-			0xff_66c2a5,
-			0xff_fc8d62,
-			0xff_8da0cb,
-			0xff_e78ac3,
-			0xff_a6d854,
-			0xff_ffd92f,
-			0xff_e5c494,
-			0xff_b3b3b3
 			),
 	
 	;
