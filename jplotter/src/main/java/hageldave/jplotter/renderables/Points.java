@@ -248,6 +248,11 @@ public class Points implements Renderable {
 				.isPresent();
 	}
 	
+	/**
+	 * Returns the points that are contained in the specified rectangle.
+	 * @param rect rectangle to test intersection
+	 * @return list of contained points
+	 */
 	public List<PointDetails> getIntersectingPoints(Rectangle2D rect) {
 		boolean useParallelStreaming = numPoints() > 10000;
 		return Utils.parallelize(getPointDetails().stream(), useParallelStreaming)
@@ -260,7 +265,7 @@ public class Points implements Renderable {
 	 * This comprises location, color, scaling, glyph rotation and picking color.
 	 * @author hageldave
 	 */
-	public static class PointDetails {
+	public static class PointDetails implements Cloneable {
 		public Point2D location;
 		public DoubleSupplier rot;
 		public DoubleSupplier scale;
@@ -272,6 +277,22 @@ public class Points implements Renderable {
 			this.rot = ()->0;
 			this.scale = ()->1;
 			this.color = ()->0xff555555;
+		}
+		
+		/**
+		 * Returns a shallow copy of this point with deep copied
+		 * {@link #location}.
+		 * @return copy of this point
+		 */
+		public PointDetails copy() {
+			try {
+	            PointDetails clone = (PointDetails) super.clone();
+	            clone.location = Utils.copy(clone.location);
+	            return clone;
+	        } catch (CloneNotSupportedException e) {
+	            // this shouldn't happen, since we are Cloneable
+	            throw new InternalError(e);
+	        }
 		}
 		
 		/**

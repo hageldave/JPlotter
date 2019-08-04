@@ -53,10 +53,8 @@ public class Triangles implements Renderable {
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param x0 x coordinate of the first triangle vertex
 	 * @param y0 y coordinate of the first triangle vertex
-	 * @param c0 integer packed ARGB color value of the first triangle vertex (0xff00ff00 = opaque green)
 	 * @param x1 x coordinate of the second triangle vertex
 	 * @param y1 y coordinate of the second triangle vertex
-	 * @param c1 integer packed ARGB color value of the second triangle vertex
 	 * @param x2 x coordinate of the third triangle vertex
 	 * @param y2 y coordinate of the third triangle vertex
 	 * @return added triangles
@@ -126,8 +124,6 @@ public class Triangles implements Renderable {
 	 * Adds two triangles that form the specified rectangle.
 	 * Sets the {@link #isDirty()} state to true.
 	 * @param rect rectangle
-	 * @param color color of the rectangle
-	 * @param picking picking color of the rectangle
 	 * @return added triangles
 	 */
 	public ArrayList<TriangleDetails> addQuad(Rectangle2D rect){
@@ -165,8 +161,6 @@ public class Triangles implements Renderable {
 	 * Each vertex forms a new triangle together with the two preceding vertices.
 	 * Make sure that the first vertex is the one that is not shared with the second triangle in the strip.
 	 * Sets the {@link #isDirty()} state to true.
-	 * @param color of the triangles in the strip
-	 * @param pickColor picking color of the strip
 	 * @param coords the coordinates of the triangle vertices, a series of (x,y) pairs.
 	 * Need at least 6 coordinates (3 pairs) and has to be an even number of coordinates.
 	 * @return this for chaining
@@ -332,7 +326,11 @@ public class Triangles implements Renderable {
 				.isPresent();
 	}
 	
-	
+	/**
+	 * Returns the triangles that intersect or contain the specified rectangle.
+	 * @param rect rectangle to test intersection
+	 * @return list of intersecting triangles
+	 */
 	public List<TriangleDetails> getIntersectingTriangles(Rectangle2D rect){
 		boolean useParallelStreaming = numTriangles() > 1000;
 		return Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
@@ -350,9 +348,9 @@ public class Triangles implements Renderable {
 	 * Specification of a triangle which comprises vertex locations, colors and picking color.
 	 * @author hageldave
 	 */
-	public static class TriangleDetails {
+	public static class TriangleDetails implements Cloneable {
 		public float x0,x1,x2, y0,y1,y2;
-		public IntSupplier c0,c1,c2; 
+		public IntSupplier c0,c1,c2;
 		public int pickColor;
 		
 		public TriangleDetails(
@@ -368,12 +366,26 @@ public class Triangles implements Renderable {
 			this.y2 = y2;
 			this.c0 = c1 = c2 = ()->0xffaaaaaa;
 		}
+		
 		public TriangleDetails(
 				double x0, double y0, 
 				double x1, double y1,
 				double x2, double y2)
 		{
 			this((float)x0, (float)y0, (float)x1, (float)y1, (float)x2, (float)y2);
+		}
+		
+		/**
+		 * Returns a shallow copy of this triangle.
+		 * @return copy of this triangle
+		 */
+		public TriangleDetails copy() {
+			try {
+	            return (TriangleDetails) super.clone();
+	        } catch (CloneNotSupportedException e) {
+	            // this shouldn't happen, since we are Cloneable
+	            throw new InternalError(e);
+	        }
 		}
 		
 		/**

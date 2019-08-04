@@ -28,8 +28,8 @@ public interface Renderable extends AutoCloseable {
 	public void initGL();
 	
 	/**
-	 * if true, indicates that a call to {@link #updateGL()} is necessary to sync this objects GL resources
-	 * to its current state.
+	 * if true, indicates that a call to {@link #updateGL()} is necessary to sync 
+	 * this objects GL resources to its current state.
 	 * @return true if dirty
 	 */
 	public boolean isDirty();
@@ -46,7 +46,12 @@ public interface Renderable extends AutoCloseable {
 	@GLContextRequired
 	public void close();
 	
-	
+	/**
+	 * tests if this {@link Renderable} intersects or contains the specified
+	 * rectangle.
+	 * @param rect rectangle to test
+	 * @return true when intersecting
+	 */
 	public boolean intersects(Rectangle2D rect);
 	
 }

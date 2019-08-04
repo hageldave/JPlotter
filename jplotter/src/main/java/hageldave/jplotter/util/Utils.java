@@ -192,6 +192,7 @@ public class Utils {
 	 * Checks if specified iterator is sorted according to natural ordering.
 	 * @param iter iterator
 	 * @return true if sorted, false otherwise
+	 * @param <T> element type that implements {@link Comparable}
 	 */
 	public static <T extends Comparable<T>> boolean isSorted(Iterator<T> iter){
 		T prev = iter.next();
@@ -204,7 +205,17 @@ public class Utils {
 		return true;
 	}
 	
-	
+	/**
+	 * tests intersection or containment of rectangle and triangle.
+	 * @param rect rectangle to test
+	 * @param x0 x coordinate of 0th triangle vertex
+	 * @param y0 y coordinate of 0th triangle vertex
+	 * @param x1 x coordinate of 1st triangle vertex
+	 * @param y1 y coordinate of 1st triangle vertex
+	 * @param x2 x coordinate of 2nd triangle vertex
+	 * @param y2 y coordinate of 2nd triangle vertex
+	 * @return true when intersecting
+	 */
 	public static boolean rectIntersectsOrIsContainedInTri(
 			Rectangle2D rect, 
 			double x0, double y0, 
