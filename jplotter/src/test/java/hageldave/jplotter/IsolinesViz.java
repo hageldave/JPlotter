@@ -83,7 +83,7 @@ public class IsolinesViz {
 		for(int i = isoValues.length-1; i >= 0; i--) {
 			List<SegmentDetails> contours = Contours.computeContourLines(X, Y, Z, isoValues[i], isoColors.getColor(i));
 			contourlines.getSegments().addAll(contours);
-			legend.addLineLabel(1, new Color(isoColors.getColor(i)), isoValues[i] < 0 ? ""+isoValues[i]:" "+isoValues[i]);
+			legend.addLineLabel(1, isoColors.getColor(i), isoValues[i] < 0 ? ""+isoValues[i]:" "+isoValues[i]);
 		}
 		for(int i = 0; i < isoValues.length-1; i++) {
 			List<TriangleDetails> contours = Contours.computeContourBands(X, Y, Z, isoValues[i], isoValues[i+1], isoColors.getColor(i), isoColors.getColor(i+1));

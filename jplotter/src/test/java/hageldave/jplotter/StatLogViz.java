@@ -1,7 +1,6 @@
 package hageldave.jplotter;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -91,7 +90,7 @@ public class StatLogViz {
 		canvas.setyAxisLabel("Feature 8");
 		Legend legend = new Legend();
 		for(int i = 0; i < classLabels.length; i++){
-			legend.addGlyphLabel(pointclasses[i].glyph, new Color(classcolors.getColor(i)), classLabels[i]);
+			legend.addGlyphLabel(pointclasses[i].glyph, classcolors.getColor(i), classLabels[i]);
 		}
 		canvas.setLegendBottom(legend);
 		canvas.setLegendBottomHeight(35);

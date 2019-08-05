@@ -131,7 +131,7 @@ public class StatLogSPLOMViz {
 		legendCanvas.setPreferredSize(new Dimension(400, 16));
 		Legend legend = new Legend();
 		for(int c=0; c<7; c++){
-			legend.addGlyphLabel(perClassGlyphs[c], new Color(perClassColors[c]), perClassNames[c]);
+			legend.addGlyphLabel(perClassGlyphs[c], perClassColors[c], perClassNames[c]);
 		}
 		legendCanvas.setRenderer(legend);
 		header.add(Box.createHorizontalStrut(30));

@@ -12,11 +12,11 @@ import java.util.Map;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
-import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -38,9 +38,9 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  */
 public class Legend implements Renderable, Renderer {
 	
-	protected ArrayList<Pair<String, Pair<Glyph,Color>>> glyphLabels = new ArrayList<>();
+	protected ArrayList<GlyphLabel> glyphLabels = new ArrayList<>();
 	
-	protected ArrayList<Pair<String, Pair<Double,Color>>> lineLabels = new ArrayList<>();
+	protected ArrayList<LineLabel> lineLabels = new ArrayList<>();
 	
 	protected Map<Glyph, Points> glyph2points = new LinkedHashMap<>();
 	
@@ -56,6 +56,35 @@ public class Legend implements Renderable, Renderer {
 	
 	protected int viewPortHeight = 0;
 	
+	protected static class GlyphLabel {
+		public String labelText;
+		public Glyph glyph;
+		public int color;
+		public int pickColor;
+		
+		public GlyphLabel(String labelText, Glyph glyph, int color, int pickColor) {
+			this.labelText = labelText;
+			this.glyph = glyph;
+			this.color = color;
+			this.pickColor = pickColor;
+		}
+	}
+	
+	protected static class LineLabel {
+		public String labelText;
+		public double thickness;
+		public int color;
+		public int pickColor;
+		
+		public LineLabel(String labelText, double thickness, int color, int pickColor) {
+			super();
+			this.labelText = labelText;
+			this.thickness = thickness;
+			this.color = color;
+			this.pickColor = pickColor;
+		}
+	}
+	
 	/**
 	 * Sets the {@link #isDirty()} state of this legend to true.
 	 * This indicates that a call to {@link #updateGL()} is necessary
@@ -70,25 +99,49 @@ public class Legend implements Renderable, Renderer {
 	/**
 	 * Adds a label for a glyph to this legend.
 	 * @param glyph to appear in front of the label text
-	 * @param color color of the glyph
+	 * @param color integer packed ARGB color value of the glyph
+	 * @param labeltxt text of the label
+	 * @param pickColor picking color (see {@link FBOCanvas})
+	 * @return this for chaining
+	 */
+	public Legend addGlyphLabel(Glyph glyph, int color, String labeltxt, int pickColor){
+		glyphLabels.add(new GlyphLabel(labeltxt, glyph, color, pickColor));
+		return setDirty();
+	}
+	
+	/**
+	 * Adds a label for a glyph to this legend.
+	 * @param glyph to appear in front of the label text
+	 * @param color integer packed ARGB color value of the glyph
 	 * @param labeltxt text of the label
 	 * @return this for chaining
 	 */
-	public Legend addGlyphLabel(Glyph glyph, Color color, String labeltxt){
-		glyphLabels.add(Pair.of(labeltxt, Pair.of(glyph, color)));
+	public Legend addGlyphLabel(Glyph glyph, int color, String labeltxt){
+		return addGlyphLabel(glyph, color, labeltxt, 0);
+	}
+	
+	/**
+	 * Adds a label for a line to this legend.
+	 * @param thickness of the line to appear in front of the label text
+	 * @param color integer packed ARGB color value of the glyph
+	 * @param labeltxt text of the label
+	 * @param pickColor picking color (see {@link FBOCanvas})
+	 * @return this for chaining
+	 */
+	public Legend addLineLabel(double thickness, int color, String labeltxt, int pickColor){
+		this.lineLabels.add(new LineLabel(labeltxt, thickness, color, pickColor));
 		return setDirty();
 	}
 	
 	/**
 	 * Adds a label for a line to this legend.
 	 * @param thickness of the line to appear in front of the label text
-	 * @param color of the line
+	 * @param integer packed ARGB color value of the glyph
 	 * @param labeltxt text of the label
 	 * @return this for chaining
 	 */
-	public Legend addLineLabel(double thickness, Color color, String labeltxt){
-		this.lineLabels.add(Pair.of(labeltxt, Pair.of(thickness, color)));
-		return setDirty();
+	public Legend addLineLabel(double thickness, int color, String labeltxt){
+		return addLineLabel(thickness, color, labeltxt, 0);
 	}
 	
 	/**
@@ -119,13 +172,13 @@ public class Legend implements Renderable, Renderer {
 		int fontSize = 10;
 		int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle, true).getBounds().height;
 		int maxTextWidth = glyphLabels.stream()
-				.map(p->CharacterAtlas.boundsForText(p.first.length(), fontSize, fontStyle, true).getBounds().width)
+				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle, true).getBounds().width)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0
 		);
 		maxTextWidth = Math.max(maxTextWidth,lineLabels.stream()
-				.map(p->CharacterAtlas.boundsForText(p.first.length(), fontSize, fontStyle, true).getBounds().width)
+				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle, true).getBounds().width)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0)
@@ -133,16 +186,18 @@ public class Legend implements Renderable, Renderer {
 		int currentX = leftPadding;
 		int currentY = viewPortHeight-fontHeight-2;
 		// glyphs first
-		for(Pair<String, Pair<Glyph, Color>> glyphLabel : glyphLabels) {
-			Text lbltxt = new Text(glyphLabel.first, fontSize, fontStyle, true);
+		for(GlyphLabel glyphLabel : glyphLabels) {
+			Text lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle, true);
+			lbltxt.setPickColor(glyphLabel.pickColor);
 			texts.add(lbltxt);
-			Glyph glyph = glyphLabel.second.first;
-			Color color = glyphLabel.second.second;
+			Glyph glyph = glyphLabel.glyph;
 			if(!glyph2points.containsKey(glyph)){
 				glyph2points.put(glyph, new Points(glyph));
 			}
 			Points points = glyph2points.get(glyph);
-			points.addPoint(currentX+5, currentY+fontHeight/2+1).setColor(color);
+			points.addPoint(currentX+5, currentY+fontHeight/2+1)
+				.setColor(glyphLabel.color)
+				.setPickColor(glyphLabel.pickColor);
 			currentX += 14;
 			lbltxt.setOrigin(currentX, currentY);
 			currentX += lbltxt.getTextSize().width + fontHeight;
@@ -153,20 +208,22 @@ public class Legend implements Renderable, Renderer {
 			}
 		}
 		// lines second
-		for(Pair<String, Pair<Double, Color>> lineLabel : lineLabels) {
-			Text lbltxt = new Text(lineLabel.first, fontSize, fontStyle, true);
+		for(LineLabel lineLabel : lineLabels) {
+			Text lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle, true);
+			lbltxt.setPickColor(lineLabel.pickColor);
 			texts.add(lbltxt);
-			Double thickness = lineLabel.second.first;
-			Color color = lineLabel.second.second;
+			double thickness = lineLabel.thickness;
 			if(!thickness2lines.containsKey(thickness)){
 				Lines lines = new Lines();
 				lines
-				.setThickness(thickness.floatValue())
-				.setVertexRoundingEnabled(thickness.intValue()==thickness.floatValue());
+				.setThickness(thickness)
+				.setVertexRoundingEnabled(((int)thickness)==thickness);
 				thickness2lines.put(thickness, lines);
 			}
 			Lines lines = thickness2lines.get(thickness);
-			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+10, currentY+fontHeight/2+1).setColor(color);
+			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+10, currentY+fontHeight/2+1)
+				.setColor(lineLabel.color)
+				.setPickColor(lineLabel.pickColor);
 			currentX += 14;
 			lbltxt.setOrigin(currentX, currentY);
 			currentX += lbltxt.getTextSize().width + fontHeight;

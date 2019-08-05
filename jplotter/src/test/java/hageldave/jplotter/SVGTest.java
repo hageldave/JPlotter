@@ -1,6 +1,5 @@
 package hageldave.jplotter;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -20,10 +19,10 @@ public class SVGTest {
 
 	public static void main(String[] args) {
 		Legend legend = new Legend();
-		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, new Color(0xffe41a1c), "rand pnts");
-		legend.addGlyphLabel(DefaultGlyph.ARROW, new Color(0xff377eb8), "-(x,y)");
-		legend.addLineLabel(2, new Color(0xffff00ff), "sin(x)");
-		legend.addLineLabel(2, new Color(0xff00ff00), "x=y");
+		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, 0xffe41a1c, "rand pnts");
+		legend.addGlyphLabel(DefaultGlyph.ARROW, 0xff377eb8, "-(x,y)");
+		legend.addLineLabel(2, 0xffff00ff, "sin(x)");
+		legend.addLineLabel(2, 0xff00ff00, "x=y");
 
 		BlankCanvas bc = new BlankCanvas();
 		bc.setPreferredSize(new Dimension(100,200));

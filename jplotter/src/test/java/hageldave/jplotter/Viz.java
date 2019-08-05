@@ -89,10 +89,10 @@ public class Viz {
 			content.points.addItemToRender(trianglepoints).addItemToRender(quiver);
 		}
 		Legend legend = new Legend();
-		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, new Color(0xffe41a1c), "rand pnts");
-		legend.addGlyphLabel(DefaultGlyph.ARROW, new Color(0xff377eb8), "-(x,y)");
-		legend.addLineLabel(2, new Color(0xffff00ff), "sin(x)");
-		legend.addLineLabel(2, new Color(0xff00ff00), "x=y");
+		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, 0xffe41a1c, "rand pnts");
+		legend.addGlyphLabel(DefaultGlyph.ARROW, 0xff377eb8, "-(x,y)");
+		legend.addLineLabel(2, 0xffff00ff, "sin(x)");
+		legend.addLineLabel(2, 0xff00ff00, "x=y");
 		canvas.setLegendRight(legend);
 		canvas.setLegendRightWidth(80);
 		

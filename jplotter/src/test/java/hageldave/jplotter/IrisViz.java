@@ -105,7 +105,7 @@ public class IrisViz {
 		legendCanvas.setPreferredSize(new Dimension(400, 16));
 		Legend legend = new Legend();
 		for(int c=0; c<3; c++){
-			legend.addGlyphLabel(perClassGlyphs[c], new Color(perClassColors.getColor(c)), perClassNames[c]);
+			legend.addGlyphLabel(perClassGlyphs[c], perClassColors.getColor(c), perClassNames[c]);
 		}
 		legendCanvas.setRenderer(legend);
 		header.add(Box.createHorizontalStrut(30));

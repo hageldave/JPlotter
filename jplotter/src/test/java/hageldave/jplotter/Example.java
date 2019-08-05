@@ -96,10 +96,10 @@ public class Example {
 		Legend legend = new Legend();
 		canvas.setLegendRightWidth(80);
 		canvas.setLegendRight(legend
-				.addLineLabel(2, new Color(sineColor), "f(x)")
-				.addGlyphLabel(DefaultGlyph.CROSS, new Color(c1Color), "< f(x)-0.5")
-				.addGlyphLabel(DefaultGlyph.CIRCLE, new Color(c2Color), "~ f(x)")
-				.addGlyphLabel(DefaultGlyph.CROSS, new Color(c3Color), "> f(x)+0.5"));
+				.addLineLabel(2, sineColor, "f(x)")
+				.addGlyphLabel(DefaultGlyph.CROSS, c1Color, "< f(x)-0.5")
+				.addGlyphLabel(DefaultGlyph.CIRCLE, c2Color, "~ f(x)")
+				.addGlyphLabel(DefaultGlyph.CROSS, c3Color, "> f(x)+0.5"));
 		
 		// lets add some controls for exploring the data
 		new CoordSysScrollZoom(canvas).setZoomFactor(1.7).register();
