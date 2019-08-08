@@ -12,6 +12,7 @@ import org.w3c.dom.Element;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.misc.CharacterAtlas;
+import hageldave.jplotter.misc.SignedDistanceCharacters;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
@@ -67,10 +68,14 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "uniform vec4 pickColorToUse;"
 			+ NL + "uniform bool useTex;"
 			+ NL + "in vec2 tex_Coords;"
+			+ NL + "uniform vec2 stepBounds;"
 			+ NL + "void main() {"
 			+ NL + "   frag_color = fragColorToUse;"
 			+ NL + "   if(useTex){"
 			+ NL + "      vec4 texColor = texture(tex, tex_Coords);"
+			+ NL + "      float alpha = texColor.r;"
+			+ NL + "      alpha = smoothstep(stepBounds.x,stepBounds.y,alpha);"
+			+ NL + "      texColor = vec4(1,1,1,alpha);"
 			+ NL + "      frag_color = fragColorToUse*texColor;"
 			+ NL + "   }"
 			+ NL + "   pick_color = pickColorToUse;"
@@ -155,6 +160,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 		GL20.glUniform4f(loc, txt.getPickColorR(), txt.getPickColorG(), txt.getPickColorB(), 1f);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "useTex");
 		GL20.glUniform1i(loc, 1);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "stepBounds");
+		GL20.glUniform2f(loc, (float)SignedDistanceCharacters.smoothStepLeft, (float)SignedDistanceCharacters.smoothStepRight);
 		// draw things
 		GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
 		txt.releaseVertexArray();

@@ -81,6 +81,7 @@ public class CharacterAtlas implements AutoCloseable {
 	public final boolean antialiased;
 	public final int owningCanvasID;
 	protected int texID;
+	public SignedDistanceCharacters sdChars;
 	
 	@GLContextRequired
 	protected CharacterAtlas(int fontSize, int style, boolean antialiased) {
@@ -108,7 +109,10 @@ public class CharacterAtlas implements AutoCloseable {
 			g.setFont(font);
 			g.drawString(CHARACTERS, (float)bounds.getX(),(float)-bounds.getY());
 		});
-		texID = GLUtils.create2DTexture(img, GL11.GL_NEAREST, GL12.GL_CLAMP_TO_EDGE);
+		
+		sdChars = new SignedDistanceCharacters(FONT_NAME, style);
+//		texID = GLUtils.create2DTexture(img, GL11.GL_NEAREST, GL12.GL_CLAMP_TO_EDGE);
+		texID = GLUtils.create2DTexture(sdChars.texImg, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
 	}
 
 	/**
@@ -183,11 +187,42 @@ public class CharacterAtlas implements AutoCloseable {
 	 * @param c character
 	 * @return x coordinate for the origin of the bounds of the specified character in the atlas texture
 	 */
-	public static float getTexCoordXForChar(char c){
+//	public static float getTexCoordXForChar(char c){
+//		if(c < 32 || c > 126){
+//			return 0;
+//		}
+//		return (c-32)*charTexWidth;
+//	}
+	public float getTexCoordXForCharLeft(char c){
 		if(c < 32 || c > 126){
 			return 0;
 		}
-		return (c-32)*charTexWidth;
+		int idx = c-32;
+		return sdChars.leftBounds[idx]*1f/(sdChars.texImg.getWidth()-1);
+	}
+	
+	public float getTexCoordXForCharRight(char c){
+		if(c < 32 || c > 126){
+			return 0;
+		}
+		int idx = c-32;
+		return sdChars.rightBounds[idx]*1f/(sdChars.texImg.getWidth()-1);
+	}
+	
+	public float getTexCoordYForCharTop(char c){
+		if(c < 32 || c > 126){
+			return 0;
+		}
+		int idx = c-32;
+		return sdChars.topBounds[idx]*1f/(sdChars.texImg.getHeight()-1);
+	}
+	
+	public float getTexCoordYForCharBot(char c){
+		if(c < 32 || c > 126){
+			return 0;
+		}
+		int idx = c-32;
+		return sdChars.botBounds[idx]*1f/(sdChars.texImg.getHeight()-1);
 	}
 
 	/**
@@ -286,22 +321,42 @@ public class CharacterAtlas implements AutoCloseable {
 	 * @param chars the sequence of characters
 	 * @return texture coordinates for the sequence of characters.
 	 */
-	public static float[] vaTexCoordsForChars(char[] chars){
+//	public static float[] vaTexCoordsForChars(char[] chars){
+//		float[] texCoords = new float[chars.length*2*4];
+//		for(int i = 0; i < chars.length; i++){
+//			// y is flipped due to texture coordinates being upside down
+//			// tex bot left
+//			texCoords[i*2*4+0] = getTexCoordXForChar(chars[i]);
+//			texCoords[i*2*4+1] = 1.0f;
+//			// tex top left
+//			texCoords[i*2*4+2] = getTexCoordXForChar(chars[i]);
+//			texCoords[i*2*4+3] = 0.0f;
+//			// tex bot right
+//			texCoords[i*2*4+4] = getTexCoordXForChar(chars[i])+charTexWidth;
+//			texCoords[i*2*4+5] = 1.0f;
+//			// tex top right
+//			texCoords[i*2*4+6] = getTexCoordXForChar(chars[i])+charTexWidth;
+//			texCoords[i*2*4+7] = 0.0f;
+//		}
+//		return texCoords;
+//	}
+	
+	public float[] vaTexCoordsForChars(char[] chars){
 		float[] texCoords = new float[chars.length*2*4];
 		for(int i = 0; i < chars.length; i++){
 			// y is flipped due to texture coordinates being upside down
 			// tex bot left
-			texCoords[i*2*4+0] = getTexCoordXForChar(chars[i]);
-			texCoords[i*2*4+1] = 1.0f;
+			texCoords[i*2*4+0] = getTexCoordXForCharLeft(chars[i]);
+			texCoords[i*2*4+1] = getTexCoordYForCharBot(chars[i]);
 			// tex top left
-			texCoords[i*2*4+2] = getTexCoordXForChar(chars[i]);
-			texCoords[i*2*4+3] = 0.0f;
+			texCoords[i*2*4+2] = getTexCoordXForCharLeft(chars[i]);
+			texCoords[i*2*4+3] = getTexCoordYForCharTop(chars[i]);
 			// tex bot right
-			texCoords[i*2*4+4] = getTexCoordXForChar(chars[i])+charTexWidth;
-			texCoords[i*2*4+5] = 1.0f;
+			texCoords[i*2*4+4] = getTexCoordXForCharRight(chars[i]);
+			texCoords[i*2*4+5] = getTexCoordYForCharBot(chars[i]);
 			// tex top right
-			texCoords[i*2*4+6] = getTexCoordXForChar(chars[i])+charTexWidth;
-			texCoords[i*2*4+7] = 0.0f;
+			texCoords[i*2*4+6] = getTexCoordXForCharRight(chars[i]);
+			texCoords[i*2*4+7] = getTexCoordYForCharTop(chars[i]);
 		}
 		return texCoords;
 	}

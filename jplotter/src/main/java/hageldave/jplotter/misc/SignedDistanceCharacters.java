@@ -13,6 +13,9 @@ import hageldave.jplotter.util.Pair;
 
 public class SignedDistanceCharacters {
 	
+	public static double smoothStepLeft = 0.37;
+	public static double smoothStepRight = 0.63;
+	
 	protected static final int genFontSize = 32;
 	protected static final int padding = 8;
 	protected static final Img FONTMETRIC_IMG = new Img(64, 64);
@@ -20,11 +23,11 @@ public class SignedDistanceCharacters {
 			" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	
 	
-	protected int[] leftBounds = new int[CHARACTERS.length()];
-	protected int[] rightBounds = new int[CHARACTERS.length()];
-	protected int[] topBounds = new int[CHARACTERS.length()];
-	protected int[] botBounds = new int[CHARACTERS.length()];
-	protected final Img texImg;
+	final int[] leftBounds = new int[CHARACTERS.length()];
+	final int[] rightBounds = new int[CHARACTERS.length()];
+	final int[] topBounds = new int[CHARACTERS.length()];
+	final int[] botBounds = new int[CHARACTERS.length()];
+	final Img texImg;
 	protected final String fontname;
 	protected final int style;
 	protected final Font font;
@@ -99,13 +102,13 @@ public class SignedDistanceCharacters {
 			px.setRGB(px.g(), px.g(), px.g());
 		});
 		// DEBUG
-		tex.paint(g2d->{
-			g2d.setColor(Color.blue);
-			g2d.setFont(f);
-			g2d.drawString(""+ch, padding, padding+fontHeight[0]-descent[0]);
-			g2d.setColor(Color.GREEN);
-			g2d.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
-		});
+//		tex.paint(g2d->{
+//			g2d.setColor(Color.blue);
+//			g2d.setFont(f);
+//			g2d.drawString(""+ch, padding, padding+fontHeight[0]-descent[0]);
+//			g2d.setColor(Color.GREEN);
+//			g2d.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
+//		});
 		return Pair.of(tex, bounds);
 	}
 	
