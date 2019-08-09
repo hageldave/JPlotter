@@ -16,7 +16,7 @@ public class SignedDistanceCharacters {
 	public static double smoothStepLeft = 0.37;
 	public static double smoothStepRight = 0.63;
 	
-	protected static final int genFontSize = 32;
+	protected static final int genFontSize = 34;
 	protected static final int padding = 8;
 	protected static final Img FONTMETRIC_IMG = new Img(64, 64);
 	public static final String CHARACTERS = 
