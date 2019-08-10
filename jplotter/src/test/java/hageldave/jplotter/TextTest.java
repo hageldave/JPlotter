@@ -1,6 +1,7 @@
 package hageldave.jplotter;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -26,7 +27,9 @@ public class TextTest {
 		for(int i = 10; i < 24; i+=2){
 			tr.addItemToRender(new Text(sample, i, Font.PLAIN, false)
 					.setOrigin(i*11, i*12)
-					.setAngle(-3.1415/4));
+					.setAngle(-3.1415/4)
+					.setColor(Color.black)
+					);
 		}
 		BlankCanvas canvas = new BlankCanvas();
 		canvas.setPreferredSize(new Dimension(700, 400));
@@ -59,6 +62,11 @@ public class TextTest {
 		};
 		sliderLeft.addChangeListener(sliderchange);
 		sliderRight.addChangeListener(sliderchange);
+		sliderLeft.addChangeListener(e->{
+			int value = sliderLeft.getValue();
+			int diff = 50-value;
+			sliderRight.setValue(50+diff);
+		});
 		
 		
 		JSlider sliderAngle = new JSlider(0, 360);

@@ -55,6 +55,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = projMX*vec4(int(pos.x), int(pos.y), pos.z, 1);"
+			+ NL + "   gl_Position = projMX*vec4(pos.x, pos.y, pos.z, 1);"
 			+ NL + "   tex_Coords = in_texcoords;"
 			+ NL + "}"
 			+ NL
