@@ -8,6 +8,7 @@ import java.awt.Rectangle;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.jplotter.util.Pair;
 
@@ -16,7 +17,7 @@ public class SignedDistanceCharacters {
 	public static double smoothStepLeft = 0.37;
 	public static double smoothStepRight = 0.63;
 	
-	protected static final int genFontSize = 32;
+	protected static final int genFontSize = 34;
 	protected static final int padding = 8;
 	protected static final Img FONTMETRIC_IMG = new Img(64, 64);
 	public static final String CHARACTERS = 
@@ -86,8 +87,14 @@ public class SignedDistanceCharacters {
 			g2d.setFont(f);
 			g2d.drawString(""+ch, padding, padding+fontHeight[0]-descent[0]);
 		});
-		int maxEdgeDist = padding;
-		tex.forEach(px->{
+		// upscale x2
+		Img tex2 = new Img(tex.getWidth()*2, tex.getHeight()*2);
+		tex2.forEach(px->{
+			px.setValue(tex.getValue(px.getX()/2, px.getY()/2));
+		});
+		
+		int maxEdgeDist = padding*2;
+		tex2.forEach(px->{
 			double edgeDistance = edgeDistance(px, maxEdgeDist);
 			edgeDistance = Math.min(edgeDistance, maxEdgeDist);
 			// normalize
@@ -99,7 +106,13 @@ public class SignedDistanceCharacters {
 			}
 		});
 		tex.forEach(px->{
-			px.setRGB(px.g(), px.g(), px.g());
+			int value0 = tex2.getValue(px.getX()*2+0, px.getY()*2+0);
+			int value1 = tex2.getValue(px.getX()*2+1, px.getY()*2+0);
+			int value2 = tex2.getValue(px.getX()*2+0, px.getY()*2+1);
+			int value3 = tex2.getValue(px.getX()*2+1, px.getY()*2+1);
+			int value = Pixel.g(value0)+Pixel.g(value1)+Pixel.g(value2)+Pixel.g(value3);
+			value /= 4;
+			px.setRGB(value,value,value);
 		});
 		// DEBUG
 //		tex.paint(g2d->{
@@ -133,6 +146,7 @@ public class SignedDistanceCharacters {
 	public static void main(String[] args) {
 		SignedDistanceCharacters signedDistanceCharacters = new SignedDistanceCharacters(CharacterAtlas.FONT_NAME, Font.PLAIN);
 		ImageFrame.display(signedDistanceCharacters.texImg);
+		ImageSaver.saveImage(signedDistanceCharacters.texImg.getRemoteBufferedImage(), "upscaled.png");
 	}
 	
 }

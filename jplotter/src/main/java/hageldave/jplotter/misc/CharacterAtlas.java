@@ -61,6 +61,8 @@ public class CharacterAtlas implements AutoCloseable {
 
 	protected static final HashMap<Integer, HashMap<GenericKey, CharacterAtlas>> ATLAS_COLLECTION = new HashMap<>();
 	
+	protected static final SignedDistanceCharacters SDCHARS;
+	
 	static {
 		String fontname = System.getProperty("jplotter_fontname");
 		if(fontname == null) {
@@ -71,6 +73,7 @@ public class CharacterAtlas implements AutoCloseable {
 			}
 		}
 		FONT_NAME = fontname;
+		SDCHARS = new SignedDistanceCharacters(FONT_NAME, Font.PLAIN);
 	}
 
 	public final Font font;
@@ -110,7 +113,7 @@ public class CharacterAtlas implements AutoCloseable {
 			g.drawString(CHARACTERS, (float)bounds.getX(),(float)-bounds.getY());
 		});
 		
-		sdChars = new SignedDistanceCharacters(FONT_NAME, style);
+		sdChars = SDCHARS;//new SignedDistanceCharacters(FONT_NAME, style);
 //		texID = GLUtils.create2DTexture(img, GL11.GL_NEAREST, GL12.GL_CLAMP_TO_EDGE);
 		texID = GLUtils.create2DTexture(sdChars.texImg, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
 	}
