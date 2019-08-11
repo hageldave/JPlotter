@@ -5,10 +5,10 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Rectangle;
+import java.util.Objects;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.jplotter.util.Pair;
 
@@ -38,18 +38,24 @@ public class SignedDistanceCharacters {
 		this.style = style;
 		this.font = new Font(fontname, style, genFontSize);
 		// create texture and setup character bounds
-		Dimension dim = mkCharDistanceField(' ', font).first.getDimension();
+		Pair<Pair<Img, Img>, Rectangle> initial = mkCharDistanceField(' ', font, null, null);
+		Dimension dim = initial.first.first.getDimension();
 		int charsPerLine = 16;
 		texImg = new Img(dim.width*charsPerLine, dim.height*(CHARACTERS.length()/charsPerLine+1));
 		int idx = 0;
 		for(int j=0; idx<CHARACTERS.length(); j++){
 			for(int i=0; i<charsPerLine && idx<CHARACTERS.length(); i++){
 				// make texture for character
-				Pair<Img, Rectangle> next = mkCharDistanceField(CHARACTERS.charAt(idx), font);
+				Pair<Pair<Img,Img>, Rectangle> next = mkCharDistanceField(
+						CHARACTERS.charAt(idx), 
+						font, 
+						initial.first.first, 
+						initial.first.second
+				);
 				// put character into collection image
 				int x = i*dim.width;
 				int y = j*dim.height;
-				next.first.copyArea(0, 0, dim.width, dim.height, texImg, x, y);
+				next.first.first.copyArea(0, 0, dim.width, dim.height, texImg, x, y);
 				// set bounds for character
 				leftBounds[idx]  = x+(int)next.second.getMinX();
 				rightBounds[idx] = x+(int)next.second.getMaxX();
@@ -65,7 +71,7 @@ public class SignedDistanceCharacters {
 		}
 	}
 	
-	protected static Pair<Img,Rectangle> mkCharDistanceField(char ch, Font f) {
+	protected static Pair<Pair<Img,Img>,Rectangle> mkCharDistanceField(char ch, Font f, Img img, Img img2x) {
 		// determine width of character and descent for font
 		int[] advance = {0};
 		int[] descent = {0};
@@ -81,20 +87,32 @@ public class SignedDistanceCharacters {
 		});
 		bounds.setLocation(padding, padding);
 		// create signed distance field image
-		Img tex = new Img(padding*2+advance[0], padding*2+fontHeight[0]).fill(0xff000000);
+		Img tex;
+		if(Objects.isNull(img)){
+			tex = new Img(padding*2+advance[0], padding*2+fontHeight[0]).fill(0xff000000);
+		} else {
+			tex = img;
+			tex.fill(0);
+		}
 		tex.paint(g2d->{
 			g2d.setColor(Color.WHITE);
 			g2d.setFont(f);
 			g2d.drawString(""+ch, padding, padding+fontHeight[0]-descent[0]);
 		});
 		// upscale x2
-		Img tex2 = new Img(tex.getWidth()*2, tex.getHeight()*2);
-		tex2.forEach(px->{
+		Img tex2;
+		if(Objects.isNull(img2x)){
+			tex2 = new Img(tex.getWidth()*2, tex.getHeight()*2);
+		} else {
+			tex2 = img2x;
+			tex2.fill(0);
+		}
+		tex2.forEach(true, px->{
 			px.setValue(tex.getValue(px.getX()/2, px.getY()/2));
 		});
 		
 		int maxEdgeDist = padding*2;
-		tex2.forEach(px->{
+		tex2.forEach(true, px->{
 			double edgeDistance = edgeDistance(px, maxEdgeDist);
 			edgeDistance = Math.min(edgeDistance, maxEdgeDist);
 			// normalize
@@ -122,7 +140,7 @@ public class SignedDistanceCharacters {
 //			g2d.setColor(Color.GREEN);
 //			g2d.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
 //		});
-		return Pair.of(tex, bounds);
+		return Pair.of(Pair.of(tex,tex2), bounds);
 	}
 	
 	static double edgeDistance(Pixel px, int maxDist){
@@ -146,7 +164,6 @@ public class SignedDistanceCharacters {
 	public static void main(String[] args) {
 		SignedDistanceCharacters signedDistanceCharacters = new SignedDistanceCharacters(CharacterAtlas.FONT_NAME, Font.PLAIN);
 		ImageFrame.display(signedDistanceCharacters.texImg);
-		ImageSaver.saveImage(signedDistanceCharacters.texImg.getRemoteBufferedImage(), "upscaled.png");
 	}
 	
 }
