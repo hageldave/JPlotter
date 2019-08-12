@@ -1,6 +1,5 @@
 package hageldave.jplotter.misc;
 
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -14,14 +13,14 @@ import java.util.Objects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL15;
-import org.lwjgl.system.Platform;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.FontProvider;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.GenericKey;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The CharacterAtlas class is a texture atlas for looking up character textures.
@@ -50,38 +49,20 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  */
 public class CharacterAtlas implements AutoCloseable {
 
-	public static final String CHARACTERS = 
-			" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-
-	public static final float charTexWidth = 1.0f/CHARACTERS.length();
-	
-	public static final String FONT_NAME;
+//	public static final String CHARACTERS = SignedDistanceCharacters.CHARACTERS;
+	private static final char[] CHARACTERS = SignedDistanceCharacters.CHARACTERS.toCharArray();
 
 	protected static final Img FONTMETRIC_IMG = new Img(32, 32);
 
 	protected static final HashMap<Integer, HashMap<GenericKey, CharacterAtlas>> ATLAS_COLLECTION = new HashMap<>();
 	
-	protected static final SignedDistanceCharacters SDCHARS;
-	
-	static {
-		String fontname = System.getProperty("jplotter_fontname");
-		if(fontname == null) {
-			if(Platform.get() == Platform.WINDOWS) {
-				fontname = "Consolas";
-			} else {
-				fontname = Font.MONOSPACED;
-			}
-		}
-		FONT_NAME = fontname;
-		SDCHARS = new SignedDistanceCharacters(FONT_NAME, Font.PLAIN);
-	}
 
 	public final Font font;
 	public final int charWidth;
 	public final int charHeigth;
 	public final int fontSize;
 	public final int style;
-	public final boolean antialiased;
+//	public final boolean antialiased;
 	public final int owningCanvasID;
 	protected int texID;
 	public SignedDistanceCharacters sdChars;
@@ -98,24 +79,19 @@ public class CharacterAtlas implements AutoCloseable {
 		this.owningCanvasID = canvasID;
 		this.fontSize = fontSize;
 		this.style = style;
-		this.antialiased = antialiased;
 
-		Object aahint = antialiased ? RenderingHints.VALUE_TEXT_ANTIALIAS_ON:RenderingHints.VALUE_TEXT_ANTIALIAS_OFF;
-		font = new Font(FONT_NAME, style, fontSize);
-		Rectangle2D bounds = boundsForText(CHARACTERS.length(), font, antialiased);
-		Img img = new Img(bounds.getBounds().getSize());
-		charWidth = img.getWidth()/CHARACTERS.length();
-		charHeigth = img.getHeight();
-		img.paint(g -> {
-			g.setColor(Color.white);
-			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, aahint);
-			g.setFont(font);
-			g.drawString(CHARACTERS, (float)bounds.getX(),(float)-bounds.getY());
-		});
+		this.font = FontProvider.getUbuntuMono(fontSize, style);
+		this.sdChars = SignedDistanceCharacters.getUbuntuMonoSDC(style);
+		this.texID = GLUtils.create2DTexture(sdChars.texImg, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
 		
-		sdChars = SDCHARS;//new SignedDistanceCharacters(FONT_NAME, style);
-//		texID = GLUtils.create2DTexture(img, GL11.GL_NEAREST, GL12.GL_CLAMP_TO_EDGE);
-		texID = GLUtils.create2DTexture(sdChars.texImg, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
+		int[] fontmetrics = {0,0};
+		FONTMETRIC_IMG.paint(g->{
+			FontMetrics metrics = g.getFontMetrics(this.font);
+			fontmetrics[0] = metrics.getMaxAdvance();
+			fontmetrics[1] = metrics.getHeight();
+		});
+		this.charWidth = fontmetrics[0];
+		this.charHeigth = fontmetrics[1];
 	}
 
 	/**
@@ -178,53 +154,40 @@ public class CharacterAtlas implements AutoCloseable {
 	 * @return bounding rectangle for a text of specified length and font.
 	 */
 	public static Rectangle2D boundsForText(int textlength, int fontSize, int style, boolean antialiased){
-		Font font = new Font(FONT_NAME, style, fontSize);
+		Font font = FontProvider.getUbuntuMono(fontSize, style);
 		return boundsForText(textlength, font, antialiased);
 	}
 
-	/**
-	 * Calculates the x coordinate of the texture origin for the specified character within the atlas texture.
-	 * The corresponding y coordinate is always zero, the height of the texture is 1 and the width for one character is
-	 * {@link #charTexWidth}. So the bounds for the character in the texture will be {@code (x,0, charTexWidth, 1)}
-	 * Characters not in ASCII range [32..126] will be mapped to white space.
-	 * @param c character
-	 * @return x coordinate for the origin of the bounds of the specified character in the atlas texture
-	 */
-//	public static float getTexCoordXForChar(char c){
-//		if(c < 32 || c > 126){
-//			return 0;
-//		}
-//		return (c-32)*charTexWidth;
-//	}
+
 	public float getTexCoordXForCharLeft(char c){
-		if(c < 32 || c > 126){
+		int idx = 0;
+		if((idx = Arrays.binarySearch(CHARACTERS, c)) < 0){
 			return 0;
 		}
-		int idx = c-32;
 		return sdChars.leftBounds[idx]*1f/(sdChars.texImg.getWidth()-1);
 	}
 	
 	public float getTexCoordXForCharRight(char c){
-		if(c < 32 || c > 126){
+		int idx = 0;
+		if((idx = Arrays.binarySearch(CHARACTERS, c)) < 0){
 			return 0;
 		}
-		int idx = c-32;
 		return sdChars.rightBounds[idx]*1f/(sdChars.texImg.getWidth()-1);
 	}
 	
 	public float getTexCoordYForCharTop(char c){
-		if(c < 32 || c > 126){
+		int idx = 0;
+		if((idx = Arrays.binarySearch(CHARACTERS, c)) < 0){
 			return 0;
 		}
-		int idx = c-32;
 		return sdChars.topBounds[idx]*1f/(sdChars.texImg.getHeight()-1);
 	}
 	
 	public float getTexCoordYForCharBot(char c){
-		if(c < 32 || c > 126){
+		int idx = 0;
+		if((idx = Arrays.binarySearch(CHARACTERS, c)) < 0){
 			return 0;
 		}
-		int idx = c-32;
 		return sdChars.botBounds[idx]*1f/(sdChars.texImg.getHeight()-1);
 	}
 
@@ -408,7 +371,7 @@ public class CharacterAtlas implements AutoCloseable {
 			GL11.glDeleteTextures(texID);
 			texID = 0;
 			HashMap<GenericKey, CharacterAtlas> contextCollection = ATLAS_COLLECTION.get(this.owningCanvasID);
-			contextCollection.remove(new GenericKey(fontSize, style, antialiased));
+			contextCollection.remove(new GenericKey(fontSize, style));
 		}
 	}
 

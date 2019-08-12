@@ -5,11 +5,21 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Rectangle;
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Objects;
+import java.util.Scanner;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.core.util.ImageFrame;
+import hageldave.imagingkit.core.io.ImageLoader;
+import hageldave.imagingkit.core.io.ImageSaver;
+import hageldave.jplotter.util.FontProvider;
 import hageldave.jplotter.util.Pair;
 
 public class SignedDistanceCharacters {
@@ -21,7 +31,29 @@ public class SignedDistanceCharacters {
 	protected static final int padding = 8;
 	protected static final Img FONTMETRIC_IMG = new Img(64, 64);
 	public static final String CHARACTERS = 
-			" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+			" !\"#$%&'()*+,-./0123456789:;<=>?@" +
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`" +
+			"abcdefghijklmnopqrstuvwxyz{|}~" +
+			"¢£¥©®×÷ĆćČčĐđŠšŽžΆΈΉΊΌΎΏΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΫ" +
+			"άέέίΰαβγδεζηθικλμνξοπρστυφχψωϊϋόύ" + 
+			"ЁЂЄЅІЇЈЉЊЋЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ" +
+			"абвгдежзийклмнопрстуфхцчшщъыьэюяёђєѕіїјљњћўџҐґὰάὲέὴήὶίὸόὺύὼώ‘’“”€";
+	
+	public static final SignedDistanceCharacters UBUNTU_MONO_PLAIN = loadFromResource(
+			SignedDistanceCharacters.class.getResource("/font/SDF_UbuntuMono-R.png"), 
+			SignedDistanceCharacters.class.getResource("/font/BOUNDS_UbuntuMono-R.txt"));
+	
+	public static final SignedDistanceCharacters UBUNTU_MONO_BOLD = loadFromResource(
+			SignedDistanceCharacters.class.getResource("/font/SDF_UbuntuMono-B.png"), 
+			SignedDistanceCharacters.class.getResource("/font/BOUNDS_UbuntuMono-B.txt"));
+	
+	public static final SignedDistanceCharacters UBUNTU_MONO_ITALIC = loadFromResource(
+			SignedDistanceCharacters.class.getResource("/font/SDF_UbuntuMono-RI.png"), 
+			SignedDistanceCharacters.class.getResource("/font/BOUNDS_UbuntuMono-RI.txt"));
+	
+	public static final SignedDistanceCharacters UBUNTU_MONO_BOLDITALIC = loadFromResource(
+			SignedDistanceCharacters.class.getResource("/font/SDF_UbuntuMono-BI.png"), 
+			SignedDistanceCharacters.class.getResource("/font/BOUNDS_UbuntuMono-BI.txt"));
 	
 	
 	final int[] leftBounds = new int[CHARACTERS.length()];
@@ -29,18 +61,13 @@ public class SignedDistanceCharacters {
 	final int[] topBounds = new int[CHARACTERS.length()];
 	final int[] botBounds = new int[CHARACTERS.length()];
 	final Img texImg;
-	protected final String fontname;
-	protected final int style;
-	protected final Font font;
 	
-	public SignedDistanceCharacters(String fontname, int style) {
-		this.fontname = fontname;
-		this.style = style;
-		this.font = new Font(fontname, style, genFontSize);
+	public SignedDistanceCharacters(Font f) {
+		Font font = f.deriveFont((float)genFontSize);
 		// create texture and setup character bounds
 		Pair<Pair<Img, Img>, Rectangle> initial = mkCharDistanceField(' ', font, null, null);
 		Dimension dim = initial.first.first.getDimension();
-		int charsPerLine = 16;
+		int charsPerLine = 24;
 		texImg = new Img(dim.width*charsPerLine, dim.height*(CHARACTERS.length()/charsPerLine+1));
 		int idx = 0;
 		for(int j=0; idx<CHARACTERS.length(); j++){
@@ -69,6 +96,14 @@ public class SignedDistanceCharacters {
 				idx++;
 			}
 		}
+	}
+	
+	private SignedDistanceCharacters(Img texImg, int[] leftBounds, int[] rightBounds, int[] topBounds, int[] botBounds){
+		this.texImg = texImg;
+		System.arraycopy(leftBounds, 0, this.leftBounds, 0, this.leftBounds.length);
+		System.arraycopy(rightBounds, 0, this.rightBounds, 0, this.rightBounds.length);
+		System.arraycopy(topBounds, 0, this.topBounds, 0, this.topBounds.length);
+		System.arraycopy(botBounds, 0, this.botBounds, 0, this.botBounds.length);
 	}
 	
 	protected static Pair<Pair<Img,Img>,Rectangle> mkCharDistanceField(char ch, Font f, Img img, Img img2x) {
@@ -161,9 +196,89 @@ public class SignedDistanceCharacters {
 		return dist;
 	}
 	
-	public static void main(String[] args) {
-		SignedDistanceCharacters signedDistanceCharacters = new SignedDistanceCharacters(CharacterAtlas.FONT_NAME, Font.PLAIN);
-		ImageFrame.display(signedDistanceCharacters.texImg);
+	static void makeSDCFiles() {
+		SignedDistanceCharacters signedDistanceCharacters = new SignedDistanceCharacters(FontProvider.UBUNTU_MONO_PLAIN);
+		ImageSaver.saveImage(signedDistanceCharacters.texImg.getRemoteBufferedImage(), "SDF_UbuntuMono-R.png");
+		bounds2File(signedDistanceCharacters, new File("BOUNDS_UbuntuMono-R.txt"));
+		
+		signedDistanceCharacters = new SignedDistanceCharacters(FontProvider.UBUNTU_MONO_BOLD);
+		ImageSaver.saveImage(signedDistanceCharacters.texImg.getRemoteBufferedImage(), "SDF_UbuntuMono-B.png");
+		bounds2File(signedDistanceCharacters, new File("BOUNDS_UbuntuMono-B.txt"));
+		
+		signedDistanceCharacters = new SignedDistanceCharacters(FontProvider.UBUNTU_MONO_ITALIC);
+		ImageSaver.saveImage(signedDistanceCharacters.texImg.getRemoteBufferedImage(), "SDF_UbuntuMono-RI.png");
+		bounds2File(signedDistanceCharacters, new File("BOUNDS_UbuntuMono-RI.txt"));
+		
+		signedDistanceCharacters = new SignedDistanceCharacters(FontProvider.UBUNTU_MONO_BOLDITALIC);
+		ImageSaver.saveImage(signedDistanceCharacters.texImg.getRemoteBufferedImage(), "SDF_UbuntuMono-BI.png");
+		bounds2File(signedDistanceCharacters, new File("BOUNDS_UbuntuMono-BI.txt"));
 	}
 	
+	public static SignedDistanceCharacters loadFromResource(URL imgResource, URL boundsResource){
+		Img texImg = null;
+		try(InputStream is = imgResource.openStream()){
+			texImg = ImageLoader.loadImg(is);
+		} catch (IOException e) {
+			throw new IllegalArgumentException("loading image from resource failed - " + imgResource.toExternalForm(), e);
+		}
+		int[][] bounds = null;
+		try(BufferedInputStream bis = new BufferedInputStream(boundsResource.openStream());
+			Scanner sc = new Scanner(bis))
+		{
+			// read array length
+			String next = sc.nextLine();
+			int len = Integer.parseInt(next);
+			bounds = new int[4][len];
+			for(int i = 0; i < len; i++){
+				next = sc.nextLine();
+				String[] split = next.split(" ", -1);
+				for(int j = 0; j < 4; j++){
+					bounds[j][i] = Integer.parseInt(split[j]);
+				}
+			}
+		} catch (IOException e) {
+			throw new IllegalArgumentException("loading bounds from text resource failed - " + boundsResource.toExternalForm(), e);
+		}
+		Objects.requireNonNull(texImg);
+		Objects.requireNonNull(bounds);
+		return new SignedDistanceCharacters(texImg, bounds[0], bounds[1], bounds[2], bounds[3]);
+	}
+	
+	public static SignedDistanceCharacters getUbuntuMonoSDC(int style){
+		switch (style) {
+		case Font.PLAIN:
+			return UBUNTU_MONO_PLAIN;
+		case Font.BOLD:
+			return UBUNTU_MONO_BOLD;
+		case Font.ITALIC:
+			return UBUNTU_MONO_ITALIC;
+		case (Font.BOLD | Font.ITALIC):
+			return UBUNTU_MONO_BOLDITALIC;
+		default:
+			throw new IllegalArgumentException(
+					"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
+		}
+	}
+	
+	static void bounds2File(SignedDistanceCharacters sdc, File f){
+		try(FileWriter fw = new FileWriter(f);
+			BufferedWriter bw = new BufferedWriter(fw))
+		{
+			bw.append(""+CHARACTERS.length());
+			bw.append('\n');
+			for(int i = 0; i < CHARACTERS.length(); i++){
+				bw.append("" +sdc.leftBounds[i]);
+				bw.append(" "+sdc.rightBounds[i]);
+				bw.append(" "+sdc.topBounds[i]);
+				bw.append(" "+sdc.botBounds[i]);
+				bw.append('\n');
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void main(String[] args) {
+		
+	}
 }

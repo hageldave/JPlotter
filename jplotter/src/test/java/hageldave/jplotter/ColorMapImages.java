@@ -10,7 +10,7 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.imagingkit.core.operations.Blending;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.misc.CharacterAtlas;
+import hageldave.jplotter.util.FontProvider;
 
 public class ColorMapImages {
 
@@ -18,7 +18,7 @@ public class ColorMapImages {
 		for(DefaultColorMap map : DefaultColorMap.values()){
 			Img img = map.toImg(250, 40, true, !map.name().startsWith("Q"));
 			Img txtbackground = img.copy().fill(0);
-			Font font = new Font(CharacterAtlas.FONT_NAME, Font.PLAIN, 12);
+			Font font = FontProvider.getUbuntuMono(12, Font.PLAIN);
 			txtbackground.paint(g2d->{
 				g2d.setColor(Color.black);
 				g2d.setFont(font);

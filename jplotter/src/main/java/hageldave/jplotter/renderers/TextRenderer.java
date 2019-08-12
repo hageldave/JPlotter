@@ -244,7 +244,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 				
 				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 				text.setTextContent(txt.getTextString());
-				String fontfamily = CharacterAtlas.FONT_NAME.equals("Monospaced") ? "monospace":"\""+CharacterAtlas.FONT_NAME+"\",monospace";
+				String fontfamily = "'Ubuntu Mono', monospace";
 				text.setAttributeNS(null, "style",
 						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
 				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));

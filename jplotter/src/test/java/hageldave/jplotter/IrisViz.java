@@ -40,7 +40,6 @@ import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
-import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -49,6 +48,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.FontProvider;
 
 public class IrisViz {
 
@@ -111,7 +111,7 @@ public class IrisViz {
 		header.add(Box.createHorizontalStrut(30));
 		header.add(legendCanvas);
 		JLabel pointInfo = new JLabel("");
-		pointInfo.setFont(new Font(CharacterAtlas.FONT_NAME,Font.PLAIN,10));
+		pointInfo.setFont(FontProvider.getUbuntuMono(10,Font.PLAIN));
 		pointInfo.setPreferredSize(new Dimension(300, pointInfo.getPreferredSize().height));
 		header.add(pointInfo);
 		
