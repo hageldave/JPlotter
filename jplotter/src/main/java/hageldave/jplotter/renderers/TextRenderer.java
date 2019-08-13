@@ -1,6 +1,7 @@
 package hageldave.jplotter.renderers;
 
 import java.awt.Color;
+import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
@@ -11,6 +12,7 @@ import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.misc.SignedDistanceCharacters;
 import hageldave.jplotter.renderables.Renderable;
@@ -54,7 +56,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "   vec3 pos = vec3((rotMX*in_position)*modelScaling+origin, 1);"
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
-			+ NL + "   gl_Position = projMX*vec4(int(pos.x), int(pos.y), pos.z, 1);"
 			+ NL + "   gl_Position = projMX*vec4(pos.x, pos.y, pos.z, 1);"
 			+ NL + "   tex_Coords = in_texcoords;"
 			+ NL + "}"
@@ -82,6 +83,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "   pick_color = pickColorToUse;"
 			+ NL + "}"
 			;
+	
+	protected VertexArray vaTextBackground;
 	
 	
 	/**
@@ -123,16 +126,28 @@ public class TextRenderer extends GenericRenderer<Text> {
 		GL20.glUniform2f(loc, (float)(1/scaleX), (float)(1/scaleY));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
+		
+		vaTextBackground = new VertexArray(2);
+		vaTextBackground.setBuffer(0, 2, 0f,0f, 0f,1f, 1f,1f, 1f,0f);
+		vaTextBackground.setBuffer(1, 2, 0f,0f, 0f,0f, 0f,0f, 0f,0f);
+		vaTextBackground.setIndices(0,1,2, 0,2,3);
 	}
 
 	@Override
 	@GLContextRequired
 	protected void renderItem(Text txt) {
 		int loc;
-		txt.bindVertexArray();
 		
 		// draw background if bg color is not 0
 		if(txt.getBackground().getRGB() !=0){
+			Rectangle2D bounds = txt.getBounds();
+			float rightpadding = 0.4f*((float)bounds.getWidth()/txt.getTextString().length());
+			vaTextBackground.setBuffer(0, 2, 
+					0,(float)bounds.getMinY(), 
+					0,(float)bounds.getMaxY(),
+					(float)bounds.getMaxX()+rightpadding,(float)bounds.getMaxY(),
+					(float)bounds.getMaxX()+rightpadding,(float)bounds.getMinY());
+			vaTextBackground.bindAndEnableAttributes(0,1);
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "origin");
 			GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "rot");
@@ -146,8 +161,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 			GL20.glUniform1i(loc, 0);
 			// draw things
 			GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
+			vaTextBackground.releaseAndDisableAttributes(0,1);
 		}
 		
+		txt.bindVertexArray();
 		GL13.glBindTexture(GL11.GL_TEXTURE_2D, txt.getTextureID());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
 		GL20.glUniform1i(loc, 0);
@@ -176,6 +193,9 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@Override
 	@GLContextRequired
 	protected void renderEnd() {
+		vaTextBackground.close();
+		vaTextBackground = null;
+		
 		GL13.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);

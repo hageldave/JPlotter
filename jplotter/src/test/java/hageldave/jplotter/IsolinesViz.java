@@ -97,7 +97,7 @@ public class IsolinesViz {
 		canvas.setCoordinateView(-2.5, -1.5, 0.5, 1.5);
 		
 		Lines userContour = new Lines();
-		Text userIsoLabel = new Text("", 10, Font.PLAIN, true);
+		Text userIsoLabel = new Text("", 10, Font.ITALIC, true);
 		canvas.setContent(content);
 		content.addItemToRender(userContour);
 		content.addItemToRender(userIsoLabel);
