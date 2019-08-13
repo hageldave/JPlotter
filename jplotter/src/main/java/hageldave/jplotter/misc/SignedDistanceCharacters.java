@@ -27,7 +27,7 @@ public class SignedDistanceCharacters {
 	public static double smoothStepLeft = 0.39;//0.44
 	public static double smoothStepRight = 0.57;//0.56
 	
-	protected static final int genFontSize = 34;
+	protected static final int genFontSize = 35;
 	protected static final int padding = 8;
 	protected static final Img FONTMETRIC_IMG = new Img(64, 64);
 	public static final String CHARACTERS = 
@@ -175,7 +175,7 @@ public class SignedDistanceCharacters {
 //			g2d.drawString(""+ch, padding, padding+fontHeight[0]-descent[0]);
 //			g2d.setColor(Color.GREEN);
 //			g2d.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
-//		});
+//		});PLAIN
 		return Pair.of(Pair.of(tex,tex2), bounds);
 	}
 	
@@ -280,6 +280,6 @@ public class SignedDistanceCharacters {
 	}
 	
 	public static void main(String[] args) {
-		makeSDCFiles();
+//		makeSDCFiles();
 	}
 }

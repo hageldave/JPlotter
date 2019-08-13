@@ -94,7 +94,7 @@ public class CharacterAtlas implements AutoCloseable {
 		int[] fontmetrics = {0,0};
 		FONTMETRIC_IMG.paint(g->{
 			FontMetrics metrics = g.getFontMetrics(this.font);
-			fontmetrics[0] = metrics.getMaxAdvance();
+			fontmetrics[0] = metrics.charWidth('K');
 			fontmetrics[1] = metrics.getHeight();
 		});
 		this.charWidth = fontmetrics[0];
@@ -146,7 +146,7 @@ public class CharacterAtlas implements AutoCloseable {
 		Graphics2D g2d = FONTMETRIC_IMG.createGraphics();
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, aahint);
 		FontMetrics fontMetrics = g2d.getFontMetrics(font);
-		char[] sampletext = new char[textlength]; Arrays.fill(sampletext, 'A');
+		char[] sampletext = new char[textlength]; Arrays.fill(sampletext, 'K');
 		Rectangle2D bounds = fontMetrics.getStringBounds(new String(sampletext), g2d);
 		g2d.dispose();
 		return bounds;

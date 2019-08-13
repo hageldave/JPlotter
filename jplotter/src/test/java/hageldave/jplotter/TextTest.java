@@ -25,7 +25,7 @@ public class TextTest {
 	public static void main(String[] args) {
 		TextRenderer tr = new TextRenderer();
 		for(int i = 10; i < 24; i+=2){
-			tr.addItemToRender(new Text(sample, i, Font.ITALIC|Font.BOLD, false)
+			tr.addItemToRender(new Text(sample, i, Font.PLAIN, false)
 					.setOrigin(i*11, i*12)
 					.setAngle(-3.1415/4)
 					.setColor(Color.black)
