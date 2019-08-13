@@ -143,10 +143,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 			Rectangle2D bounds = txt.getBounds();
 			float rightpadding = 0.4f*((float)bounds.getWidth()/txt.getTextString().length());
 			vaTextBackground.setBuffer(0, 2, 
-					0,(float)bounds.getMinY(), 
-					0,(float)bounds.getMaxY(),
-					(float)bounds.getMaxX()+rightpadding,(float)bounds.getMaxY(),
-					(float)bounds.getMaxX()+rightpadding,(float)bounds.getMinY());
+					0f, 0f, 
+					0f, (float)bounds.getHeight(),
+					(float)bounds.getWidth()+rightpadding, (float)bounds.getHeight(),
+					(float)bounds.getWidth()+rightpadding, 0f);
 			vaTextBackground.bindAndEnableAttributes(0,1);
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "origin");
 			GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
