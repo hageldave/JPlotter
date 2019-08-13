@@ -56,6 +56,13 @@ public class CharacterAtlas implements AutoCloseable {
 
 	protected static final HashMap<Integer, HashMap<GenericKey, CharacterAtlas>> ATLAS_COLLECTION = new HashMap<>();
 	
+	protected static final float leftPaddingFactor = 0.1f;
+	
+	protected static final float rightPaddingFactor = 0.3f;
+	
+	protected static final float topPaddingFactor = 0.1f;
+	
+	protected static final float botPaddingFactor = 0.1f;
 
 	public final Font font;
 	public final int charWidth;
@@ -263,18 +270,28 @@ public class CharacterAtlas implements AutoCloseable {
 	public float[] vaVerticesForStringLength(int len){
 		float[] vertices = new float[len*2*4];
 		for(int i = 0; i < len; i++){
+			float x0 = i*charWidth;
+			float x1 = (i+1)*charWidth;
+			float y0 = 0;
+			float y1 = charHeigth;
+			// apply padding
+			x0 -= charWidth*leftPaddingFactor;
+			x1 += charWidth*rightPaddingFactor;
+			y0 -= charHeigth*botPaddingFactor;
+			y1 += charHeigth*topPaddingFactor;
+			
 			// bot left
-			vertices[i*2*4+0] = i*charWidth;
-			vertices[i*2*4+1] = 0.0f;
+			vertices[i*2*4+0] = x0;
+			vertices[i*2*4+1] = y0;
 			// top left
-			vertices[i*2*4+2] = i*charWidth;
-			vertices[i*2*4+3] = charHeigth;
+			vertices[i*2*4+2] = x0;
+			vertices[i*2*4+3] = y1;
 			// bot right
-			vertices[i*2*4+4] = (i+1)*charWidth;
-			vertices[i*2*4+5] = 0.0f;
+			vertices[i*2*4+4] = x1;
+			vertices[i*2*4+5] = y0;
 			// top right
-			vertices[i*2*4+6] = (i+1)*charWidth;
-			vertices[i*2*4+7] = charHeigth;
+			vertices[i*2*4+6] = x1;
+			vertices[i*2*4+7] = y1;
 		}
 		return vertices;
 	}
@@ -311,18 +328,30 @@ public class CharacterAtlas implements AutoCloseable {
 		float[] texCoords = new float[chars.length*2*4];
 		for(int i = 0; i < chars.length; i++){
 			// y is flipped due to texture coordinates being upside down
+			float x0 = getTexCoordXForCharLeft(chars[i]);
+			float x1 = getTexCoordXForCharRight(chars[i]);
+			float y0 = getTexCoordYForCharBot(chars[i]);
+			float y1 = getTexCoordYForCharTop(chars[i]);
+			// apply padding
+			float width = x1-x0;
+			float height = y0-y1;
+			x0 -= width*leftPaddingFactor;
+			y0 += height*botPaddingFactor;
+			x1 += width*rightPaddingFactor;
+			y1 -= height*topPaddingFactor;
+			
 			// tex bot left
-			texCoords[i*2*4+0] = getTexCoordXForCharLeft(chars[i]);
-			texCoords[i*2*4+1] = getTexCoordYForCharBot(chars[i]);
+			texCoords[i*2*4+0] = x0;
+			texCoords[i*2*4+1] = y0;
 			// tex top left
-			texCoords[i*2*4+2] = getTexCoordXForCharLeft(chars[i]);
-			texCoords[i*2*4+3] = getTexCoordYForCharTop(chars[i]);
+			texCoords[i*2*4+2] = x0;
+			texCoords[i*2*4+3] = y1;
 			// tex bot right
-			texCoords[i*2*4+4] = getTexCoordXForCharRight(chars[i]);
-			texCoords[i*2*4+5] = getTexCoordYForCharBot(chars[i]);
+			texCoords[i*2*4+4] = x1;
+			texCoords[i*2*4+5] = y0;
 			// tex top right
-			texCoords[i*2*4+6] = getTexCoordXForCharRight(chars[i]);
-			texCoords[i*2*4+7] = getTexCoordYForCharTop(chars[i]);
+			texCoords[i*2*4+6] = x1;
+			texCoords[i*2*4+7] = y1;
 		}
 		return texCoords;
 	}

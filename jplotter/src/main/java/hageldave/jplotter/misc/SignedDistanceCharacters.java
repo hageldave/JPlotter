@@ -115,11 +115,12 @@ public class SignedDistanceCharacters {
 		FONTMETRIC_IMG.paint(g2d->{
 			FontMetrics fontMetrics = g2d.getFontMetrics(f);
 			descent[0] = fontMetrics.getDescent();
-			advance[0] = fontMetrics.getMaxAdvance();
+			advance[0] = fontMetrics.charWidth('K');
 			fontHeight[0] = fontMetrics.getHeight();
 			Rectangle b = fontMetrics.getStringBounds(""+ch, g2d).getBounds();
 			bounds.setRect(b);
 		});
+		
 		bounds.setLocation(padding, padding);
 		// create signed distance field image
 		Img tex;
@@ -279,6 +280,6 @@ public class SignedDistanceCharacters {
 	}
 	
 	public static void main(String[] args) {
-		
+		makeSDCFiles();
 	}
 }
