@@ -169,7 +169,7 @@ public class Legend implements Renderable, Renderer {
 		// do layout
 		int leftPadding = 4;
 		int fontStyle = Font.PLAIN;
-		int fontSize = 10;
+		int fontSize = 11;
 		int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
 		int maxTextWidth = glyphLabels.stream()
 				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width)
@@ -204,7 +204,7 @@ public class Legend implements Renderable, Renderer {
 			if(viewPortWidth-currentX < 14 + maxTextWidth){
 				// new line
 				currentX = leftPadding;
-				currentY -= Math.max(10, fontHeight)+4; 
+				currentY -= Math.max(10, fontHeight)+5; 
 			}
 		}
 		// lines second
@@ -230,7 +230,7 @@ public class Legend implements Renderable, Renderer {
 			if(viewPortWidth-currentX < 14 + maxTextWidth){
 				// new line
 				currentX = leftPadding;
-				currentY -= Math.max(10, fontHeight)+4; 
+				currentY -= Math.max(10, fontHeight)+5; 
 			}
 		}
 		
