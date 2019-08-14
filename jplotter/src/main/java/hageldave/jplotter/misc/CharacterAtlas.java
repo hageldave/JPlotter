@@ -3,7 +3,6 @@ package hageldave.jplotter.misc;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,14 +28,13 @@ import hageldave.jplotter.util.GenericKey;
  * the corresponding area in the texture.
  * A {@link CharacterAtlas} is defined by:
  * <ul>
- * <li>its font which is always mono spaced in this implementation</li>
  * <li>its font size</li>
- * <li>its font style (PLAIN, ITALIC, BOLD)</li>
- * <li>antialiasing - whether the texture uses antialiased characters</li>
+ * <li>its font style (PLAIN, ITALIC, BOLD, BOLD|ITALIC)</li>
  * </ul>
- * This implementation limits the possible characters to ASCII displayable ones.
- * More exact the range of ASCII characters [32..126] that is the white space character
- * up to the tilda character.
+ * The font used is Ubuntu Mono which is a monospaced font, which can be accessed through
+ * the {@link FontProvider}.
+ * This implementation limits the possible characters to the ones listed in 
+ * {@link SignedDistanceCharacters#CHARACTERS}.
  * Any other character will be mapped to white space and will this be invisible in the
  * render.
  * To obtain an character atlas use the static {@link CharacterAtlas#get(int, int, boolean)}
@@ -69,13 +67,12 @@ public class CharacterAtlas implements AutoCloseable {
 	public final int charHeigth;
 	public final int fontSize;
 	public final int style;
-//	public final boolean antialiased;
 	public final int owningCanvasID;
 	protected int texID;
 	public SignedDistanceCharacters sdChars;
 	
 	@GLContextRequired
-	protected CharacterAtlas(int fontSize, int style, boolean antialiased) {
+	protected CharacterAtlas(int fontSize, int style) {
 		int canvasID = FBOCanvas.CURRENTLY_ACTIVE_CANVAS;
 		if(canvasID == 0){
 			throw new IllegalStateException(
@@ -108,12 +105,11 @@ public class CharacterAtlas implements AutoCloseable {
 	 * @param fontSize point size of the font
 	 * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
 	 * or bitwise union BOLD|ITALIC.
-	 * @param antialiased whether the characters of the texture are antialiased or not.
 	 * @return matching {@link CharacterAtlas}.
 	 * @throws IllegalStateException when no {@link FBOCanvas} is currently active
 	 */
 	@GLContextRequired
-	public static CharacterAtlas get(int fontSize, int style, boolean antialiased){
+	public static CharacterAtlas get(int fontSize, int style){
 		int canvasID = FBOCanvas.CURRENTLY_ACTIVE_CANVAS;
 		if(canvasID == 0){
 			throw new IllegalStateException(
@@ -125,9 +121,9 @@ public class CharacterAtlas implements AutoCloseable {
 			ATLAS_COLLECTION.put(canvasID, new HashMap<>());
 		}
 		HashMap<GenericKey, CharacterAtlas> contextCollection = ATLAS_COLLECTION.get(canvasID);
-		GenericKey key = new GenericKey(fontSize, style, antialiased);
+		GenericKey key = new GenericKey(fontSize, style);
 		if(!contextCollection.containsKey(key)){
-			contextCollection.put(key, new CharacterAtlas(fontSize, style, antialiased));
+			contextCollection.put(key, new CharacterAtlas(fontSize, style));
 		}
 		return contextCollection.get(key);
 	}
@@ -138,13 +134,10 @@ public class CharacterAtlas implements AutoCloseable {
 	 * y coordinate that is the distance of the descent line from the baseline.
 	 * @param textlength number of characters
 	 * @param font to measure with (has to be monospaced, or else bounds will be incorrect)
-	 * @param antialiased whether the font is intended to be drawn with antialiasing (may not make a difference but who knows).
 	 * @return bounding rectangle for a text of specified length and font.
 	 */
-	public static Rectangle2D boundsForText(int textlength, Font font, boolean antialiased){
-		Object aahint = antialiased ? RenderingHints.VALUE_TEXT_ANTIALIAS_ON:RenderingHints.VALUE_TEXT_ANTIALIAS_OFF;
+	public static Rectangle2D boundsForText(int textlength, Font font){
 		Graphics2D g2d = FONTMETRIC_IMG.createGraphics();
-		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, aahint);
 		FontMetrics fontMetrics = g2d.getFontMetrics(font);
 		char[] sampletext = new char[textlength]; Arrays.fill(sampletext, 'K');
 		Rectangle2D bounds = fontMetrics.getStringBounds(new String(sampletext), g2d);
@@ -157,12 +150,11 @@ public class CharacterAtlas implements AutoCloseable {
 	 * @param textlength number of characters
 	 * @param fontSize point size of the font
 	 * @param style of the font e.g. {@link Font#PLAIN}.
-	 * @param antialiased whether the font is intended to be drawn with antialiasing (may not make a difference but who knows).
 	 * @return bounding rectangle for a text of specified length and font.
 	 */
-	public static Rectangle2D boundsForText(int textlength, int fontSize, int style, boolean antialiased){
+	public static Rectangle2D boundsForText(int textlength, int fontSize, int style){
 		Font font = FontProvider.getUbuntuMono(fontSize, style);
-		return boundsForText(textlength, font, antialiased);
+		return boundsForText(textlength, font);
 	}
 
 

@@ -170,15 +170,15 @@ public class Legend implements Renderable, Renderer {
 		int leftPadding = 4;
 		int fontStyle = Font.PLAIN;
 		int fontSize = 10;
-		int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle, true).getBounds().height;
+		int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
 		int maxTextWidth = glyphLabels.stream()
-				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle, true).getBounds().width)
+				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0
 		);
 		maxTextWidth = Math.max(maxTextWidth,lineLabels.stream()
-				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle, true).getBounds().width)
+				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0)
@@ -187,7 +187,7 @@ public class Legend implements Renderable, Renderer {
 		int currentY = viewPortHeight-fontHeight-2;
 		// glyphs first
 		for(GlyphLabel glyphLabel : glyphLabels) {
-			Text lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle, true);
+			Text lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle);
 			lbltxt.setPickColor(glyphLabel.pickColor);
 			texts.add(lbltxt);
 			Glyph glyph = glyphLabel.glyph;
@@ -209,7 +209,7 @@ public class Legend implements Renderable, Renderer {
 		}
 		// lines second
 		for(LineLabel lineLabel : lineLabels) {
-			Text lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle, true);
+			Text lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle);
 			lbltxt.setPickColor(lineLabel.pickColor);
 			texts.add(lbltxt);
 			double thickness = lineLabel.thickness;

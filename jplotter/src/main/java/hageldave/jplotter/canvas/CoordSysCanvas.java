@@ -104,8 +104,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
 	protected Lines guides = new Lines().setVertexRoundingEnabled(true);
 	protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
-	protected Text xAxisLabelText = new Text("", 12, Font.PLAIN, true);
-	protected Text yAxisLabelText = new Text("", 12, Font.PLAIN, true);
+	protected Text xAxisLabelText = new Text("", 12, Font.PLAIN);
+	protected Text yAxisLabelText = new Text("", 12, Font.PLAIN);
 
 	protected double[] xticks;
 	protected double[] yticks;
@@ -306,18 +306,17 @@ public class CoordSysCanvas extends FBOCanvas {
 		String[] xticklabels = xticksAndLabels.second;
 		String[] yticklabels = yticksAndLabels.second;
 
-		final int tickfontSize = 10;
+		final int tickfontSize = 11;
 		final int labelfontSize = 12;
 		final int style = Font.PLAIN;
-		final boolean antialiased = true;
 		// find maximum length of y axis labels
 		int maxYTickLabelWidth = 0;
 		for(String label:yticklabels){
-			int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style, antialiased).getBounds().width;
+			int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
 			maxYTickLabelWidth = Math.max(maxYTickLabelWidth, labelW);
 		}
-		int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style, antialiased).getBounds().height;
-		int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style, antialiased).getBounds().height;
+		int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
+		int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style).getBounds().height;
 
 		int legendRightW = Objects.nonNull(legendRight) ? legendRightWidth+4:0;
 		int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
@@ -349,7 +348,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			Point2D onaxis = new Point2D.Double(x,coordsysAreaLB.getY());
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
 			// label
-			Text label = new Text(xticklabels[i], tickfontSize, style, antialiased);
+			Text label = new Text(xticklabels[i], tickfontSize, style);
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(
 					(int)(onaxis.getX()-textSize.getWidth()/2.0), 
@@ -365,7 +364,7 @@ public class CoordSysCanvas extends FBOCanvas {
 			Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, m*yAxisHeight);
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
 			// label
-			Text label = new Text(yticklabels[i], tickfontSize, style, antialiased);
+			Text label = new Text(yticklabels[i], tickfontSize, style);
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -textSize.getHeight()/2.0));
 			tickMarkLabels.add(label);

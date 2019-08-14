@@ -37,7 +37,7 @@ public class TextTest {
 		double[] smoothStepRight = smoothStepRight_[0];
 		
 		for(int i = 10; i <= 27; i+=1){
-			tr.addItemToRender(new Text(i + sample, i, Font.PLAIN, false)
+			tr.addItemToRender(new Text(i + sample, i, Font.PLAIN)
 					.setOrigin((i-9)*12, (i-9)*20)
 					.setAngle(-3.1415/4)
 					.setColor(Color.black)
@@ -68,8 +68,8 @@ public class TextTest {
 		ChangeListener sliderchange = e->{
 			double l = sliderLeft.getValue()*1.0/100;
 			double r = sliderRight.getValue()*1.0/100;
-			smoothStepLeft[16-10]=l;
-			smoothStepRight[16-10]=r;
+			smoothStepLeft[10-10]=l;
+			smoothStepRight[10-10]=r;
 			System.out.println(l + " << >> " + r);
 			canvas.repaint();
 		};
