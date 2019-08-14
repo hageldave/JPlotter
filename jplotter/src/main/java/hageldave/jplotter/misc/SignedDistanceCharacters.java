@@ -22,6 +22,23 @@ import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.util.FontProvider;
 import hageldave.jplotter.util.Pair;
 
+/**
+ * The SignedDistanceCharacters class comprises signed distance fields 
+ * of a set of characters. 
+ * A signed distance field is an image in which each pixel encodes the
+ * distance to the nearest edge.
+ * Such an image of a character glyph allows for efficient rendering of
+ * text with arbitrary size and rotation using alpha testing and blending.
+ * For more details read this paper 
+ * <a href="https://dl.acm.org/citation.cfm?id=1281665">dl.acm.org/citation.cfm?id=1281665</a>.
+ * <p>
+ * The signed distance fields for each character are stored in a single
+ * image alongside a lookup table for the bounding rectangles for each
+ * character within that image.
+ * 
+ * @author hageldave
+ *
+ */
 public class SignedDistanceCharacters {
 	
 	protected static final int genFontSize = 35;

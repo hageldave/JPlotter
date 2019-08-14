@@ -115,6 +115,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 			shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
 			itemsToRender.forEach(Renderable::initGL);
 		}
+		if(Objects.isNull(vaTextBackground)){
+			vaTextBackground = new VertexArray(2);
+			vaTextBackground.setBuffer(0, 2, 0f,0f, 0f,1f, 1f,1f, 1f,0f);
+			vaTextBackground.setBuffer(1, 2, 0f,0f, 0f,0f, 0f,0f, 0f,0f);
+			vaTextBackground.setIndices(0,1,2, 0,2,3);
+		}
 	}
 	
 	/**
@@ -141,11 +147,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 		GL20.glUniform2f(loc, (float)(1/scaleX), (float)(1/scaleY));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
-		
-		vaTextBackground = new VertexArray(2);
-		vaTextBackground.setBuffer(0, 2, 0f,0f, 0f,1f, 1f,1f, 1f,0f);
-		vaTextBackground.setBuffer(1, 2, 0f,0f, 0f,0f, 0f,0f, 0f,0f);
-		vaTextBackground.setIndices(0,1,2, 0,2,3);
 	}
 
 	@Override
@@ -210,9 +211,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@Override
 	@GLContextRequired
 	protected void renderEnd() {
-		vaTextBackground.close();
-		vaTextBackground = null;
-		
 		GL13.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -228,6 +226,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 	public void close() {
 		if(Objects.nonNull(shader))
 			shader.close();
+		if(Objects.nonNull(vaTextBackground))
+			vaTextBackground.close();
 		deleteAllItems();
 	}
 	
