@@ -35,15 +35,31 @@ import hageldave.jplotter.util.Pair;
  * The signed distance fields for each character are stored in a single
  * image alongside a lookup table for the bounding rectangles for each
  * character within that image.
+ * The set of characters used is defined in {@link #CHARACTERS} which is
+ * a String sorted by char value ascending.
+ * <p>
+ * Since the process of computing a SignedDistanceCharacters object is quite
+ * time consuming, there are pre-computed SignedDistanceCharacters instances
+ * for the Ubuntu Mono font used by JPlotter (see {@link FontProvider}) which
+ * are statically loaded from files.
+ * These are located in {@code .../resources/font/} alongside the corresponding
+ * true type font files.
+ * Similar to the {@link FontProvider#getUbuntuMono(float, int)}
+ * the {@link #getUbuntuMonoSDC(int)} method can be used to access the
+ * pre-computed SignedDistanceCharacters.
  * 
  * @author hageldave
- *
  */
 public class SignedDistanceCharacters {
 	
 	protected static final int genFontSize = 35;
 	protected static final int padding = 8;
 	protected static final Img FONTMETRIC_IMG = new Img(64, 64);
+	
+	/**
+	 * Character set for instances of {@link SignedDistanceCharacters}.
+	 * Characters in this string are sorted by char value ascending.
+	 */
 	public static final String CHARACTERS = 
 			" !\"#$%&'()*+,-./0123456789:;<=>?@" +
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`" +
@@ -69,12 +85,33 @@ public class SignedDistanceCharacters {
 			SignedDistanceCharacters.class.getResource("/font/SDF_UbuntuMono-BI.png"), 
 			SignedDistanceCharacters.class.getResource("/font/BOUNDS_UbuntuMono-BI.txt"));
 	
+	/**
+	 * left bounds for each character out of {@link #CHARACTERS} within
+	 * this SignedDistanceCharacters texture image.
+	 */
+	public final int[] leftBounds = new int[CHARACTERS.length()];
+	/**
+	 * right bounds for each character out of {@link #CHARACTERS} within
+	 * this SignedDistanceCharacters texture image.
+	 */
+	public final int[] rightBounds = new int[CHARACTERS.length()];
+	/**
+	 * top bounds for each character out of {@link #CHARACTERS} within
+	 * this SignedDistanceCharacters texture image.
+	 */
+	public final int[] topBounds = new int[CHARACTERS.length()];
+	/**
+	 * bottom bounds for each character out of {@link #CHARACTERS} within
+	 * this SignedDistanceCharacters texture image.
+	 */
+	public final int[] botBounds = new int[CHARACTERS.length()];
+	/**
+	 * texture image containing the signed distance fields of each character
+	 * in {@link #CHARACTERS}.
+	 */
+	public final Img texImg;
 	
-	final int[] leftBounds = new int[CHARACTERS.length()];
-	final int[] rightBounds = new int[CHARACTERS.length()];
-	final int[] topBounds = new int[CHARACTERS.length()];
-	final int[] botBounds = new int[CHARACTERS.length()];
-	final Img texImg;
+	
 	
 	public SignedDistanceCharacters(Font f) {
 		Font font = f.deriveFont((float)genFontSize);
