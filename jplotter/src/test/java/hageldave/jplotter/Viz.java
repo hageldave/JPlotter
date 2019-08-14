@@ -16,9 +16,7 @@ import java.io.File;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeListener;
 
 import org.w3c.dom.Document;
 
@@ -26,7 +24,6 @@ import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
-import hageldave.jplotter.misc.SignedDistanceCharacters;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
@@ -146,26 +143,6 @@ public class Viz {
 				}
 			}
 		});
-		
-		JSlider sliderLeft = new JSlider(0, 100);
-		JSlider sliderRight = new JSlider(0, 100);
-		sliderLeft.setMajorTickSpacing(50);
-		sliderRight.setMajorTickSpacing(50);
-		sliderLeft.setPaintTicks(true);
-		sliderRight.setPaintTicks(true);
-		frame.getContentPane().add(sliderLeft, BorderLayout.NORTH);
-		frame.getContentPane().add(sliderRight, BorderLayout.SOUTH);
-		
-		ChangeListener sliderchange = e->{
-			double l = sliderLeft.getValue()*1.0/100;
-			double r = sliderRight.getValue()*1.0/100;
-			SignedDistanceCharacters.smoothStepLeft=l;
-			SignedDistanceCharacters.smoothStepRight=r;
-			System.out.println(l + " << >> " + r);
-			canvas.repaint();
-		};
-		sliderLeft.addChangeListener(sliderchange);
-		sliderRight.addChangeListener(sliderchange);
 		
 		
 //		{

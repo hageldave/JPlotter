@@ -24,9 +24,6 @@ import hageldave.jplotter.util.Pair;
 
 public class SignedDistanceCharacters {
 	
-	public static double smoothStepLeft = 0.39;//0.44
-	public static double smoothStepRight = 0.57;//0.56
-	
 	protected static final int genFontSize = 35;
 	protected static final int padding = 8;
 	protected static final Img FONTMETRIC_IMG = new Img(64, 64);

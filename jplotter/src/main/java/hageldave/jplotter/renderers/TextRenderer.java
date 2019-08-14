@@ -14,11 +14,11 @@ import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.CharacterAtlas;
-import hageldave.jplotter.misc.SignedDistanceCharacters;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -83,6 +83,21 @@ public class TextRenderer extends GenericRenderer<Text> {
 			+ NL + "   pick_color = pickColorToUse;"
 			+ NL + "}"
 			;
+	
+	/**
+	 * Left (lower) cut off parameter of the smooth step function for text rendering 
+	 * in the fragment shader.
+	 * This is used to tune the sharpness and aliasing of characters for font sizes 10 to 24.
+	 */
+	 protected static final double[] smoothStepLeft = 
+		{0.39, 0.42, 0.42, 0.40, 0.41, 0.41, 0.43, 0.43, 0.43, 0.44, 0.44, 0.44, 0.45, 0.47, 0.47};
+	/**
+	 * Right (upper) cut off parameter of the smooth step function for text rendering 
+	 * in the fragment shader.
+	 * This is used to tune the sharpness and aliasing of characters for font sizes 10 to 24.
+	 */
+	protected static final double[] smoothStepRight = 
+		{0.58, 0.58, 0.58, 0.62, 0.62, 0.63, 0.61, 0.61, 0.61, 0.60, 0.59, 0.58, 0.57, 0.55, 0.55};
 	
 	protected VertexArray vaTextBackground;
 	
@@ -179,7 +194,9 @@ public class TextRenderer extends GenericRenderer<Text> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "useTex");
 		GL20.glUniform1i(loc, 1);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "stepBounds");
-		GL20.glUniform2f(loc, (float)SignedDistanceCharacters.smoothStepLeft, (float)SignedDistanceCharacters.smoothStepRight);
+		int smoothStepIdx = Utils.clamp(10, txt.fontsize, 9+smoothStepLeft.length)-10;
+		GL20.glUniform2f(loc, 	(float)smoothStepLeft[smoothStepIdx], 
+								(float)smoothStepRight[smoothStepIdx]);
 		// draw things
 		GL11.glDrawElements(GL11.GL_TRIANGLES, txt.getVertexArray().getNumIndices(), GL11.GL_UNSIGNED_INT, 0);
 		txt.releaseVertexArray();

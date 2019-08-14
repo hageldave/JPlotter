@@ -149,6 +149,17 @@ public class Utils {
 	}
 	
 	/**
+	 * Clamps value between specified bounds
+	 * @param lower minimum value
+	 * @param v value to clamp
+	 * @param upper maximum value
+	 * @return max(lower,min(upper,v))
+	 */
+	public static int clamp(int lower, int v, int upper){
+		return Math.max(lower, Math.min(upper, v));
+	}
+	
+	/**
 	 * Returns the minimum of 3 values
 	 * @param v0 value
 	 * @param v1 value
