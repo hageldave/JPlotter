@@ -12,4 +12,9 @@ public class ColorOperations {
 				(b(argb1)+b(argb2))/2);
 	}
 	
+	public static int desaturate(int argb){
+		int luminance = getLuminance(argb);
+		return argb(a(argb), luminance, luminance, luminance);
+	}
+	
 }
