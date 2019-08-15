@@ -433,6 +433,17 @@ public class Lines implements Renderable {
 			return setColor(color.getRGB());
 		}
 		
+		public SegmentDetails setThickness(double t){
+			this.thickness0 = this.thickness1 = (float)t;
+			return this;
+		}
+		
+		public SegmentDetails setThickness(double t0, double t1){
+			this.thickness0 = (float)t0;
+			this.thickness1 = (float)t1;
+			return this;
+		}
+		
 	}
 
 	/**
@@ -494,7 +505,7 @@ public class Lines implements Renderable {
 			va.setBuffer(0, 2, segmentCoordBuffer);
 			va.setBuffer(1, 1, false, colorBuffer);
 			va.setBuffer(2, 1, false, pickBuffer);
-			va.setBuffer(3, 2, thicknessBuffer);
+			va.setBuffer(3, 1, thicknessBuffer);
 			isDirty = false;
 		}
 	}
