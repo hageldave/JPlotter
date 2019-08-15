@@ -35,7 +35,7 @@ import hageldave.jplotter.util.GenericKey;
  * the {@link FontProvider}.
  * This implementation limits the possible characters to the ones listed in 
  * {@link SignedDistanceCharacters#CHARACTERS}.
- * Any other character will be mapped to white space and will this be invisible in the
+ * Any other character will be mapped to white space and will thus be invisible in the
  * render.
  * To obtain an character atlas use the static {@link CharacterAtlas#get(int, int, boolean)}
  * method.
@@ -47,7 +47,6 @@ import hageldave.jplotter.util.GenericKey;
  */
 public class CharacterAtlas implements AutoCloseable {
 
-//	public static final String CHARACTERS = SignedDistanceCharacters.CHARACTERS;
 	private static final char[] CHARACTERS = SignedDistanceCharacters.CHARACTERS.toCharArray();
 
 	protected static final Img FONTMETRIC_IMG = new Img(32, 32);
@@ -156,37 +155,29 @@ public class CharacterAtlas implements AutoCloseable {
 		Font font = FontProvider.getUbuntuMono(fontSize, style);
 		return boundsForText(textlength, font);
 	}
+	
+	/**
+	 * index for char in {@link #CHARACTERS}.
+	 * @param c char to search for
+	 * @return index or negative number if not contained
+	 */
+	protected static int indexForChar(char c){
+		return Arrays.binarySearch(CHARACTERS, c);
+	}
 
-
-	public float getTexCoordXForCharLeft(char c){
-		int idx = 0;
-		if((idx = Arrays.binarySearch(CHARACTERS, c)) < 0){
-			return 0;
-		}
+	protected float getTexCoordXForCharLeft(int idx){
 		return sdChars.leftBounds[idx]*1f/(sdChars.texImg.getWidth()-1);
 	}
 	
-	public float getTexCoordXForCharRight(char c){
-		int idx = 0;
-		if((idx = Arrays.binarySearch(CHARACTERS, c)) < 0){
-			return 0;
-		}
+	protected float getTexCoordXForCharRight(int idx){
 		return sdChars.rightBounds[idx]*1f/(sdChars.texImg.getWidth()-1);
 	}
 	
-	public float getTexCoordYForCharTop(char c){
-		int idx = 0;
-		if((idx = Arrays.binarySearch(CHARACTERS, c)) < 0){
-			return 0;
-		}
+	protected float getTexCoordYForCharTop(int idx){
 		return sdChars.topBounds[idx]*1f/(sdChars.texImg.getHeight()-1);
 	}
 	
-	public float getTexCoordYForCharBot(char c){
-		int idx = 0;
-		if((idx = Arrays.binarySearch(CHARACTERS, c)) < 0){
-			return 0;
-		}
+	protected float getTexCoordYForCharBot(int idx){
 		return sdChars.botBounds[idx]*1f/(sdChars.texImg.getHeight()-1);
 	}
 
@@ -296,34 +287,15 @@ public class CharacterAtlas implements AutoCloseable {
 	 * @param chars the sequence of characters
 	 * @return texture coordinates for the sequence of characters.
 	 */
-//	public static float[] vaTexCoordsForChars(char[] chars){
-//		float[] texCoords = new float[chars.length*2*4];
-//		for(int i = 0; i < chars.length; i++){
-//			// y is flipped due to texture coordinates being upside down
-//			// tex bot left
-//			texCoords[i*2*4+0] = getTexCoordXForChar(chars[i]);
-//			texCoords[i*2*4+1] = 1.0f;
-//			// tex top left
-//			texCoords[i*2*4+2] = getTexCoordXForChar(chars[i]);
-//			texCoords[i*2*4+3] = 0.0f;
-//			// tex bot right
-//			texCoords[i*2*4+4] = getTexCoordXForChar(chars[i])+charTexWidth;
-//			texCoords[i*2*4+5] = 1.0f;
-//			// tex top right
-//			texCoords[i*2*4+6] = getTexCoordXForChar(chars[i])+charTexWidth;
-//			texCoords[i*2*4+7] = 0.0f;
-//		}
-//		return texCoords;
-//	}
-	
 	public float[] vaTexCoordsForChars(char[] chars){
 		float[] texCoords = new float[chars.length*2*4];
 		for(int i = 0; i < chars.length; i++){
+			int charIDX = indexForChar(chars[i]);
 			// y is flipped due to texture coordinates being upside down
-			float x0 = getTexCoordXForCharLeft(chars[i]);
-			float x1 = getTexCoordXForCharRight(chars[i]);
-			float y0 = getTexCoordYForCharBot(chars[i]);
-			float y1 = getTexCoordYForCharTop(chars[i]);
+			float x0 = getTexCoordXForCharLeft(charIDX);
+			float x1 = getTexCoordXForCharRight(charIDX);
+			float y0 = getTexCoordYForCharBot(charIDX);
+			float y1 = getTexCoordYForCharTop(charIDX);
 			// apply padding
 			float width = x1-x0;
 			float height = y0-y1;

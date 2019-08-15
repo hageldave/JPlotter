@@ -112,11 +112,14 @@ public class SignedDistanceCharacters {
 	public final Img texImg;
 	
 	
-	
+	/**
+	 * Creates a new {@link SignedDistanceCharacters} instance for the specified font.
+	 * @param f font to use for the SDC
+	 */
 	public SignedDistanceCharacters(Font f) {
 		Font font = f.deriveFont((float)genFontSize);
-		// create texture and setup character bounds
-		Pair<Pair<Img, Img>, Rectangle> initial = mkCharDistanceField(' ', font, null, null);
+		// create texture img and setup character bounds
+		Pair<Pair<Img, Img>, Rectangle> initial = mkCharDistanceField('K', font, null, null);
 		Dimension dim = initial.first.first.getDimension();
 		int charsPerLine = 24;
 		texImg = new Img(dim.width*charsPerLine, dim.height*(CHARACTERS.length()/charsPerLine+1));
@@ -157,6 +160,29 @@ public class SignedDistanceCharacters {
 		System.arraycopy(botBounds, 0, this.botBounds, 0, this.botBounds.length);
 	}
 	
+	/**
+	 * Returns the {@link SignedDistanceCharacters} instance for the specified style
+	 * of the Ubuntu Mono font (which is a pre-computed constant).
+	 * @param style font style, one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
+	 * or BOLD|ITALIC.
+	 * @return ubuntu mono SDC for specified style
+	 */
+	public static SignedDistanceCharacters getUbuntuMonoSDC(int style){
+		switch (style) {
+		case Font.PLAIN:
+			return UBUNTU_MONO_PLAIN;
+		case Font.BOLD:
+			return UBUNTU_MONO_BOLD;
+		case Font.ITALIC:
+			return UBUNTU_MONO_ITALIC;
+		case (Font.BOLD | Font.ITALIC):
+			return UBUNTU_MONO_BOLDITALIC;
+		default:
+			throw new IllegalArgumentException(
+					"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
+		}
+	}
+
 	protected static Pair<Pair<Img,Img>,Rectangle> mkCharDistanceField(char ch, Font f, Img img, Img img2x) {
 		// determine width of character and descent for font
 		int[] advance = {0};
@@ -248,6 +274,10 @@ public class SignedDistanceCharacters {
 		return dist;
 	}
 	
+	/**
+	 * Creates (pre-computes) the files for the Ubuntu Mono {@link SignedDistanceCharacters}.
+	 * Just in case these ever need to be recreated.
+	 */
 	static void makeSDCFiles() {
 		SignedDistanceCharacters signedDistanceCharacters = new SignedDistanceCharacters(FontProvider.UBUNTU_MONO_PLAIN);
 		ImageSaver.saveImage(signedDistanceCharacters.texImg.getRemoteBufferedImage(), "SDF_UbuntuMono-R.png");
@@ -266,7 +296,7 @@ public class SignedDistanceCharacters {
 		bounds2File(signedDistanceCharacters, new File("BOUNDS_UbuntuMono-BI.txt"));
 	}
 	
-	public static SignedDistanceCharacters loadFromResource(URL imgResource, URL boundsResource){
+	static SignedDistanceCharacters loadFromResource(URL imgResource, URL boundsResource){
 		Img texImg = null;
 		try(InputStream is = imgResource.openStream()){
 			texImg = ImageLoader.loadImg(is);
@@ -296,22 +326,6 @@ public class SignedDistanceCharacters {
 		return new SignedDistanceCharacters(texImg, bounds[0], bounds[1], bounds[2], bounds[3]);
 	}
 	
-	public static SignedDistanceCharacters getUbuntuMonoSDC(int style){
-		switch (style) {
-		case Font.PLAIN:
-			return UBUNTU_MONO_PLAIN;
-		case Font.BOLD:
-			return UBUNTU_MONO_BOLD;
-		case Font.ITALIC:
-			return UBUNTU_MONO_ITALIC;
-		case (Font.BOLD | Font.ITALIC):
-			return UBUNTU_MONO_BOLDITALIC;
-		default:
-			throw new IllegalArgumentException(
-					"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
-		}
-	}
-	
 	static void bounds2File(SignedDistanceCharacters sdc, File f){
 		try(FileWriter fw = new FileWriter(f);
 			BufferedWriter bw = new BufferedWriter(fw))
@@ -330,7 +344,4 @@ public class SignedDistanceCharacters {
 		}
 	}
 	
-	public static void main(String[] args) {
-//		makeSDCFiles();
-	}
 }
