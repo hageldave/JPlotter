@@ -61,7 +61,7 @@ public class Text implements Renderable {
 		this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style).getBounds().getSize();
 		this.fontsize = fontsize;
 		this.style = style;
-		this.color = new Color(128,128,128);
+		this.color = new Color(96,96,96);
 		this.origin = new Point(0, 0);
 	}
 

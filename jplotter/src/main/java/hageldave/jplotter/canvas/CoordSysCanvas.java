@@ -104,8 +104,8 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
 	protected Lines guides = new Lines().setVertexRoundingEnabled(true);
 	protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
-	protected Text xAxisLabelText = new Text("", 12, Font.PLAIN);
-	protected Text yAxisLabelText = new Text("", 12, Font.PLAIN);
+	protected Text xAxisLabelText = new Text("", 13, Font.PLAIN);
+	protected Text yAxisLabelText = new Text("", 13, Font.PLAIN);
 
 	protected double[] xticks;
 	protected double[] yticks;
