@@ -40,6 +40,7 @@ import org.w3c.dom.Document;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
@@ -50,7 +51,6 @@ import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.FontProvider;
 
 public class StatLogSPLOMViz {
 

@@ -11,9 +11,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;

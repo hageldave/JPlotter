@@ -10,7 +10,7 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.imagingkit.core.operations.Blending;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.util.FontProvider;
+import hageldave.jplotter.font.FontProvider;
 
 public class ColorMapImages {
 

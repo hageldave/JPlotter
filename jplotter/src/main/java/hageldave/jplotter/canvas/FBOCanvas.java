@@ -21,10 +21,10 @@ import org.lwjgl.opengl.awt.PlatformGLCanvas;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.misc.CharacterAtlas;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.CapabilitiesCreator;

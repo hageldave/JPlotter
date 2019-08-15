@@ -1,4 +1,4 @@
-package hageldave.jplotter.misc;
+package hageldave.jplotter.font;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -19,7 +19,6 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.io.ImageLoader;
 import hageldave.imagingkit.core.io.ImageSaver;
-import hageldave.jplotter.util.FontProvider;
 import hageldave.jplotter.util.Pair;
 
 /**

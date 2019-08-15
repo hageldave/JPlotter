@@ -1,4 +1,4 @@
-package hageldave.jplotter.util;
+package hageldave.jplotter.font;
 
 import java.awt.Font;
 import java.awt.FontFormatException;

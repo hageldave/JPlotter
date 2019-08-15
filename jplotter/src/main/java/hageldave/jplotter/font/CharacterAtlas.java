@@ -1,4 +1,4 @@
-package hageldave.jplotter.misc;
+package hageldave.jplotter.font;
 
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -17,7 +17,6 @@ import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.FontProvider;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.GenericKey;
 
