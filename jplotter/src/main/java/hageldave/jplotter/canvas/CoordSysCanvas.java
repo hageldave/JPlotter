@@ -143,7 +143,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(Color.BLACK);
 		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(Color.GRAY);
 		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT).setColor(Color.GRAY);
-		this.axes.setThickness(2);
+		this.axes.setGlobalThicknessMultiplier(2);
 		this.preContentLinesR
 		.addItemToRender(guides)
 		.addItemToRender(ticks);

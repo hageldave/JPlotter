@@ -59,7 +59,7 @@ public class Example {
 		// the sine samples should be visualized as a line in a kind of red color
 		Lines sineLine = new Lines();
 		int sineColor = 0xff66c2a5;
-		sineLine.setThickness(2)
+		sineLine.setGlobalThicknessMultiplier(2)
 			.addLineStrip(curveX, curveY)
 			.forEach(segment -> segment.setColor(sineColor));
 		

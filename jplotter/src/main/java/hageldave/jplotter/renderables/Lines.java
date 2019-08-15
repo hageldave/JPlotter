@@ -40,7 +40,7 @@ public class Lines implements Renderable {
 
 	protected ArrayList<SegmentDetails> segments = new ArrayList<>();
 
-	protected float thickness = 1;
+	protected float globalThicknessMultiplier = 1;
 
 	protected boolean isDirty;
 
@@ -211,16 +211,16 @@ public class Lines implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
-	public Lines setThickness(double thickness) {
-		this.thickness = (float)thickness;
+	public Lines setGlobalThicknessMultiplier(double thickness) {
+		this.globalThicknessMultiplier = (float)thickness;
 		return this;
 	}
 
 	/**
 	 * @return the line thickness of this {@link Lines} object
 	 */
-	public float getThickness() {
-		return thickness;
+	public float getGlobalThicknessMultiplier() {
+		return globalThicknessMultiplier;
 	}
 
 	/**
@@ -309,6 +309,8 @@ public class Lines implements Renderable {
 		public Point2D p1;
 		public IntSupplier color0;
 		public IntSupplier color1;
+		public float thickness0 = 1;
+		public float thickness1 = 1;
 		public int pickColor;
 
 		public SegmentDetails(Point2D p0, Point2D p1) {
@@ -455,7 +457,7 @@ public class Lines implements Renderable {
 	@GLContextRequired
 	public void initGL(){
 		if(Objects.isNull(va)){
-			va = new VertexArray(3);
+			va = new VertexArray(4);
 			updateGL();
 		}
 	}
@@ -473,6 +475,7 @@ public class Lines implements Renderable {
 			float[] segmentCoordBuffer = new float[segments.size()*2*2];
 			int[] colorBuffer = new int[segments.size()*2];
 			int[] pickBuffer = new int[segments.size()*2];
+			float[] thicknessBuffer = new float[segments.size()*2];
 			for(int i=0; i<segments.size(); i++){
 				SegmentDetails seg = segments.get(i);
 				segmentCoordBuffer[i*4+0] = (float) seg.p0.getX();
@@ -484,10 +487,14 @@ public class Lines implements Renderable {
 				colorBuffer[i*2+1] = seg.color1.getAsInt();
 
 				pickBuffer[i*2+0] = pickBuffer[i*2+1] = seg.pickColor;
+				
+				thicknessBuffer[i*2+0] = seg.thickness0;
+				thicknessBuffer[i*2+1] = seg.thickness1;
 			}
 			va.setBuffer(0, 2, segmentCoordBuffer);
 			va.setBuffer(1, 1, false, colorBuffer);
 			va.setBuffer(2, 1, false, pickBuffer);
+			va.setBuffer(3, 2, thicknessBuffer);
 			isDirty = false;
 		}
 	}
@@ -513,7 +520,7 @@ public class Lines implements Renderable {
 	 */
 	@GLContextRequired
 	public void bindVertexArray() {
-		va.bindAndEnableAttributes(0,1,2);
+		va.bindAndEnableAttributes(0,1,2,3);
 	}
 
 
@@ -523,7 +530,7 @@ public class Lines implements Renderable {
 	 */
 	@GLContextRequired
 	public void releaseVertexArray() {
-		va.releaseAndDisableAttributes(0,1,2);
+		va.releaseAndDisableAttributes(0,1,2,3);
 	}
 
 }

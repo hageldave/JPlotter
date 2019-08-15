@@ -68,7 +68,7 @@ public class Viz {
 					.forEach(tri->tri.setColor(triColor));
 			}
 			tris.setGlobalAlphaMultiplier(0.2);
-			lines.setThickness(2);
+			lines.setGlobalThicknessMultiplier(2);
 			lines.setGlobalAlphaMultiplier(0.8);
 			content.lines.addItemToRender(lines);
 			content.triangles.addItemToRender(tris);

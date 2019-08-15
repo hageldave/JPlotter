@@ -172,7 +172,7 @@ public class StatLogSPLOMViz {
 					allLines.add(lines);
 					for(int c = 0; c < 7; c++){
 						int color = perClassColors[c];
-						lines[c].setThickness(1.5f).addLineStrip(histo[7], histo[c])
+						lines[c].setGlobalThicknessMultiplier(1.5f).addLineStrip(histo[7], histo[c])
 							.forEach(seg->seg.setColor(color));
 						content.addItemToRender(lines[c]);
 					}

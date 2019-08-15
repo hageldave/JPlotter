@@ -216,7 +216,7 @@ public class Legend implements Renderable, Renderer {
 			if(!thickness2lines.containsKey(thickness)){
 				Lines lines = new Lines();
 				lines
-				.setThickness(thickness)
+				.setGlobalThicknessMultiplier(thickness)
 				.setVertexRoundingEnabled(((int)thickness)==thickness);
 				thickness2lines.put(thickness, lines);
 			}

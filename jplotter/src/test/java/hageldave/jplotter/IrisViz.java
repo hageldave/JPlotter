@@ -141,7 +141,7 @@ public class IrisViz {
 					allLines.add(lines);
 					for(int c = 0; c < 3; c++){
 						int color = perClassColors.getColor(c);
-						lines[c].setThickness(1.5f).addLineStrip(histo[3], histo[c])
+						lines[c].setGlobalThicknessMultiplier(1.5f).addLineStrip(histo[3], histo[c])
 							.forEach(seg->seg.setColor(color));
 						content.addItemToRender(lines[c]);
 					}
