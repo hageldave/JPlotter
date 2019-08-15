@@ -90,7 +90,7 @@ public class IsolinesViz {
 			contourbands.getTriangleDetails().addAll(contours);
 		}
 		content.addItemToRender(contourlines).addItemToRender(contourbands);
-		contourlines.setThickness(1);
+		contourlines.setGlobalThicknessMultiplier(1);
 		contourbands.setGlobalAlphaMultiplier(0.3);
 		new CoordSysScrollZoom(canvas).register();
 		new CoordSysPanning(canvas).register();

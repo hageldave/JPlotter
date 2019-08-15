@@ -40,7 +40,7 @@ public class Lines implements Renderable {
 
 	protected ArrayList<SegmentDetails> segments = new ArrayList<>();
 
-	protected float thickness = 1;
+	protected float globalThicknessMultiplier = 1;
 
 	protected boolean isDirty;
 
@@ -211,16 +211,16 @@ public class Lines implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
-	public Lines setThickness(double thickness) {
-		this.thickness = (float)thickness;
+	public Lines setGlobalThicknessMultiplier(double thickness) {
+		this.globalThicknessMultiplier = (float)thickness;
 		return this;
 	}
 
 	/**
 	 * @return the line thickness of this {@link Lines} object
 	 */
-	public float getThickness() {
-		return thickness;
+	public float getGlobalThicknessMultiplier() {
+		return globalThicknessMultiplier;
 	}
 
 	/**

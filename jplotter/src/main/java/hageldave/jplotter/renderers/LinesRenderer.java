@@ -61,7 +61,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(lines) in;"
 			+ NL + "layout(triangle_strip,max_vertices=4) out;"
 			+ NL + "uniform mat4 projMX;"
-			+ NL + "uniform float linewidth;"
+			+ NL + "uniform float linewidthMultiplier;"
 			+ NL + "uniform bool roundposition;"
 			+ NL + "in vec4 vcolor[];"
 			+ NL + "in vec4 vpick[];"
@@ -78,7 +78,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   vec2 p1 = gl_in[0].gl_Position.xy;"
 			+ NL + "   vec2 p2 = gl_in[1].gl_Position.xy;"
 			+ NL + "   vec2 dir = p1-p2;"
-			+ NL + "   vec2 miterDir = normalize(vec2(dir.y, -dir.x))*0.5*linewidth;"
+			+ NL + "   vec2 miterDir = normalize(vec2(dir.y, -dir.x))*0.5*linewidthMultiplier;"
 			+ NL + "   vec2 p;"
 			
 			+ NL + "   p = p1+miterDir;"
@@ -169,8 +169,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@GLContextRequired
 	protected void renderItem(Lines lines) {
 		int loc;
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidth");
-		GL20.glUniform1f(loc, lines.getThickness());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidthMultiplier");
+		GL20.glUniform1f(loc, lines.getGlobalThicknessMultiplier());
 		// set projection matrix in shader
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
@@ -220,7 +220,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		
 		for(Lines lines : getItemsToRender()){
 			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
-			linesGroup.setAttributeNS(null, "stroke-width", ""+lines.getThickness());
+			// TODO: adapt SVG to variable segment sizes
+			linesGroup.setAttributeNS(null, "stroke-width", ""+lines.getGlobalThicknessMultiplier());
 			mainGroup.appendChild(linesGroup);
 			for(SegmentDetails seg : lines.getSegments()){
 				double x1,y1,x2,y2;
