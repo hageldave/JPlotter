@@ -138,7 +138,11 @@ public class CoordSysCanvas extends FBOCanvas {
 
 
 	public CoordSysCanvas() {
-		super();
+		this(null);
+	}
+	
+	public CoordSysCanvas(FBOCanvas parent) {
+		super(parent);
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(Color.BLACK);
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(Color.BLACK);
 		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(Color.GRAY);

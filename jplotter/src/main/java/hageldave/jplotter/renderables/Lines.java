@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
@@ -309,8 +310,8 @@ public class Lines implements Renderable {
 		public Point2D p1;
 		public IntSupplier color0;
 		public IntSupplier color1;
-		public float thickness0 = 1;
-		public float thickness1 = 1;
+		public DoubleSupplier thickness0 = ()->1f;
+		public DoubleSupplier thickness1 = ()->1f;
 		public int pickColor;
 
 		public SegmentDetails(Point2D p0, Point2D p1) {
@@ -434,13 +435,21 @@ public class Lines implements Renderable {
 		}
 		
 		public SegmentDetails setThickness(double t){
-			this.thickness0 = this.thickness1 = (float)t;
+			return setThickness(()->t);
+		}
+		
+		public SegmentDetails setThickness(DoubleSupplier t){
+			this.thickness0 = this.thickness1 = t;
 			return this;
 		}
 		
 		public SegmentDetails setThickness(double t0, double t1){
-			this.thickness0 = (float)t0;
-			this.thickness1 = (float)t1;
+			return setThickness(()->t0, ()->t1);
+		}
+		
+		public SegmentDetails setThickness(DoubleSupplier t0, DoubleSupplier t1){
+			this.thickness0 = t0;
+			this.thickness1 = t1;
 			return this;
 		}
 		
@@ -499,8 +508,8 @@ public class Lines implements Renderable {
 
 				pickBuffer[i*2+0] = pickBuffer[i*2+1] = seg.pickColor;
 				
-				thicknessBuffer[i*2+0] = seg.thickness0;
-				thicknessBuffer[i*2+1] = seg.thickness1;
+				thicknessBuffer[i*2+0] = (float)seg.thickness0.getAsDouble();
+				thicknessBuffer[i*2+1] = (float)seg.thickness1.getAsDouble();
 			}
 			va.setBuffer(0, 2, segmentCoordBuffer);
 			va.setBuffer(1, 1, false, colorBuffer);

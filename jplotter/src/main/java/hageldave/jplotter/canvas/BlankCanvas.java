@@ -22,6 +22,14 @@ public class BlankCanvas extends FBOCanvas {
 	private static final long serialVersionUID = 1L;
 
 	protected Renderer renderer;
+	
+	public BlankCanvas(FBOCanvas parent) {
+		super(parent);
+	}
+	
+	public BlankCanvas() {
+		this(null);
+	}
 
 	@Override
 	@GLContextRequired

@@ -154,7 +154,36 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected Color screenClearColor = Color.BLACK;
 	protected boolean useMSAA = true;
 	public final int canvasID;
+	protected final FBOCanvas parentCanvas;
 
+	
+	/**
+	 * Creates a new {@link FBOCanvas}.
+	 * Increments the {@link #ATOMIC_COUNTER} and sets
+	 * its value as this canvas' {@link #canvasID}.
+	 * It also registers a {@link ComponentListener} that
+	 * calls the {@link #repaint()} method when resizing.
+	 * 
+	 * @param data GLData object for creating the GL context.
+	 * @param parent parent FBOCanvas to share GLContext with
+	 */
+	protected FBOCanvas(GLData data, FBOCanvas parent){
+		super(data);
+		this.parentCanvas = parent;
+		if(parent != null){
+			data.shareContext = parent;
+			this.canvasID = parent.canvasID;
+		} else {
+			this.canvasID = ATOMIC_COUNTER.incrementAndGet();
+		}
+		this.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				repaint();
+			}
+		});
+	}
+	
 	/**
 	 * Creates a new {@link FBOCanvas}.
 	 * Increments the {@link #ATOMIC_COUNTER} and sets
@@ -165,19 +194,17 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 * @param data GLData object for creating the GL context.
 	 */
 	protected FBOCanvas(GLData data){
-		super(data);
-		this.canvasID = ATOMIC_COUNTER.incrementAndGet();
-		this.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				repaint();
-			}
-		});
+		this(new GLData(), null);
 	}
 
 	/** Calls {@link #FBOCanvas(GLData)} with default {@link GLData}. */
 	protected FBOCanvas() {
 		this(new GLData());
+	}
+	
+	/** Calls {@link #FBOCanvas(GLData, FBOCanvas))} with default {@link GLData}. */
+	protected FBOCanvas(FBOCanvas parent) {
+		this(new GLData(), parent);
 	}
 	
 	/**
@@ -188,6 +215,9 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 */
 	@Override
 	protected void beforeRender() {
+		if(parentCanvas != null && parentCanvas.context == 0){
+			parentCanvas.runInContext(()->{/* initialize */});
+		}
 		CURRENTLY_ACTIVE_CANVAS = this.canvasID;
 		super.beforeRender();
 	}
