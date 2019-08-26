@@ -306,12 +306,15 @@ public class Lines implements Renderable {
 	 * @author hageldave
 	 */
 	public static class SegmentDetails implements Cloneable {
+		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
+				{()->0f, ()->1f, ()->2f, ()->3f};
+		
 		public Point2D p0;
 		public Point2D p1;
 		public IntSupplier color0;
 		public IntSupplier color1;
-		public DoubleSupplier thickness0 = ()->1f;
-		public DoubleSupplier thickness1 = ()->1f;
+		public DoubleSupplier thickness0 = PREDEFINED_THICKNESSES[1];
+		public DoubleSupplier thickness1 = PREDEFINED_THICKNESSES[1];
 		public int pickColor;
 
 		public SegmentDetails(Point2D p0, Point2D p1) {
@@ -435,7 +438,7 @@ public class Lines implements Renderable {
 		}
 		
 		public SegmentDetails setThickness(double t){
-			return setThickness(()->t);
+			return setThickness(sup4thick(t));
 		}
 		
 		public SegmentDetails setThickness(DoubleSupplier t){
@@ -444,13 +447,20 @@ public class Lines implements Renderable {
 		}
 		
 		public SegmentDetails setThickness(double t0, double t1){
-			return setThickness(()->t0, ()->t1);
+			return setThickness(sup4thick(t0), sup4thick(t1));
 		}
 		
 		public SegmentDetails setThickness(DoubleSupplier t0, DoubleSupplier t1){
 			this.thickness0 = t0;
 			this.thickness1 = t1;
 			return this;
+		}
+		
+		protected static DoubleSupplier sup4thick(double t){
+			if( t == ((int)t) && t >= 0 && t < PREDEFINED_THICKNESSES.length){
+				return PREDEFINED_THICKNESSES[(int)t];
+			}
+			return ()->t;
 		}
 		
 	}
