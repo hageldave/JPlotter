@@ -48,6 +48,22 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	public void close();
 	
 	/**
+	 * En-/Disables this renderer. By default a renderer is enabled and will
+	 * render upon {@link #render(int, int)} or {@link #renderSVG(org.w3c.dom.Document, org.w3c.dom.Element, int, int)}.
+	 * When disabled those methods return right away and will not render anything.
+	 * @param enable true when activating, false when deactivating.
+	 */
+	public void setEnabled(boolean enable);
+	
+	/**
+	 * Whether this renderer is enabled or not. By default a renderer is enabled and will
+	 * render upon {@link #render(int, int)} or {@link #renderSVG(org.w3c.dom.Document, org.w3c.dom.Element, int, int)}.
+	 * When disabled those methods return right away and will not render anything.
+	 * @return true when active
+	 */
+	public boolean isEnabled();
+	
+	/**
 	 * Creates a {@link ChainedRenderer} with this as first and the
 	 * specified as second renderer in sequence.
 	 * @param r the renderer subsequent to this in the chain

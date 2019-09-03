@@ -29,6 +29,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	protected Shader shader;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	protected Rectangle2D view = null;
+	protected boolean isEnabled = true;
 	
 	/**
 	 * Executes the rendering procedure IF this {@link Renderer}s shader 
@@ -50,6 +51,9 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	@Override
 	@GLContextRequired
 	public void render(int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		if(Objects.nonNull(shader) && w>0 && h>0 && !itemsToRender.isEmpty()){
 			// initialize all objects first
 			for(T item: itemsToRender){
@@ -146,6 +150,16 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 		for(T item: itemsToRender)
 			item.close();
 		itemsToRender.clear();
+	}
+	
+	@Override
+	public void setEnabled(boolean enable) {
+		this.isEnabled = enable;
+	}
+	
+	@Override
+	public boolean isEnabled() {
+		return isEnabled;
 	}
 	
 	/**

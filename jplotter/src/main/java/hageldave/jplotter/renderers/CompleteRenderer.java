@@ -47,6 +47,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	private final Renderer[] rendererLUT = {triangles,lines,points,text};
 	public static final int TRI = 0, LIN = 1, PNT = 2, TXT = 3;
 	private final int[] renderOrder = {TRI,LIN,PNT,TXT};
+	boolean isEnabled = true;
 	
 	/**
 	 * Sets the order of the renderers. 
@@ -100,6 +101,9 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	 */
 	@Override
 	public void render(int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		rendererLUT[renderOrder[0]].render(w, h);
 		rendererLUT[renderOrder[1]].render(w, h);
 		rendererLUT[renderOrder[2]].render(w, h);
@@ -115,6 +119,16 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		lines.close();
 		points.close();
 		text.close();
+	}
+	
+	@Override
+	public void setEnabled(boolean enable) {
+		this.isEnabled = enable;
+	}
+	
+	@Override
+	public boolean isEnabled() {
+		return isEnabled;
 	}
 	
 	/**
@@ -149,6 +163,9 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		rendererLUT[renderOrder[0]].renderSVG(doc, parent, w, h);
 		rendererLUT[renderOrder[1]].renderSVG(doc, parent, w, h);
 		rendererLUT[renderOrder[2]].renderSVG(doc, parent, w, h);

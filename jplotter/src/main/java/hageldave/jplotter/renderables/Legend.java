@@ -56,6 +56,8 @@ public class Legend implements Renderable, Renderer {
 	
 	protected int viewPortHeight = 0;
 	
+	protected boolean isEnabled=true;
+	
 	protected static class GlyphLabel {
 		public String labelText;
 		public Glyph glyph;
@@ -288,6 +290,9 @@ public class Legend implements Renderable, Renderer {
 	
 	@Override
 	public void render(int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		if(w == 0 || h == 0){
 			return;
 		}
@@ -301,7 +306,20 @@ public class Legend implements Renderable, Renderer {
 	
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		delegate.renderSVG(doc, parent, w, h);
+	}
+	
+	@Override
+	public void setEnabled(boolean enable) {
+		this.isEnabled = enable;	
+	}
+	
+	@Override
+	public boolean isEnabled() {
+		return isEnabled;
 	}
 	
 	

@@ -196,6 +196,9 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
 		

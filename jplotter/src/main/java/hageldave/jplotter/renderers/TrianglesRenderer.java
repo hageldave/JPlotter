@@ -147,6 +147,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		String svgTriangleStrategy = getSvgTriangleStrategy();
 		
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");

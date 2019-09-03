@@ -18,6 +18,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 public class ChainedRenderer implements Renderer, AdaptableView {
 
 	protected Renderer r1,r2;
+	protected boolean isEnabled=true;
 	
 	public ChainedRenderer(Renderer r1, Renderer r2) {
 		this.r1 = r1;
@@ -42,6 +43,9 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 	@Override
 	@GLContextRequired
 	public void render(int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		r1.render(w, h);
 		r2.render(w, h);
 	}
@@ -57,7 +61,20 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 	}
 	
 	@Override
+	public void setEnabled(boolean enable) {
+		this.isEnabled = enable;
+	}
+	
+	@Override
+	public boolean isEnabled() {
+		return isEnabled;
+	}
+	
+	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		r1.renderSVG(doc, parent, w, h);
 		r2.renderSVG(doc, parent, w, h);
 	}
