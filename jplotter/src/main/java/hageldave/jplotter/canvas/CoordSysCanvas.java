@@ -633,6 +633,16 @@ public class CoordSysCanvas extends FBOCanvas {
 		}
 		return this;
 	}
+	
+	/**
+	 * Calls {@link #setCoordinateView(double, double, double, double)} with minX, minY, maxX, maxY
+	 * of the specified rectangle 
+	 * @param viewRect to set the view to
+	 * @return this for chaining
+	 */
+	public CoordSysCanvas setCoordinateView(Rectangle2D viewRect){
+		return setCoordinateView(viewRect.getMinX(), viewRect.getMinY(), viewRect.getMaxX(), viewRect.getMaxY());
+	}
 
 	/**
 	 * Adds a {@link CoordinateViewListener} to this canvas which will be notified
