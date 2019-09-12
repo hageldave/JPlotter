@@ -41,11 +41,11 @@ public class Lines implements Renderable {
 
 	protected ArrayList<SegmentDetails> segments = new ArrayList<>();
 
-	protected float globalThicknessMultiplier = 1;
+	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 
 	protected boolean isDirty;
 
-	protected float globalAlphaMultiplier=1;
+	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 
 	protected boolean useVertexRounding=false;
 
@@ -174,19 +174,30 @@ public class Lines implements Renderable {
 	 * Sets the global alpha multiplier parameter of this {@link Lines} object.
 	 * The value will be multiplied with each segment point's alpha color value when rendering.
 	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
-	 * @param globalAlphaMultiplier of the triangles in this collection
+	 * @param globalAlphaMultiplier of the segments in this collection
+	 * @return this for chaining
+	 */
+	public Lines setGlobalAlphaMultiplier(DoubleSupplier globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = globalAlphaMultiplier;
+		return this;
+	}
+	
+	/**
+	 * Sets the global alpha multiplier parameter of this {@link Lines} object.
+	 * The value will be multiplied with each segment point's alpha color value when rendering.
+	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+	 * @param globalAlphaMultiplier of the segments in this collection
 	 * @return this for chaining
 	 */
 	public Lines setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
-		this.globalAlphaMultiplier = (float)globalAlphaMultiplier;
-		return this;
+		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
 	}
 
 	/**
 	 * @return the global alpha multiplier of the segments in this collection
 	 */
 	public float getGlobalAlphaMultiplier() {
-		return globalAlphaMultiplier;
+		return (float)globalAlphaMultiplier.getAsDouble();
 	}
 
 	/**
@@ -206,6 +217,16 @@ public class Lines implements Renderable {
 	public ArrayList<SegmentDetails> getSegments() {
 		return segments;
 	}
+	
+	/**
+	 * Sets the line thickness for this {@link Lines} object in pixels.
+	 * @param thickness of the lines, default is 1.
+	 * @return this for chaining
+	 */
+	public Lines setGlobalThicknessMultiplier(DoubleSupplier thickness) {
+		this.globalThicknessMultiplier = thickness;
+		return this;
+	}
 
 	/**
 	 * Sets the line thickness for this {@link Lines} object in pixels.
@@ -213,15 +234,14 @@ public class Lines implements Renderable {
 	 * @return this for chaining
 	 */
 	public Lines setGlobalThicknessMultiplier(double thickness) {
-		this.globalThicknessMultiplier = (float)thickness;
-		return this;
+		return setGlobalThicknessMultiplier(() -> thickness); 
 	}
 
 	/**
 	 * @return the line thickness of this {@link Lines} object
 	 */
 	public float getGlobalThicknessMultiplier() {
-		return globalThicknessMultiplier;
+		return (float)globalThicknessMultiplier.getAsDouble();
 	}
 
 	/**
