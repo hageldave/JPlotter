@@ -49,6 +49,10 @@ public class Lines implements Renderable {
 
 	protected boolean useVertexRounding=false;
 
+	protected short strokePattern = (short)0xffff;
+	
+	protected float strokeLength = 16;
+
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
 	 * This indicates that an {@link #updateGL()} call is necessary to sync GL resources.
@@ -320,6 +324,67 @@ public class Lines implements Renderable {
 				.filter(seg->rect.intersectsLine(seg.p0.getX(), seg.p0.getY(), seg.p1.getX(), seg.p1.getY()))
 				.collect(Collectors.toList());
 	}
+	
+	/**
+	 * Whether this Lines object has a stroke pattern other than 0xffff (completely solid).
+	 * @return true when stroke pattern != 0xffff
+	 */
+	public boolean hasStrokePattern() {
+		return this.strokePattern != (short)0xffff;
+	}
+	
+	/**
+	 * Returns this {@link Lines} object's stroke pattern
+	 * @return stroke pattern
+	 */
+	public short getStrokePattern() {
+		return this.strokePattern;
+	}
+	
+	/**
+	 * Sets this Lines object's stroke pattern.
+	 * The stroke pattern is a 16bit number that defines a sequence of solid and empty parts of a stroke.
+	 * <br>
+	 * <b>An error message is printed on System.err when more than the first 16bits are non zero</b> since
+	 * this method only takes an int for convenience to save you the cast to (short).
+	 * <p>
+	 * Here are some examples:
+	 * <ul>
+	 * <li>{@code 0xffff = 0b1111_1111_1111_1111 =} completely solid</li>
+	 * <li>{@code 0x0000 = 0b0000_0000_0000_0000 =} completely empty (invisible)</li>
+	 * <li>{@code 0xff00 = 0b1111_1111_0000_0000 =} first half solid, second half empty </li>
+	 * <li>{@code 0x0f0f = 0b0000_1111_0000_1111 =} first and third quarter empty, second and fourth solid</li>
+	 * <li>{@code 0xaaaa = 0b1010_1010_1010_1010 =} alternating every 16th of the stroke</li>
+	 * </ul>
+	 * @param strokePattern 16bit pattern
+	 * @return this for chaining
+	 */
+	public Lines setStrokePattern(int strokePattern) {
+		if(strokePattern >> 16 != 0){
+			System.err.println("specified stroke pattern should only be 16 bits but is " + Integer.toBinaryString(strokePattern));
+		}
+		this.strokePattern = (short)strokePattern;
+		return this;
+	}
+	
+	/**
+	 * Returns the stroke length in pixels, which is by default 16pixels.
+	 * @return stroke length
+	 */
+	public float getStrokeLength() {
+		return strokeLength;
+	}
+	
+	/**
+	 * Sets the stroke length in pixels. The specified stroke pattern will repeat every
+	 * strokeLength pixels.
+	 * @param strokeLength length of the stroke
+	 * @return this for chaining
+	 */
+	public Lines setStrokeLength(double strokeLength) {
+		this.strokeLength = (float) Math.max(0, strokeLength);
+		return this;
+	}
 
 	/**
 	 * Specification of a line segment which comprises vertex locations, colors and picking color.
@@ -507,7 +572,7 @@ public class Lines implements Renderable {
 	@GLContextRequired
 	public void initGL(){
 		if(Objects.isNull(va)){
-			va = new VertexArray(4);
+			va = new VertexArray(5);
 			updateGL();
 		}
 	}
@@ -521,17 +586,62 @@ public class Lines implements Renderable {
 	@Override
 	@GLContextRequired
 	public void updateGL(){
+//		if(Objects.nonNull(va)){
+//			float[] segmentCoordBuffer = new float[segments.size()*2*2];
+//			int[] colorBuffer = new int[segments.size()*2];
+//			int[] pickBuffer = new int[segments.size()*2];
+//			float[] thicknessBuffer = new float[segments.size()*2];
+//			for(int i=0; i<segments.size(); i++){
+//				SegmentDetails seg = segments.get(i);
+//				segmentCoordBuffer[i*4+0] = (float) seg.p0.getX();
+//				segmentCoordBuffer[i*4+1] = (float) seg.p0.getY();
+//				segmentCoordBuffer[i*4+2] = (float) seg.p1.getX();
+//				segmentCoordBuffer[i*4+3] = (float) seg.p1.getY();
+//
+//				colorBuffer[i*2+0] = seg.color0.getAsInt();
+//				colorBuffer[i*2+1] = seg.color1.getAsInt();
+//
+//				pickBuffer[i*2+0] = pickBuffer[i*2+1] = seg.pickColor;
+//
+//				thicknessBuffer[i*2+0] = (float)seg.thickness0.getAsDouble();
+//				thicknessBuffer[i*2+1] = (float)seg.thickness1.getAsDouble();
+//			}
+//			va.setBuffer(0, 2, segmentCoordBuffer);
+//			va.setBuffer(1, 1, false, colorBuffer);
+//			va.setBuffer(2, 1, false, pickBuffer);
+//			va.setBuffer(3, 1, thicknessBuffer);
+//			isDirty = false;
+//		}
+		updateGL(1, 1);
+	}
+	
+	/**
+	 * Updates the vertex array to be in sync with this lines object.
+	 * This sets the {@link #isDirty()} state to false.
+	 * if {@link #initGL()} has not been called yet or this object has
+	 * already been closed, nothing happens
+	 */
+	@GLContextRequired
+	public void updateGL(double scaleX, double scaleY){
 		if(Objects.nonNull(va)){
 			float[] segmentCoordBuffer = new float[segments.size()*2*2];
 			int[] colorBuffer = new int[segments.size()*2];
 			int[] pickBuffer = new int[segments.size()*2];
 			float[] thicknessBuffer = new float[segments.size()*2];
+			float[] pathLengthBuffer = new float[segments.size()*2];
+			
+			double xprev = 0, yprev=0, pathLen = 0;
 			for(int i=0; i<segments.size(); i++){
 				SegmentDetails seg = segments.get(i);
-				segmentCoordBuffer[i*4+0] = (float) seg.p0.getX();
-				segmentCoordBuffer[i*4+1] = (float) seg.p0.getY();
-				segmentCoordBuffer[i*4+2] = (float) seg.p1.getX();
-				segmentCoordBuffer[i*4+3] = (float) seg.p1.getY();
+				double x0 = seg.p0.getX();
+				double y0 = seg.p0.getY();
+				double x1 = seg.p1.getX();
+				double y1 = seg.p1.getY();
+				
+				segmentCoordBuffer[i*4+0] = (float) x0;
+				segmentCoordBuffer[i*4+1] = (float) y0;
+				segmentCoordBuffer[i*4+2] = (float) x1;
+				segmentCoordBuffer[i*4+3] = (float) y1;
 
 				colorBuffer[i*2+0] = seg.color0.getAsInt();
 				colorBuffer[i*2+1] = seg.color1.getAsInt();
@@ -540,11 +650,20 @@ public class Lines implements Renderable {
 				
 				thicknessBuffer[i*2+0] = (float)seg.thickness0.getAsDouble();
 				thicknessBuffer[i*2+1] = (float)seg.thickness1.getAsDouble();
+				
+				if(xprev != x0 || yprev != y0){
+					pathLen = 0;
+				}
+				double segLen = Utils.hypot((x1-x0)*scaleX, (y1-y0)*scaleY);
+				pathLengthBuffer[i*2+0] = (float)pathLen;
+				pathLengthBuffer[i*2+1] = (float)(pathLen += segLen);
+				xprev = x1; yprev = y1;
 			}
 			va.setBuffer(0, 2, segmentCoordBuffer);
 			va.setBuffer(1, 1, false, colorBuffer);
 			va.setBuffer(2, 1, false, pickBuffer);
 			va.setBuffer(3, 1, thicknessBuffer);
+			va.setBuffer(4, 1, pathLengthBuffer);
 			isDirty = false;
 		}
 	}
@@ -570,7 +689,7 @@ public class Lines implements Renderable {
 	 */
 	@GLContextRequired
 	public void bindVertexArray() {
-		va.bindAndEnableAttributes(0,1,2,3);
+		va.bindAndEnableAttributes(0,1,2,3,4);
 	}
 
 
@@ -580,7 +699,7 @@ public class Lines implements Renderable {
 	 */
 	@GLContextRequired
 	public void releaseVertexArray() {
-		va.releaseAndDisableAttributes(0,1,2,3);
+		va.releaseAndDisableAttributes(0,1,2,3,4);
 	}
 
 }

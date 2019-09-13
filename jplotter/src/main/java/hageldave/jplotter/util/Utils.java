@@ -217,6 +217,16 @@ public class Utils {
 	}
 	
 	/**
+	 * Calculates sqrt(x*x + y*y) which is the hypotenuse length given catheti x and y.
+	 * @param x a value
+	 * @param y a value
+	 * @return hypotenuse length
+	 */
+	public static final double hypot(double x, double y){
+		return Math.sqrt(x*x + y*y);
+	}
+	
+	/**
 	 * tests intersection or containment of rectangle and triangle.
 	 * @param rect rectangle to test
 	 * @param x0 x coordinate of 0th triangle vertex

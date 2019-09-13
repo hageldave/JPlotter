@@ -15,6 +15,7 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -38,10 +39,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 1) in uint in_color;"
 			+ NL + "layout(location = 2) in uint in_pick;"
 			+ NL + "layout(location = 3) in float in_thickness;"
+			+ NL + "layout(location = 4) in float in_pathlen;"
 			+ NL + "uniform vec4 viewTransform;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
 			+ NL + "out float vthickness;"
+			+ NL + "out float vpathlen;"
 
 			+ NL + "vec4 unpackARGB(uint c) {"
 			+ NL + "   uint mask = uint(255);"
@@ -56,6 +59,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   vcolor = unpackARGB(in_color);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "   vthickness = in_thickness;"
+			+ NL + "   vpathlen = in_pathlen;"
 			+ NL + "}"
 			+ NL
 			;
@@ -69,8 +73,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "in vec4 vcolor[];"
 			+ NL + "in vec4 vpick[];"
 			+ NL + "in float vthickness[];"
+			+ NL + "in float vpathlen[];"
 			+ NL + "out vec4 gcolor;"
 			+ NL + "out vec4 gpick;"
+			+ NL + "out float gpathlen;"
 			
 			+ NL + "float rnd(float f){return float(int(f+0.5));}"
 			
@@ -91,6 +97,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[0];"
 			+ NL + "   gpick = vpick[0];"
+			+ NL + "   gpathlen = vpathlen[0];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p1-miterDir*vthickness[0];"
@@ -98,6 +105,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[0];"
 			+ NL + "   gpick = vpick[0];"
+			+ NL + "   gpathlen = vpathlen[0];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p2+miterDir*vthickness[1];"
@@ -105,6 +113,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[1];"
 			+ NL + "   gpick = vpick[1];"
+			+ NL + "   gpathlen = vpathlen[1];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   p = p2-miterDir*vthickness[1];"
@@ -112,6 +121,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[1];"
 			+ NL + "   gpick = vpick[1];"
+			+ NL + "   gpathlen = vpathlen[1];"
 			+ NL + "   EmitVertex();"
 			
 			+ NL + "   EndPrimitive();"
@@ -124,13 +134,24 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 1) out vec4 pick_color;"
 			+ NL + "in vec4 gcolor;"
 			+ NL + "in vec4 gpick;"
+			+ NL + "in float gpathlen;"
 			+ NL + "uniform float alphaMultiplier;"
+			+ NL + "uniform int[16] strokePattern;"
+			+ NL + "uniform float strokeLength;"
 			+ NL + "void main() {"
+			+ NL + "   if(strokeLength > 0){"
+			+ NL + "      float m = mod(gpathlen,strokeLength) / strokeLength;"
+			+ NL + "      int idx = int(m*16);"
+			+ NL + "      if(strokePattern[idx]==0){discard;}"
+			+ NL + "   }"
 			+ NL + "   frag_color = vec4(gcolor.rgb, gcolor.a*alphaMultiplier);"
 			+ NL + "   pick_color = gpick;"
 			+ NL + "}"
 			+ NL
 			;
+	
+	protected boolean viewHasChanged = true;
+	private final int[] strokePattern = new int[16];
 	
 	
 	/**
@@ -147,6 +168,40 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			itemsToRender.forEach(Renderable::initGL);
 		}
 	}
+	
+	@GLContextRequired
+	public void render(int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		if(Objects.nonNull(shader) && w>0 && h>0 && !itemsToRender.isEmpty()){
+			// initialize all objects first
+			for(Lines item: itemsToRender){
+				item.initGL();
+			}
+			// bind shader
+			shader.bind();
+			// prepare for rendering (e.g. en/disable depth or blending and such)
+			orthoMX = GLUtils.orthoMX(orthoMX, 0, w, 0, h);
+			renderStart(w,h);
+			// render every item
+			double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+			double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+			boolean viewHasChanged_ = this.viewHasChanged;
+			this.viewHasChanged = false;
+			for(Lines item: itemsToRender){
+				if(item.isDirty() || (viewHasChanged_ && item.hasStrokePattern() )){
+					// update items gl state if necessary
+					item.updateGL(scaleX,scaleY);
+				}
+				renderItem(item);
+			}
+			// clean up after renering (e.g. en/disable depth or blending and such)
+			renderEnd();
+			shader.release();
+		}
+	}
+	
 	
 	/**
 	 * Disables {@link GL11#GL_DEPTH_TEST},
@@ -181,6 +236,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");
 		GL20.glUniform1i(loc, lines.isVertexRoundingEnabled() ? 1:0);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokePattern");
+		GL20.glUniform1iv(loc, transferBits(lines.getStrokePattern(), strokePattern));
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokeLength");
+		GL20.glUniform1f(loc, lines.hasStrokePattern() ? lines.getStrokeLength():0);
 		// draw things
 		lines.bindVertexArray();
 		GL11.glDrawArrays(GL11.GL_LINES, 0, lines.numSegments()*2);
@@ -196,6 +255,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	protected void renderEnd() {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+	}
+	
+	@Override
+	public void setView(Rectangle2D view) {
+		super.setView(view);
+		this.viewHasChanged = true;
 	}
 
 	/**
@@ -284,4 +349,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		}
 	}
 	
+	protected static int[] transferBits(short bits, int[] target){
+		for(int i = 0; i < 16; i++){
+			target[15-i] = (bits >> i) & 0b1;
+		}
+		return target;
+	}
 }
