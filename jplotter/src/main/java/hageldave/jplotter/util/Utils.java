@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
@@ -277,5 +278,15 @@ public class Utils {
 	    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
 	    return !(has_neg && has_pos);
+	}
+	
+	/**
+	 * Creates the union rectangle that encloses all specified rectangles.
+	 * @param rects to unite
+	 * @return smallest rectangle containing all specified rectangles.
+	 * @throws ArrayIndexOutOfBoundsException when no argument was provided
+	 */
+	public static Rectangle2D mergeRectangles(Rectangle2D ... rects){
+		return Arrays.stream(rects).reduce(rects[0], Rectangle2D::createUnion);
 	}
 }
