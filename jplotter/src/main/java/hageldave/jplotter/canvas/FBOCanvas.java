@@ -588,5 +588,11 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				super.repaint();
 			});
 		}
-	}	
+	}
+	
+	@Override
+	public void render() {
+		if(this.isValid())
+			super.render();
+	}
 }
