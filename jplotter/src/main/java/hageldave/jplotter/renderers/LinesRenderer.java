@@ -1,6 +1,7 @@
 package hageldave.jplotter.renderers;
 
 import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
@@ -16,6 +17,7 @@ import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.GLUtils;
+import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -293,10 +295,17 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
 		
 		for(Lines lines : getItemsToRender()){
+			if(lines.getStrokePattern()==0){
+				// stroke pattern is all zeros which is invisible
+				continue;
+			}
 			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
-			// TODO: adapt SVG to variable segment sizes
-			linesGroup.setAttributeNS(null, "stroke-width", ""+lines.getGlobalThicknessMultiplier());
+			// TODO: adapt SVG to stroke patterns
+			linesGroup.setAttributeNS(null, "stroke-width", "0");
 			mainGroup.appendChild(linesGroup);
+			double dist = 0;
+			double prevX = 0;
+			double prevY = 0;
 			for(SegmentDetails seg : lines.getSegments()){
 				double x1,y1,x2,y2;
 				x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
@@ -306,17 +315,76 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				x1*=scaleX; x2*=scaleX;
 				y1*=scaleY; y2*=scaleY;
 				
+				// path length calculations
+				double dx = x2-x1;
+				double dy = y2-y1;
+				double len = Utils.hypot(dx, dy);
+				double l1,l2;
+				if(prevX==x1 && prevY==y1){
+					l1 = dist;
+					l2 = dist+len;
+					dist += len;
+					dist = dist % lines.getStrokeLength();
+				} else {
+					l1 = 0;
+					l2 = len;
+					dist = len;
+				}
+				prevX = x2;
+				prevY = y2;
+				
+				// visibility check
 				if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
 					continue;
 				}
 				
-				Element segment = SVGUtils.createSVGElement(doc, "polyline");
-				linesGroup.appendChild(segment);
+				// miter vector stuff
+				double normalize = 1/len;
+				double miterX =  dy*normalize*0.5;
+				double miterY = -dx*normalize*0.5;
+				double t1 = seg.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier();
+				double t2 = seg.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier();
 				
-				segment.setAttributeNS(null, "points", SVGUtils.svgPoints(x1,y1,x2,y2));
+				
 				if(seg.color0 == seg.color1){
-					segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-					segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
+					if(!lines.hasStrokePattern()){
+						Element segment = SVGUtils.createSVGElement(doc, "polygon");
+						linesGroup.appendChild(segment);
+						segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
+								x1+miterX*t1,y1+miterY*t1, x2+miterX*t2,y2+miterY*t2, 
+								x2-miterX*t2,y2-miterY*t2, x1-miterX*t1,y1-miterY*t1));
+						segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
+						segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
+						segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
+					} else {
+						double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+						while(strokeInterval[0] < l2){
+							double start = strokeInterval[0];
+							double end = Math.min(strokeInterval[1], l2);
+							// interpolation factors
+							double m1 = Math.max((start-l1)/(l2-l1), 0);
+							double m2 = (end-l1)/(l2-l1);
+							// interpolate miters
+							double t1_ = t1*(1-m1)+t2*m1;
+							double t2_ = t1*(1-m2)+t2*m2;
+							// interpolate segment
+							double x1_ = x1 + dx*m1;
+							double x2_ = x1 + dx*m2;
+							double y1_ = y1 + dy*m1;
+							double y2_ = y1 + dy*m2;
+							
+							Element segment = SVGUtils.createSVGElement(doc, "polygon");
+							linesGroup.appendChild(segment);
+							segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
+									x1_+miterX*t1_,y1_+miterY*t1_, x2_+miterX*t2_,y2_+miterY*t2_, 
+									x2_-miterX*t2_,y2_-miterY*t2_, x1_-miterX*t1_,y1_-miterY*t1_));
+							segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
+							segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
+							segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
+						
+							strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
+						}
+					}
 				} else {
 					// create gradient for line
 					Node defs = SVGUtils.getDefs(doc);
@@ -343,10 +411,42 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1.getAsInt())));
 					
 					// use gradient for line stroke
+					Element segment = SVGUtils.createSVGElement(doc, "polygon");
+					linesGroup.appendChild(segment);
+					segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
+							x1+miterX*t1,y1+miterY*t1, x2+miterX*t2,y2+miterY*t2, 
+							x2-miterX*t2,y2-miterY*t2, x1-miterX*t1,y1-miterY*t1));
 					segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
 				}
 			}
 		}
+	}
+	
+	protected static double[] findStrokeInterval(double current, double strokeLen, short pattern){
+		double patternStart = current - (current%strokeLen);
+		double patternPos = (current%strokeLen) * (16/strokeLen);
+		int bit = (int)patternPos;
+		int steps = bit;
+		int[] pat = transferBits(pattern, new int[16]);
+		// find next part of stroke pattern that is solid
+		while( pat[bit] != 1 ){
+			bit = (bit+1)%16;
+			steps++;
+		}
+		double intervalStart = steps==0 ? current : patternStart+steps*(strokeLen/16);
+		// find next part of stroke pattern that is empty
+		while( pat[bit] == 1 ){
+			bit = (bit+1)%16;
+			steps++;
+		}
+		double intervalEnd = patternStart+steps*(strokeLen/16);
+		// find next solid again
+		while( pat[bit] != 1 ){
+			bit = (bit+1)%16;
+			steps++;
+		}
+		double nextIntervalStart = patternStart+steps*(strokeLen/16);
+		return new double[]{intervalStart,intervalEnd,nextIntervalStart};
 	}
 	
 	protected static int[] transferBits(short bits, int[] target){
