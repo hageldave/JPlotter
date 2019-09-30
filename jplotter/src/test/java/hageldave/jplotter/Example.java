@@ -60,6 +60,7 @@ public class Example {
 		Lines sineLine = new Lines();
 		int sineColor = 0xff66c2a5;
 		sineLine.setGlobalThicknessMultiplier(2)
+			.setStrokePattern(0xf790)
 			.addLineStrip(curveX, curveY)
 			.forEach(segment -> segment.setColor(sineColor));
 		

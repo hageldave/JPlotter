@@ -657,6 +657,7 @@ public class Lines implements Renderable {
 				double segLen = Utils.hypot((x1-x0)*scaleX, (y1-y0)*scaleY);
 				pathLengthBuffer[i*2+0] = (float)pathLen;
 				pathLengthBuffer[i*2+1] = (float)(pathLen += segLen);
+				pathLen = pathLen % strokeLength;
 				xprev = x1; yprev = y1;
 			}
 			va.setBuffer(0, 2, segmentCoordBuffer);

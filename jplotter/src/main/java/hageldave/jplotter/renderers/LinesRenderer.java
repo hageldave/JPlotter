@@ -1,7 +1,6 @@
 package hageldave.jplotter.renderers;
 
 import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
@@ -16,9 +15,9 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The LinesRenderer is an implementation of the {@link GenericRenderer}
@@ -52,7 +51,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
-			
+
 			+ NL + "void main() {"
 			+ NL + "   vec3 pos = vec3(in_position,1);"
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
@@ -79,13 +78,13 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "out vec4 gcolor;"
 			+ NL + "out vec4 gpick;"
 			+ NL + "out float gpathlen;"
-			
+
 			+ NL + "float rnd(float f){return float(int(f+0.5));}"
-			
+
 			+ NL + "vec2 roundToIntegerValuedVec(vec2 v){"
 			+ NL + "   return vec2(rnd(v.x),rnd(v.y));"
 			+ NL + "}"
-			
+
 			+ NL + "void main() {"
 			+ NL + "   vec2 p1 = gl_in[0].gl_Position.xy;"
 			+ NL + "   vec2 p2 = gl_in[1].gl_Position.xy;"
@@ -93,7 +92,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   vec2 miterDir = normalize(vec2(dir.y, -dir.x));"
 			+ NL + "   miterDir = miterDir * 0.5*linewidthMultiplier;"
 			+ NL + "   vec2 p;"
-			
+
 			+ NL + "   p = p1+miterDir*vthickness[0];"
 			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
@@ -101,7 +100,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   gpick = vpick[0];"
 			+ NL + "   gpathlen = vpathlen[0];"
 			+ NL + "   EmitVertex();"
-			
+
 			+ NL + "   p = p1-miterDir*vthickness[0];"
 			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
@@ -109,7 +108,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   gpick = vpick[0];"
 			+ NL + "   gpathlen = vpathlen[0];"
 			+ NL + "   EmitVertex();"
-			
+
 			+ NL + "   p = p2+miterDir*vthickness[1];"
 			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
@@ -117,7 +116,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   gpick = vpick[1];"
 			+ NL + "   gpathlen = vpathlen[1];"
 			+ NL + "   EmitVertex();"
-			
+
 			+ NL + "   p = p2-miterDir*vthickness[1];"
 			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
@@ -125,7 +124,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   gpick = vpick[1];"
 			+ NL + "   gpathlen = vpathlen[1];"
 			+ NL + "   EmitVertex();"
-			
+
 			+ NL + "   EndPrimitive();"
 			+ NL + "}"
 			+ NL
@@ -151,11 +150,11 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "}"
 			+ NL
 			;
-	
+
 	protected boolean viewHasChanged = true;
 	private final int[] strokePattern = new int[16];
-	
-	
+
+
 	/**
 	 * Creates the shader if not already created and 
 	 * calls {@link Renderable#initGL()} for all items 
@@ -170,7 +169,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			itemsToRender.forEach(Renderable::initGL);
 		}
 	}
-	
+
 	@GLContextRequired
 	public void render(int w, int h) {
 		if(!isEnabled()){
@@ -203,8 +202,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			shader.release();
 		}
 	}
-	
-	
+
+
 	/**
 	 * Disables {@link GL11#GL_DEPTH_TEST},
 	 * enables {@link GL11#GL_BLEND}
@@ -258,7 +257,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 	}
-	
+
 	@Override
 	public void setView(Rectangle2D view) {
 		super.setView(view);
@@ -278,7 +277,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		deleteAllItems();
 	}
 
-	
+
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
@@ -286,14 +285,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		}
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
-		
+
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 
 		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
-		
+
 		for(Lines lines : getItemsToRender()){
 			if(lines.getStrokePattern()==0){
 				// stroke pattern is all zeros which is invisible
@@ -309,12 +308,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			for(SegmentDetails seg : lines.getSegments()){
 				double x1,y1,x2,y2;
 				x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
-				
+
 				x1-=translateX; x2-=translateX;
 				y1-=translateY; y2-=translateY;
 				x1*=scaleX; x2*=scaleX;
 				y1*=scaleY; y2*=scaleY;
-				
+
 				// path length calculations
 				double dx = x2-x1;
 				double dy = y2-y1;
@@ -332,65 +331,27 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				}
 				prevX = x2;
 				prevY = y2;
-				
+
 				// visibility check
 				if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
 					continue;
 				}
-				
+
 				// miter vector stuff
 				double normalize = 1/len;
 				double miterX =  dy*normalize*0.5;
 				double miterY = -dx*normalize*0.5;
 				double t1 = seg.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier();
 				double t2 = seg.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier();
+
 				
-				
-				if(seg.color0 == seg.color1){
-					if(!lines.hasStrokePattern()){
-						Element segment = SVGUtils.createSVGElement(doc, "polygon");
-						linesGroup.appendChild(segment);
-						segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
-								x1+miterX*t1,y1+miterY*t1, x2+miterX*t2,y2+miterY*t2, 
-								x2-miterX*t2,y2-miterY*t2, x1-miterX*t1,y1-miterY*t1));
-						segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-						segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-						segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
-					} else {
-						double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
-						while(strokeInterval[0] < l2){
-							double start = strokeInterval[0];
-							double end = Math.min(strokeInterval[1], l2);
-							// interpolation factors
-							double m1 = Math.max((start-l1)/(l2-l1), 0);
-							double m2 = (end-l1)/(l2-l1);
-							// interpolate miters
-							double t1_ = t1*(1-m1)+t2*m1;
-							double t2_ = t1*(1-m2)+t2*m2;
-							// interpolate segment
-							double x1_ = x1 + dx*m1;
-							double x2_ = x1 + dx*m2;
-							double y1_ = y1 + dy*m1;
-							double y2_ = y1 + dy*m2;
-							
-							Element segment = SVGUtils.createSVGElement(doc, "polygon");
-							linesGroup.appendChild(segment);
-							segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
-									x1_+miterX*t1_,y1_+miterY*t1_, x2_+miterX*t2_,y2_+miterY*t2_, 
-									x2_-miterX*t2_,y2_-miterY*t2_, x1_-miterX*t1_,y1_-miterY*t1_));
-							segment.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-							segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-							segment.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
-						
-							strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-						}
-					}
-				} else {
+				String defID = "";
+				if(seg.color0 != seg.color1){
 					// create gradient for line
 					Node defs = SVGUtils.getDefs(doc);
 					Element gradient = SVGUtils.createSVGElement(doc, "linearGradient");
 					defs.appendChild(gradient);
-					String defID = SVGUtils.newDefId();
+					defID = SVGUtils.newDefId();
 					gradient.setAttributeNS(null, "id", defID);
 					gradient.setAttributeNS(null, "x1", SVGUtils.svgNumber(x1));
 					gradient.setAttributeNS(null, "y1", SVGUtils.svgNumber(y1));
@@ -402,26 +363,67 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					stop1.setAttributeNS(null, "offset", "0%");
 					stop1.setAttributeNS(null, "style", 
 							"stop-color:"+SVGUtils.svgRGBhex(seg.color0.getAsInt())+";"+
-							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
+									"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
 					Element stop2 = SVGUtils.createSVGElement(doc, "stop");
 					gradient.appendChild(stop2);
 					stop2.setAttributeNS(null, "offset", "100%");
 					stop2.setAttributeNS(null, "style", 
 							"stop-color:"+SVGUtils.svgRGBhex(seg.color1.getAsInt())+";"+
-							"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1.getAsInt())));
-					
-					// use gradient for line stroke
+									"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1.getAsInt())));
+				}
+				
+				if(!lines.hasStrokePattern()){
 					Element segment = SVGUtils.createSVGElement(doc, "polygon");
 					linesGroup.appendChild(segment);
 					segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
 							x1+miterX*t1,y1+miterY*t1, x2+miterX*t2,y2+miterY*t2, 
 							x2-miterX*t2,y2-miterY*t2, x1-miterX*t1,y1-miterY*t1));
-					segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
+					if(seg.color0 == seg.color1){
+						segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
+						segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
+					} else {
+						// use gradient for line stroke
+						segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
+					}
+				} else {
+					double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+					while(strokeInterval[0] < l2){
+						double start = strokeInterval[0];
+						double end = Math.min(strokeInterval[1], l2);
+						// interpolation factors
+						double m1 = Math.max((start-l1)/(l2-l1), 0);
+						double m2 = (end-l1)/(l2-l1);
+						// interpolate miters
+						double t1_ = t1*(1-m1)+t2*m1;
+						double t2_ = t1*(1-m2)+t2*m2;
+						// interpolate segment
+						double x1_ = x1 + dx*m1;
+						double x2_ = x1 + dx*m2;
+						double y1_ = y1 + dy*m1;
+						double y2_ = y1 + dy*m2;
+
+						Element segment = SVGUtils.createSVGElement(doc, "polygon");
+						linesGroup.appendChild(segment);
+						segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
+								x1_+miterX*t1_,y1_+miterY*t1_, x2_+miterX*t2_,y2_+miterY*t2_, 
+								x2_-miterX*t2_,y2_-miterY*t2_, x1_-miterX*t1_,y1_-miterY*t1_));
+
+						strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
+
+						if(seg.color0 == seg.color1){
+							segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
+							segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
+						} else {
+							// use gradient for line stroke
+							segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
+						}
+					}
 				}
+
 			}
 		}
 	}
-	
+
 	protected static double[] findStrokeInterval(double current, double strokeLen, short pattern){
 		double patternStart = current - (current%strokeLen);
 		double patternPos = (current%strokeLen) * (16/strokeLen);
@@ -448,7 +450,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		double nextIntervalStart = patternStart+steps*(strokeLen/16);
 		return new double[]{intervalStart,intervalEnd,nextIntervalStart};
 	}
-	
+
 	protected static int[] transferBits(short bits, int[] target){
 		for(int i = 0; i < 16; i++){
 			target[15-i] = (bits >> i) & 0b1;
