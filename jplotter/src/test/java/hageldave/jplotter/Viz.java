@@ -51,6 +51,7 @@ public class Viz {
 		{
 			Triangles tris = new Triangles();
 			Lines lines = new Lines();
+			lines.setStrokePattern(0xf790);
 			double scaling = 0.1;
 			Color triColor = new Color(0xff6633aa,true);
 			for(int i = 0; i < 100; i++){
@@ -62,11 +63,11 @@ public class Viz {
 					.setColor0(0xffff00ff)
 					.setColor1(0xffff00ff)
 					.setPickColor(0xbabe01);
-				lines.addSegment(i, i, i+1, i+1)
-					.setColor(Utils.interpolateColor(0xff00ff00, 0xff00ffff, i/99.0));
 				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0)
 					.forEach(tri->tri.setColor(triColor));
 			}
+			lines.addSegment(0, 0, 100, 100)
+				.setColor0(0xff00ff00).setColor1(0xff00ffff);
 			tris.setGlobalAlphaMultiplier(0.2);
 			lines.setGlobalThicknessMultiplier(2);
 			lines.setGlobalAlphaMultiplier(0.8);

@@ -346,7 +346,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 				
 				String defID = "";
-				if(seg.color0 != seg.color1){
+				if(seg.color0.getAsInt() != seg.color1.getAsInt()){
 					// create gradient for line
 					Node defs = SVGUtils.getDefs(doc);
 					Element gradient = SVGUtils.createSVGElement(doc, "linearGradient");
@@ -378,12 +378,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
 							x1+miterX*t1,y1+miterY*t1, x2+miterX*t2,y2+miterY*t2, 
 							x2-miterX*t2,y2-miterY*t2, x1-miterX*t1,y1-miterY*t1));
-					if(seg.color0 == seg.color1){
+					if(seg.color0.getAsInt() == seg.color1.getAsInt()){
 						segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
 						segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
 					} else {
 						// use gradient for line stroke
-						segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
+						segment.setAttributeNS(null, "fill", "url(#"+defID+")");
 					}
 				} else {
 					double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
@@ -410,12 +410,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 						strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 
-						if(seg.color0 == seg.color1){
+						if(seg.color0.getAsInt() == seg.color1.getAsInt()){
 							segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
 							segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
 						} else {
 							// use gradient for line stroke
-							segment.setAttributeNS(null, "stroke", "url(#"+defID+")");
+							segment.setAttributeNS(null, "fill", "url(#"+defID+")");
 						}
 					}
 				}
