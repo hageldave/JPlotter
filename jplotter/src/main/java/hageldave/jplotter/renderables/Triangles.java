@@ -380,6 +380,10 @@ public class Triangles implements Renderable {
 		 * @return copy of this triangle
 		 */
 		public TriangleDetails copy() {
+			return clone();
+		}
+		
+		public TriangleDetails clone() {
 			try {
 	            return (TriangleDetails) super.clone();
 	        } catch (CloneNotSupportedException e) {

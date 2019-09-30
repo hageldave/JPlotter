@@ -425,6 +425,16 @@ public class Lines implements Renderable {
 	        }
 		}
 		
+		@Override
+		public SegmentDetails clone() {
+			try {
+				return (SegmentDetails) super.clone();
+			} catch (CloneNotSupportedException e) {
+				// should never happen since cloneable
+				throw new InternalError(e);
+			}
+		}
+		
 		/**
 		 * Sets the picking color.
 		 * When a non 0 transparent color is specified its alpha channel will be set to 0xff to make it opaque.

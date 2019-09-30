@@ -295,6 +295,16 @@ public class Points implements Renderable {
 	        }
 		}
 		
+		public PointDetails clone() {
+			try {
+	            PointDetails clone = (PointDetails) super.clone();
+	            return clone;
+	        } catch (CloneNotSupportedException e) {
+	            // this shouldn't happen, since we are Cloneable
+	            throw new InternalError(e);
+	        }
+		}
+		
 		/**
 		 * Sets the rotation of the glyph for this point
 		 * @param rot rotation in radian
