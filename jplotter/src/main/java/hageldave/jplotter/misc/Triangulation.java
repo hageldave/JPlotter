@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public class Triangulation {
@@ -33,7 +34,7 @@ public class Triangulation {
 		return d * d;
 	}
 	
-	public static <T> ArrayList<T[]> getTriangulation(ArrayList<T> points, CoordinateGetter<T> getx, CoordinateGetter<T> gety, T[] emptyArray) {
+	public static <T> ArrayList<T[]> getTriangulation(Collection<T> points, CoordinateGetter<T> getx, CoordinateGetter<T> gety, T[] emptyArray) {
 		// sort locations
 		Comparator<T> compX = (a, b) -> {
 			return (int) Math.signum(getx.get(a) - getx.get(b));
@@ -41,16 +42,18 @@ public class Triangulation {
 		Comparator<T> compY = (a, b) -> {
 			return (int) Math.signum(gety.get(a) - gety.get(b));
 		};
-		ArrayList<T> locations = new ArrayList<>(points);
+		TreeSet<T> uniquePoints = new TreeSet<>(compX.thenComparing(compY));
+		uniquePoints.addAll(points);
+		ArrayList<T> locations = new ArrayList<>(uniquePoints);
 		locations.sort(compX.thenComparing(compY));
 		// initial triangulation
 		ArrayList<int[]> cells = sweepline(locations, getx, gety);
 		// delaunay triangulation
-		try {
-			cells = delaunayTriangulation(locations, cells, getx, gety);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		try {
+//			cells = delaunayTriangulation(locations, cells, getx, gety);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 		// cell indices to objects
 		ArrayList<T[]> pointcells = cells.stream()
 		.map(cell->{
@@ -175,7 +178,10 @@ public class Triangulation {
 		HashMap<Integer, Set<Integer>> edgeMap = getEdgeMap(cells);
 		HashMap<Integer, Set<int[]>> cellMap = getCellMap(cells);
 		boolean triangualtionChanged = true;
+		int numIter =0;
 		while (triangualtionChanged) {
+			if(numIter++ % 1000==0)
+			 System.out.println("numpoints " + locations.size() +" iter " + numIter);
 			triangualtionChanged = false;
 			// System.out.println("delaunay: iterating over cells");
 			for (int i = 0; i < cells.size(); i++) {
@@ -201,7 +207,7 @@ public class Triangulation {
 					if (g < 0.000001 && g > -0.000001) {
 						// throw new RuntimeException("circumcircle could not be
 						// calculated!");
-						System.err.println("WARNING: circumcircle may be bad: " + g);
+//						System.err.println("WARNING: circumcircle may be bad: " + g);
 					}
 					circX = (d * e - b * f) / g;
 					circY = (a * f - c * e) / g;
@@ -211,20 +217,21 @@ public class Triangulation {
 				Set<Integer> neighbourPoints = getNeighbouringPointsOfCells(currentCell, edgeMap);
 				Set<int[]> neighbourCells = getNeighbouringCellsOfCells(currentCell, cellMap);
 				for (Integer neighbor : neighbourPoints) {
-					if (dist(circX, circY, locations.get(neighbor), getx,gety) < circR) {
+					double dist = dist(circX, circY, locations.get(neighbor), getx,gety);
+					double diff = dist-circR;
+					if (diff < -0.00001) {
 						// find neighbouring cell and flip edge
-						// System.out.println("neighbour is in circumcircle: " +
-						// neighbor);
+//						 System.out.println("neighbour is in circumcircle: " + neighbor + " radiu: " + circR + " diff:" + diff);
 						int[] adjCell = findAdjacentCell(currentCell, neighbor, neighbourCells);
 						if (adjCell != null) { // point in range and part of
 												// adjacent cell
-							// System.out.format("flipping: %s %s -> ",
-							// Arrays.toString(currentCell),
-							// Arrays.toString(adjCell));
+//							 System.out.format("flipping: %s %s -> ",
+//							 Arrays.toString(currentCell),
+//							 Arrays.toString(adjCell));
 							flipEdge(currentCell, adjCell);
-							// System.out.format("%s %s%n",
-							// Arrays.toString(currentCell),
-							// Arrays.toString(adjCell));
+//							 System.out.format("%s %s%n",
+//							 Arrays.toString(currentCell),
+//							 Arrays.toString(adjCell));
 							// update neighbours (inefficient)
 							edgeMap = getEdgeMap(cells);
 							cellMap = getCellMap(cells);
@@ -243,13 +250,22 @@ public class Triangulation {
 	private static int[] findAdjacentCell(int[] cell, int adjacentPoint, Set<int[]> adjacentCells) {
 		for (int[] adjCell : adjacentCells) {
 			int index = 0;
-			if (adjCell[index++] == adjacentPoint || adjCell[index++] == adjacentPoint
-					|| adjCell[index++] == adjacentPoint) {
+			if (
+					adjCell[index++] == adjacentPoint || 
+					adjCell[index++] == adjacentPoint || 
+					adjCell[index++] == adjacentPoint) 
+			{
 				index--;
-				if (adjCell[(index + 1) % 3] == cell[0] || adjCell[(index + 1) % 3] == cell[1]
-						|| adjCell[(index + 1) % 3] == cell[2]) {
-					if (adjCell[(index + 2) % 3] == cell[0] || adjCell[(index + 2) % 3] == cell[1]
-							|| adjCell[(index + 2) % 3] == cell[2]) {
+				if (
+						adjCell[(index + 1) % 3] == cell[0] || 
+						adjCell[(index + 1) % 3] == cell[1] || 
+						adjCell[(index + 1) % 3] == cell[2]) 
+				{
+					if (
+							adjCell[(index + 2) % 3] == cell[0] || 
+							adjCell[(index + 2) % 3] == cell[1] || 
+							adjCell[(index + 2) % 3] == cell[2]) 
+					{
 						return adjCell;
 					}
 				}
