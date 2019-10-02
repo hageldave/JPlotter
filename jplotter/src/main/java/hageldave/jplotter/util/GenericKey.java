@@ -43,4 +43,16 @@ public class GenericKey {
 		return Arrays.hashCode(keycontents);
 	}
 	
+	public int numComponents(){
+		return keycontents.length;
+	}
+	
+	public Object getComponent(int i){
+		return keycontents[i];
+	}
+	
+	public <T> T getComponent(int i, Class<T> clazz){
+		return clazz.cast(keycontents[i]);
+	}
+	
 }
