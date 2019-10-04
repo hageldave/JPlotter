@@ -6,6 +6,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingUtilities;
@@ -155,6 +156,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected boolean useMSAA = true;
 	public final int canvasID;
 	protected final FBOCanvas parentCanvas;
+	protected AtomicBoolean repaintIsSheduled = new AtomicBoolean(false);
 
 	
 	/**
@@ -575,18 +577,27 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	
 	/**
 	 * Calls {@link #render()} and super repaint on AWT event dispatch thread or
-	 * schedules a render and super repaint call on it.
+	 * schedules a repaint call call on the AWT event dispatch thread if not on it.
 	 */
 	@Override
 	public void repaint() {
 		if(SwingUtilities.isEventDispatchThread()){
+			repaintIsSheduled.set(false);
 			render();
 			super.repaint();
 		} else {
-			SwingUtilities.invokeLater(()->{
-				render();
-				super.repaint();
-			});
+			scheduleRepaint();
+		}
+	}
+	
+	/**
+	 * Schedules a repaint call on the AWT event dispatch thread.
+	 * If a repaint is already pending, this method will not schedule an
+	 * additional call until the render method within repaint is about to be executed.
+	 */
+	public void scheduleRepaint() {
+		if(repaintIsSheduled.compareAndSet(false, true)){
+			SwingUtilities.invokeLater(this::repaint);
 		}
 	}
 	
