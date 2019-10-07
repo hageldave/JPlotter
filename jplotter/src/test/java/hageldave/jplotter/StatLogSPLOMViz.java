@@ -151,7 +151,7 @@ public class StatLogSPLOMViz {
 				CoordSysCanvas canvas = new CoordSysCanvas(){
 					private static final long serialVersionUID = 1L;
 					{
-						leftPadding=rightPadding=topPadding=botPadding=2;
+						paddingLeft=paddingRight=paddingTop=paddingBot=2;
 					}
 				};
 				canvasCollection.add(canvas);

@@ -117,10 +117,10 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected Color tickColor = Color.DARK_GRAY;
 	protected Color guideColor = new Color(0xdddddd);
 
-	protected int leftPadding = 10;
-	protected int rightPadding = 10;
-	protected int topPadding = 10;
-	protected int botPadding = 10;
+	protected int paddingLeft = 10;
+	protected int paddingRight = 10;
+	protected int paddingTop = 10;
+	protected int paddingBot = 10;
 
 	@GLCoordinates
 	protected PointeredPoint2D coordsysAreaLB = new PointeredPoint2D();
@@ -229,6 +229,78 @@ public class CoordSysCanvas extends FBOCanvas {
 	}
 
 	/**
+	 * @return the padding on the left side
+	 */
+	public int getPaddingLeft() {
+		return paddingLeft;
+	}
+
+	/**
+	 * @return the padding on the right side
+	 */
+	public int getPaddingRight() {
+		return paddingRight;
+	}
+
+	/**
+	 * @return the padding on the top side
+	 */
+	public int getPaddingTop() {
+		return paddingTop;
+	}
+
+	/**
+	 * @return the padding on the bottom side
+	 */
+	public int getPaddingBot() {
+		return paddingBot;
+	}
+
+	/**
+	 * Sets the padding to the left side, which is the size of the blank area
+	 * before any visible elements of the CoordSysCanvas are drawn
+	 * @param padding amount of blank area
+	 * @return this for chaining
+	 */
+	public CoordSysCanvas setPaddingLeft(int padding) {
+		this.paddingLeft = padding;
+		return this;
+	}
+
+	/**
+	 * Sets the padding to the right side, which is the size of the blank area
+	 * before any visible elements of the CoordSysCanvas are drawn
+	 * @param padding amount of blank area
+	 * @return this for chaining
+	 */
+	public CoordSysCanvas setPaddingRight(int padding) {
+		this.paddingRight = padding;
+		return this;
+	}
+
+	/**
+	 * Sets the padding to the top side, which is the size of the blank area
+	 * before any visible elements of the CoordSysCanvas are drawn
+	 * @param padding amount of blank area
+	 * @return this for chaining
+	 */
+	public CoordSysCanvas setPaddingTop(int padding) {
+		this.paddingTop = padding;
+		return this;
+	}
+
+	/**
+	 * Sets the padding to the bottom side, which is the size of the blank area
+	 * before any visible elements of the CoordSysCanvas are drawn
+	 * @param padding amount of blank area
+	 * @return this for chaining
+	 */
+	public CoordSysCanvas setPaddingBot(int padding) {
+		this.paddingBot = padding;
+		return this;
+	}
+
+	/**
 	 * @return bottom legend. see {@link #setLegendBottom(Renderer)}
 	 */
 	public Renderer getLegendBottom() {
@@ -254,9 +326,11 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * (width is determined by x-axis width)
 	 * @param legendBottomHeight height of the bottom legend area.
 	 * (default is 20px)
+	 * @return this for chaining
 	 */
-	public void setLegendBottomHeight(int legendBottomHeight) {
+	public CoordSysCanvas setLegendBottomHeight(int legendBottomHeight) {
 		this.legendBottomHeight = legendBottomHeight;
+		return this;
 	}
 
 	/**
@@ -264,9 +338,11 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * (height is determined by the space available until the bottom of the canvas)
 	 * @param legendRightWidth width of the right legend area.
 	 * (default is 70 px)
+	 * @return this for chaining
 	 */
-	public void setLegendRightWidth(int legendRightWidth) {
+	public CoordSysCanvas setLegendRightWidth(int legendRightWidth) {
 		this.legendRightWidth = legendRightWidth;
+		return this;
 	}
 
 	/**
@@ -326,11 +402,11 @@ public class CoordSysCanvas extends FBOCanvas {
 		int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
 
 		// move coordwindow origin so that labels have enough display space
-		coordsysAreaLB.x[0] = maxYTickLabelWidth + leftPadding + 7;
-		coordsysAreaLB.y[0] = maxXTickLabelHeight + botPadding + legendBotH + 6;
+		coordsysAreaLB.x[0] = maxYTickLabelWidth + paddingLeft + 7;
+		coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 6;
 		// move opposing corner of coordwindow to have enough display space
-		coordsysAreaRT.x[0] = getWidth()-rightPadding-maxLabelHeight-legendRightW-4;
-		coordsysAreaRT.y[0] = getHeight()-topPadding-maxLabelHeight-4;
+		coordsysAreaRT.x[0] = getWidth()-paddingRight-maxLabelHeight-legendRightW-4;
+		coordsysAreaRT.y[0] = getHeight()-paddingTop-maxLabelHeight-4;
 
 		// dispose of old stuff
 		ticks.removeAllSegments();
@@ -390,9 +466,9 @@ public class CoordSysCanvas extends FBOCanvas {
 		if(Objects.nonNull(legendRight)){
 			legendRightViewPort.setBounds(
 					(int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4), 
-					botPadding, 
+					paddingBot, 
 					legendRightWidth, 
-					(int)(coordsysAreaRT.getY()-botPadding)
+					(int)(coordsysAreaRT.getY()-paddingBot)
 					);
 		} else {
 			legendRightViewPort.setBounds(0, 0, 0, 0);
@@ -400,7 +476,7 @@ public class CoordSysCanvas extends FBOCanvas {
 		if(Objects.nonNull(legendBottom)){
 			legendBottomViewPort.setBounds(
 					(int)coordsysAreaLB.getX(),
-					botPadding,
+					paddingBot,
 					(int)(coordsysAreaLB.distance(coordsysAreaRB)),
 					legendBottomHeight
 					);
@@ -427,20 +503,24 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * Sets the specified string as the x axis label which appears on top of the coordinate system.
 	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
 	 * @param xAxisLabel to set
+	 * @return this for chaining
 	 */
-	public void setxAxisLabel(String xAxisLabel) {
+	public CoordSysCanvas setxAxisLabel(String xAxisLabel) {
 		this.xAxisLabel = xAxisLabel;
 		setDirty();
+		return this;
 	}
 
 	/**
 	 * Sets the specified string as the y axis label which appears to the right of the coordinate system.
 	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
 	 * @param yAxisLabel to set
+	 * @return this for chaining
 	 */
-	public void setyAxisLabel(String yAxisLabel) {
+	public CoordSysCanvas setyAxisLabel(String yAxisLabel) {
 		this.yAxisLabel = yAxisLabel;
 		setDirty();
+		return this;
 	}
 
 	/**
@@ -455,10 +535,12 @@ public class CoordSysCanvas extends FBOCanvas {
 	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
 	 * @param tickMarkGenerator to be used for determining tick locations 
 	 * and corresponding labels
+	 * @return this for chaining
 	 */
-	public void setTickMarkGenerator(TickMarkGenerator tickMarkGenerator) {
+	public CoordSysCanvas setTickMarkGenerator(TickMarkGenerator tickMarkGenerator) {
 		this.tickMarkGenerator = tickMarkGenerator;
 		setDirty();
+		return this;
 	}
 
 	/**
