@@ -122,7 +122,7 @@ public class IrisViz {
 		// make scatter plot matrix
 		for(int j = 0; j < 4; j++){
 			for(int i = 0; i < 4; i++){
-				CoordSysCanvas canvas = new CoordSysCanvas();
+				CoordSysCanvas canvas = new CoordSysCanvas(legendCanvas);
 				canvasCollection.add(canvas);
 				canvas.setPreferredSize(new Dimension(250, 250));
 				gridPane.add(canvas);

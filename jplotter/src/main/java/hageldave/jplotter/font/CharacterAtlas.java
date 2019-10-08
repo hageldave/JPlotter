@@ -52,6 +52,8 @@ public class CharacterAtlas implements AutoCloseable {
 
 	protected static final HashMap<Integer, HashMap<GenericKey, CharacterAtlas>> ATLAS_COLLECTION = new HashMap<>();
 	
+	protected static final HashMap<Integer, HashMap<Integer, int[]>> CONTEXT_2_STYLE_2_TEXTUREREF = new HashMap<>();
+	
 	protected static final float leftPaddingFactor = 0.1f;
 	
 	protected static final float rightPaddingFactor = 0.3f;
@@ -84,7 +86,16 @@ public class CharacterAtlas implements AutoCloseable {
 
 		this.font = FontProvider.getUbuntuMono(fontSize, style);
 		this.sdChars = SignedDistanceCharacters.getUbuntuMonoSDC(style);
-		this.texID = GLUtils.create2DTexture(sdChars.texImg, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
+		HashMap<Integer, int[]> textures = getOrAllocateTextureReferenceMap(canvasID);
+		if(!textures.containsKey(style)){
+			int texID = GLUtils.create2DTexture(sdChars.texImg, GL11.GL_LINEAR, GL12.GL_CLAMP_TO_EDGE);
+			textures.put(style, new int[]{texID,1});
+			this.texID = texID;
+		} else {
+			int[] texref = textures.get(style);
+			this.texID = texref[0];
+			texref[1]++;
+		}
 		
 		int[] fontmetrics = {0,0};
 		FONTMETRIC_IMG.paint(g->{
@@ -94,6 +105,13 @@ public class CharacterAtlas implements AutoCloseable {
 		});
 		this.charWidth = fontmetrics[0];
 		this.charHeigth = fontmetrics[1];
+	}
+	
+	private static HashMap<Integer, int[]> getOrAllocateTextureReferenceMap(int context){
+		if(!CONTEXT_2_STYLE_2_TEXTUREREF.containsKey(context)){
+			CONTEXT_2_STYLE_2_TEXTUREREF.put(context, new HashMap<>());
+		}
+		return CONTEXT_2_STYLE_2_TEXTUREREF.get(context);
 	}
 
 	/**
@@ -360,7 +378,13 @@ public class CharacterAtlas implements AutoCloseable {
 						"Currently active canvas:" + canvasID + " Owning canvas:" + this.owningCanvasID
 				);
 			}
-			GL11.glDeleteTextures(texID);
+			HashMap<Integer, int[]> textures = CONTEXT_2_STYLE_2_TEXTUREREF.get(canvasID);
+			int[] texref = textures.get(style);
+			if(--texref[1] == 0){
+				GL11.glDeleteTextures(texID);
+				textures.remove(style);
+				System.out.println("deleted font tex " + style);
+			}
 			texID = 0;
 			HashMap<GenericKey, CharacterAtlas> contextCollection = ATLAS_COLLECTION.get(this.owningCanvasID);
 			contextCollection.remove(new GenericKey(fontSize, style));
