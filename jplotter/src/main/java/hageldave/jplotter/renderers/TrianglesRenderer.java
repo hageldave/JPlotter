@@ -163,6 +163,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
 		
 		for(Triangles tris : getItemsToRender()){
+			if(tris.isHidden()){
+				continue;
+			}
 			Element trianglesGroup = SVGUtils.createSVGElement(doc, "g");
 			mainGroup.appendChild(trianglesGroup);
 			if(tris.isCrispEdgesForSVGEnabled()){

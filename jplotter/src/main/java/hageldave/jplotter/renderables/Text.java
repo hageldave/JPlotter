@@ -266,6 +266,12 @@ public class Text implements Renderable {
 		return hidden;
 	}
 	
+	/**
+	 * Hides or unhides this Text object, i.e. sets the {@link #isHidden()} field
+	 * value. When hidden, renderers will not draw it.
+	 * @param hide true when hiding
+	 * @return this for chaining
+	 */
 	public Text hide(boolean hide) {
 		this.hidden = hide;
 		return this;

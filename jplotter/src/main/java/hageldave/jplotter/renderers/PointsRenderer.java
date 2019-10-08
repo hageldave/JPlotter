@@ -210,6 +210,9 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
 		
 		for(Points points : getItemsToRender()){
+			if(points.isHidden()){
+				continue;
+			}
 			Element pointsGroup = SVGUtils.createSVGElement(doc, "g");
 			mainGroup.appendChild(pointsGroup);
 			Glyph glyph = points.glyph;

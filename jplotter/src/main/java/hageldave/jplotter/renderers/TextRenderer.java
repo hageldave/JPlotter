@@ -246,6 +246,9 @@ public class TextRenderer extends GenericRenderer<Text> {
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 
 		for(Text txt: getItemsToRender()){
+			if(txt.isHidden()){
+				continue;
+			}
 			{
 				double x1,y1;
 				x1 = txt.getOrigin().getX();

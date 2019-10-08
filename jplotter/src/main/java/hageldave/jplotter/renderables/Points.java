@@ -266,6 +266,12 @@ public class Points implements Renderable {
 		return hidden;
 	}
 	
+	/**
+	 * Hides or unhides this Points object, i.e. sets the {@link #isHidden()} field
+	 * value. When hidden, renderers will not draw it.
+	 * @param hide true when hiding
+	 * @return this for chaining
+	 */
 	public Points hide(boolean hide) {
 		this.hidden = hide;
 		return this;

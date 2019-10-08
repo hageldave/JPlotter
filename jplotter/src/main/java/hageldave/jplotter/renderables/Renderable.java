@@ -54,7 +54,10 @@ public interface Renderable extends AutoCloseable {
 	 */
 	public boolean intersects(Rectangle2D rect);
 	
-	
+	/**
+	 * Indicates whether this Renderable is hidden i.e. will not be drawn.
+	 * @return true when hidden
+	 */
 	public default boolean isHidden() {return false;}
 	
 }

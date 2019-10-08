@@ -393,6 +393,12 @@ public class Lines implements Renderable {
 		return hidden;
 	}
 	
+	/**
+	 * Hides or unhides this Lines object, i.e. sets the {@link #isHidden()} field
+	 * value. When hidden, renderers will not draw it.
+	 * @param hide true when hiding
+	 * @return this for chaining
+	 */
 	public Lines hide(boolean hide) {
 		this.hidden = hide;
 		return this;

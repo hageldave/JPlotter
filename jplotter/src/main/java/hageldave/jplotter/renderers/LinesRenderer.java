@@ -296,8 +296,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
 
 		for(Lines lines : getItemsToRender()){
-			if(lines.getStrokePattern()==0){
-				// stroke pattern is all zeros which is invisible
+			if(lines.isHidden() || lines.getStrokePattern()==0){
+				// line is invisible
 				continue;
 			}
 			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
