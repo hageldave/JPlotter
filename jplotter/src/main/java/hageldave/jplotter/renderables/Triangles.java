@@ -40,6 +40,7 @@ public class Triangles implements Renderable {
 	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<TriangleDetails> triangles = new ArrayList<>();
 	protected boolean useCrispEdgesForSVG = true;
+	protected boolean hidden=false;
 	
 	/**
 	 * @return the number of triangles in this collection.
@@ -211,6 +212,17 @@ public class Triangles implements Renderable {
 	public float getGlobalAlphaMultiplier() {
 		return globalAlphaMultiplier;
 	}
+	
+	@Override
+	public boolean isHidden() {
+		return hidden;
+	}
+	
+	public Triangles hide(boolean hide) {
+		this.hidden = hide;
+		return this;
+	}
+	
 
 	/**
 	 * Disposes of GL resources, i.e. coloses the vertex array.

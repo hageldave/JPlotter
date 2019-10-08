@@ -48,6 +48,7 @@ public class Text implements Renderable {
 	protected float angle=0;
 	protected String txtStr;
 	protected boolean isDirty=true;
+	protected boolean hidden=false;
 	
 	/**
 	 * Creates a new Text object with the specified string and font configuration.
@@ -257,6 +258,16 @@ public class Text implements Renderable {
 	 */
 	public Text setAngle(double angle) {
 		this.angle = (float)angle;
+		return this;
+	}
+	
+	@Override
+	public boolean isHidden() {
+		return hidden;
+	}
+	
+	public Text hide(boolean hide) {
+		this.hidden = hide;
 		return this;
 	}
 	

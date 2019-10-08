@@ -66,6 +66,8 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 			renderStart(w,h);
 			// render every item
 			for(T item: itemsToRender){
+				if(item.isHidden())
+					continue;
 				if(item.isDirty()){
 					// update items gl state if necessary
 					item.updateGL();

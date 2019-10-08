@@ -195,7 +195,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					// update items gl state if necessary
 					item.updateGL(scaleX,scaleY);
 				}
-				renderItem(item);
+				if(!item.isHidden()){
+					renderItem(item);
+				}
 			}
 			// clean up after renering (e.g. en/disable depth or blending and such)
 			renderEnd();

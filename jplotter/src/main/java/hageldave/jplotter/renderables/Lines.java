@@ -52,6 +52,8 @@ public class Lines implements Renderable {
 	protected short strokePattern = (short)0xffff;
 	
 	protected float strokeLength = 16;
+	
+	protected boolean hidden = false;
 
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
@@ -383,6 +385,16 @@ public class Lines implements Renderable {
 	 */
 	public Lines setStrokeLength(double strokeLength) {
 		this.strokeLength = (float) Math.max(0, strokeLength);
+		return this;
+	}
+	
+	@Override
+	public boolean isHidden() {
+		return hidden;
+	}
+	
+	public Lines hide(boolean hide) {
+		this.hidden = hide;
 		return this;
 	}
 

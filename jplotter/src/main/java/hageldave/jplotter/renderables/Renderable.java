@@ -54,4 +54,7 @@ public interface Renderable extends AutoCloseable {
 	 */
 	public boolean intersects(Rectangle2D rect);
 	
+	
+	public default boolean isHidden() {return false;}
+	
 }

@@ -47,6 +47,7 @@ public class Points implements Renderable {
 	protected float globalScaling = 1f;
 	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<PointDetails> points = new ArrayList<>();
+	protected boolean hidden=false;
 
 	/**
 	 * Creates a new {@link Points} object which uses the specified {@link Glyph} for displaying its points.
@@ -259,6 +260,17 @@ public class Points implements Renderable {
 				.filter(p->rect.contains(p.location))
 				.collect(Collectors.toList());
 	}
+	
+	@Override
+	public boolean isHidden() {
+		return hidden;
+	}
+	
+	public Points hide(boolean hide) {
+		this.hidden = hide;
+		return this;
+	}
+	
 
 	/**
 	 * Class for storing all the details of a single point to be rendered.
