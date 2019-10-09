@@ -608,46 +608,27 @@ public class Lines implements Renderable {
 	/**
 	 * Updates the vertex array to be in sync with this lines object.
 	 * This sets the {@link #isDirty()} state to false.
-	 * if {@link #initGL()} has not been called yet or this object has
+	 * If {@link #initGL()} has not been called yet or this object has
 	 * already been closed, nothing happens
 	 */
 	@Override
 	@GLContextRequired
+	@Deprecated(/* use updateGL(scaleX,scaleY) instead */)
 	public void updateGL(){
-//		if(Objects.nonNull(va)){
-//			float[] segmentCoordBuffer = new float[segments.size()*2*2];
-//			int[] colorBuffer = new int[segments.size()*2];
-//			int[] pickBuffer = new int[segments.size()*2];
-//			float[] thicknessBuffer = new float[segments.size()*2];
-//			for(int i=0; i<segments.size(); i++){
-//				SegmentDetails seg = segments.get(i);
-//				segmentCoordBuffer[i*4+0] = (float) seg.p0.getX();
-//				segmentCoordBuffer[i*4+1] = (float) seg.p0.getY();
-//				segmentCoordBuffer[i*4+2] = (float) seg.p1.getX();
-//				segmentCoordBuffer[i*4+3] = (float) seg.p1.getY();
-//
-//				colorBuffer[i*2+0] = seg.color0.getAsInt();
-//				colorBuffer[i*2+1] = seg.color1.getAsInt();
-//
-//				pickBuffer[i*2+0] = pickBuffer[i*2+1] = seg.pickColor;
-//
-//				thicknessBuffer[i*2+0] = (float)seg.thickness0.getAsDouble();
-//				thicknessBuffer[i*2+1] = (float)seg.thickness1.getAsDouble();
-//			}
-//			va.setBuffer(0, 2, segmentCoordBuffer);
-//			va.setBuffer(1, 1, false, colorBuffer);
-//			va.setBuffer(2, 1, false, pickBuffer);
-//			va.setBuffer(3, 1, thicknessBuffer);
-//			isDirty = false;
-//		}
 		updateGL(1, 1);
 	}
 	
 	/**
 	 * Updates the vertex array to be in sync with this lines object.
 	 * This sets the {@link #isDirty()} state to false.
-	 * if {@link #initGL()} has not been called yet or this object has
-	 * already been closed, nothing happens
+	 * For calculating the path length of line segments in screen space
+	 * the scaling parameters of the respective view transformation need
+	 * to be specified in order to realize view invariant stroke patterns.
+	 * <p>
+	 * If {@link #initGL()} has not been called yet or this object has
+	 * already been closed, nothing happens.
+	 * @param scaleX scaling of the x coordinate of the current view transform
+	 * @param scaleY scaling of the y coordinate of the current view transform
 	 */
 	@GLContextRequired
 	public void updateGL(double scaleX, double scaleY){

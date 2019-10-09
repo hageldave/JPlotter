@@ -36,7 +36,7 @@ import hageldave.jplotter.util.GenericKey;
  * {@link SignedDistanceCharacters#CHARACTERS}.
  * Any other character will be mapped to white space and will thus be invisible in the
  * render.
- * To obtain an character atlas use the static {@link CharacterAtlas#get(int, int, boolean)}
+ * To obtain an character atlas use the static {@link CharacterAtlas#get(int, int)}
  * method.
  * A {@link VertexArray} with 2D vertices on the first attribute and 2D texture coordinates
  * on the second can be retrieved for a specified string using 
@@ -162,7 +162,7 @@ public class CharacterAtlas implements AutoCloseable {
 	}
 
 	/**
-	 * Calls {@link #boundsForText(int, Font, boolean)} with {@code ont(Font.MONOSPACED, style, fontSize)}.
+	 * Calls {@link #boundsForText(int, Font)} with corresponding Ubuntu Mono font.
 	 * @param textlength number of characters
 	 * @param fontSize point size of the font
 	 * @param style of the font e.g. {@link Font#PLAIN}.

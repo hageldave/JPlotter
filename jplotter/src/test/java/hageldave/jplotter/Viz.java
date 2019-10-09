@@ -30,7 +30,6 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.Utils;
 
 public class Viz {
 

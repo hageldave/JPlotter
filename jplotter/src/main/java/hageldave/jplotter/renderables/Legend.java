@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.geom.Rectangle2D;
@@ -25,8 +24,8 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * such as a colored {@link Glyph} or line segment, in order to explain the meaning 
  * of the contents of a visualization.
  * <p>
- * To add items to the legend, the methods {@link #addGlyphLabel(Glyph, Color, String)} and 
- * {@link #addLineLabel(double, Color, String)} can be used.
+ * To add items to the legend, the methods {@link #addGlyphLabel(Glyph, int, String)} and 
+ * {@link #addLineLabel(double, int, String)} can be used.
  * The layout of the items is very similar to {@link FlowLayout} in which the items
  * are positioned next to each other until no more space is available to the right
  * and a line break happens, then positioning continues in the next row.
@@ -138,7 +137,7 @@ public class Legend implements Renderable, Renderer {
 	/**
 	 * Adds a label for a line to this legend.
 	 * @param thickness of the line to appear in front of the label text
-	 * @param integer packed ARGB color value of the glyph
+	 * @param color integer packed ARGB color value of the glyph
 	 * @param labeltxt text of the label
 	 * @return this for chaining
 	 */

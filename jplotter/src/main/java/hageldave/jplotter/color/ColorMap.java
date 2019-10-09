@@ -169,6 +169,8 @@ public interface ColorMap {
 	 * @param w width of the image
 	 * @param h height of the image
 	 * @param horizontal when true, the color map will shown left to right, otherwise top to bottom.
+	 * @param interpolate when true, the color map's interpolate method will be 
+	 * used to obtain the colors, otherwise the discrete colors will be used
 	 * @return image of the color map
 	 */
 	public default BufferedImage toImage(int w, int h, boolean horizontal, boolean interpolate){

@@ -65,6 +65,7 @@ public class GenericKey {
 	 * @param i index
 	 * @param clazz type to cast to
 	 * @return key component
+	 * @param <T> type of the component
 	 */
 	public <T> T getComponent(int i, Class<T> clazz){
 		return clazz.cast(keycontents[i]);

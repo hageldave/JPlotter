@@ -167,7 +167,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 * calls the {@link #repaint()} method when resizing.
 	 * 
 	 * @param data GLData object for creating the GL context.
-	 * @param parent parent FBOCanvas to share GLContext with
+	 * @param parent parent FBOCanvas to share GL context with
 	 */
 	protected FBOCanvas(GLData data, FBOCanvas parent){
 		super(data);
@@ -199,12 +199,17 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		this(new GLData(), null);
 	}
 
-	/** Calls {@link #FBOCanvas(GLData)} with default {@link GLData}. */
+	/** 
+	 * Calls {@link #FBOCanvas(GLData)} with default {@link GLData}. 
+	 */
 	protected FBOCanvas() {
 		this(new GLData());
 	}
 	
-	/** Calls {@link #FBOCanvas(GLData, FBOCanvas))} with default {@link GLData}. */
+	/** 
+	 * Calls {@link #FBOCanvas(GLData, FBOCanvas)} with default {@link GLData}. 
+	 * @param parent the parent canvas to share GL context with
+	 */
 	protected FBOCanvas(FBOCanvas parent) {
 		this(new GLData(), parent);
 	}
