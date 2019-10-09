@@ -12,6 +12,12 @@ import hageldave.imagingkit.core.Pixel;
  */
 public class ColorOperations {
 
+	/**
+	 * Mixes the specified colors equally using mean channel values.
+	 * @param argb1 integer packed ARGB color value 
+	 * @param argb2 integer packed ARGB color value, e.g. 0xff00ff00 for opaque green
+	 * @return the mixed color
+	 */
 	public static int mixARGB(int argb1, int argb2){
 		return argb(
 				(a(argb1)+a(argb2))/2, 
@@ -20,6 +26,12 @@ public class ColorOperations {
 				(b(argb1)+b(argb2))/2);
 	}
 	
+	/**
+	 * Desaturates the specified color, i.e. calcualtes
+	 * the color's luminance and returns a grey color for it.
+	 * @param argb integer packed ARGB color value, e.g. 0xff00ff00 for opaque green
+	 * @return desaturated color
+	 */
 	public static int desaturate(int argb){
 		int luminance = getLuminance(argb);
 		return argb(a(argb), luminance, luminance, luminance);
