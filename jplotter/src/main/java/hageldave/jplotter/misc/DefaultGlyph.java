@@ -15,8 +15,8 @@ import hageldave.jplotter.svg.SVGUtils;
 /**
  * The default implementations of various {@link Glyph}s such as a
  * {@link #CROSS}, {@link #CIRCLE}, {@link #SQUARE} and {@link #TRIANGLE} glyph.
- * Apart from these there is an {@link #ARROW} glyph that can be used for
- * vector field visualizations.
+ * Apart from these there are {@link #ARROW} and {@link #ARROWHEAD} glyphs that can be used for
+ * directional information as in vector field visualizations.
  * 
  * @author hageldave
  */
