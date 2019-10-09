@@ -410,7 +410,7 @@ public class Lines implements Renderable {
 	 */
 	public static class SegmentDetails implements Cloneable {
 		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
-				{()->0f, ()->1f, ()->2f, ()->3f};
+				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
 		
 		public Point2D p0;
 		public Point2D p1;
