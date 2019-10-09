@@ -73,7 +73,7 @@ public interface ColorMap {
 			int c1 = getColor(idx);
 			double m0 = getLocation(idx-1);
 			double m1 = getLocation(idx);
-			return Utils.interpolateColor(c0, c1, (m-m0)/(m1-m0));
+			return ColorOperations.interpolateColor(c0, c1, (m-m0)/(m1-m0));
 		}
 	}
 	

@@ -6,6 +6,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.TrianglesRenderer;
 import hageldave.jplotter.util.Utils;
@@ -75,7 +76,7 @@ public class SVGTriangleRendering {
 			int edge = getSubdivisionEdge(x0, y0, x1, y1, x2, y2);
 			if(edge==0){
 				coords = new double[6];
-				int c = Utils.interpolateColor(c0, c1, 0.5);
+				int c = ColorOperations.interpolateColor(c0, c1, 0.5);
 				// first subdivided triangle
 				int i=0;
 				coords[i++]=x0;coords[i++]=y0; coords[i++]=x0+(x1-x0)/2;coords[i++]=y0+(y1-y0)/2; coords[i++]=x2;coords[i++]=y2;
@@ -88,7 +89,7 @@ public class SVGTriangleRendering {
 				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "SUBDIVIDE", viewportRect);
 			} else if(edge==1){
 				coords = new double[6];
-				int c = Utils.interpolateColor(c1, c2, 0.5);
+				int c = ColorOperations.interpolateColor(c1, c2, 0.5);
 				// first subdivided triangle
 				int i=0;
 				coords[i++]=x0;coords[i++]=y0; coords[i++]=x1+(x2-x1)/2;coords[i++]=y1+(y2-y1)/2; coords[i++]=x1;coords[i++]=y1;
@@ -101,7 +102,7 @@ public class SVGTriangleRendering {
 				addSVGTriangle(doc, trianglesGroup, coords, colors, alphaMultiplier, "SUBDIVIDE", viewportRect);
 			} else if(edge==2){
 				coords = new double[6];
-				int c = Utils.interpolateColor(c0, c2, 0.5);
+				int c = ColorOperations.interpolateColor(c0, c2, 0.5);
 				// first subdivided triangle
 				int i=0;
 				coords[i++]=x1;coords[i++]=y1; coords[i++]=x0+(x2-x0)/2;coords[i++]=y0+(y2-y0)/2; coords[i++]=x0;coords[i++]=y0;

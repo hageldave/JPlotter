@@ -1,6 +1,6 @@
 package hageldave.jplotter.misc;
 
-import static hageldave.jplotter.util.Utils.interpolateColor;
+import static hageldave.jplotter.color.ColorOperations.interpolateColor;
 
 import java.awt.geom.Point2D;
 import java.util.Arrays;
