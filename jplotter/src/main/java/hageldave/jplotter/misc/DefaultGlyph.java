@@ -37,6 +37,10 @@ public enum DefaultGlyph implements Glyph {
 	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true, true, DefaultGlyph::mkCircleSVG),
 	/** an arrow glyph, pointing to the right */
 	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false, false, DefaultGlyph::mkArrowSVG),
+	/** an arrow head glyph, pointing to the right */
+	ARROWHEAD(DefaultGlyph::mkArrowHead, 4, GL11.GL_LINE_LOOP, 12, false, false, DefaultGlyph::mkArrowHeadSVG),
+	/** a filled arrow head glyph, pointing to the right */
+	ARROWHEAD_F(DefaultGlyph::mkArrowHead, 4, GL11.GL_TRIANGLE_FAN, 12, false, true, DefaultGlyph::mkArrowHeadSVG),
 	;
 	
 	private Consumer<VertexArray> vertexGenerator;
@@ -164,12 +168,26 @@ public enum DefaultGlyph implements Glyph {
 		va.setBuffer(0, 2,  -.5f,0f,  .5f,0f,  .1f,-.2f, .5,0, .1f,.2f, .5f,0f);
 	}
 	
+	static void mkArrowHead(VertexArray va){
+		va.setBuffer(0, 2,  -.2f,0f,  -.5f,-.3f,  .5f,0f, -.5,.3);
+	}
+	
 	static List<Element> mkArrowSVG(Document doc, Integer pixelSize){
 		Element l1 = SVGUtils.createSVGElement(doc, "polyline");
 		Element l2 = SVGUtils.createSVGElement(doc, "polyline");
 		l1.setAttributeNS(null, "points", SVGUtils.svgPoints(-.5f*pixelSize,0,  .5f*pixelSize,0));
 		l2.setAttributeNS(null, "points", SVGUtils.svgPoints(.1f*pixelSize,.2f*pixelSize,  .5f*pixelSize,0, .1f*pixelSize,-.2f*pixelSize));
 		return Arrays.asList(l1,l2);
+	}
+	
+	static List<Element> mkArrowHeadSVG(Document doc, Integer pixelSize){
+		Element line = SVGUtils.createSVGElement(doc, "polygon");
+		line.setAttributeNS(null, "points", SVGUtils.svgPoints(
+				-.2f*pixelSize,0,  
+				-.5f*pixelSize,-.3*pixelSize,
+				.5f*pixelSize,0,
+				-.5f*pixelSize, .3*pixelSize));
+		return Arrays.asList(line);
 	}
 	
 	static void mkCross(VertexArray va){

@@ -47,7 +47,7 @@ public class VectorFieldViz {
 		DoubleBinaryOperator fu = (x,y)->(x+y)*(y+1);
 		DoubleBinaryOperator fv = (x,y)->(x*y)-(y+1)*y;
 		// make quiver plot
-		Points quiver = new Points(DefaultGlyph.ARROW);
+		Points quiver = new Points(DefaultGlyph.ARROWHEAD);
 		Color color = new Color(DefaultColorMap.Q_9_SET1.getColor(1));
 		final int resolution = 21;
 		for(int j = 0; j < resolution; j++){
