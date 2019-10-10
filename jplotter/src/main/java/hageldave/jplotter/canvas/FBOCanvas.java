@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.batik.svggen.SVGGraphics2D;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -628,9 +629,17 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			super.render();
 	}
 	
+	public boolean renderSvgAsImage(){
+		return false;
+	}
+	
 	@Override
 	public void paint(Graphics g) {
 		if(Objects.nonNull(frontBufferBackup)){
+			// test if this is SVG painting
+			if(g instanceof SVGGraphics2D && !renderSvgAsImage()){
+				return;
+			}
 			int w = frontBufferBackup.getWidth();
 			int h = frontBufferBackup.getHeight();
 			g.drawImage(frontBufferBackup.getRemoteBufferedImage(), 
