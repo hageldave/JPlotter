@@ -310,7 +310,7 @@ public class SVGUtils {
 		defs.setAttributeNS(null, "id", "JPlotterDefs");
 		document.getDocumentElement().appendChild(defs);
 		{ // draw all non FBOCanvas components
-			SVGGraphics2D g2d = new SVGGraphics2D(document);
+			SVGGraphics2D g2d = new SVGPatchedGraphics2D(document);
 			c.paintAll(g2d);
 			document.getDocumentElement().appendChild(g2d.getTopLevelGroup(true));
 		}
