@@ -16,6 +16,8 @@ import javax.swing.SwingUtilities;
 
 import org.w3c.dom.Document;
 
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -132,16 +134,9 @@ public class Example {
 			frame.setVisible(true);
 		});
 		
-		// add a pop up menu (on right click) for exporting to SVG
+		// add a pop up menu (on right click) for exporting to SVG or PNG
 		PopupMenu menu = new PopupMenu();
 		canvas.add(menu);
-		MenuItem svgExport = new MenuItem("SVG export");
-		menu.add(svgExport);
-		svgExport.addActionListener(e->{
-			Document svg = SVGUtils.containerToSVG(frame.getContentPane());
-			SVGUtils.documentToXMLFile(svg, new File("example_export.svg"));
-			System.out.println("exported SVG.");
-		});
 		canvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -149,6 +144,21 @@ public class Example {
 					menu.show(canvas, e.getX(), e.getY());
 			}
 		});
+		MenuItem svgExport = new MenuItem("SVG export");
+		svgExport.addActionListener(e->{
+			Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+			SVGUtils.documentToXMLFile(svg, new File("example_export.svg"));
+			System.out.println("exported SVG.");
+		});
+		menu.add(svgExport);
+		MenuItem pngExport = new MenuItem("PNG export");
+		pngExport.addActionListener(e->{
+			Img img = new Img(frame.getContentPane().getSize());
+			img.paint(g -> frame.getContentPane().paintAll(g));
+			ImageSaver.saveImage(img.getRemoteBufferedImage(), "example_export.png");
+			System.out.println("exported PNG.");
+		});
+		menu.add(pngExport);
 		
 	}
 }
