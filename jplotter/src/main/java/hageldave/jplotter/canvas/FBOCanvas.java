@@ -162,6 +162,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected final FBOCanvas parentCanvas;
 	protected AtomicBoolean repaintIsSheduled = new AtomicBoolean(false);
 	protected Img frontBufferBackup = new Img(0, 0);
+	protected boolean isRenderSvgAsImage = false;
 
 	
 	/**
@@ -263,6 +264,47 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				0,1,
 				1,1
 		});
+	}
+	
+	protected Img toImg(Img img, boolean picking){
+		if(fbo != null){
+			int imgW = img.getWidth();
+			int imgH = img.getHeight();
+			int attachment = picking ? GL30.GL_COLOR_ATTACHMENT1 : GL30.GL_COLOR_ATTACHMENT0;
+			Utils.execOnAWTEventDispatch(()->{
+				runInContext(()->{
+					GLUtils.fetchPixels(
+							fbo.getFBOid(), 
+							attachment, 
+							0, 
+							0, 
+							imgW, 
+							imgH, 
+							img.getData()
+							);
+				});
+			});
+			// flip Y axis
+			BufferedImage copy = img.toBufferedImage();
+			img.fill(0).paint(g->{
+				g.drawImage(copy, 
+						0, imgH, 
+						imgW, 0, 
+						0, 0, 
+						imgW, imgH, 
+						null);
+			});
+		}
+		return img;
+	}
+	
+	/**
+	 * Fetches the current contents of the framebuffer and returns them as an {@link Img}.
+	 * @return image of the current framebuffer.
+	 */
+	public Img toImg() {
+		Img img = new Img(getWidth(), getHeight());
+		return toImg(img, false);
 	}
 
 	/**
@@ -630,52 +672,36 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			super.render();
 	}
 	
-	protected Img toImg(Img img){
-		if(fbo != null){
-			int imgW = img.getWidth();
-			int imgH = img.getHeight();
-			int attachment = GL30.GL_COLOR_ATTACHMENT0;
-			Utils.execOnAWTEventDispatch(()->{
-				runInContext(()->{
-					GLUtils.fetchPixels(
-							fbo.getFBOid(), 
-							attachment, 
-							0, 
-							0, 
-							imgW, 
-							imgH, 
-							img.getData()
-							);
-				});
-			});
-			// flip Y axis
-			BufferedImage copy = img.toBufferedImage();
-			img.fill(0).paint(g->{
-				g.drawImage(copy, 
-						0, imgH, 
-						imgW, 0, 
-						0, 0, 
-						imgW, imgH, 
-						null);
-			});
-		}
-		return img;
+	/**
+	 * En/disables SVG rendering as image.
+	 * When rendering to SVG and this is enabled, instead of translating the 
+	 * contents of the renderers into SVG elements, the current framebuffer image 
+	 * is used and put into the dom.
+	 * <p>
+	 * This can be useful for example when too many SVG elements would be created
+	 * resulting in a huge dom and file size when exporting as SVG.
+	 * 
+	 * @param enable true when no SVG elements should be created from the content
+	 * of this FBOCanvas but instead a simple image element with the framebuffer's
+	 * content.
+	 */
+	public void enableSvgAsImageRendering(boolean enable){
+		this.isRenderSvgAsImage = enable;
 	}
 	
-	public Img toImg() {
-		Img img = new Img(getWidth(), getHeight());
-		return toImg(img);
-	}
-		
-	public boolean renderSvgAsImage(){
-		return false;
+	/**
+	 * @return true when enabled
+	 * @see #enableSvgAsImageRendering(boolean)
+	 */
+	public boolean isSvgAsImageRenderingEnabled(){
+		return isRenderSvgAsImage;
 	}
 	
 	@Override
 	public void paint(Graphics g) {
 		if(Objects.nonNull(frontBufferBackup)){
 			// test if this is SVG painting
-			if(g instanceof SVGGraphics2D && !renderSvgAsImage()){
+			if(g instanceof SVGGraphics2D && !isSvgAsImageRenderingEnabled()){
 				return;
 			}
 			int w = frontBufferBackup.getWidth();
