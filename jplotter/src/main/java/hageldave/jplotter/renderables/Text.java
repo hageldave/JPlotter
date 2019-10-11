@@ -188,6 +188,13 @@ public class Text implements Renderable {
 	public float getPickColorB() {
 		return Pixel.b(pickColor)/255f;
 	}
+	
+	/**
+	 * @return the normalized alpha channel of the picking color (in [0,1])
+	 */
+	public float getPickColorA() {
+		return Pixel.a(pickColor)/255f;
+	}
 
 	/**
 	 * @return the dimensions in pixels of this text object

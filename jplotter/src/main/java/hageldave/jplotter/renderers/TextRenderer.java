@@ -191,7 +191,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
 		GL20.glUniform4f(loc, txt.getColorR(), txt.getColorG(), txt.getColorB(), txt.getColorA());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "pickColorToUse");
-		GL20.glUniform4f(loc, txt.getPickColorR(), txt.getPickColorG(), txt.getPickColorB(), 1f);
+		GL20.glUniform4f(loc, txt.getPickColorR(), txt.getPickColorG(), txt.getPickColorB(), txt.getPickColorA());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "useTex");
 		GL20.glUniform1i(loc, 1);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "stepBounds");

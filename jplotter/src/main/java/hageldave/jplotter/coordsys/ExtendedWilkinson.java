@@ -31,7 +31,7 @@ import hageldave.jplotter.util.Pair;
  */
 public class ExtendedWilkinson implements TickMarkGenerator {
 
-	/** Set preference decreasing ordered set of nice increments */
+	/** preference-decreasing ordered set of nice increments */
 	protected double[] Q = new double[]{1, 5, 2, 2.5, 4, 3, 1.5, 6, 8};
 	/** weights for simplicity, coverage, density and legibility */
 	protected double[] w = new double[]{0.2, 0.25, 0.5, 0.05};

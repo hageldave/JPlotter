@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,6 +23,7 @@ import org.lwjgl.opengl.awt.PlatformGLCanvas;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
@@ -610,5 +612,42 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	public void render() {
 		if(this.isValid())
 			super.render();
+	}
+	
+	protected Img toImg(Img img){
+		if(fbo != null){
+			int imgW = img.getWidth();
+			int imgH = img.getHeight();
+			int attachment = GL30.GL_COLOR_ATTACHMENT0;
+			Utils.execOnAWTEventDispatch(()->{
+				runInContext(()->{
+					GLUtils.fetchPixels(
+							fbo.getFBOid(), 
+							attachment, 
+							0, 
+							0, 
+							imgW, 
+							imgH, 
+							img.getData()
+							);
+				});
+			});
+			// flip Y axis
+			BufferedImage copy = img.toBufferedImage();
+			img.fill(0).paint(g->{
+				g.drawImage(copy, 
+						0, imgH, 
+						imgW, 0, 
+						0, 0, 
+						imgW, imgH, 
+						null);
+			});
+		}
+		return img;
+	}
+	
+	public Img toImg() {
+		Img img = new Img(getWidth(), getHeight());
+		return toImg(img);
 	}
 }

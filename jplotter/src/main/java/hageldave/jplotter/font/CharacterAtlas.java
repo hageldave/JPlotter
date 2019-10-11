@@ -36,7 +36,7 @@ import hageldave.jplotter.util.GenericKey;
  * {@link SignedDistanceCharacters#CHARACTERS}.
  * Any other character will be mapped to white space and will thus be invisible in the
  * render.
- * To obtain an character atlas use the static {@link CharacterAtlas#get(int, int)}
+ * To obtain a character atlas use the static {@link CharacterAtlas#get(int, int)}
  * method.
  * A {@link VertexArray} with 2D vertices on the first attribute and 2D texture coordinates
  * on the second can be retrieved for a specified string using 
@@ -383,7 +383,6 @@ public class CharacterAtlas implements AutoCloseable {
 			if(--texref[1] == 0){
 				GL11.glDeleteTextures(texID);
 				textures.remove(style);
-				System.out.println("deleted font tex " + style);
 			}
 			texID = 0;
 			HashMap<GenericKey, CharacterAtlas> contextCollection = ATLAS_COLLECTION.get(this.owningCanvasID);
