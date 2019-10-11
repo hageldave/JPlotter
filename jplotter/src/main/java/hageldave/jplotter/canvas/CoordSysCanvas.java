@@ -137,10 +137,20 @@ public class CoordSysCanvas extends FBOCanvas {
 	protected ActionListener coordviewListener;
 
 
+	/**
+	 * Creates a new {@link CoordSysCanvas}.
+	 */
 	public CoordSysCanvas() {
 		this(null);
 	}
 	
+	/**
+	 * Creates a new {@link CoordSysCanvas} with the specified {@link FBOCanvas}
+	 * as it's GL context sharing parent.
+	 * When sharing GL context both canvases can use the same GL textures and buffers
+	 * which saves memory and may also improve performance.
+	 * @param parent to share GL context with
+	 */
 	public CoordSysCanvas(FBOCanvas parent) {
 		super(parent);
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(Color.BLACK);

@@ -167,10 +167,15 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	
 	/**
 	 * Creates a new {@link FBOCanvas}.
-	 * Increments the {@link #ATOMIC_COUNTER} and sets
-	 * its value as this canvas' {@link #canvasID}.
 	 * It also registers a {@link ComponentListener} that
 	 * calls the {@link #repaint()} method when resizing.
+	 * The specified parent FBOCanvas will be used for sharing GL context with,
+	 * and this {@link FBOCanvas} will use the same {@link #canvasID} as its parent.
+	 * When sharing GL context both canvases can use the same GL textures and buffers
+	 * which saves memory and may also improve performance.
+	 * <br>
+	 * When no parent is specified this increments the {@link #ATOMIC_COUNTER} and sets
+	 * its value as this canvas' {@link #canvasID}.
 	 * 
 	 * @param data GLData object for creating the GL context.
 	 * @param parent parent FBOCanvas to share GL context with
@@ -213,7 +218,10 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	}
 	
 	/** 
-	 * Calls {@link #FBOCanvas(GLData, FBOCanvas)} with default {@link GLData}. 
+	 * Calls {@link #FBOCanvas(GLData, FBOCanvas)} with default {@link GLData}.
+	 * The specified parent FBOCanvas will be used for sharing GL context with.
+	 * When sharing GL context both canvases can use the same GL textures and buffers
+	 * which saves memory and may also improve performance.
 	 * @param parent the parent canvas to share GL context with
 	 */
 	protected FBOCanvas(FBOCanvas parent) {

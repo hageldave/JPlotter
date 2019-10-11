@@ -23,10 +23,20 @@ public class BlankCanvas extends FBOCanvas {
 
 	protected Renderer renderer;
 	
+	/**
+	 * Creates a new {@link BlankCanvas} with the specified {@link FBOCanvas}
+	 * as it's GL context sharing parent.
+	 * When sharing GL context both canvases can use the same GL textures and buffers
+	 * which saves memory and may also improve performance.
+	 * @param parent to share GL context with
+	 */
 	public BlankCanvas(FBOCanvas parent) {
 		super(parent);
 	}
 	
+	/**
+	 * Creates a new {@link BlankCanvas}.
+	 */
 	public BlankCanvas() {
 		this(null);
 	}
