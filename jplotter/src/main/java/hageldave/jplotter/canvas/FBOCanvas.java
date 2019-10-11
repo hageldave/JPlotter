@@ -1,6 +1,7 @@
 package hageldave.jplotter.canvas;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -12,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.batik.svggen.SVGGraphics2D;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -159,6 +161,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	public final int canvasID;
 	protected final FBOCanvas parentCanvas;
 	protected AtomicBoolean repaintIsSheduled = new AtomicBoolean(false);
+	protected Img frontBufferBackup = new Img(0, 0);
 
 	
 	/**
@@ -412,6 +415,19 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 			}
+			// to image
+			if(Objects.nonNull(frontBufferBackup)){
+				if(frontBufferBackup.getWidth() != w || frontBufferBackup.getHeight() != h){
+					frontBufferBackup = new Img(w, h);
+				}
+				GLUtils.fetchPixels(
+						fbo.getFBOid(), 
+						GL30.GL_COLOR_ATTACHMENT0, 
+						0, 0, 
+						w, h, 
+						frontBufferBackup.getData()
+				);
+			}
 		}
 		this.swapBuffers();
 	}
@@ -649,5 +665,27 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	public Img toImg() {
 		Img img = new Img(getWidth(), getHeight());
 		return toImg(img);
+	}
+		
+	public boolean renderSvgAsImage(){
+		return false;
+	}
+	
+	@Override
+	public void paint(Graphics g) {
+		if(Objects.nonNull(frontBufferBackup)){
+			// test if this is SVG painting
+			if(g instanceof SVGGraphics2D && !renderSvgAsImage()){
+				return;
+			}
+			int w = frontBufferBackup.getWidth();
+			int h = frontBufferBackup.getHeight();
+			g.drawImage(frontBufferBackup.getRemoteBufferedImage(), 
+					0, 0, 
+					w, h,
+					0, h, 
+					w, 0,
+					null);
+		}
 	}
 }
