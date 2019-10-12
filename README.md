@@ -13,6 +13,8 @@ in the coordinate system (only those whose coordinates match the current view of
 
 JPlotter is also capable of exporting plots as Scalable Vector Graphics (SVG) through [Apache Batik](https://xmlgraphics.apache.org/batik/).
 
+More details and information can be found in the **[Wiki](https://github.com/hageldave/JPlotter/wiki)**.
+
 ## Maven
 JPlotter is available as Maven artifact at the Central Maven Repository.
 ```xml
@@ -24,7 +26,7 @@ JPlotter is available as Maven artifact at the Central Maven Repository.
 ```
 
 ## Teaser Image
-See the **[Wiki](https://github.com/hageldave/JPlotter/wiki/Gallery)** for more images.
+See the **[Gallery](https://github.com/hageldave/JPlotter/wiki/Gallery)** for more images.
 
 ![teaser img](https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/isolines_viz.png)
 
