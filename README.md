@@ -24,7 +24,7 @@ JPlotter is available as Maven artifact at the Central Maven Repository.
 ```
 
 ## Teaser Image
-See the [Wiki](https://github.com/hageldave/JPlotter/wiki) for more images.
+See the **[Wiki](https://github.com/hageldave/JPlotter/wiki/Gallery)** for more images.
 
 ![teaser img](https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/isolines_viz.png)
 
