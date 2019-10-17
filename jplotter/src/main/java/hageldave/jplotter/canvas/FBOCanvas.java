@@ -163,6 +163,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected AtomicBoolean repaintIsSheduled = new AtomicBoolean(false);
 	protected Img frontBufferBackup = new Img(0, 0);
 	protected boolean isRenderSvgAsImage = false;
+	protected boolean disposeOnRemove = true;
 
 	
 	/**
@@ -724,6 +725,13 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 					0, h, 
 					w, 0,
 					null);
+		}
+	}
+	
+	@Override
+	public void removeNotify() {
+		if(disposeOnRemove){
+			super.removeNotify();
 		}
 	}
 }
