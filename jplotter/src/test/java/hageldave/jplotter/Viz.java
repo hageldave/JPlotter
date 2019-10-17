@@ -6,8 +6,10 @@ import static hageldave.jplotter.renderers.CompleteRenderer.TRI;
 import static hageldave.jplotter.renderers.CompleteRenderer.TXT;
 
 import java.awt.BorderLayout;
+import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -16,10 +18,13 @@ import java.io.File;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
+import org.lwjgl.opengl.awt.PlatformGLCanvas;
 import org.w3c.dom.Document;
 
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -27,8 +32,10 @@ import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
 public class Viz {
@@ -39,12 +46,22 @@ public class Viz {
 		frame.setContentPane(new JPanel(new BorderLayout()));
 		frame.getContentPane().setBackground(Color.white);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().setPreferredSize(new Dimension(300, 300));;
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
+		CoordSysCanvas canvas = new CoordSysCanvas(){
+			public void removeNotify() {
+//				PlatformGLCanvas backup = this.platformCanvas;
+//				this.platformCanvas = null;
+//				try{
+//					super.removeNotify();
+//				} catch(NullPointerException e){}
+//				this.platformCanvas = backup;
+			};
+		};
 		canvas.setyAxisLabel("Y-Axis");
 		CompleteRenderer content = new CompleteRenderer();
 		content.setRenderOrder(PNT, LIN, TRI, TXT);
 		canvas.setContent(content);
+		canvas.setPreferredSize(new Dimension(300, 300));
 		
 		// setup content
 		{
@@ -106,11 +123,12 @@ public class Viz {
 		}.register();
 		
 		canvas.setCoordinateView(0, 0, 2, 1);
-		frame.getContentPane().add(canvas, BorderLayout.CENTER);
+//		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				canvas.runInContext(()->canvas.close());
+				canvas.disposePlatformCanvas();
 			}
 		});
 		
@@ -145,19 +163,27 @@ public class Viz {
 		});
 		
 		
-//		{
-//			BlankCanvas bc = new BlankCanvas();
-//			bc.setPreferredSize(new Dimension(100,200));
-//			JFrame f2 = new JFrame("f2");
-//			f2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-//			f2.getContentPane().add(bc);
-//			bc.setRenderer(legend);
-//			SwingUtilities.invokeLater(()->{
-//				f2.pack();
-//				f2.setVisible(true);
-//				f2.transferFocus();
-//			});
-//		}
+		BlankCanvas canvas2 = new BlankCanvas(){
+			public void removeNotify() {
+//				PlatformGLCanvas backup = this.platformCanvas;
+//				this.platformCanvas = null;
+//				try{
+//					super.removeNotify();
+//				} catch(NullPointerException e){}
+//				this.platformCanvas = backup;
+			};
+		};
+		canvas2.setPreferredSize(new Dimension(100, 100));
+		TextRenderer textRenderer = new TextRenderer();
+		canvas2.setRenderer(textRenderer);
+		textRenderer.addItemToRender(new Text("blank", 15, Font.PLAIN).setOrigin(40, 40));
+		
+		JSplitPane pane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,canvas,canvas2);
+		canvas.setMinimumSize(new Dimension(1, 1));
+		canvas2.setMinimumSize(new Dimension(1, 1));
+		pane.setDividerLocation(150);
+		
+		frame.setContentPane(pane);
 	}
 
 }

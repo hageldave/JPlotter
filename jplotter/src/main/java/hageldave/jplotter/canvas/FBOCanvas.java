@@ -571,6 +571,10 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			vertexArray = null;
 		}
 	}
+	
+	public void disposePlatformCanvas() {
+		this.platformCanvas.dispose();
+	}
 
 	private void setFBO(FBO fbo){
 		if(Objects.nonNull(this.fbo)){
