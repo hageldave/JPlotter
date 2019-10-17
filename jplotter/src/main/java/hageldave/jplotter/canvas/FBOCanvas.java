@@ -734,4 +734,23 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			super.removeNotify();
 		}
 	}
+	
+	public boolean isDisposeOnRemove() {
+		return disposeOnRemove;
+	}
+	
+	/**
+	 * Sets the disposeOnRemove flag.
+	 * <p>
+	 * By default, when the the canvas receives a remove notification through the
+	 * {@link #removeNotify()} method, its PlatformGLCanvas (that contains the native drawing surface)
+	 * is disposed and this canvas becomes unusable.
+	 * This may be undesired in special cases e.g. when using this canvas within a JSplitPane which will
+	 * call removeNotify when changing the split location.
+	 * 
+	 * @param disposeOnRemove true (default) when disposal of the PlatformGLCanvas on removeNotify is desired.
+	 */
+	public void setDisposeOnRemove(boolean disposeOnRemove) {
+		this.disposeOnRemove = disposeOnRemove;
+	}
 }
