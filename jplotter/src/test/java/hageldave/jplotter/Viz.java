@@ -42,7 +42,7 @@ public class Viz {
 
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("AWT test");
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(new JPanel(new BorderLayout()));
 		frame.getContentPane().setBackground(Color.white);
 		frame.getContentPane().setLayout(new BorderLayout());
