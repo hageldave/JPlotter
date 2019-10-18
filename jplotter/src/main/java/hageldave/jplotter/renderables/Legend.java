@@ -43,7 +43,7 @@ public class Legend implements Renderable, Renderer {
 	
 	protected Map<Glyph, Points> glyph2points = new LinkedHashMap<>();
 	
-	protected Map<Double, Lines> thickness2lines = new LinkedHashMap<>();
+	protected Map<Integer, Lines> pattern2lines = new LinkedHashMap<>();
 	
 	protected LinkedList<Text> texts = new LinkedList<>();
 	
@@ -76,13 +76,19 @@ public class Legend implements Renderable, Renderer {
 		public double thickness;
 		public int color;
 		public int pickColor;
+		public int strokePattern;
 		
-		public LineLabel(String labelText, double thickness, int color, int pickColor) {
-			super();
+		public LineLabel(String labelText, double thickness, int color, int pickColor, int strokePattern) {
 			this.labelText = labelText;
 			this.thickness = thickness;
 			this.color = color;
 			this.pickColor = pickColor;
+			this.strokePattern = strokePattern;
+		}
+		
+		
+		public LineLabel(String labelText, double thickness, int color, int pickColor){
+			this(labelText, thickness, color, pickColor, 0xffff);
 		}
 	}
 	
@@ -125,13 +131,26 @@ public class Legend implements Renderable, Renderer {
 	 * Adds a label for a line to this legend.
 	 * @param thickness of the line to appear in front of the label text
 	 * @param color integer packed ARGB color value of the glyph
+	 * @param strokePattern lines stroke pattern (see {@link Lines#setStrokePattern(int)})
+	 * @param labeltxt text of the label
+	 * @param pickColor picking color (see {@link FBOCanvas})
+	 * @return this for chaining
+	 */
+	public Legend addLineLabel(double thickness, int color, int strokePattern, String labeltxt, int pickColor){
+		this.lineLabels.add(new LineLabel(labeltxt, thickness, color, pickColor, strokePattern));
+		return setDirty();
+	}
+	
+	/**
+	 * Adds a label for a line to this legend.
+	 * @param thickness of the line to appear in front of the label text
+	 * @param color integer packed ARGB color value of the glyph
 	 * @param labeltxt text of the label
 	 * @param pickColor picking color (see {@link FBOCanvas})
 	 * @return this for chaining
 	 */
 	public Legend addLineLabel(double thickness, int color, String labeltxt, int pickColor){
-		this.lineLabels.add(new LineLabel(labeltxt, thickness, color, pickColor));
-		return setDirty();
+		return addLineLabel(thickness, color, 0xffff, labeltxt, pickColor);
 	}
 	
 	/**
@@ -213,18 +232,19 @@ public class Legend implements Renderable, Renderer {
 			Text lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle);
 			lbltxt.setPickColor(lineLabel.pickColor);
 			texts.add(lbltxt);
-			double thickness = lineLabel.thickness;
-			if(!thickness2lines.containsKey(thickness)){
+			int pattern = lineLabel.strokePattern;
+			if(!pattern2lines.containsKey(pattern)){
 				Lines lines = new Lines();
 				lines
-				.setGlobalThicknessMultiplier(thickness)
-				.setVertexRoundingEnabled(((int)thickness)==thickness);
-				thickness2lines.put(thickness, lines);
+				.setStrokePattern(pattern)
+				.setVertexRoundingEnabled(true);
+				pattern2lines.put(pattern, lines);
 			}
-			Lines lines = thickness2lines.get(thickness);
+			Lines lines = pattern2lines.get(pattern);
 			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+10, currentY+fontHeight/2+1)
 				.setColor(lineLabel.color)
-				.setPickColor(lineLabel.pickColor);
+				.setPickColor(lineLabel.pickColor)
+				.setThickness(lineLabel.thickness);
 			currentX += 14;
 			lbltxt.setOrigin(currentX, currentY);
 			currentX += lbltxt.getTextSize().width + fontHeight;
@@ -240,7 +260,7 @@ public class Legend implements Renderable, Renderer {
 			p.initGL();
 			delegate.addItemToRender(p);
 		});
-		thickness2lines.values().forEach(l->{
+		pattern2lines.values().forEach(l->{
 			l.initGL();
 			delegate.addItemToRender(l);
 		});
@@ -266,11 +286,11 @@ public class Legend implements Renderable, Renderer {
 			p.close();
 		});
 		glyph2points.clear();
-		thickness2lines.values().forEach(l->{
+		pattern2lines.values().forEach(l->{
 			delegate.lines.removeItemToRender(l);
 			l.close();
 		});
-		thickness2lines.clear();
+		pattern2lines.clear();
 		texts.forEach(t->{
 			delegate.text.removeItemToRender(t);
 			t.close();

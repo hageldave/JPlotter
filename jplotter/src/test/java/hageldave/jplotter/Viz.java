@@ -108,7 +108,7 @@ public class Viz {
 		Legend legend = new Legend();
 		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, 0xffe41a1c, "rand pnts");
 		legend.addGlyphLabel(DefaultGlyph.ARROW, 0xff377eb8, "-(x,y)");
-		legend.addLineLabel(2, 0xffff00ff, "sin(x)");
+		legend.addLineLabel(2, 0xffff00ff, 0xf790, "sin(x)", 0);
 		legend.addLineLabel(2, 0xff00ff00, "x=y");
 		canvas.setLegendRight(legend);
 		canvas.setLegendRightWidth(80);
