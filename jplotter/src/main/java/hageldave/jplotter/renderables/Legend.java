@@ -187,10 +187,12 @@ public class Legend implements Renderable, Renderer {
 	public void updateGL() {
 		clearGL();
 		// do layout
-		int leftPadding = 4;
-		int fontStyle = Font.PLAIN;
-		int fontSize = 11;
-		int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
+		final int leftPadding = 4;
+		final int fontStyle = Font.PLAIN;
+		final int fontSize = 11;
+		final int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
+		final int itemWidth = 16;
+		final int itemTextSpacing = 4;
 		int maxTextWidth = glyphLabels.stream()
 				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width)
 				.mapToInt(i->i)
@@ -215,13 +217,13 @@ public class Legend implements Renderable, Renderer {
 				glyph2points.put(glyph, new Points(glyph));
 			}
 			Points points = glyph2points.get(glyph);
-			points.addPoint(currentX+5, currentY+fontHeight/2+1)
+			points.addPoint(currentX+itemWidth/2, currentY+fontHeight/2+1)
 				.setColor(glyphLabel.color)
 				.setPickColor(glyphLabel.pickColor);
-			currentX += 14;
+			currentX += itemWidth+itemTextSpacing;
 			lbltxt.setOrigin(currentX, currentY);
 			currentX += lbltxt.getTextSize().width + fontHeight;
-			if(viewPortWidth-currentX < 14 + maxTextWidth){
+			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
 				// new line
 				currentX = leftPadding;
 				currentY -= Math.max(10, fontHeight)+5; 
@@ -241,14 +243,14 @@ public class Legend implements Renderable, Renderer {
 				pattern2lines.put(pattern, lines);
 			}
 			Lines lines = pattern2lines.get(pattern);
-			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+10, currentY+fontHeight/2+1)
+			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+itemWidth, currentY+fontHeight/2+1)
 				.setColor(lineLabel.color)
 				.setPickColor(lineLabel.pickColor)
 				.setThickness(lineLabel.thickness);
-			currentX += 14;
+			currentX += itemWidth+itemTextSpacing;
 			lbltxt.setOrigin(currentX, currentY);
 			currentX += lbltxt.getTextSize().width + fontHeight;
-			if(viewPortWidth-currentX < 14 + maxTextWidth){
+			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
 				// new line
 				currentX = leftPadding;
 				currentY -= Math.max(10, fontHeight)+5; 
