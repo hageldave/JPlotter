@@ -17,6 +17,8 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.swing.JLabel;
+
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.transcoder.TranscoderException;
@@ -312,7 +314,11 @@ public class SVGUtils {
 		{ // draw all non FBOCanvas components
 			SVGGraphics2D g2d = new SVGPatchedGraphics2D(document);
 			c.paintAll(g2d);
-			document.getDocumentElement().appendChild(g2d.getTopLevelGroup(true));
+			// set default font size to inherit by awt/swing elements (batik does not do this)
+			Element awtgroup = SVGUtils.createSVGElement(document, "g");
+			awtgroup.setAttribute("font-size", new JLabel().getFont().getSize()+"px");
+			document.getDocumentElement().appendChild(awtgroup);
+			awtgroup.appendChild(g2d.getTopLevelGroup(true));
 		}
 		// draw FBOCanvases
 		containerToSVG(c, document, document.getDocumentElement());
