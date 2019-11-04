@@ -46,7 +46,7 @@
 		<dependency>
 			<groupId>org.lwjglx</groupId>
 			<artifactId>lwjgl3-awt</artifactId>
-			<version>0.1.6</version>
+			<version>0.1.7</version>
 		</dependency>
 		<!-- Image manipulation and creation -->
 		<dependency>
