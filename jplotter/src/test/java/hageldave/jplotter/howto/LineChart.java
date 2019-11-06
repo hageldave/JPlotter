@@ -60,9 +60,9 @@ public class LineChart {
 		canvas.setCoordinateView(-1,-1,1,1);
 		// set the content renderer of the coordinate system 
 		// we want to render Lines objects
-		LinesRenderer content = new LinesRenderer();
-		content.addItemToRender(lineA).addItemToRender(lineB);
-		canvas.setContent(content);
+		LinesRenderer lineContent = new LinesRenderer();
+		lineContent.addItemToRender(lineA).addItemToRender(lineB);
+		canvas.setContent(lineContent);
 		// display within a JFrame
 		JFrame frame = new JFrame();
 		frame.getContentPane().add(canvas);
@@ -103,9 +103,11 @@ public class LineChart {
 				areaA.addTriangle(x2, y2, x1, 0, x2, 0).setColor(Color.RED);
 			}
 		}
+		// use a TriangleRenderer for the Triangles
 		TrianglesRenderer areaContent = new TrianglesRenderer();
 		areaContent.addItemToRender(areaA);
-		canvas.setContent(areaContent.withAppended(content));
+		// append the line renderer to the triangle renderer and use as new content
+		canvas.setContent(areaContent.withAppended(lineContent));
 		
 
 		long t=System.currentTimeMillis()+2000;
@@ -114,7 +116,7 @@ public class LineChart {
 			SwingUtilities.invokeLater(()->{
 				Img img = new Img(frame.getSize());
 				img.paint(g2d->frame.paintAll(g2d));
-				ImageSaver.saveImage(img.getRemoteBufferedImage(), "scatterplot.png");
+				ImageSaver.saveImage(img.getRemoteBufferedImage(), "linechart.png");
 			});
 	}
 
