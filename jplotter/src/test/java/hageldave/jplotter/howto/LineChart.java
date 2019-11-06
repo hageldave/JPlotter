@@ -19,9 +19,7 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
-import hageldave.jplotter.renderers.ChainedRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
-import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
 
 public class LineChart {
