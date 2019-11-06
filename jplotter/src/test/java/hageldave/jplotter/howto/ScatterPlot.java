@@ -19,7 +19,7 @@ import hageldave.jplotter.renderers.PointsRenderer;
 
 public class ScatterPlot {
 	
-	private static double[][] random2DData(int n){
+	private static double[][] randomData(int n){
 		double[][] d = new double[n][3];
 		for(int i=0; i<n; i++){
 			d[i][0]=Math.random()*2-1;
@@ -31,8 +31,8 @@ public class ScatterPlot {
 
 	public static void main(String[] args) {
 		// generate data
-		double[][] dataA = random2DData(50);
-		double[][] dataB = random2DData(100);
+		double[][] dataA = randomData(50);
+		double[][] dataB = randomData(100);
 		// create Points objects that display as filled circles and crosses
 		Points pointsA = new Points(DefaultGlyph.CIRCLE_F);
 		Points pointsB = new Points(DefaultGlyph.CROSS);
