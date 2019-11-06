@@ -30,7 +30,7 @@ public class ScatterPlot {
 	}
 
 	public static void main(String[] args) {
-		// generate data
+		// generate or get data
 		double[][] dataA = randomData(50);
 		double[][] dataB = randomData(100);
 		// create Points objects that display as filled circles and crosses
@@ -69,7 +69,7 @@ public class ScatterPlot {
 				canvas.runInContext(()->canvas.close());
 			}
 		});
-		// make visible on AWT event dispatch
+		// make visible on AWT event dispatch thread
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);
@@ -77,6 +77,7 @@ public class ScatterPlot {
 		
 		long t=System.currentTimeMillis()+2000;
 		while(t>System.currentTimeMillis());
+		if("false".equals("true"))
 		SwingUtilities.invokeLater(()->{
 			Img img = new Img(frame.getSize());
 			img.paint(g2d->frame.paintAll(g2d));
