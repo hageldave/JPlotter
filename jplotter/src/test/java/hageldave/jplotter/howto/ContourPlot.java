@@ -77,6 +77,7 @@ public class ContourPlot {
 		CompleteRenderer content = new CompleteRenderer();
 		content.addItemToRender(contourbands).addItemToRender(contourlines);
 		canvas.setContent(content);
+		
 		// display within a JFrame
 		JFrame frame = new JFrame();
 		frame.getContentPane().add(canvas);

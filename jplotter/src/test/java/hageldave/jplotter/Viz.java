@@ -6,7 +6,6 @@ import static hageldave.jplotter.renderers.CompleteRenderer.TRI;
 import static hageldave.jplotter.renderers.CompleteRenderer.TXT;
 
 import java.awt.BorderLayout;
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -21,7 +20,6 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
-import org.lwjgl.opengl.awt.PlatformGLCanvas;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
@@ -40,6 +38,7 @@ import hageldave.jplotter.svg.SVGUtils;
 
 public class Viz {
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("AWT test");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -47,16 +46,8 @@ public class Viz {
 		frame.getContentPane().setBackground(Color.white);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
-		CoordSysCanvas canvas = new CoordSysCanvas(){
-			public void removeNotify() {
-//				PlatformGLCanvas backup = this.platformCanvas;
-//				this.platformCanvas = null;
-//				try{
-//					super.removeNotify();
-//				} catch(NullPointerException e){}
-//				this.platformCanvas = backup;
-			};
-		};
+		CoordSysCanvas canvas = new CoordSysCanvas();
+		canvas.setDisposeOnRemove(false);
 		canvas.setyAxisLabel("Y-Axis");
 		CompleteRenderer content = new CompleteRenderer();
 		content.setRenderOrder(PNT, LIN, TRI, TXT);
@@ -163,16 +154,8 @@ public class Viz {
 		});
 		
 		
-		BlankCanvas canvas2 = new BlankCanvas(){
-			public void removeNotify() {
-//				PlatformGLCanvas backup = this.platformCanvas;
-//				this.platformCanvas = null;
-//				try{
-//					super.removeNotify();
-//				} catch(NullPointerException e){}
-//				this.platformCanvas = backup;
-			};
-		};
+		BlankCanvas canvas2 = new BlankCanvas();
+		canvas2.setDisposeOnRemove(false);
 		canvas2.setPreferredSize(new Dimension(100, 100));
 		TextRenderer textRenderer = new TextRenderer();
 		canvas2.setRenderer(textRenderer);

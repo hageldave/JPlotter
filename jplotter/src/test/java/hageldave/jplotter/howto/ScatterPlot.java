@@ -57,6 +57,7 @@ public class ScatterPlot {
 		PointsRenderer content = new PointsRenderer();
 		content.addItemToRender(pointsB).addItemToRender(pointsA);
 		canvas.setContent(content);
+		
 		// display within a JFrame
 		JFrame frame = new JFrame();
 		frame.getContentPane().add(canvas);

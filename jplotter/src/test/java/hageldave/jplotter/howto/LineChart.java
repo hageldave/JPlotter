@@ -32,6 +32,7 @@ public class LineChart {
 		return d;
 	}
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// obtain data series
 		double[] seriesA_y = randomData(20);
@@ -63,6 +64,7 @@ public class LineChart {
 		LinesRenderer lineContent = new LinesRenderer();
 		lineContent.addItemToRender(lineA).addItemToRender(lineB);
 		canvas.setContent(lineContent);
+		
 		// display within a JFrame
 		JFrame frame = new JFrame();
 		frame.getContentPane().add(canvas);

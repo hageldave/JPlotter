@@ -51,14 +51,16 @@ public class BarChart {
 		// set the content renderer of the coordinate system 
 		canvas.setContent(barRenderer);
 		// we need to change the tick marks labeling for the y axis
-		TickMarkGenerator currTickGen = canvas.getTickMarkGenerator();
+		TickMarkGenerator oldTickGen = canvas.getTickMarkGenerator();
 		canvas.setTickMarkGenerator((min,max,desired,vert)->{
 			if(!vert){
-				return currTickGen.genTicksAndLabels(min,max,desired,vert);
+				return oldTickGen.genTicksAndLabels(min,max,desired,vert);
 			}
+			// make ticks at integer values (0,1,2,...)
 			double[] ticks = IntStream.range(0, cases.length)
 					.mapToDouble(i -> (double)i)
 					.toArray();
+			// use case names as tick mark labels
 			return Pair.of(ticks, cases);
 		});
 		// set axis labels
