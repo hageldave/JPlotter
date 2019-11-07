@@ -31,7 +31,7 @@ public class BarChart {
 			Triangles bar = new Triangles();
 			bar.addQuad(new Rectangle2D.Double(0, row-0.4, val, 0.8));
 			bar.getTriangleDetails().forEach(tri->{
-				int red=0xff_b40426, blue=0xff_3b4cc0;
+				int red=0xff_e41a1c, blue=0xff_377eb8;
 				tri.setColor(val < 0.5 ? red:blue);
 			});
 			return bar;
@@ -88,7 +88,7 @@ public class BarChart {
 		
 		long t=System.currentTimeMillis()+2000;
 		while(t>System.currentTimeMillis());
-		if("false".equals("true"))
+		if(!"false".equals("true"))
 		SwingUtilities.invokeLater(()->{
 			Img img = new Img(frame.getSize());
 			img.paint(g2d->frame.paintAll(g2d));
