@@ -66,7 +66,7 @@ public class LineChart {
 		// display within a JFrame
 		JFrame frame = new JFrame();
 		frame.getContentPane().add(canvas);
-		frame.setTitle("scatterplot");
+		frame.setTitle("linechart");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -108,6 +108,7 @@ public class LineChart {
 		areaContent.addItemToRender(areaA);
 		// append the line renderer to the triangle renderer and use as new content
 		canvas.setContent(areaContent.withAppended(lineContent));
+		canvas.scheduleRepaint();
 		
 
 		long t=System.currentTimeMillis()+2000;
