@@ -259,6 +259,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 				x1*=scaleX;
 				y1*=scaleY;
 				
+				y1+=1;
+				
 				// test if inside of view port
 				if(x1+txt.getTextSize().width < 0 || x1-txt.getTextSize().width > w){
 					continue;

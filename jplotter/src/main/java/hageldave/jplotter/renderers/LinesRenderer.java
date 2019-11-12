@@ -301,7 +301,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				continue;
 			}
 			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
-			// TODO: adapt SVG to stroke patterns
 			linesGroup.setAttributeNS(null, "stroke-width", "0");
 			mainGroup.appendChild(linesGroup);
 			double dist = 0;
@@ -333,6 +332,13 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				}
 				prevX = x2;
 				prevY = y2;
+				
+				if(lines.isVertexRoundingEnabled()){
+					x1 = (int)(x1+0.5);
+					x2 = (int)(x2+0.5);
+					y1 = (int)(y1+0.5);
+					y2 = (int)(y2+0.5);
+				}
 
 				// visibility check
 				if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
