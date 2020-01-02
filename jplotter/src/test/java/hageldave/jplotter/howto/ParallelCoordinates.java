@@ -2,6 +2,8 @@ package hageldave.jplotter.howto;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
@@ -14,10 +16,10 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.CoordSysCanvas;
-import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.util.Pair;
+import hageldave.jplotter.util.PickingRegistry;
 
 public class ParallelCoordinates {
 
@@ -48,7 +50,11 @@ public class ParallelCoordinates {
 		Collections.shuffle(axisOrder);
 		// build lines and put into appropriate renderer
 		LinesRenderer lineContent = new LinesRenderer();
+		PickingRegistry<Lines> picking = new PickingRegistry<>();
+		int defaultLineColor = 0xff666666; 
+		int highlightColor = 0xffff0000;
 		for(int i=0; i<numSamples; i++){
+			@SuppressWarnings("resource")
 			Lines line = new Lines();
 			for(int j=0; j<dim-1; j++){
 				int d1=axisOrder.get(j), d2=axisOrder.get(j+1);
@@ -56,10 +62,13 @@ public class ParallelCoordinates {
 				// values to unitRange
 				v1 = (v1-min[d1])/(max[d1]-min[d1]);
 				v2 = (v2-min[d2])/(max[d2]-min[d2]);
-				line.addSegment(j, v1, j+1, v2);
+				line.addSegment(j, v1, j+1, v2).setColor(defaultLineColor);
 			}
 			lineContent.addItemToRender(line.setGlobalAlphaMultiplier(0.5));
+			int pickid = picking.register(line);
+			line.getSegments().forEach(seg->seg.setPickColor(pickid));
 		}
+		
 		// use a coordinate system for display
 		CoordSysCanvas canvas = new CoordSysCanvas();
 		canvas.setPreferredSize(new Dimension(700, 400));
@@ -77,11 +86,41 @@ public class ParallelCoordinates {
 			return Pair.of(ticks,labels);
 		});
 		
-
+		// interaction
+		canvas.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if(!SwingUtilities.isLeftMouseButton(e))
+					return;
+				// make all lines grey
+				lineContent.getItemsToRender().forEach(l->l
+					.setGlobalThicknessMultiplier(1)
+					.setGlobalAlphaMultiplier(0.5)
+					.setDirty()
+					.getSegments().forEach(s->s.setColor(defaultLineColor)));
+				canvas.scheduleRepaint();
+				// get picked obj
+				int id = canvas.getPixel(e.getX(), e.getY(), true, 3);
+				Lines lines = picking.lookup(id);
+				if(lines==null)
+					return;
+				// highlight
+				lines
+					.setGlobalThicknessMultiplier(2)
+					.setGlobalAlphaMultiplier(1)
+					.setDirty()
+					.getSegments().forEach(s->s.setColor(highlightColor));
+				// bring to front
+				lineContent.removeItemToRender(lines);
+				lineContent.addItemToRender(lines);
+				canvas.scheduleRepaint();
+			};
+		});
+		
+		
 		// display within a JFrame
 		JFrame frame = new JFrame();
 		frame.getContentPane().add(canvas);
-		frame.setTitle("linechart");
+		frame.setTitle("parallel coordinates");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
