@@ -308,6 +308,7 @@ public class CharacterAtlas implements AutoCloseable {
 		float[] texCoords = new float[chars.length*2*4];
 		for(int i = 0; i < chars.length; i++){
 			int charIDX = indexForChar(chars[i]);
+			charIDX = charIDX < 0 ? 0:charIDX;
 			// y is flipped due to texture coordinates being upside down
 			float x0 = getTexCoordXForCharLeft(charIDX);
 			float x1 = getTexCoordXForCharRight(charIDX);
