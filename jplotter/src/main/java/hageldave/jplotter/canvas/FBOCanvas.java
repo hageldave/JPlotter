@@ -719,11 +719,12 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			}
 			int w = frontBufferBackup.getWidth();
 			int h = frontBufferBackup.getHeight();
-			g.drawImage(frontBufferBackup.getRemoteBufferedImage(), 
+			g.drawImage(Utils.remoteRGBImage(frontBufferBackup), 
 					0, 0, 
 					w, h,
 					0, h, 
 					w, 0,
+					null,
 					null);
 		}
 	}

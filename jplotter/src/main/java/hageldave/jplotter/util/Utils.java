@@ -3,6 +3,11 @@ package hageldave.jplotter.util;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.awt.image.DirectColorModel;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -10,6 +15,7 @@ import java.util.stream.Stream;
 
 import javax.swing.SwingUtilities;
 
+import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 
 /**
@@ -261,5 +267,18 @@ public class Utils {
 	 */
 	public static Rectangle2D mergeRectangles(Rectangle2D ... rects){
 		return Arrays.stream(rects).reduce(rects[0], Rectangle2D::createUnion);
+	}
+	
+	public static BufferedImage remoteRGBImage(Img img) {
+		DirectColorModel cm = new DirectColorModel(24,
+				0x00ff0000,       // Red
+                0x0000ff00,       // Green
+                0x000000ff,       // Blue
+                0x00000000        // Alpha
+                );
+		DataBufferInt buffer = new DataBufferInt(img.getData(), img.numValues());
+		WritableRaster raster = Raster.createPackedRaster(buffer, img.getWidth(), img.getHeight(), img.getWidth(), cm.getMasks(), null);
+		BufferedImage bimg = new BufferedImage(cm, raster, false, null);
+		return bimg;
 	}
 }
