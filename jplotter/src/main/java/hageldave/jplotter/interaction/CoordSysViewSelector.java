@@ -9,6 +9,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 import javax.swing.SwingUtilities;
 
@@ -39,10 +40,17 @@ import hageldave.jplotter.util.Utils;
  * Per default the extended modifier mask for a dragging mouse event to trigger
  * selection is {@link InputEvent#SHIFT_DOWN_MASK}. 
  * If this is undesired the {@link #extModifierMask} has to be overridden.<br>
+ * You may also want to not trigger selection when other modifiers are present. E.g.
+ * when CTRL {@link InputEvent#CTRL_DOWN_MASK} is pressed, don't select because CTRL 
+ * is already meant for panning.
+ * In this case you need to add these modifiers to the exclude list {@link #extModifierMaskExcludes}.
  * For example to not need to press any key:
  * <pre>
  * new CoordSysViewSelector(canvas) {
- *    {extModifierMask=0;}
+ *    {
+ *       extModifierMask=0;
+ *       extModifierMaskExcludes.add(InputEvent.CTRL_DOWN_MASK);
+ *    }
  *    
  *    public void areaSelected(double minX, double minY, double maxX, double maxY) {
  *       canvas.setCoordinateView(minX, minY, maxX, maxY);
@@ -59,6 +67,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
 	protected int extModifierMask = InputEvent.SHIFT_DOWN_MASK;
+	protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 	
 	
 	public CoordSysViewSelector(CoordSysCanvas canvas) {
@@ -96,14 +105,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			double endY = Utils.clamp(coordSysArea.getMinY(), end.getY(), coordSysArea.getMaxY());
 			this.end = new Point((int)endX, (int)endY);
 		}
-		Point start_ = Utils.swapYAxis(start, canvas.getHeight());
-		Point2D end_ = Utils.swapYAxis(end, canvas.getHeight());
-		areaBorder.removeAllSegments();
-		areaBorder.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY()).setColor(0xff222222);
-		areaBorder.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
-		areaBorder.addSegment(start_.getX(), start_.getY(), end_.getX(), start_.getY()).setColor(0xff222222);
-		areaBorder.addSegment(start_.getX(), end_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
-		;
+		createSelectionAreaBorder();
 		
 		Point2D p1 = canvas.transformAWT2CoordSys(start);
 		Point2D p2 = canvas.transformAWT2CoordSys(end);
@@ -115,6 +117,16 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		);
 		
 		canvas.repaint();
+	}
+	
+	protected void createSelectionAreaBorder() {
+		Point start_ = Utils.swapYAxis(start, canvas.getHeight());
+		Point2D end_ = Utils.swapYAxis(end, canvas.getHeight());
+		areaBorder.removeAllSegments();
+		areaBorder.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY()).setColor(0xff222222);
+		areaBorder.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
+		areaBorder.addSegment(start_.getX(), start_.getY(), end_.getX(), start_.getY()).setColor(0xff222222);
+		areaBorder.addSegment(start_.getX(), end_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
 	}
 	
 	@Override
@@ -137,10 +149,17 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	}
 	
 	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
-		if(!SwingUtilities.isLeftMouseButton(e))
+		if(!SwingUtilities.isLeftMouseButton(e)) {
 			return false;
-		if((e.getModifiersEx()&extModifierMask) != extModifierMask)
+		}
+		int modifiers = e.getModifiersEx();
+		if(
+			(modifiers&extModifierMask) != extModifierMask
+			|| 
+			extModifierMaskExcludes.stream().anyMatch(mask->(modifiers&mask) == mask))
+		{
 			return false;
+		}
 		if(method == MouseEvent.MOUSE_PRESSED){
 			return canvas.getCoordSysArea().contains( Utils.swapYAxis(e.getPoint(), canvas.getHeight()) );
 		}
