@@ -73,8 +73,8 @@ public class Contours {
 		double[] xCoords = new double[3];
 		double[] yCoords = new double[3];
 		for(TriangleDetails tri:contourBands){
-			xCoords[0]=tri.x0; xCoords[1]=tri.x1; xCoords[2]=tri.x2;
-			yCoords[0]=tri.y0; yCoords[1]=tri.y1; yCoords[2]=tri.y2;
+			xCoords[0]=tri.p0.getX(); xCoords[1]=tri.p1.getX(); xCoords[2]=tri.p2.getX();
+			yCoords[0]=tri.p0.getY(); yCoords[1]=tri.p1.getY(); yCoords[2]=tri.p2.getY();
 			for(int t=0; t<3; t++){
 				int i = (int)xCoords[t];
 				int j = (int)yCoords[t];
@@ -91,8 +91,9 @@ public class Contours {
 				xCoords[t] = xcoord;
 				yCoords[t] = ycoord;
 			}
-			tri.x0=(float)xCoords[0]; tri.x1=(float)xCoords[1]; tri.x2=(float)xCoords[2];
-			tri.y0=(float)yCoords[0]; tri.y1=(float)yCoords[1]; tri.y2=(float)yCoords[2];
+			tri.p0.setLocation(xCoords[0],yCoords[0]);
+			tri.p1.setLocation(xCoords[1],yCoords[1]);
+			tri.p2.setLocation(xCoords[2],yCoords[2]);
 		}
 		return contourBands;
 	}

@@ -173,7 +173,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			}
 			for(TriangleDetails tri : tris.getTriangleDetails()){
 				double x0,y0, x1,y1, x2,y2;
-				x0=tri.x0; y0=tri.y0; x1=tri.x1; y1=tri.y1; x2=tri.x2; y2=tri.y2;
+				x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
 				
 				x0-=translateX; x1-=translateX; x2-=translateX;
 				y0-=translateY; y1-=translateY; y2-=translateY;

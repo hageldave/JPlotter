@@ -80,7 +80,10 @@ public class Triangles implements Renderable {
 	 * @return added triangle
 	 */
 	public TriangleDetails addTriangle(Point2D p0, Point2D p1, Point2D p2){
-		return this.addTriangle(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY());
+		TriangleDetails tri = new TriangleDetails(p0,p1,p2);
+		this.triangles.add(tri);
+		setDirty();
+		return tri;
 	}
 	
 	/**
@@ -118,7 +121,10 @@ public class Triangles implements Renderable {
 	 * @return added triangles
 	 */
 	public ArrayList<TriangleDetails> addQuad(Point2D bl, Point2D tl, Point2D tr, Point2D br){
-		return this.addQuad(bl.getX(), bl.getY(), tl.getX(), tl.getY(), tr.getX(), tr.getY(), br.getX(), br.getY());
+		ArrayList<TriangleDetails> tris = new ArrayList<>(2);
+		tris.add( this.addTriangle(bl, tl, tr) );
+		tris.add( this.addTriangle(bl, tr, br) );
+		return tris;
 	}
 	
 	/**
@@ -268,12 +274,12 @@ public class Triangles implements Renderable {
 			for(int i=0; i<numTris; i++){
 				TriangleDetails tri = triangles.get(i);
 
-				vertices[i*6+0] = tri.x0;
-				vertices[i*6+1] = tri.y0;
-				vertices[i*6+2] = tri.x1;
-				vertices[i*6+3] = tri.y1;
-				vertices[i*6+4] = tri.x2;
-				vertices[i*6+5] = tri.y2;
+				vertices[i*6+0] = (float) tri.p0.getX();
+				vertices[i*6+1] = (float) tri.p0.getY();
+				vertices[i*6+2] = (float) tri.p1.getX();
+				vertices[i*6+3] = (float) tri.p1.getY();
+				vertices[i*6+4] = (float) tri.p2.getX();
+				vertices[i*6+5] = (float) tri.p2.getY();
 
 				vColors[i*6+0] = tri.c0.getAsInt();
 				vColors[i*6+1] = tri.pickColor;
@@ -311,20 +317,20 @@ public class Triangles implements Renderable {
 		
 		boolean useParallelStreaming = numTriangles() > 1000;
 		double minX = Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
-				.flatMap(tri->Arrays.asList(tri.x0,tri.x1,tri.x2).stream())
-				.mapToDouble(Float::floatValue)
+				.flatMap(tri->Arrays.asList(tri.p0.getX(),tri.p1.getX(),tri.p2.getX()).stream())
+				.mapToDouble(Double::floatValue)
 				.min().getAsDouble();
 		double maxX = Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
-				.flatMap(tri->Arrays.asList(tri.x0,tri.x1,tri.x2).stream())
-				.mapToDouble(Float::floatValue)
+				.flatMap(tri->Arrays.asList(tri.p0.getX(),tri.p1.getX(),tri.p2.getX()).stream())
+				.mapToDouble(Double::floatValue)
 				.max().getAsDouble();
 		double minY = Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
-				.flatMap(tri->Arrays.asList(tri.y0,tri.y1,tri.y2).stream())
-				.mapToDouble(Float::floatValue)
+				.flatMap(tri->Arrays.asList(tri.p0.getY(),tri.p1.getY(),tri.p2.getY()).stream())
+				.mapToDouble(Double::floatValue)
 				.min().getAsDouble();
 		double maxY = Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
-				.flatMap(tri->Arrays.asList(tri.y0,tri.y1,tri.y2).stream())
-				.mapToDouble(Float::floatValue)
+				.flatMap(tri->Arrays.asList(tri.p0.getY(),tri.p1.getY(),tri.p2.getY()).stream())
+				.mapToDouble(Double::floatValue)
 				.max().getAsDouble();
 		return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 	}
@@ -336,9 +342,9 @@ public class Triangles implements Renderable {
 		return Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
 				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
 						rect, 
-						tri.x0, tri.y0, 
-						tri.x1, tri.y1, 
-						tri.x2, tri.y2
+						tri.p0.getX(), tri.p0.getY(), 
+						tri.p1.getX(), tri.p1.getY(), 
+						tri.p2.getX(), tri.p2.getY()
 						))
 				.findAny()
 				.isPresent();
@@ -354,9 +360,9 @@ public class Triangles implements Renderable {
 		return Utils.parallelize(getTriangleDetails().stream(), useParallelStreaming)
 				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
 						rect, 
-						tri.x0, tri.y0, 
-						tri.x1, tri.y1, 
-						tri.x2, tri.y2
+						tri.p0.getX(), tri.p0.getY(), 
+						tri.p1.getX(), tri.p1.getY(), 
+						tri.p2.getX(), tri.p2.getY()
 						))
 				.collect(Collectors.toList());
 	}
@@ -367,21 +373,18 @@ public class Triangles implements Renderable {
 	 * @author hageldave
 	 */
 	public static class TriangleDetails implements Cloneable {
-		public float x0,x1,x2, y0,y1,y2;
+		public Point2D p0,p1,p2;
 		public IntSupplier c0,c1,c2;
 		public int pickColor;
 		
 		public TriangleDetails(
-				float x0, float y0,
-				float x1, float y1,
-				float x2, float y2)
+				Point2D p0,
+				Point2D p1,
+				Point2D p2)
 		{
-			this.x0 = x0;
-			this.x1 = x1;
-			this.x2 = x2;
-			this.y0 = y0;
-			this.y1 = y1;
-			this.y2 = y2;
+			this.p0 = p0;
+			this.p1 = p1;
+			this.p2 = p2;
 			this.c0 = c1 = c2 = ()->0xffaaaaaa;
 		}
 		
@@ -390,7 +393,7 @@ public class Triangles implements Renderable {
 				double x1, double y1,
 				double x2, double y2)
 		{
-			this((float)x0, (float)y0, (float)x1, (float)y1, (float)x2, (float)y2);
+			this(new Point2D.Float((float)x0, (float)y0), new Point2D.Float((float)x1, (float)y1), new Point2D.Float((float)x2, (float)y2));
 		}
 		
 		/**
