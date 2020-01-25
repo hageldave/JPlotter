@@ -111,7 +111,7 @@ public class Viz {
 		new CoordSysViewSelector(canvas,coordsys) {
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
-				renderer.setCoordinateView(minX, minY, maxX, maxY);
+				coordsys.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}.register();
 		

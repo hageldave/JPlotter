@@ -22,18 +22,18 @@ import hageldave.jplotter.util.Utils;
 
 /**
  * The CoordSysViewSelector class realizes a rectangular 
- * selection tool for {@link CoordSysCanvas}.
+ * selection tool for {@link CoordSysRenderer}.
  * This enables to drag a selection region within the
- * coordinate area of a {@link CoordSysCanvas} using SHIFT+LMB.
+ * coordinate area of a {@link CoordSysRenderer} using SHIFT+LMB.
  * The action to be performed with the selected region is up to
  * the implementation of the methods {@link #areaSelected(double, double, double, double)}
  * and {@link #areaSelectedOnGoing(double, double, double, double)}.
  * <p>
  * Intended use, (for example rectangular zooming):
  * <pre>
- * new CoordSysViewSelector(canvas) {
+ * new CoordSysViewSelector(canvas, coordsys) {
  *    public void areaSelected(double minX, double minY, double maxX, double maxY) {
- *       canvas.setCoordinateView(minX, minY, maxX, maxY);
+ *       coordsys.setCoordinateView(minX, minY, maxX, maxY);
  *    }
  * }.register();
  * </pre>
@@ -47,14 +47,14 @@ import hageldave.jplotter.util.Utils;
  * In this case you need to add these modifiers to the exclude list {@link #extModifierMaskExcludes}.
  * For example to not need to press any key:
  * <pre>
- * new CoordSysViewSelector(canvas) {
+ * new CoordSysViewSelector(canvas, coordsys) {
  *    {
  *       extModifierMask=0;
  *       extModifierMaskExcludes.add(InputEvent.CTRL_DOWN_MASK);
  *    }
  *    
  *    public void areaSelected(double minX, double minY, double maxX, double maxY) {
- *       canvas.setCoordinateView(minX, minY, maxX, maxY);
+ *       coordsys.setCoordinateView(minX, minY, maxX, maxY);
  *    }
  * }.register();
  * </pre>
@@ -64,7 +64,7 @@ import hageldave.jplotter.util.Utils;
 public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	protected FBOCanvas canvas;
-	protected CoordSysRenderer renderer;
+	protected CoordSysRenderer coordsys;
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
@@ -72,12 +72,12 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 	
 	
-	public CoordSysViewSelector(FBOCanvas canvas, CoordSysRenderer renderer) {
+	public CoordSysViewSelector(FBOCanvas canvas, CoordSysRenderer coordsys) {
 		this.canvas = canvas;
-		this.renderer = renderer;
+		this.coordsys = coordsys;
 		Renderer presentRenderer;
-		if((presentRenderer = renderer.getOverlay()) == null){
-			renderer.setOverlay(this.overlay = new CompleteRenderer());
+		if((presentRenderer = coordsys.getOverlay()) == null){
+			coordsys.setOverlay(this.overlay = new CompleteRenderer());
 		} else if(presentRenderer instanceof CompleteRenderer){
 			this.overlay = (CompleteRenderer) presentRenderer;
 		} else {
@@ -101,7 +101,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			return;
 		}
 		{
-			Rectangle2D coordSysArea = Utils.swapYAxis(renderer.getCoordSysArea(),canvas.getHeight());
+			Rectangle2D coordSysArea = Utils.swapYAxis(coordsys.getCoordSysArea(),canvas.getHeight());
 			Point end = e.getPoint();
 			// clamp end point to area
 			double endX = Utils.clamp(coordSysArea.getMinX(), end.getX(), coordSysArea.getMaxX());
@@ -110,8 +110,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		}
 		createSelectionAreaBorder();
 		
-		Point2D p1 = renderer.transformAWT2CoordSys(start);
-		Point2D p2 = renderer.transformAWT2CoordSys(end);
+		Point2D p1 = coordsys.transformAWT2CoordSys(start);
+		Point2D p2 = coordsys.transformAWT2CoordSys(end);
 		this.areaSelectedOnGoing(
 				Math.min(p1.getX(), p2.getX()),
 				Math.min(p1.getY(), p2.getY()),
@@ -137,8 +137,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		areaBorder.removeAllSegments();
 		overlay.lines.removeItemToRender(areaBorder);
 		if(start != null && end != null){
-			Point2D p1 = renderer.transformAWT2CoordSys(start);
-			Point2D p2 = renderer.transformAWT2CoordSys(end);
+			Point2D p1 = coordsys.transformAWT2CoordSys(start);
+			Point2D p2 = coordsys.transformAWT2CoordSys(end);
 			this.areaSelected(
 					Math.min(p1.getX(), p2.getX()),
 					Math.min(p1.getY(), p2.getY()),
@@ -164,7 +164,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			return false;
 		}
 		if(method == MouseEvent.MOUSE_PRESSED){
-			return renderer.getCoordSysArea().contains( Utils.swapYAxis(e.getPoint(), canvas.getHeight()) );
+			return coordsys.getCoordSysArea().contains( Utils.swapYAxis(e.getPoint(), canvas.getHeight()) );
 		}
 		return true;
 	}

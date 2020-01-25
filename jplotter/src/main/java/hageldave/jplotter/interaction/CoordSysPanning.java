@@ -17,8 +17,8 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 /**
  * The CoordSysPanning class implements a {@link MouseListener}
  * and {@link MouseMotionListener} that realize panning functionality
- * for the coordinate view of the {@link CoordSysCanvas}.
- * When registering this with a CoordSysCanvas dragging with the left mouse
+ * for the coordinate view of the {@link CoordSysRenderer}.
+ * When registering this with an FBOCanvas and CoordSysRenderer dragging with the left mouse
  * button over the Canvas while holding down CTRL will set the coordinate view accordingly.
  * <p>
  * Intended use: {@code CoordSysPanning pan = new CoordSysPanning(canvas).register(); }
@@ -35,17 +35,18 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	
 	protected Point startPoint;
 	protected FBOCanvas canvas;
-	protected CoordSysRenderer renderer;
+	protected CoordSysRenderer coordsys;
 	protected int extModifierMask = InputEvent.CTRL_DOWN_MASK;
 	protected int axes = X_AXIS | Y_AXIS;
 	
 	/**
-	 * Creates a new {@link CoordSysPanning} for the specified canvas.
-	 * @param canvas to control coordinate view of
+	 * Creates a new {@link CoordSysPanning} for the specified canvas and corresponding coordinate system.
+	 * @param canvas displaying the coordsys
+	 * @param coordsys the coordinate system to apply the panning in
 	 */
-	public CoordSysPanning(FBOCanvas canvas, CoordSysRenderer renderer) {
+	public CoordSysPanning(FBOCanvas canvas, CoordSysRenderer coordsys) {
 		this.canvas = canvas;
-		this.renderer = renderer;
+		this.coordsys = coordsys;
 	}
 
 	@Override
@@ -65,13 +66,13 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 			if((axes & Y_AXIS) != 0)
 				mouseTy = dragPoint.getY()-startPoint.getY();
 			startPoint = dragPoint;
-			Rectangle2D coordSysFrame = renderer.getCoordSysArea();
-			Rectangle2D coordinateArea = renderer.getCoordinateView();
+			Rectangle2D coordSysFrame = coordsys.getCoordSysArea();
+			Rectangle2D coordinateArea = coordsys.getCoordinateView();
 			double relativeTx = mouseTx/coordSysFrame.getWidth();
 			double relativeTy = mouseTy/coordSysFrame.getHeight();
 			double areaTx = relativeTx*coordinateArea.getWidth();
 			double areaTy = relativeTy*coordinateArea.getHeight();
-			renderer.setCoordinateView(
+			coordsys.setCoordinateView(
 					coordinateArea.getMinX()-areaTx, 
 					coordinateArea.getMinY()+areaTy,  
 					coordinateArea.getMaxX()-areaTx, 

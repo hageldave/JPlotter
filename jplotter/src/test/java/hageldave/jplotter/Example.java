@@ -113,7 +113,7 @@ public class Example {
 			{extModifierMask=0;/* no need for shift to be pressed */}
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
-				renderer.setCoordinateView(minX, minY, maxX, maxY);
+				coordsys.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}.register();
 		

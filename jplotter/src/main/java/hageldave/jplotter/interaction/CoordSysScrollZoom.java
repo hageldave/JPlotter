@@ -9,8 +9,8 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 
 /**
  * The CoordSysScrollZoom class implements a {@link MouseWheelListener}
- * that realize zooming functionality for the coordinate view of the {@link CoordSysCanvas}.
- * When registering this with a CoordSysCanvas turning the scroll wheel zooms into or out of
+ * that realize zooming functionality for the coordinate view of the {@link CoordSysRenderer}.
+ * When registering this with an {@link FBOCanvas} and corresponding {@link CoordSysRenderer} turning the scroll wheel zooms into or out of
  * the current coordinate system view.
  * The zoom factor can be set and is by default 2.0.
  * <p>
@@ -21,28 +21,28 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 public class CoordSysScrollZoom implements MouseWheelListener, InteractionConstants {
 
 	protected FBOCanvas canvas;
-	protected CoordSysRenderer renderer;
+	protected CoordSysRenderer coordsys;
 	protected double zoomFactor = 2;
 	protected int axes = X_AXIS | Y_AXIS;
 	
-	public CoordSysScrollZoom(FBOCanvas canvas, CoordSysRenderer renderer) {
+	public CoordSysScrollZoom(FBOCanvas canvas, CoordSysRenderer coordsys) {
 		this.canvas = canvas;
-		this.renderer = renderer;
+		this.coordsys = coordsys;
 	}
 	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		int wheelRotation = e.getWheelRotation();
 		double zoom = Math.pow(zoomFactor, wheelRotation);
-		double centerX = renderer.getCoordinateView().getCenterX();
-		double centerY = renderer.getCoordinateView().getCenterY();
-		double width = renderer.getCoordinateView().getWidth();
-		double height = renderer.getCoordinateView().getHeight();
+		double centerX = coordsys.getCoordinateView().getCenterX();
+		double centerY = coordsys.getCoordinateView().getCenterY();
+		double width = coordsys.getCoordinateView().getWidth();
+		double height = coordsys.getCoordinateView().getHeight();
 		if((axes & X_AXIS) != 0) 
 			width *= zoom;
 		if((axes & Y_AXIS) != 0)
 			height *= zoom;
-		renderer.setCoordinateView(
+		coordsys.setCoordinateView(
 				centerX-width/2,
 				centerY-height/2,
 				centerX+width/2,
