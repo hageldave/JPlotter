@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 
 /**
  * The CoordinateViewListener is a listener that listens on changes to a 
@@ -17,9 +17,9 @@ public interface CoordinateViewListener extends ActionListener {
 
 	@Override
 	default void actionPerformed(ActionEvent e) {
-		if(e.getSource() instanceof CoordSysCanvas){
-			CoordSysCanvas canvas = (CoordSysCanvas) e.getSource();
-			coordinateViewChanged(canvas,canvas.getCoordinateView());
+		if(e.getSource() instanceof CoordSysRenderer){
+			CoordSysRenderer renderer = (CoordSysRenderer) e.getSource();
+			coordinateViewChanged(renderer,renderer.getCoordinateView());
 		}
 	}
 
@@ -28,6 +28,6 @@ public interface CoordinateViewListener extends ActionListener {
 	 * @param src source {@link CoordSysCanvas}
 	 * @param view the new coordinate view
 	 */
-	void coordinateViewChanged(CoordSysCanvas src, Rectangle2D view);
+	void coordinateViewChanged(CoordSysRenderer src, Rectangle2D view);
 
 }

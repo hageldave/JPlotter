@@ -4,7 +4,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.Arrays;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 
 /**
  * The CoordSysScrollZoom class implements a {@link MouseWheelListener}
@@ -19,27 +20,29 @@ import hageldave.jplotter.canvas.CoordSysCanvas;
  */
 public class CoordSysScrollZoom implements MouseWheelListener, InteractionConstants {
 
-	protected CoordSysCanvas canvas;
+	protected FBOCanvas canvas;
+	protected CoordSysRenderer renderer;
 	protected double zoomFactor = 2;
 	protected int axes = X_AXIS | Y_AXIS;
 	
-	public CoordSysScrollZoom(CoordSysCanvas canvas) {
+	public CoordSysScrollZoom(FBOCanvas canvas, CoordSysRenderer renderer) {
 		this.canvas = canvas;
+		this.renderer = renderer;
 	}
 	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		int wheelRotation = e.getWheelRotation();
 		double zoom = Math.pow(zoomFactor, wheelRotation);
-		double centerX = canvas.getCoordinateView().getCenterX();
-		double centerY = canvas.getCoordinateView().getCenterY();
-		double width = canvas.getCoordinateView().getWidth();
-		double height = canvas.getCoordinateView().getHeight();
+		double centerX = renderer.getCoordinateView().getCenterX();
+		double centerY = renderer.getCoordinateView().getCenterY();
+		double width = renderer.getCoordinateView().getWidth();
+		double height = renderer.getCoordinateView().getHeight();
 		if((axes & X_AXIS) != 0) 
 			width *= zoom;
 		if((axes & Y_AXIS) != 0)
 			height *= zoom;
-		canvas.setCoordinateView(
+		renderer.setCoordinateView(
 				centerX-width/2,
 				centerY-height/2,
 				centerX+width/2,

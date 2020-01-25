@@ -11,7 +11,8 @@ import java.util.Arrays;
 
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 
 /**
  * The CoordSysPanning class implements a {@link MouseListener}
@@ -33,7 +34,8 @@ import hageldave.jplotter.canvas.CoordSysCanvas;
 public class CoordSysPanning extends MouseAdapter implements InteractionConstants {
 	
 	protected Point startPoint;
-	protected CoordSysCanvas canvas;
+	protected FBOCanvas canvas;
+	protected CoordSysRenderer renderer;
 	protected int extModifierMask = InputEvent.CTRL_DOWN_MASK;
 	protected int axes = X_AXIS | Y_AXIS;
 	
@@ -41,8 +43,9 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	 * Creates a new {@link CoordSysPanning} for the specified canvas.
 	 * @param canvas to control coordinate view of
 	 */
-	public CoordSysPanning(CoordSysCanvas canvas) {
+	public CoordSysPanning(FBOCanvas canvas, CoordSysRenderer renderer) {
 		this.canvas = canvas;
+		this.renderer = renderer;
 	}
 
 	@Override
@@ -62,13 +65,13 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 			if((axes & Y_AXIS) != 0)
 				mouseTy = dragPoint.getY()-startPoint.getY();
 			startPoint = dragPoint;
-			Rectangle2D coordSysFrame = canvas.getCoordSysArea();
-			Rectangle2D coordinateArea = canvas.getCoordinateView();
+			Rectangle2D coordSysFrame = renderer.getCoordSysArea();
+			Rectangle2D coordinateArea = renderer.getCoordinateView();
 			double relativeTx = mouseTx/coordSysFrame.getWidth();
 			double relativeTy = mouseTy/coordSysFrame.getHeight();
 			double areaTx = relativeTx*coordinateArea.getWidth();
 			double areaTy = relativeTy*coordinateArea.getHeight();
-			canvas.setCoordinateView(
+			renderer.setCoordinateView(
 					coordinateArea.getMinX()-areaTx, 
 					coordinateArea.getMinY()+areaTy,  
 					coordinateArea.getMaxX()-areaTx, 

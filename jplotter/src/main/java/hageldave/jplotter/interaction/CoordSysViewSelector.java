@@ -13,9 +13,10 @@ import java.util.LinkedList;
 
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
 
@@ -62,7 +63,8 @@ import hageldave.jplotter.util.Utils;
  */
 public abstract class CoordSysViewSelector extends MouseAdapter {
 	
-	protected CoordSysCanvas canvas;
+	protected FBOCanvas canvas;
+	protected CoordSysRenderer renderer;
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
@@ -70,11 +72,12 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 	
 	
-	public CoordSysViewSelector(CoordSysCanvas canvas) {
+	public CoordSysViewSelector(FBOCanvas canvas, CoordSysRenderer renderer) {
 		this.canvas = canvas;
+		this.renderer = renderer;
 		Renderer presentRenderer;
-		if((presentRenderer = canvas.getOverlay()) == null){
-			canvas.setOverlay(this.overlay = new CompleteRenderer());
+		if((presentRenderer = renderer.getOverlay()) == null){
+			renderer.setOverlay(this.overlay = new CompleteRenderer());
 		} else if(presentRenderer instanceof CompleteRenderer){
 			this.overlay = (CompleteRenderer) presentRenderer;
 		} else {
@@ -98,7 +101,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			return;
 		}
 		{
-			Rectangle2D coordSysArea = Utils.swapYAxis(canvas.getCoordSysArea(),canvas.getHeight());
+			Rectangle2D coordSysArea = Utils.swapYAxis(renderer.getCoordSysArea(),canvas.getHeight());
 			Point end = e.getPoint();
 			// clamp end point to area
 			double endX = Utils.clamp(coordSysArea.getMinX(), end.getX(), coordSysArea.getMaxX());
@@ -107,8 +110,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		}
 		createSelectionAreaBorder();
 		
-		Point2D p1 = canvas.transformAWT2CoordSys(start);
-		Point2D p2 = canvas.transformAWT2CoordSys(end);
+		Point2D p1 = renderer.transformAWT2CoordSys(start);
+		Point2D p2 = renderer.transformAWT2CoordSys(end);
 		this.areaSelectedOnGoing(
 				Math.min(p1.getX(), p2.getX()),
 				Math.min(p1.getY(), p2.getY()),
@@ -134,8 +137,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		areaBorder.removeAllSegments();
 		overlay.lines.removeItemToRender(areaBorder);
 		if(start != null && end != null){
-			Point2D p1 = canvas.transformAWT2CoordSys(start);
-			Point2D p2 = canvas.transformAWT2CoordSys(end);
+			Point2D p1 = renderer.transformAWT2CoordSys(start);
+			Point2D p2 = renderer.transformAWT2CoordSys(end);
 			this.areaSelected(
 					Math.min(p1.getX(), p2.getX()),
 					Math.min(p1.getY(), p2.getY()),
@@ -161,7 +164,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			return false;
 		}
 		if(method == MouseEvent.MOUSE_PRESSED){
-			return canvas.getCoordSysArea().contains( Utils.swapYAxis(e.getPoint(), canvas.getHeight()) );
+			return renderer.getCoordSysArea().contains( Utils.swapYAxis(e.getPoint(), canvas.getHeight()) );
 		}
 		return true;
 	}

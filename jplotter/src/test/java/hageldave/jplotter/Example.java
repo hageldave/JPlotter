@@ -18,7 +18,7 @@ import org.w3c.dom.Document;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -26,6 +26,7 @@ import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
 public class Example {
@@ -85,32 +86,34 @@ public class Example {
 		}
 		
 		// okay we're good to go, lets display the data in a coordinate system
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
-		canvas.setContent( content
+		coordsys.setContent( content
 				.addItemToRender(sineLine)
 				.addItemToRender(pointsC1)
 				.addItemToRender(pointsC2)
 				.addItemToRender(pointsC3));
 		// lets set the coordinate view to cover the whole sampling space
-		canvas.setCoordinateView(-.5, -3.3, 6.5, 3.3);
+		coordsys.setCoordinateView(-.5, -3.3, 6.5, 3.3);
 		
 		// lets add a legend so the viewer can make sense of the data
 		Legend legend = new Legend();
-		canvas.setLegendRightWidth(80);
-		canvas.setLegendRight(legend
+		coordsys.setLegendRightWidth(80);
+		coordsys.setLegendRight(legend
 				.addLineLabel(2, sineColor, "f(x)")
 				.addGlyphLabel(DefaultGlyph.CROSS, c1Color, "< f(x)-0.5")
 				.addGlyphLabel(DefaultGlyph.CIRCLE, c2Color, "~ f(x)")
 				.addGlyphLabel(DefaultGlyph.CROSS, c3Color, "> f(x)+0.5"));
 		
 		// lets add some controls for exploring the data
-		new CoordSysScrollZoom(canvas).setZoomFactor(1.7).register();
-		new CoordSysViewSelector(canvas) {
+		new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
+		new CoordSysViewSelector(canvas,coordsys) {
 			{extModifierMask=0;/* no need for shift to be pressed */}
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
-				canvas.setCoordinateView(minX, minY, maxX, maxY);
+				renderer.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}.register();
 		

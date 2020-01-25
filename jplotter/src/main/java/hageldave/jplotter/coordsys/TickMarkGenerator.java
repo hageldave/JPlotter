@@ -1,12 +1,12 @@
 package hageldave.jplotter.coordsys;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Pair;
 
 /**
  * The TickMarkGenerator interface provides the
  * {@link #genTicksAndLabels(double, double, int, boolean)} method.
- * It is used by the {@link CoordSysCanvas} to obtain tick marks and
+ * It is used by the {@link CoordSysRenderer} to obtain tick marks and
  * labels for its current view of coordinates.
  * 
  * @author hageldave
