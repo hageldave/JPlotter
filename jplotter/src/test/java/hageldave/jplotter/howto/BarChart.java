@@ -13,9 +13,10 @@ import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.renderables.Triangles;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
 import hageldave.jplotter.util.Pair;
 
@@ -44,15 +45,17 @@ public class BarChart {
 			barRenderer.addItemToRender(bar);
 		}
 		// use a coordinate system for display
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		canvas.setPreferredSize(new Dimension(500, 300));
 		canvas.setBackground(Color.WHITE);
-		canvas.setCoordinateView(0, -1, 1, cases.length);
+		coordsys.setCoordinateView(0, -1, 1, cases.length);
 		// set the content renderer of the coordinate system 
-		canvas.setContent(barRenderer);
+		coordsys.setContent(barRenderer);
 		// we need to change the tick marks labeling for the y axis
-		TickMarkGenerator oldTickGen = canvas.getTickMarkGenerator();
-		canvas.setTickMarkGenerator((min,max,desired,vert)->{
+		TickMarkGenerator oldTickGen = coordsys.getTickMarkGenerator();
+		coordsys.setTickMarkGenerator((min,max,desired,vert)->{
 			if(!vert){
 				return oldTickGen.genTicksAndLabels(min,max,desired,vert);
 			}
@@ -64,8 +67,8 @@ public class BarChart {
 			return Pair.of(ticks, cases);
 		});
 		// set axis labels
-		canvas.setxAxisLabel("Score");
-		canvas.setyAxisLabel("");
+		coordsys.setxAxisLabel("Score");
+		coordsys.setyAxisLabel("");
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();

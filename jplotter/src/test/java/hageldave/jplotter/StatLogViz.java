@@ -17,7 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
@@ -26,6 +26,7 @@ import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 
 public class StatLogViz {
 
@@ -33,10 +34,12 @@ public class StatLogViz {
 		JFrame frame = new JFrame("Statlog (Shuttle) data set");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().setPreferredSize(new Dimension(500, 500));;
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		frame.getContentPane().setPreferredSize(new Dimension(500, 500));
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
-		canvas.setContent(content);
+		coordsys.setContent(content);
 
 		// setup content
 		Points[] pointclasses = new Points[]{
@@ -84,16 +87,16 @@ public class StatLogViz {
 				maxY = Math.max(maxY, y);
 			}
 			minY = -10;
-			canvas.setCoordinateView(minX-10, minY-10, maxX+1, maxY+10);
+			coordsys.setCoordinateView(minX-10, minY-10, maxX+1, maxY+10);
 		}
-		canvas.setxAxisLabel("Feature 7");
-		canvas.setyAxisLabel("Feature 8");
+		coordsys.setxAxisLabel("Feature 7");
+		coordsys.setyAxisLabel("Feature 8");
 		Legend legend = new Legend();
 		for(int i = 0; i < classLabels.length; i++){
 			legend.addGlyphLabel(pointclasses[i].glyph, classcolors.getColor(i), classLabels[i]);
 		}
-		canvas.setLegendBottom(legend);
-		canvas.setLegendBottomHeight(35);
+		coordsys.setLegendBottom(legend);
+		coordsys.setLegendBottomHeight(35);
 
 		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
@@ -119,8 +122,8 @@ public class StatLogViz {
 		footer.add(slider);
 		footer.add(Box.createGlue());
 
-		new CoordSysPanning(canvas){{extModifierMask=0;}}.register();
-		new CoordSysScrollZoom(canvas).setZoomFactor(1.5).register();
+		new CoordSysPanning(canvas,coordsys){{extModifierMask=0;}}.register();
+		new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.5).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

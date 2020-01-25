@@ -38,7 +38,6 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
-import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -50,6 +49,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
 public class StatLogSPLOMViz {
@@ -148,17 +148,18 @@ public class StatLogSPLOMViz {
 		// make scatter plot matrix
 		for(int j = 0; j < 9; j++){
 			for(int i = 0; i < 9; i++){
-				CoordSysCanvas canvas = new CoordSysCanvas(){
-					private static final long serialVersionUID = 1L;
+				CoordSysRenderer coordsys = new CoordSysRenderer(){
 					{
 						paddingLeft=paddingRight=paddingTop=paddingBot=2;
 					}
 				};
+				BlankCanvas canvas = new BlankCanvas();
+				canvas.setRenderer(coordsys);
 				canvasCollection.add(canvas);
 				canvas.setPreferredSize(new Dimension(250, 250));
 				gridPane.add(canvas);
-				canvas.setxAxisLabel(j==0 ? dimNames[i] : "");
-				canvas.setyAxisLabel(i==8 ? dimNames[j] : "");
+				coordsys.setxAxisLabel(j==0 ? dimNames[i] : "");
+				coordsys.setyAxisLabel(i==8 ? dimNames[j] : "");
 				CompleteRenderer content = new CompleteRenderer();
 
 				double maxX,minX,maxY,minY;
@@ -252,8 +253,8 @@ public class StatLogSPLOMViz {
 							if(SwingUtilities.isRightMouseButton(e)){
 								return;
 							}
-							Point2D location = canvas.transformAWT2CoordSys(e.getPoint());
-							if(!canvas.getCoordinateView().contains(location)){
+							Point2D location = coordsys.transformAWT2CoordSys(e.getPoint());
+							if(!coordsys.getCoordinateView().contains(location)){
 								pointInfo.setText("");
 								recolorAll();
 								return;
@@ -338,7 +339,7 @@ public class StatLogSPLOMViz {
 						}
 					});
 					// selecting points (brush & link)
-					new CoordSysViewSelector(canvas) {
+					new CoordSysViewSelector(canvas,coordsys) {
 						{extModifierMask=0;/* no shift needed */}
 						public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
 							pointInfo.setText("");
@@ -390,8 +391,8 @@ public class StatLogSPLOMViz {
 						}
 					}.register();
 				}
-				canvas.setContent(content);
-				canvas.setCoordinateView(minX, minY, maxX, maxY);
+				coordsys.setContent(content);
+				coordsys.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}
 		

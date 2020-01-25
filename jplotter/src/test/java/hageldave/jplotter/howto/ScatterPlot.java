@@ -10,11 +10,12 @@ import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
 
 public class ScatterPlot {
@@ -48,15 +49,17 @@ public class ScatterPlot {
 			pointsB.addPoint(entry[0],entry[1]).setColor(Color.GRAY);
 		}
 		// use a coordinate system for display
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		canvas.setPreferredSize(new Dimension(400, 400));
 		canvas.setBackground(Color.WHITE);
-		canvas.setCoordinateView(-1,-1,1,1);
+		coordsys.setCoordinateView(-1,-1,1,1);
 		// set the content renderer of the coordinate system 
 		// we want to render Points objects
 		PointsRenderer content = new PointsRenderer();
 		content.addItemToRender(pointsB).addItemToRender(pointsA);
-		canvas.setContent(content);
+		coordsys.setContent(content);
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();

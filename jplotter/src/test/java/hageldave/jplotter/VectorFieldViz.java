@@ -23,12 +23,13 @@ import javax.swing.SwingUtilities;
 
 import org.w3c.dom.Document;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Utils;
 
@@ -38,10 +39,12 @@ public class VectorFieldViz {
 		JFrame frame = new JFrame("Vector Field");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().setPreferredSize(new Dimension(500, 500));;
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		frame.getContentPane().setPreferredSize(new Dimension(500, 500));
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
-		canvas.setContent(content);
+		coordsys.setContent(content);
 
 		// setup content
 		DoubleBinaryOperator fu = (x,y)->(x+y)*(y+1);
@@ -79,7 +82,7 @@ public class VectorFieldViz {
 			}
 			
 			void calcTrajectory(Point mousePoint){
-				Point2D point = canvas.transformAWT2CoordSys(mousePoint);
+				Point2D point = coordsys.transformAWT2CoordSys(mousePoint);
 				double h = 0.02;
 				LinkedList<Point2D> trajectory = new LinkedList<>();
 				trajectory.add(point);

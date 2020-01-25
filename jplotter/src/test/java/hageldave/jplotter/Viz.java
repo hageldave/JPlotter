@@ -23,7 +23,6 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
-import hageldave.jplotter.canvas.CoordSysCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -33,6 +32,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
@@ -46,12 +46,14 @@ public class Viz {
 		frame.getContentPane().setBackground(Color.white);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		canvas.setDisposeOnRemove(false);
-		canvas.setyAxisLabel("Y-Axis");
+		coordsys.setyAxisLabel("Y-Axis");
 		CompleteRenderer content = new CompleteRenderer();
 		content.setRenderOrder(PNT, LIN, TRI, TXT);
-		canvas.setContent(content);
+		coordsys.setContent(content);
 		canvas.setPreferredSize(new Dimension(300, 300));
 		
 		// setup content
@@ -101,19 +103,19 @@ public class Viz {
 		legend.addGlyphLabel(DefaultGlyph.ARROW, 0xff377eb8, "-(x,y)");
 		legend.addLineLabel(2, 0xffff00ff, 0xf790, "sin(x)", 0);
 		legend.addLineLabel(2, 0xff00ff00, "x=y");
-		canvas.setLegendRight(legend);
-		canvas.setLegendRightWidth(80);
+		coordsys.setLegendRight(legend);
+		coordsys.setLegendRightWidth(80);
 		
 		CompleteRenderer overlay = new CompleteRenderer();
-		canvas.setOverlay(overlay);
-		new CoordSysViewSelector(canvas) {
+		coordsys.setOverlay(overlay);
+		new CoordSysViewSelector(canvas,coordsys) {
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
-				canvas.setCoordinateView(minX, minY, maxX, maxY);
+				renderer.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}.register();
 		
-		canvas.setCoordinateView(0, 0, 2, 1);
+		coordsys.setCoordinateView(0, 0, 2, 1);
 //		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -134,8 +136,8 @@ public class Viz {
 				System.out.println(Integer.toHexString(pixel));
 			}
 		});
-//		new CoordSysPanning(canvas).register();
-		new CoordSysScrollZoom(canvas).register();
+//		new CoordSysPanning(canvas,coordsys).register();
+		new CoordSysScrollZoom(canvas,coordsys).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

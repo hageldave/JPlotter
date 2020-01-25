@@ -14,11 +14,12 @@ import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
 
@@ -55,15 +56,17 @@ public class LineChart {
 		ArrayList<SegmentDetails> segmentsB = lineB.addLineStrip(seriesB_x, seriesB_y);
 		segmentsB.forEach(seg->seg.setColor(Color.BLUE));
 		// use a coordinate system for display
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		canvas.setPreferredSize(new Dimension(700, 400));
 		canvas.setBackground(Color.WHITE);
-		canvas.setCoordinateView(-1,-1,1,1);
+		coordsys.setCoordinateView(-1,-1,1,1);
 		// set the content renderer of the coordinate system 
 		// we want to render Lines objects
 		LinesRenderer lineContent = new LinesRenderer();
 		lineContent.addItemToRender(lineA).addItemToRender(lineB);
-		canvas.setContent(lineContent);
+		coordsys.setContent(lineContent);
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
@@ -109,7 +112,7 @@ public class LineChart {
 		TrianglesRenderer areaContent = new TrianglesRenderer();
 		areaContent.addItemToRender(areaA);
 		// append the line renderer to the triangle renderer and use as new content
-		canvas.setContent(areaContent.withAppended(lineContent));
+		coordsys.setContent(areaContent.withAppended(lineContent));
 		canvas.scheduleRepaint();
 		
 

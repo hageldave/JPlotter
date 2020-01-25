@@ -13,7 +13,7 @@ import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.Contours;
@@ -22,6 +22,7 @@ import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 
 public class ContourPlot {
 
@@ -68,15 +69,17 @@ public class ContourPlot {
 		contourbands.getTriangleDetails().addAll(bandAB);
 		contourbands.getTriangleDetails().addAll(bandBC);
 		// use a coordinate system for display
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		canvas.setPreferredSize(new Dimension(400, 400));
 		canvas.setBackground(Color.WHITE);
-		canvas.setCoordinateView(-1,-1,1,1);
+		coordsys.setCoordinateView(-1,-1,1,1);
 		// set the content renderer of the coordinate system 
 		// we want to render Lines and Triangles objects
 		CompleteRenderer content = new CompleteRenderer();
 		content.addItemToRender(contourbands).addItemToRender(contourlines);
-		canvas.setContent(content);
+		coordsys.setContent(content);
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();

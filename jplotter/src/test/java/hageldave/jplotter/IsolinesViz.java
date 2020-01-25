@@ -19,7 +19,7 @@ import javax.swing.SwingUtilities;
 
 import org.w3c.dom.Document;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
@@ -32,6 +32,7 @@ import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
 public class IsolinesViz {
@@ -41,12 +42,14 @@ public class IsolinesViz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 450));
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
-		canvas.setContent(content);
+		coordsys.setContent(content);
 		Legend legend = new Legend();
-		canvas.setLegendRight(legend);
-		canvas.setLegendRightWidth(50);
+		coordsys.setLegendRight(legend);
+		coordsys.setLegendRightWidth(50);
 		canvas.setBackground(Color.WHITE);
 
 		// setup content
@@ -92,13 +95,13 @@ public class IsolinesViz {
 		content.addItemToRender(contourlines).addItemToRender(contourbands);
 		contourlines.setGlobalThicknessMultiplier(1);
 		contourbands.setGlobalAlphaMultiplier(0.3);
-		new CoordSysScrollZoom(canvas).register();
-		new CoordSysPanning(canvas).register();
-		canvas.setCoordinateView(-2.5, -1.5, 0.5, 1.5);
+		new CoordSysScrollZoom(canvas, coordsys).register();
+		new CoordSysPanning(canvas, coordsys).register();
+		coordsys.setCoordinateView(-2.5, -1.5, 0.5, 1.5);
 		
 		Lines userContour = new Lines();
 		Text userIsoLabel = new Text("", 10, Font.ITALIC);
-		canvas.setContent(content);
+		coordsys.setContent(content);
 		content.addItemToRender(userContour);
 		content.addItemToRender(userIsoLabel);
 		MouseAdapter contourPlacer = new MouseAdapter() {
@@ -113,7 +116,7 @@ public class IsolinesViz {
 			};
 			
 			void calcContour(Point mp){
-				Point2D p = canvas.transformAWT2CoordSys(mp);
+				Point2D p = coordsys.transformAWT2CoordSys(mp);
 				double isoValue = f.applyAsDouble(p.getX(), p.getY());
 				userIsoLabel
 					.setTextString(String.format("%.3f", isoValue))
