@@ -549,6 +549,9 @@ public class CoordSysRenderer implements Renderer {
 	
 	@Override
 	public void render(int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		if(isDirty || viewportwidth != w || viewportheight != h){
 			// update axes
 			axes.setDirty();
@@ -599,6 +602,9 @@ public class CoordSysRenderer implements Renderer {
 	
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
 		preContentLinesR.renderSVG(doc, parent, w, h);
 		preContentTextR.renderSVG(doc, parent, w, h);
 		if(content != null){
