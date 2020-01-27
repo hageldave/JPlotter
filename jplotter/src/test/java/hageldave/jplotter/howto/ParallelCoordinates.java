@@ -15,8 +15,9 @@ import java.util.stream.IntStream;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.canvas.CoordSysCanvas;
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
@@ -70,13 +71,15 @@ public class ParallelCoordinates {
 		}
 		
 		// use a coordinate system for display
-		CoordSysCanvas canvas = new CoordSysCanvas();
+		BlankCanvas canvas = new BlankCanvas();
+		CoordSysRenderer coordsys = new CoordSysRenderer();
+		canvas.setRenderer(coordsys);
 		canvas.setPreferredSize(new Dimension(700, 400));
 		canvas.setBackground(Color.WHITE);
-		canvas.setCoordinateView(0,0,dim-1,1);
-		canvas.setContent(lineContent);
+		coordsys.setCoordinateView(0,0,dim-1,1);
+		coordsys.setContent(lineContent);
 		// need to change axis tick marks
-		canvas.setTickMarkGenerator((vmin,vmax,desired,vert)->{
+		coordsys.setTickMarkGenerator((vmin,vmax,desired,vert)->{
 			if(vert)
 				return Pair.of(new double[0], new String[0]);
 			String[] labels = axisOrder.stream()

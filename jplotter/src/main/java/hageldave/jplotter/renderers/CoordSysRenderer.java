@@ -130,7 +130,7 @@ public class CoordSysRenderer implements Renderer {
 	protected String yAxisLabel = null;
 	
 	protected ActionListener coordviewListener;
-	protected boolean isEnabled;
+	protected boolean isEnabled=true;
 	
 	public CoordSysRenderer() {
 		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(Color.BLACK);
