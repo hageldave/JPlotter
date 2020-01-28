@@ -75,9 +75,11 @@ public class BlankCanvas extends FBOCanvas {
 	/**
 	 * Sets the renderer of this canvas.
 	 * @param renderer to draw contents.
+	 * @return this for chaining
 	 */
-	public void setRenderer(Renderer renderer) {
+	public BlankCanvas setRenderer(Renderer renderer) {
 		this.renderer = renderer;
+		return this;
 	}
 
 }
