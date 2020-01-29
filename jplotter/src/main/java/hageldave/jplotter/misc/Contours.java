@@ -25,7 +25,13 @@ public class Contours {
 	 * Computes the contour lines from the grid samples of a bivariate function z(x,y).
 	 * The resulting line segments are solutions to the equation { (x,y) | z(x,y)=iso }
 	 * within the grid.
-	 * @param X x-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
+	 * <p>
+	 * <b>About indices</b>
+	 * For cartesian or rectilinear grids, x varies with the inner index of the 2D array, y with the outer index:<br>
+	 * X<sub>ij</sub>=X[i][j]=X[?][j].<br>
+	 * Y<sub>ij</sub>=Y[i][j]=Y[i][?]
+	 * 
+	 * @param X x-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) ) 
 	 * @param Y y-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
 	 * @param Z z-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
 	 * @param isoValue the iso value for which the contour (iso) lines should be computed
@@ -37,17 +43,17 @@ public class Contours {
 		List<SegmentDetails> contourLines = computeContourLines(Z, isoValue, color);
 		for(SegmentDetails segment:contourLines){
 			for(Point2D p : Arrays.asList(segment.p0,segment.p1)){
-				int i = (int)p.getX();
-				int j = (int)p.getY();
-				double mi = p.getX()-i;
-				double mj = p.getY()-j;
-				double xcoord = X[j][i];
+				int j = (int)p.getX();
+				int i = (int)p.getY();
+				double mi = p.getX()-j;
+				double mj = p.getY()-i;
+				double xcoord = X[i][j];
 				if(mi > 1e-6){
-					xcoord = X[j][i]+mi*(X[j][i+1]-X[j][i]);
+					xcoord = X[i][j]+mi*(X[i][j+1]-X[i][j]);
 				}
-				double ycoord = Y[j][i];
+				double ycoord = Y[i][j];
 				if(mj > 1e-6){
-					ycoord = Y[j][i]+mj*(Y[j+1][i]-Y[j][i]);
+					ycoord = Y[i][j]+mj*(Y[i+1][j]-Y[i][j]);
 				}
 				p.setLocation(xcoord, ycoord);
 			}
@@ -59,6 +65,12 @@ public class Contours {
 	 * Computes the contour bands from the grid samples of a bivariate function z(x,y).
 	 * The resulting triangles are solutions to the equation { (x,y) | iso1 &lt; z(x,y) &lt; iso2 }
 	 * within the grid.
+	 * <p>
+	 * <b>About indices</b>
+	 * For cartesian or rectilinear grids, x varies with the inner index of the 2D array, y with the outer index:<br>
+	 * X<sub>ij</sub>=X[i][j]=X[?][j].<br>
+	 * Y<sub>ij</sub>=Y[i][j]=Y[i][?]
+	 * 
 	 * @param X x-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
 	 * @param Y y-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
 	 * @param Z z-coordinates of the grid points ( (x,y,z)<sub>ij</sub> = (X<sub>ij</sub>,Y<sub>ij</sub>,Z<sub>ij</sub>) )
@@ -76,17 +88,17 @@ public class Contours {
 			xCoords[0]=tri.p0.getX(); xCoords[1]=tri.p1.getX(); xCoords[2]=tri.p2.getX();
 			yCoords[0]=tri.p0.getY(); yCoords[1]=tri.p1.getY(); yCoords[2]=tri.p2.getY();
 			for(int t=0; t<3; t++){
-				int i = (int)xCoords[t];
-				int j = (int)yCoords[t];
-				double mi = xCoords[t]-i;
-				double mj = yCoords[t]-j;
-				double xcoord = X[j][i];
+				int j = (int)xCoords[t];
+				int i = (int)yCoords[t];
+				double mi = xCoords[t]-j;
+				double mj = yCoords[t]-i;
+				double xcoord = X[i][j];
 				if(mi > 1e-6){
-					xcoord = X[j][i]+mi*(X[j][i+1]-X[j][i]);
+					xcoord = X[i][j]+mi*(X[i][j+1]-X[i][j]);
 				}
-				double ycoord = Y[j][i];
+				double ycoord = Y[i][j];
 				if(mj > 1e-6){
-					ycoord = Y[j][i]+mj*(Y[j+1][i]-Y[j][i]);
+					ycoord = Y[i][j]+mj*(Y[i+1][j]-Y[i][j]);
 				}
 				xCoords[t] = xcoord;
 				yCoords[t] = ycoord;
