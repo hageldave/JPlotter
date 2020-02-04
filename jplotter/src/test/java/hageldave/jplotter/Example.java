@@ -86,9 +86,7 @@ public class Example {
 		}
 		
 		// okay we're good to go, lets display the data in a coordinate system
-		BlankCanvas canvas = new BlankCanvas();
 		CoordSysRenderer coordsys = new CoordSysRenderer();
-		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
 		coordsys.setContent( content
 				.addItemToRender(sineLine)
@@ -107,6 +105,8 @@ public class Example {
 				.addGlyphLabel(DefaultGlyph.CIRCLE, c2Color, "~ f(x)")
 				.addGlyphLabel(DefaultGlyph.CROSS, c3Color, "> f(x)+0.5"));
 		
+		// display the coordinate system on a blank canvas
+		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
 		// lets add some controls for exploring the data
 		new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
 		new CoordSysViewSelector(canvas,coordsys) {

@@ -4,12 +4,11 @@ OpenGL based 2D Plotting Library for Java using AWT and [LWJGL](https://github.c
 [![Build Status](https://travis-ci.org/hageldave/JPlotter.svg?branch=master)](https://travis-ci.org/hageldave/JPlotter)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.hageldave.jplotter/jplotter.svg)](https://search.maven.org/search?q=g:com.github.hageldave.jplotter)
 
-JPlotter's concept is pretty straight forward, you get a `Canvas` that can display a coordinate system, 
-called the `CoordSysCanvas`.
-To this you can add a `Renderer` (or multiple) as content, e.g. a `PointsRenderer`.
-This renderer will then be allowed to draw into the viewport of the coordinate system.
-To a `PointsRenderer` or `LinesRenderer` for example, a set of points or line segments can be added which will then appear
-in the coordinate system (only those whose coordinates match the current view of course).
+JPlotter's concept is pretty straight forward, you get a `BlankCanvas` that is backed by OpenGL.
+What is displayed by this canvas depends on the set `Renderer`.
+Most likely you want to set a `CoordSysRenderer` that displays a coordinate system.
+Within that coordinate system you may want to display points or lines, which you can do by again using a `Renderer` (or multiple) as content.
+A `PointsRenderer` can be used to draw points as in a scatter plot, or a `LinesRenderer` can be used to make a line chart or contour plot.
 
 JPlotter is also capable of exporting plots as Scalable Vector Graphics (SVG) through [Apache Batik](https://xmlgraphics.apache.org/batik/).
 
@@ -86,33 +85,35 @@ for(int i=0; i<numPointSamples; i++){
 ```
 Alright next we put everything into a coordinate system.
 ```java
-CoordSysCanvas canvas = new CoordSysCanvas();
+CoordSysRenderer coordsys = new CoordSysRenderer();
 CompleteRenderer content = new CompleteRenderer();
-canvas.setContent( content
+coordsys.setContent( content
       .addItemToRender(sineLine)
       .addItemToRender(pointsC1)
       .addItemToRender(pointsC2)
       .addItemToRender(pointsC3));
 // lets set the coordinate view to cover the whole sampling space
-canvas.setCoordinateView(-.5, -3.3, 6.5, 3.3);
+coordsys.setCoordinateView(-.5, -3.3, 6.5, 3.3);
 ```
 We can also add a legend to the plot so that a viewer can make more sense of the viz.
 ```java
 Legend legend = new Legend();
-canvas.setLegendRightWidth(80);
-canvas.setLegendRight(legend
+coordsys.setLegendRightWidth(80);
+coordsys.setLegendRight(legend
       .addLineLabel(2, sineColor, "f(x)")
-      .addGlyphLabel(DefaultGlyph.CROSS,  c1Color, "< f(x)-0.5")
+      .addGlyphLabel(DefaultGlyph.CROSS, c1Color, "< f(x)-0.5")
       .addGlyphLabel(DefaultGlyph.CIRCLE, c2Color, "~ f(x)")
-      .addGlyphLabel(DefaultGlyph.CROSS,  c3Color, "> f(x)+0.5"));
+      .addGlyphLabel(DefaultGlyph.CROSS, c3Color, "> f(x)+0.5"));
 ```
+We will use a blank canvas to display our coordinate system.
 For exploring the plot we can add some controls for zooming.
 ```java
-new CoordSysScrollZoom(canvas).setZoomFactor(1.7).register();
-new CoordSysViewSelector(canvas) {
+BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
+new CoordSysViewSelector(canvas,coordsys) {
    {extModifierMask=0;/* no need for shift to be pressed */}
    public void areaSelected(double minX, double minY, double maxX, double maxY) {
-      canvas.setCoordinateView(minX, minY, maxX, maxY);
+      coordsys.setCoordinateView(minX, minY, maxX, maxY);
    }
 }.register();
 ```
