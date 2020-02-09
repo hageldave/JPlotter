@@ -30,6 +30,7 @@ public class ScatterPlot {
 		return d;
 	}
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// generate or get data
 		double[][] dataA = randomData(50);
@@ -49,11 +50,7 @@ public class ScatterPlot {
 			pointsB.addPoint(entry[0],entry[1]).setColor(Color.GRAY);
 		}
 		// use a coordinate system for display
-		BlankCanvas canvas = new BlankCanvas();
 		CoordSysRenderer coordsys = new CoordSysRenderer();
-		canvas.setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(400, 400));
-		canvas.setBackground(Color.WHITE);
 		coordsys.setCoordinateView(-1,-1,1,1);
 		// set the content renderer of the coordinate system 
 		// we want to render Points objects
@@ -63,6 +60,9 @@ public class ScatterPlot {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
+		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+		canvas.setPreferredSize(new Dimension(400, 400));
+		canvas.setBackground(Color.WHITE);
 		frame.getContentPane().add(canvas);
 		frame.setTitle("scatterplot");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

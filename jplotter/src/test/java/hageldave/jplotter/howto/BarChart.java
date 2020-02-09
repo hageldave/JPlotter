@@ -22,6 +22,7 @@ import hageldave.jplotter.util.Pair;
 
 public class BarChart {
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// have some data
 		String[] cases = {"A","B","C","D1","D2*"};
@@ -45,11 +46,7 @@ public class BarChart {
 			barRenderer.addItemToRender(bar);
 		}
 		// use a coordinate system for display
-		BlankCanvas canvas = new BlankCanvas();
 		CoordSysRenderer coordsys = new CoordSysRenderer();
-		canvas.setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(500, 300));
-		canvas.setBackground(Color.WHITE);
 		coordsys.setCoordinateView(0, -1, 1, cases.length);
 		// set the content renderer of the coordinate system 
 		coordsys.setContent(barRenderer);
@@ -72,6 +69,9 @@ public class BarChart {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
+		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+		canvas.setPreferredSize(new Dimension(500, 300));
+		canvas.setBackground(Color.WHITE);
 		frame.getContentPane().add(canvas);
 		frame.setTitle("barchart");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -91,7 +91,7 @@ public class BarChart {
 		
 		long t=System.currentTimeMillis()+2000;
 		while(t>System.currentTimeMillis());
-		if(!"false".equals("true"))
+		if("false".equals("true"))
 		SwingUtilities.invokeLater(()->{
 			Img img = new Img(frame.getSize());
 			img.paint(g2d->frame.paintAll(g2d));

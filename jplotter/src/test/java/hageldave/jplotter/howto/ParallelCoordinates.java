@@ -24,6 +24,7 @@ import hageldave.jplotter.util.PickingRegistry;
 
 public class ParallelCoordinates {
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// have some multidimensional data
 		int dim=5, numSamples=100;
@@ -55,7 +56,6 @@ public class ParallelCoordinates {
 		int defaultLineColor = 0xff666666; 
 		int highlightColor = 0xffff0000;
 		for(int i=0; i<numSamples; i++){
-			@SuppressWarnings("resource")
 			Lines line = new Lines();
 			for(int j=0; j<dim-1; j++){
 				int d1=axisOrder.get(j), d2=axisOrder.get(j+1);
@@ -71,11 +71,7 @@ public class ParallelCoordinates {
 		}
 		
 		// use a coordinate system for display
-		BlankCanvas canvas = new BlankCanvas();
 		CoordSysRenderer coordsys = new CoordSysRenderer();
-		canvas.setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(700, 400));
-		canvas.setBackground(Color.WHITE);
 		coordsys.setCoordinateView(0,0,dim-1,1);
 		coordsys.setContent(lineContent);
 		// need to change axis tick marks
@@ -89,6 +85,9 @@ public class ParallelCoordinates {
 			return Pair.of(ticks,labels);
 		});
 		
+		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+		canvas.setPreferredSize(new Dimension(700, 400));
+		canvas.setBackground(Color.WHITE);
 		// interaction
 		canvas.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {

@@ -26,6 +26,7 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 
 public class ContourPlot {
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// formulate bivariate function that defines the 2D surface
 		DoubleBinaryOperator bivariateFn = (x,y)->(x*y + x*x - y*y -.01);
@@ -69,11 +70,7 @@ public class ContourPlot {
 		contourbands.getTriangleDetails().addAll(bandAB);
 		contourbands.getTriangleDetails().addAll(bandBC);
 		// use a coordinate system for display
-		BlankCanvas canvas = new BlankCanvas();
 		CoordSysRenderer coordsys = new CoordSysRenderer();
-		canvas.setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(400, 400));
-		canvas.setBackground(Color.WHITE);
 		coordsys.setCoordinateView(-1,-1,1,1);
 		// set the content renderer of the coordinate system 
 		// we want to render Lines and Triangles objects
@@ -83,6 +80,9 @@ public class ContourPlot {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
+		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+		canvas.setPreferredSize(new Dimension(400, 400));
+		canvas.setBackground(Color.WHITE);
 		frame.getContentPane().add(canvas);
 		frame.setTitle("contourplot");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

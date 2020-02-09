@@ -56,11 +56,7 @@ public class LineChart {
 		ArrayList<SegmentDetails> segmentsB = lineB.addLineStrip(seriesB_x, seriesB_y);
 		segmentsB.forEach(seg->seg.setColor(Color.BLUE));
 		// use a coordinate system for display
-		BlankCanvas canvas = new BlankCanvas();
 		CoordSysRenderer coordsys = new CoordSysRenderer();
-		canvas.setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(700, 400));
-		canvas.setBackground(Color.WHITE);
 		coordsys.setCoordinateView(-1,-1,1,1);
 		// set the content renderer of the coordinate system 
 		// we want to render Lines objects
@@ -70,6 +66,9 @@ public class LineChart {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
+		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+		canvas.setPreferredSize(new Dimension(700, 400));
+		canvas.setBackground(Color.WHITE);
 		frame.getContentPane().add(canvas);
 		frame.setTitle("linechart");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
