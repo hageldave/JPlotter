@@ -55,7 +55,7 @@ import hageldave.jplotter.util.Annotations.GLCoordinates;
  * If that renderer implements the {@link AdaptableView} interface it will be passed the
  * view matrix corresponding to the coordinate view.
  * The content renderer will be able to draw within the viewport defined by the coordinate
- * system area of this Canvas.
+ * system area of this CoordSysRenderer.
  * <p>
  * Optionally a {@link Renderer} for drawing a legend (such as the {@link Legend} class)
  * can be set to either the bottom or right hand side of the coordinate system (can also
@@ -65,9 +65,9 @@ import hageldave.jplotter.util.Annotations.GLCoordinates;
  * and {@link #setLegendRightWidth(int)} if this is needed.
  * <p>
  * The overlay renderer ({@link #setOverlay(Renderer)}) can be used to finally draw over all
- * of the canvas viewport.
+ * of the renderer viewport.
  * <p>
- * For interacting with this CoordSysCanvas there already exist implementations of MouseListeners
+ * For interacting with this {@link CoordSysRenderer} there already exist implementations of MouseListeners
  * for panning and zooming (see {@link CoordSysPanning} and {@link CoordSysScrollZoom}).
  * 
  * @author hageldave
@@ -148,7 +148,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 	
 	/**
-	 * Sets the {@link #isDirty} state of this CoordSysCanvas to true.
+	 * Sets the {@link #isDirty} state of this CoordSysRenderer to true.
 	 * This indicates that axis locations, tick marks, labels and guides
 	 * have to be recomputed.
 	 * This will be done during {@link #paintToFBO(int, int)} which
@@ -173,7 +173,7 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * Sets the renderer that will draw the legend to the right of the coordinate system.
 	 * The view port area for this renderer will start at the top edge of the coordinate system,
-	 * be {@link #getLegendRightWidth()} wide and extend to the bottom of the canvas (-padding).
+	 * be {@link #getLegendRightWidth()} wide and extend to the bottom (-padding).
 	 * @param legend renderer for right side of coordinate system
 	 * @return the previous legend renderer (which may need to be closed to free GL resources),
 	 * null if none was set
@@ -248,7 +248,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Sets the padding to the left side, which is the size of the blank area
-	 * before any visible elements of the CoordSysCanvas are drawn
+	 * before any visible elements of the CoordSysRenderer are drawn
 	 * @param padding amount of blank area
 	 * @return this for chaining
 	 */
@@ -259,7 +259,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Sets the padding to the right side, which is the size of the blank area
-	 * before any visible elements of the CoordSysCanvas are drawn
+	 * before any visible elements of the CoordSysRenderer are drawn
 	 * @param padding amount of blank area
 	 * @return this for chaining
 	 */
@@ -270,7 +270,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Sets the padding to the top side, which is the size of the blank area
-	 * before any visible elements of the CoordSysCanvas are drawn
+	 * before any visible elements of the CoordSysRenderer are drawn
 	 * @param padding amount of blank area
 	 * @return this for chaining
 	 */
@@ -281,7 +281,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Sets the padding to the bottom side, which is the size of the blank area
-	 * before any visible elements of the CoordSysCanvas are drawn
+	 * before any visible elements of the CoordSysRenderer are drawn
 	 * @param padding amount of blank area
 	 * @return this for chaining
 	 */
@@ -325,7 +325,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Sets the width of the legend area right to the coordinate system.
-	 * (height is determined by the space available until the bottom of the canvas)
+	 * (height is determined by the space available until the bottom of the renderer's viewport)
 	 * @param legendRightWidth width of the right legend area.
 	 * (default is 70 px)
 	 * @return this for chaining
@@ -491,7 +491,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	/**
 	 * Sets the specified string as the x axis label which appears on top of the coordinate system.
-	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
+	 * Sets the {@link #isDirty} state of this {@link CoordSysRenderer} to true.
 	 * @param xAxisLabel to set
 	 * @return this for chaining
 	 */
@@ -503,7 +503,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Sets the specified string as the y axis label which appears to the right of the coordinate system.
-	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
+	 * Sets the {@link #isDirty} state of this {@link CoordSysRenderer} to true.
 	 * @param yAxisLabel to set
 	 * @return this for chaining
 	 */
@@ -521,8 +521,8 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * Sets the specified {@link TickMarkGenerator} for this {@link CoordSysCanvas}.
-	 * Sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
+	 * Sets the specified {@link TickMarkGenerator} for this {@link CoordSysRenderer}.
+	 * Sets the {@link #isDirty} state of this {@link CoordSysRenderer} to true.
 	 * @param tickMarkGenerator to be used for determining tick locations 
 	 * and corresponding labels
 	 * @return this for chaining
@@ -672,7 +672,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	/**
 	 * Sets the coordinate view. This is the range of x and y coordinates that is displayed by this
-	 * {@link CoordSysCanvas}. It is not the rectangular area in which the content appears on screen
+	 * {@link CoordSysRenderer}. It is not the rectangular area in which the content appears on screen
 	 * but what coordinates that area corresponds to as a coordinate system.
 	 * <p>
 	 * This determines what range of coordinates is visible when rendering the {@link #content}.
@@ -681,9 +681,9 @@ public class CoordSysRenderer implements Renderer {
 	 * refuses to set the view accordingly to prevent unrecoverable zooming and inaccurate
 	 * or broken renderings due to floating point precision.
 	 * <p>
-	 * This method also sets the {@link #isDirty} state of this {@link CoordSysCanvas} to true.
+	 * This method also sets the {@link #isDirty} state of this {@link CoordSysRenderer} to true.
 	 * <p>
-	 * When {@link CoordinateViewListener} are registered to this canvas, they will be notified
+	 * When {@link CoordinateViewListener} are registered to this renderer, they will be notified
 	 * before this method returns.
 	 * 
 	 * @param minX minimum x coordinate visible in the coordinate system
@@ -716,7 +716,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * Adds a {@link CoordinateViewListener} to this canvas which will be notified
+	 * Adds a {@link CoordinateViewListener} to this renderer which will be notified
 	 * whenever the coordinate view changes 
 	 * (i.e. when {@link #setCoordinateView(double, double, double, double)} is called)
 	 * @param l listener
@@ -730,7 +730,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * Removes the specified {@link CoordinateViewListener} from this canvas.
+	 * Removes the specified {@link CoordinateViewListener} from this renderer.
 	 * @param l listener
 	 * @return this for chaining
 	 */
@@ -752,7 +752,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * @return the area of this canvas in which the coordinate system contents are rendered.
+	 * @return the area of this renderer in which the coordinate system contents are rendered.
 	 * It is the viewPort for the {@link #content} renderer which is enclosed by
 	 * the coordinate system axes.
 	 */
@@ -768,7 +768,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	/**
 	 * Transforms a location in AWT coordinates (y axis extends to bottom) 
-	 * on this Canvas to the corresponding coordinates in the coordinate 
+	 * on this renderer to the corresponding coordinates in the coordinate 
 	 * system view (in GL coords).
 	 * @param awtPoint to be transformed
 	 * @return transformed location
@@ -779,7 +779,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 	
 	/**
-	 * Transforms a location in GL coordinates on this canvas to the 
+	 * Transforms a location in GL coordinates on this renderer to the 
 	 * corresponding coordinates in the coordinate system view.
 	 * @param point to be transformed
 	 * @return transformed location
@@ -799,7 +799,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	/**
 	 * Transforms a location in coordinates of the current coordinate view
-	 * to corresponding coordinates of this canvas (in GL coords).
+	 * to corresponding coordinates of this renderer (in GL coords).
 	 * @param point to be transformed
 	 * @return transformed location
 	 */
@@ -818,7 +818,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	/**
 	 * Transforms a location in coordinates of the current coordinate view
-	 * to corresponding coordinates of this canvas in AWT coordinates 
+	 * to corresponding coordinates of this renderer in AWT coordinates 
 	 * (where y axis extends to bottom).
 	 * @param point to be transformed
 	 * @return transformed location

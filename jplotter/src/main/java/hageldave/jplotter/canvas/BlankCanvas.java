@@ -5,7 +5,7 @@ import java.util.Objects;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import hageldave.jplotter.renderables.Legend;
+import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
@@ -13,8 +13,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * The BlankCanvas is an {@link FBOCanvas} that uses a single {@link Renderer} 
  * to draw its contents.
  * <p>
- * This can for example come in handy when a {@link Legend} should be drawn in
- * another canvas than the {@link CoordSysCanvas}. 
+ * Usually a {@link CoordSysRenderer} will be used in conjunction with this canvas to display plots.
  * 
  * @author hageldave
  */

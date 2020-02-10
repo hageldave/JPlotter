@@ -8,8 +8,8 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 
 /**
  * The CoordinateViewListener is a listener that listens on changes to a 
- * {@link CoordSysCanvas}' coordinate view 
- * (i.e. {@link CoordSysCanvas#setCoordinateView(double, double, double, double)}).
+ * {@link CoordSysRenderer}'s coordinate view 
+ * (i.e. {@link CoordSysRenderer#setCoordinateView(double, double, double, double)}).
  * 
  * @author hageldave
  */
@@ -25,7 +25,7 @@ public interface CoordinateViewListener extends ActionListener {
 
 	/**
 	 * Method will be called when the source's coordinate view changed.
-	 * @param src source {@link CoordSysCanvas}
+	 * @param src source {@link CoordSysRenderer}
 	 * @param view the new coordinate view
 	 */
 	void coordinateViewChanged(CoordSysRenderer src, Rectangle2D view);
