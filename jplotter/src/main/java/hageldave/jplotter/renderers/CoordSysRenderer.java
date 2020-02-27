@@ -693,26 +693,34 @@ public class CoordSysRenderer implements Renderer {
 	 * @return this for chaining
 	 */
 	public CoordSysRenderer setCoordinateView(double minX, double minY, double maxX, double maxY){
-		if(maxX-minX < 1e-9 || maxY-minY < 1e-9){
-			System.err.printf("hitting coordinate area precision limit, x-range:%e, y-range:%e%n", maxX-minX, maxY-minY);
+		return setCoordinateViewRect(minX, minY, maxX-minX, maxY-minY);
+	}
+	
+	/**
+	 * Sets the coordinate view. This is the range of x and y coordinates that is displayed by this
+	 * {@link CoordSysRenderer}. It is not the rectangular area in which the content appears on screen
+	 * but what coordinates that area corresponds to as a coordinate system.
+	 * <p>
+	 * See also {@link #setCoordinateView(double, double, double, double)}.
+	 * 
+	 * @param viewRect to set the view to
+	 * @return this for chaining
+	 */
+	public CoordSysRenderer setCoordinateView(Rectangle2D viewRect){
+		return setCoordinateViewRect(viewRect.getMinX(), viewRect.getMinY(), viewRect.getWidth(), viewRect.getHeight());
+	}
+	
+	protected CoordSysRenderer setCoordinateViewRect(double x, double y, double w, double h) {
+		if(w < 1e-9 || h < 1e-9){
+			System.err.printf("hitting coordinate area precision limit, x-range:%e, y-range:%e%n", w, h);
 			return this;
 		}
-		this.coordinateView = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+		this.coordinateView = new Rectangle2D.Double(x, y, w, h);
 		setDirty();
 		if(Objects.nonNull(coordviewListener)){
 			coordviewListener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_FIRST, "setCoordinateView"));
 		}
 		return this;
-	}
-	
-	/**
-	 * Calls {@link #setCoordinateView(double, double, double, double)} with minX, minY, maxX, maxY
-	 * of the specified rectangle 
-	 * @param viewRect to set the view to
-	 * @return this for chaining
-	 */
-	public CoordSysRenderer setCoordinateView(Rectangle2D viewRect){
-		return setCoordinateView(viewRect.getMinX(), viewRect.getMinY(), viewRect.getMaxX(), viewRect.getMaxY());
 	}
 
 	/**
