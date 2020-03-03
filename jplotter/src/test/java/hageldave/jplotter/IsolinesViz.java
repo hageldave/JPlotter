@@ -116,7 +116,7 @@ public class IsolinesViz {
 			};
 			
 			void calcContour(Point mp){
-				Point2D p = coordsys.transformAWT2CoordSys(mp);
+				Point2D p = coordsys.transformAWT2CoordSys(mp, canvas.getHeight());
 				double isoValue = f.applyAsDouble(p.getX(), p.getY());
 				userIsoLabel
 					.setTextString(String.format("%.3f", isoValue))

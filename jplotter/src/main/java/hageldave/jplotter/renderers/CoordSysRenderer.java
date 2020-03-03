@@ -33,6 +33,7 @@ import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Annotations.GLCoordinates;
+import hageldave.jplotter.util.GLUtils;
 
 /**
  * The CoordSysRenderer is a {@link Renderer} that displays a coordinate system.
@@ -90,6 +91,9 @@ public class CoordSysRenderer implements Renderer {
 	protected Rectangle legendRightViewPort = new Rectangle();
 	@GLCoordinates
 	protected Rectangle legendBottomViewPort = new Rectangle();
+	
+	@GLCoordinates
+	protected Rectangle currentViewPort = new Rectangle();
 
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
@@ -552,6 +556,9 @@ public class CoordSysRenderer implements Renderer {
 		if(!isEnabled()){
 			return;
 		}
+		
+		final Rectangle vp = currentViewPort = GLUtils.getCurrentViewPort();
+		
 		if(isDirty || viewportwidth != w || viewportheight != h){
 			// update axes
 			axes.setDirty();
@@ -565,8 +572,8 @@ public class CoordSysRenderer implements Renderer {
 		// draw into the coord system
 		if(content != null){
 			content.glInit();
-			int viewPortX = (int)coordsysAreaLB.getX();
-			int viewPortY = (int)coordsysAreaLB.getY();
+			int viewPortX = (int)coordsysAreaLB.getX() + vp.x;
+			int viewPortY = (int)coordsysAreaLB.getY() + vp.y;
 			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
 			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
 			GL11.glViewport(viewPortX,viewPortY,viewPortW,viewPortH);
@@ -574,7 +581,7 @@ public class CoordSysRenderer implements Renderer {
 				((AdaptableView) content).setView(coordinateView);
 			}
 			content.render(viewPortW, viewPortH);
-			GL11.glViewport(0, 0, w, h);
+			GL11.glViewport(vp.x, vp.y, w, h);
 		}
 		postContentLinesR.render(w, h);
 		postContentTextR.render(w, h);
@@ -582,15 +589,15 @@ public class CoordSysRenderer implements Renderer {
 		// draw legends
 		if(Objects.nonNull(legendRight)){
 			legendRight.glInit();
-			GL11.glViewport(legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+			GL11.glViewport(vp.x+legendRightViewPort.x, vp.y+legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
 			legendRight.render(legendRightViewPort.width, legendRightViewPort.height);
-			GL11.glViewport(0, 0, w, h);
+			GL11.glViewport(vp.x, vp.y, w, h);
 		}
 		if(Objects.nonNull(legendBottom)){
 			legendBottom.glInit();
-			GL11.glViewport(legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+			GL11.glViewport(vp.x+legendBottomViewPort.x, vp.y+legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			legendBottom.render(legendBottomViewPort.width, legendBottomViewPort.height);
-			GL11.glViewport(0, 0, w, h);
+			GL11.glViewport(vp.x, vp.y, w, h);
 		}
 
 		// draw overlay
@@ -767,11 +774,19 @@ public class CoordSysRenderer implements Renderer {
 	@GLCoordinates
 	public Rectangle2D getCoordSysArea() {
 		return new Rectangle2D.Double(
-				coordsysAreaLB.getX(), 
-				coordsysAreaLB.getY(), 
+				coordsysAreaLB.getX()+currentViewPort.x, 
+				coordsysAreaLB.getY()+currentViewPort.y, 
 				coordsysAreaLB.distance(coordsysAreaRB), 
 				coordsysAreaLB.distance(coordsysAreaLT)
 				);
+	}
+	
+	/**
+	 * @return the viewport which this CoordSysRenderer was last rendered into
+	 */
+	@GLCoordinates
+	public Rectangle getCurrentViewPort() {
+		return currentViewPort;
 	}
 	
 	/**
@@ -779,11 +794,12 @@ public class CoordSysRenderer implements Renderer {
 	 * on this renderer to the corresponding coordinates in the coordinate 
 	 * system view (in GL coords).
 	 * @param awtPoint to be transformed
+	 * @param canvasheight height of the canvas this {@link CoordSysRenderer} is drawn to
 	 * @return transformed location
 	 */
-	public Point2D transformAWT2CoordSys(Point2D awtPoint){
-		awtPoint = Utils.swapYAxis(awtPoint, viewportheight);
-		return transformGL2CoordSys(awtPoint);
+	public Point2D transformAWT2CoordSys(Point2D awtPoint, int canvasheight){
+		Point2D glp = Utils.swapYAxis(awtPoint, canvasheight);
+		return transformGL2CoordSys(glp);
 	}
 	
 	/**
@@ -826,14 +842,15 @@ public class CoordSysRenderer implements Renderer {
 	
 	/**
 	 * Transforms a location in coordinates of the current coordinate view
-	 * to corresponding coordinates of this renderer in AWT coordinates 
+	 * to corresponding coordinates of this renderer's canvas in AWT coordinates
 	 * (where y axis extends to bottom).
 	 * @param point to be transformed
+	 * @param canvasheight height of the canvas this {@link CoordSysRenderer} is drawn to
 	 * @return transformed location
 	 */
-	public Point2D transformCoordSys2AWT(Point2D point){
+	public Point2D transformCoordSys2AWT(Point2D point, int canvasheight){
 		Point2D glPoint = transformCoordSys2GL(point);
-		return Utils.swapYAxis(glPoint, viewportheight);
+		return Utils.swapYAxis(glPoint, canvasheight);
 	}
 	
 	@Override

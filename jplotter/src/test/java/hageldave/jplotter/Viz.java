@@ -33,6 +33,7 @@ import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.renderers.SplitScreenRenderer;
 import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
@@ -47,8 +48,10 @@ public class Viz {
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
 		BlankCanvas canvas = new BlankCanvas();
+		SplitScreenRenderer splitscreen = new SplitScreenRenderer(0.5,false);
 		CoordSysRenderer coordsys = new CoordSysRenderer();
-		canvas.setRenderer(coordsys);
+		splitscreen.setR1(coordsys);
+		canvas.setRenderer(splitscreen);
 		canvas.setDisposeOnRemove(false);
 		coordsys.setyAxisLabel("Y-Axis");
 		CompleteRenderer content = new CompleteRenderer();

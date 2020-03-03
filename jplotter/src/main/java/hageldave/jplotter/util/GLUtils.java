@@ -1,5 +1,6 @@
 package hageldave.jplotter.util;
 
+import java.awt.Rectangle;
 import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
@@ -269,6 +270,12 @@ public class GLUtils {
 				GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES) >= 4
 				&&
 				GL11.glGetInteger(GL32.GL_MAX_DEPTH_TEXTURE_SAMPLES) >= 4;
+	}
+	
+	public static Rectangle getCurrentViewPort() {
+		int[] p = new int[4];
+		GL11.glGetIntegerv(GL11.GL_VIEWPORT, p);
+		return new Rectangle(p[0], p[1], p[2], p[3]);
 	}
 	
 }

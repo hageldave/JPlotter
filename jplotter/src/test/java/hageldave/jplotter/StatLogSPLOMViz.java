@@ -253,7 +253,7 @@ public class StatLogSPLOMViz {
 							if(SwingUtilities.isRightMouseButton(e)){
 								return;
 							}
-							Point2D location = coordsys.transformAWT2CoordSys(e.getPoint());
+							Point2D location = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
 							if(!coordsys.getCoordinateView().contains(location)){
 								pointInfo.setText("");
 								recolorAll();

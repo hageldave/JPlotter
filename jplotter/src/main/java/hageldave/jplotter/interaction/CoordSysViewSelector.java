@@ -1,6 +1,7 @@
 package hageldave.jplotter.interaction;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -110,8 +111,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		}
 		createSelectionAreaBorder();
 		
-		Point2D p1 = coordsys.transformAWT2CoordSys(start);
-		Point2D p2 = coordsys.transformAWT2CoordSys(end);
+		Point2D p1 = coordsys.transformAWT2CoordSys(start, canvas.getHeight());
+		Point2D p2 = coordsys.transformAWT2CoordSys(end, canvas.getHeight());
 		this.areaSelectedOnGoing(
 				Math.min(p1.getX(), p2.getX()),
 				Math.min(p1.getY(), p2.getY()),
@@ -124,7 +125,10 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	protected void createSelectionAreaBorder() {
 		Point start_ = Utils.swapYAxis(start, canvas.getHeight());
-		Point2D end_ = Utils.swapYAxis(end, canvas.getHeight());
+		Point end_ = Utils.swapYAxis(end, canvas.getHeight());
+		Rectangle vp = coordsys.getCurrentViewPort();
+		start_.setLocation(start_.getX()-vp.x, start_.getY()-vp.y);
+		end_.setLocation(end_.getX()-vp.x, end_.getY()-vp.y);
 		areaBorder.removeAllSegments();
 		areaBorder.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY()).setColor(0xff222222);
 		areaBorder.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
@@ -137,8 +141,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		areaBorder.removeAllSegments();
 		overlay.lines.removeItemToRender(areaBorder);
 		if(start != null && end != null){
-			Point2D p1 = coordsys.transformAWT2CoordSys(start);
-			Point2D p2 = coordsys.transformAWT2CoordSys(end);
+			Point2D p1 = coordsys.transformAWT2CoordSys(start, canvas.getHeight());
+			Point2D p2 = coordsys.transformAWT2CoordSys(end, canvas.getHeight());
 			this.areaSelected(
 					Math.min(p1.getX(), p2.getX()),
 					Math.min(p1.getY(), p2.getY()),
@@ -164,7 +168,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			return false;
 		}
 		if(method == MouseEvent.MOUSE_PRESSED){
-			return coordsys.getCoordSysArea().contains( Utils.swapYAxis(e.getPoint(), canvas.getHeight()) );
+			Rectangle2D coordSysArea = Utils.swapYAxis(coordsys.getCoordSysArea(),canvas.getHeight());
+			return coordSysArea.contains(e.getPoint() );
 		}
 		return true;
 	}
