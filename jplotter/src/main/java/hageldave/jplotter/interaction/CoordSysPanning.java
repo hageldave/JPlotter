@@ -13,6 +13,7 @@ import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The CoordSysPanning class implements a {@link MouseListener}
@@ -57,7 +58,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(isTriggerMouseEvent(e, MouseEvent.MOUSE_DRAGGED)){
+		if(startPoint!= null && isTriggerMouseEvent(e, MouseEvent.MOUSE_DRAGGED)){
 			Point dragPoint = e.getPoint();
 			double mouseTx = 0;
 			double mouseTy = 0;
@@ -89,7 +90,12 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	
 	
 	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
-		return SwingUtilities.isLeftMouseButton(e) && (e.getModifiersEx()&extModifierMask) == extModifierMask;
+		return SwingUtilities.isLeftMouseButton(e) 
+				&& 
+				(e.getModifiersEx()&extModifierMask) == extModifierMask
+				&&
+				(method!=MouseEvent.MOUSE_PRESSED || coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
+				;
 	}
 	
 	/**

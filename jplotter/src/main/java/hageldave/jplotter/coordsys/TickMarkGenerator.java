@@ -27,4 +27,7 @@ public interface TickMarkGenerator {
 	 */
 	public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis);
 	
+	
+	public static final TickMarkGenerator NO_TICKS = (double min, double max, int desiredNumTicks, boolean verticalAxis)->Pair.of(new double[0], new String[0]);
+	
 }

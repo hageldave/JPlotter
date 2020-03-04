@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The CoordSysScrollZoom class implements a {@link MouseWheelListener}
@@ -32,6 +33,9 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
+		if(!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
+			return;
+		
 		int wheelRotation = e.getWheelRotation();
 		double zoom = Math.pow(zoomFactor, wheelRotation);
 		double centerX = coordsys.getCoordinateView().getCenterX();
