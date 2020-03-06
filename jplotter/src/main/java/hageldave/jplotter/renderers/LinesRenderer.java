@@ -170,8 +170,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		}
 	}
 
+	@Override
 	@GLContextRequired
-	public void render(int w, int h) {
+	public void render(int vpx, int vpy, int w, int h) {
 		if(!isEnabled()){
 			return;
 		}

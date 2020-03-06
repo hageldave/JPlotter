@@ -42,12 +42,12 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 
 	@Override
 	@GLContextRequired
-	public void render(int w, int h) {
+	public void render(int vpx, int vpy, int w, int h) {
 		if(!isEnabled()){
 			return;
 		}
-		r1.render(w, h);
-		r2.render(w, h);
+		r1.render(vpx, vpy, w, h);
+		r2.render(vpx, vpy, w, h);
 	}
 
 	@Override

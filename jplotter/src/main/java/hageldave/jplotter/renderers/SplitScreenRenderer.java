@@ -82,7 +82,7 @@ public class SplitScreenRenderer implements Renderer, AdaptableView {
 	}
 
 	@Override
-	public void render(int w, int h) {
+	public void render(int vpx, int vpy, int w, int h) {
 		if(!isEnabled())
 			return;
 		
@@ -98,14 +98,14 @@ public class SplitScreenRenderer implements Renderer, AdaptableView {
 		int y2 = 0;
 		
 		if(r1 != null) {
-			GL11.glViewport(x1,y1,w1,h1);
-			r1.render(w1, h1);
+			GL11.glViewport( x1+vpx, y1+vpy, w1, h1 );
+			r1.render(       x1+vpx, y1+vpy, w1, h1 );
 		}
 		if(r2 != null) {
-			GL11.glViewport(x2,y2,w2,h2);
-			r2.render(w2, h2);
+			GL11.glViewport( x2+vpx, y2+vpy, w2, h2 );
+			r2.render(       x2+vpx, y2+vpy, w2, h2 );
 		}
-		GL11.glViewport(0, 0, w, h);
+		GL11.glViewport(vpx, vpy, w, h);
 	}
 	
 	@Override

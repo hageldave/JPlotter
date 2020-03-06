@@ -35,11 +35,13 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	
 	/**
 	 * renders this {@link Renderer}'s 'scene'.
+	 * @param vpx x coordinate of the viewport's origin
+	 * @param vpy y coordinate of the viewport's origin
 	 * @param w width of the current viewport in pixels
 	 * @param h height of the current viewport in pixels
 	 */
 	@GLContextRequired
-	public void render(int w, int h);
+	public void render(int vpx, int vpy, int w, int h);
 	
 	/**
 	 * Disposes of any GL resources belonging to this object.

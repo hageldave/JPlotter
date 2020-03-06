@@ -100,14 +100,14 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	 * (See {@link #setRenderOrder(int, int, int, int)})
 	 */
 	@Override
-	public void render(int w, int h) {
+	public void render(int vpx, int vpy, int w, int h) {
 		if(!isEnabled()){
 			return;
 		}
-		rendererLUT[renderOrder[0]].render(w, h);
-		rendererLUT[renderOrder[1]].render(w, h);
-		rendererLUT[renderOrder[2]].render(w, h);
-		rendererLUT[renderOrder[3]].render(w, h);
+		rendererLUT[renderOrder[0]].render(vpx,vpy,w, h);
+		rendererLUT[renderOrder[1]].render(vpx,vpy,w, h);
+		rendererLUT[renderOrder[2]].render(vpx,vpy,w, h);
+		rendererLUT[renderOrder[3]].render(vpx,vpy,w, h);
 	}
 
 	/**

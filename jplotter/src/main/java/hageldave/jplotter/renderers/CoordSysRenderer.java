@@ -27,13 +27,12 @@ import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Annotations.GLCoordinates;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
 import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Annotations.GLCoordinates;
-import hageldave.jplotter.util.GLUtils;
 
 /**
  * The CoordSysRenderer is a {@link Renderer} that displays a coordinate system.
@@ -552,13 +551,12 @@ public class CoordSysRenderer implements Renderer {
 	}
 	
 	@Override
-	public void render(int w, int h) {
+	public void render(int vpx, int vpy, int w, int h) {
 		if(!isEnabled()){
 			return;
 		}
 		
-		final Rectangle vp = currentViewPort = GLUtils.getCurrentViewPort();
-		
+		currentViewPort.setRect(vpx, vpy, w, h);
 		if(isDirty || viewportwidth != w || viewportheight != h){
 			// update axes
 			axes.setDirty();
@@ -567,43 +565,43 @@ public class CoordSysRenderer implements Renderer {
 			setupAndLayout();
 			isDirty = false;
 		}
-		preContentLinesR.render(w, h);
-		preContentTextR.render(w, h);
+		preContentLinesR.render(vpx, vpy, w, h);
+		preContentTextR.render( vpx, vpy, w, h);
 		// draw into the coord system
 		if(content != null){
 			content.glInit();
-			int viewPortX = (int)coordsysAreaLB.getX() + vp.x;
-			int viewPortY = (int)coordsysAreaLB.getY() + vp.y;
+			int viewPortX = (int)coordsysAreaLB.getX() + vpx;
+			int viewPortY = (int)coordsysAreaLB.getY() + vpy;
 			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
 			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
 			GL11.glViewport(viewPortX,viewPortY,viewPortW,viewPortH);
 			if(content instanceof AdaptableView){
 				((AdaptableView) content).setView(coordinateView);
 			}
-			content.render(viewPortW, viewPortH);
-			GL11.glViewport(vp.x, vp.y, w, h);
+			content.render(viewPortX,viewPortY,viewPortW, viewPortH);
+			GL11.glViewport(vpx, vpy, w, h);
 		}
-		postContentLinesR.render(w, h);
-		postContentTextR.render(w, h);
+		postContentLinesR.render(vpx, vpy, w, h);
+		postContentTextR.render( vpx, vpy, w, h);
 
 		// draw legends
 		if(Objects.nonNull(legendRight)){
 			legendRight.glInit();
-			GL11.glViewport(vp.x+legendRightViewPort.x, vp.y+legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
-			legendRight.render(legendRightViewPort.width, legendRightViewPort.height);
-			GL11.glViewport(vp.x, vp.y, w, h);
+			GL11.glViewport(   vpx+legendRightViewPort.x, vpy+legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+			legendRight.render(vpx+legendRightViewPort.x, vpy+legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+			GL11.glViewport(vpx, vpy, w, h);
 		}
 		if(Objects.nonNull(legendBottom)){
 			legendBottom.glInit();
-			GL11.glViewport(vp.x+legendBottomViewPort.x, vp.y+legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
-			legendBottom.render(legendBottomViewPort.width, legendBottomViewPort.height);
-			GL11.glViewport(vp.x, vp.y, w, h);
+			GL11.glViewport(    vpx+legendBottomViewPort.x, vpy+legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+			legendBottom.render(vpx+legendBottomViewPort.x, vpy+legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+			GL11.glViewport(vpx, vpy, w, h);
 		}
 
 		// draw overlay
 		if(Objects.nonNull(overlay)){
 			overlay.glInit();
-			overlay.render(w,h);
+			overlay.render(vpx,vpy,w,h);
 		}
 	}
 	

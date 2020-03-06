@@ -45,7 +45,7 @@ public class BlankCanvas extends FBOCanvas {
 	protected void paintToFBO(int width, int height) {
 		if(Objects.nonNull(renderer) && width > 0 && height > 0){
 			renderer.glInit();
-			renderer.render(width, height);
+			renderer.render(0, 0, width, height);
 		}
 	}
 	

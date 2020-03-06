@@ -50,7 +50,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	 */
 	@Override
 	@GLContextRequired
-	public void render(int w, int h) {
+	public void render(int vpx, int vpy, int w, int h) {
 		if(!isEnabled()){
 			return;
 		}

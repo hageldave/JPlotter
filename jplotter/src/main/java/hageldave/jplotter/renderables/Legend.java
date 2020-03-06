@@ -310,7 +310,7 @@ public class Legend implements Renderable, Renderer {
 
 	
 	@Override
-	public void render(int w, int h) {
+	public void render(int vpx, int vpy, int w, int h) {
 		if(!isEnabled()){
 			return;
 		}
@@ -322,7 +322,7 @@ public class Legend implements Renderable, Renderer {
 			viewPortHeight = h;
 			updateGL();
 		}
-		delegate.render(w, h);
+		delegate.render(vpx, vpy, w, h);
 	}
 	
 	@Override
