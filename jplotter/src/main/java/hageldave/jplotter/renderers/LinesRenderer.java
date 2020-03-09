@@ -277,7 +277,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	public void close() {
 		if(Objects.nonNull(shader))
 			shader.close();
-		deleteAllItems();
+		shader = null;
+		closeAllItems();
 	}
 
 

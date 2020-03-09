@@ -57,7 +57,6 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 			r1.close();
 		if(r2 != null)
 			r2.close();
-		r1=r2=null;
 	}
 	
 	@Override

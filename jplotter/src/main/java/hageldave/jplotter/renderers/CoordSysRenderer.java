@@ -869,14 +869,6 @@ public class CoordSysRenderer implements Renderer {
 			legendBottom.close();
 		if(Objects.nonNull(overlay))
 			overlay.close();
-		preContentTextR = null;
-		preContentLinesR = null;
-		postContentTextR = null;
-		postContentLinesR = null;
-		content = null;
-		legendRight = null;
-		legendBottom = null;
-		overlay = null;
 	}
 	@Override
 	public void setEnabled(boolean enable) {

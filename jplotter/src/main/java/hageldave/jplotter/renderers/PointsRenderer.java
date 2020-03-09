@@ -134,8 +134,9 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	public void close() {
 		if(Objects.nonNull(shader)){
 			shader.close();
+			shader = null;
 		}
-		deleteAllItems();
+		closeAllItems();
 	}
 
 	/**

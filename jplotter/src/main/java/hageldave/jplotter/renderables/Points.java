@@ -65,6 +65,7 @@ public class Points implements Renderable {
 	public void close() {
 		if(Objects.nonNull(va)){
 			va.close();
+			va = null;
 		}
 	}
 

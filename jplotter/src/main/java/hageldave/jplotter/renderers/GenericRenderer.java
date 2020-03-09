@@ -145,13 +145,12 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	}
 	
 	/**
-	 * Closes and removes all items from this renderer's {@link #itemsToRender} list.
+	 * Closes all items in this renderer's {@link #itemsToRender} list.
 	 */
 	@GLContextRequired
-	public void deleteAllItems(){
+	public void closeAllItems(){
 		for(T item: itemsToRender)
 			item.close();
-		itemsToRender.clear();
 	}
 	
 	@Override

@@ -80,5 +80,12 @@ public class BlankCanvas extends FBOCanvas {
 		this.renderer = renderer;
 		return this;
 	}
+	
+	/**
+	 * @return the current renderer
+	 */
+	public Renderer getRenderer() {
+		return renderer;
+	}
 
 }

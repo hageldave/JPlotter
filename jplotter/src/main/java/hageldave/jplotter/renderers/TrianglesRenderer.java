@@ -93,8 +93,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	public void close() {
 		if(Objects.nonNull(shader)){
 			shader.close();
+			shader = null;
 		}
-		deleteAllItems();
+		closeAllItems();
 	}
 
 	/**

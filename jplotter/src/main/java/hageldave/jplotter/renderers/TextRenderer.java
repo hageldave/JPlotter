@@ -226,9 +226,11 @@ public class TextRenderer extends GenericRenderer<Text> {
 	public void close() {
 		if(Objects.nonNull(shader))
 			shader.close();
+		shader = null;
 		if(Objects.nonNull(vaTextBackground))
 			vaTextBackground.close();
-		deleteAllItems();
+		vaTextBackground = null;
+		closeAllItems();
 	}
 	
 	
