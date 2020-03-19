@@ -46,6 +46,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "uniform vec4 viewTransform;"
 			+ NL + "uniform vec2 modelScaling;"
 			+ NL + "uniform float globalScaling;"
+			+ NL + "uniform bool roundposition;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
@@ -62,6 +63,12 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "mat2 scalingMatrix(float s){"
 			+ NL + "   return mat2(s,0,0,s);"
 			+ NL + "}"
+			
+			+ NL + "float rnd(float f){return float(int(f+0.5));}"
+
+			+ NL + "vec2 roundToIntegerValuedVec(vec2 v){"
+			+ NL + "   return vec2(rnd(v.x),rnd(v.y));"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   mat2 rotMX = rotationMatrix(in_rotAndScale.x);"
@@ -69,6 +76,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "   vec3 pos = vec3(globalScaling*(scaleMX*rotMX*in_position)*modelScaling+in_pointpos, 1);"
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
+			+ NL + "   if(roundposition){pos = vec3(roundToIntegerValuedVec(pos.xy),pos.z);}"
 			+ NL + "   gl_Position = projMX*vec4(pos,1);"
 			+ NL + "   vColor = unpackARGB(in_colors.x);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
@@ -174,6 +182,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		GL20.glUniform1f(loc, this.glyphScaling * item.glyph.pixelSize() * item.getGlobalScaling());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, item.getGlobalAlphaMultiplier());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");
+		GL20.glUniform1i(loc, item.isVertexRoundingEnabled() ? 1:0);
 		// draw things
 		item.bindVertexArray();
 		if(item.glyph.useElementsDrawCall()){

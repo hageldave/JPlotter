@@ -15,6 +15,7 @@ import org.lwjgl.opengl.GL33;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.Glyph;
+import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
@@ -48,6 +49,7 @@ public class Points implements Renderable {
 	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<PointDetails> points = new ArrayList<>();
 	protected boolean hidden=false;
+	protected boolean useVertexRounding=false;
 
 	/**
 	 * Creates a new {@link Points} object which uses the specified {@link Glyph} for displaying its points.
@@ -460,5 +462,36 @@ public class Points implements Renderable {
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1,2,3);
 	}
+
+	/**
+	 * @return whether vertex rounding is enabled. This indicates if
+	 * the {@link PointsRenderer}'s shader will round vertex positions of 
+	 * the glyph's vertices to integer values.
+	 * <p>
+	 * This has the effect of sharpening horizontal and vertical lines, but
+	 * can affect shape. 
+	 */
+	public boolean isVertexRoundingEnabled() {
+		return useVertexRounding;
+	}
+
+	/**
+	 * En/Disables vertex rounding for this Points object. This indicates if
+	 * the {@link PointsRenderer}'s shader will round vertex positions of 
+	 * the glyph's vertices to integer values.
+	 * <p>
+	 * This has the effect of sharpening horizontal and vertical lines, but
+	 * can affect shape. 
+	 * <p>
+	 * Also this only makes sense for some glyphs like SQUARE.
+	 * @param useVertexRounding will enable if true
+	 * @return this for chaining
+	 */
+	public Points setVertexRoundingEnabled(boolean useVertexRounding) {
+		this.useVertexRounding = useVertexRounding;
+		return this;
+	}
+	
+	
 
 }
