@@ -14,6 +14,7 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.svg.SVGTriangleRendering;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -78,7 +79,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shader)){
-			shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
 		}
 	}
@@ -92,7 +93,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	@GLContextRequired
 	public void close() {
 		if(Objects.nonNull(shader)){
-			shader.close();
+			ShaderRegistry.handbackShader(shader);
 			shader = null;
 		}
 		closeAllItems();

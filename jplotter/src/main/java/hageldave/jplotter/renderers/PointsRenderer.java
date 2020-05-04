@@ -16,6 +16,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -127,7 +128,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shader)){
-			this.shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+			this.shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);;
 		}
 	}
@@ -141,7 +142,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	@GLContextRequired
 	public void close() {
 		if(Objects.nonNull(shader)){
-			shader.close();
+			ShaderRegistry.handbackShader(shader);
 			shader = null;
 		}
 		closeAllItems();

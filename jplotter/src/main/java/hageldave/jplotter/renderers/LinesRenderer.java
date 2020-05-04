@@ -17,6 +17,7 @@ import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
+import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
 
 /**
@@ -165,7 +166,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shader)){
-			shader = new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc);
+			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
 		}
 	}
@@ -276,7 +277,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@GLContextRequired
 	public void close() {
 		if(Objects.nonNull(shader))
-			shader.close();
+			ShaderRegistry.handbackShader(shader);
 		shader = null;
 		closeAllItems();
 	}

@@ -18,6 +18,7 @@ import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
 
 /**
@@ -112,7 +113,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shader)){
-			shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
 		}
 		if(Objects.isNull(vaTextBackground)){
@@ -225,7 +226,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@GLContextRequired
 	public void close() {
 		if(Objects.nonNull(shader))
-			shader.close();
+			ShaderRegistry.handbackShader(shader);
 		shader = null;
 		if(Objects.nonNull(vaTextBackground))
 			vaTextBackground.close();
