@@ -10,10 +10,11 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * The Renderer interface defines methods to 
  * initialize the renderer,
  * execute a rendering pass,
- * closing the renderer.
+ * close the renderer.
  * <p>
  * <b>Implementation Notice:</b><br>
- * A renderer's fragment shader is obliged to output color for two
+ * If this renderer directly uses a shader,
+ * its fragment shader is obliged to output color for two
  * buffers, which are the two color attachments of an {@link FBO}.
  * These have to be written to <br>
  * {@code layout(location=0) out vec4 c1;} and <br>
@@ -51,7 +52,7 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	
 	/**
 	 * En-/Disables this renderer. By default a renderer is enabled and will
-	 * render upon {@link #render(int, int)} or {@link #renderSVG(org.w3c.dom.Document, org.w3c.dom.Element, int, int)}.
+	 * render upon {@link #render(int, int, int, int)} or {@link #renderSVG(org.w3c.dom.Document, org.w3c.dom.Element, int, int)}.
 	 * When disabled those methods return right away and will not render anything.
 	 * @param enable true when activating, false when deactivating.
 	 */
@@ -59,7 +60,7 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	
 	/**
 	 * Whether this renderer is enabled or not. By default a renderer is enabled and will
-	 * render upon {@link #render(int, int)} or {@link #renderSVG(org.w3c.dom.Document, org.w3c.dom.Element, int, int)}.
+	 * render upon {@link #render(int, int, int, int)} or {@link #renderSVG(org.w3c.dom.Document, org.w3c.dom.Element, int, int)}.
 	 * When disabled those methods return right away and will not render anything.
 	 * @return true when active
 	 */

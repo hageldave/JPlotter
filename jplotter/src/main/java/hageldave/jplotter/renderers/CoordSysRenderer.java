@@ -154,7 +154,7 @@ public class CoordSysRenderer implements Renderer {
 	 * Sets the {@link #isDirty} state of this CoordSysRenderer to true.
 	 * This indicates that axis locations, tick marks, labels and guides
 	 * have to be recomputed.
-	 * This will be done during {@link #paintToFBO(int, int)} which
+	 * The recomputing will be done during {@link #render(int, int, int, int)} which
 	 * will set the isDirty state back to false.
 	 */
 	public void setDirty() {

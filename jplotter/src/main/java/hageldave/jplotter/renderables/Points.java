@@ -15,6 +15,7 @@ import org.lwjgl.opengl.GL33;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.Glyph;
+import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 

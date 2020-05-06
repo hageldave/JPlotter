@@ -15,7 +15,7 @@ import hageldave.jplotter.util.Utils;
  * for rendering some kind of {@link Renderable} (e.g. Points).
  * It provides some typical attributes such as a List of Renderables to render,
  * a Shader object, a projection and view matrix.
- * It also implements the {@link #render(int, int)} method while exposing
+ * It also implements the {@link #render(int, int, int, int)} method while exposing
  * a new interface for implementations of GenericRenderers that need
  * to implement {@link #renderStart(int, int)} {@link #renderItem(Renderable)}
  * and {@link #renderEnd()}.
@@ -81,7 +81,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	}
 	
 	/**
-	 * Is called during the {@link #render(int, int)} routine before 
+	 * Is called during the {@link #render(int, int, int, int)} routine before 
 	 * {@link #renderItem(Renderable)} is called.
 	 * At this stage the {@link #shader} has already been bound, 
 	 * the projection matrix {@link #orthoMX} been set
@@ -97,7 +97,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	protected abstract void renderStart(int w, int h);
 
 	/**
-	 * Is called during the {@link #render(int, int)} routine after
+	 * Is called during the {@link #render(int, int, int, int)} routine after
 	 * {@link #renderStart(int, int)} for every item contained in this renderer.
 	 * <p>
 	 * This method should take care of rendering the specified item, i.e.
@@ -110,7 +110,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	protected abstract void renderItem(T item);
 	
 	/**
-	 * Is called during the {@link #render(int, int)} routine after
+	 * Is called during the {@link #render(int, int, int, int)} routine after
 	 * all items have been rendered ({@link #renderItem(Renderable)}).
 	 * This will be called before the {@link #shader} is closed.
 	 * <p>
@@ -123,7 +123,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	/**
 	 * Adds an item to this renderer's {@link #itemsToRender} list.
 	 * The renderer will take care of calling {@link Renderable#initGL()} during
-	 * its {@link #render(int, int)} method and will as well call
+	 * its {@link #render(int, int, int, int)} method and will as well call
 	 * {@link Renderable#updateGL()} if {@link Renderable#isDirty()}.
 	 * 
 	 * @param item to add
