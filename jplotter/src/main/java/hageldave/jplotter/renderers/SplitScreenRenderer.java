@@ -1,7 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.geom.Rectangle2D;
-
 import org.lwjgl.opengl.GL11;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -9,71 +7,122 @@ import org.w3c.dom.Node;
 
 import hageldave.jplotter.svg.SVGUtils;
 
-public class SplitScreenRenderer implements Renderer, AdaptableView {
+/**
+ * The SplitScreenRenderer is a space dividing renderer which defines two separate
+ * view ports for two other renderers.
+ * The space can be divided either vertically or horizontally ({@link #setVerticalSplit(boolean)}).
+ * The location of the divider is defined by a relative value determining the area ratio between 
+ * the first view port and the whole area (0.5 is equally split, divider in the middle).
+ * ({@link #setDividerLocation(double)}).
+ * The first renderer will be put on top/left, the second on bottom/right.
+ * 
+ * @author hageldave
+ */
+public class SplitScreenRenderer implements Renderer {
 
 	Renderer r1;
 	Renderer r2;
-	double spaceRatio;
+	double dividerLocation;
 	boolean verticalSplit;
 	boolean isEnabled = true;
 
+	/**
+	 * Creates a new SplitScreenRenderer that is horizontally and equally split.
+	 */
 	public SplitScreenRenderer() {
 		this(0.5,false);
 	}
 
-	public SplitScreenRenderer(double ratio, boolean vertical) {
-		this(null,null,ratio,vertical);
+	/**
+	 * Creates a new SplitScreenRenderer.
+	 * @param divider relative location of the divider
+	 * @param vertical splitting vertically (true) or horizontally (false)
+	 */
+	public SplitScreenRenderer(double divider, boolean vertical) {
+		this(null,null,divider,vertical);
 	}
 
-	public SplitScreenRenderer(Renderer r1, Renderer r2, double ratio, boolean vertical) {
+	/**
+	 * Creates a new {@link SplitScreenRenderer}
+	 * @param r1 left/top renderer
+	 * @param r2 right/bottom renderer
+	 * @param divider relative location of the divider
+	 * @param vertical splitting vertically (true) or horizontally (false)
+	 */
+	public SplitScreenRenderer(Renderer r1, Renderer r2, double divider, boolean vertical) {
 		this.r1=r1;
 		this.r2=r2;
-		this.spaceRatio=ratio;
+		this.dividerLocation=divider;
 		this.verticalSplit=vertical;
 	}
 
-	public SplitScreenRenderer setSpaceRatio(double spaceRatio) {
-		this.spaceRatio = spaceRatio;
+	/**
+	 * Sets the dividers relative location. This determines the viewport sizes for the split.
+	 * @param location value in [0.0 .. 1.0], 0.5 is equal, 0.75 uses 3/4 of the space for renderer 1.
+	 * @return this for chaining.
+	 */
+	public SplitScreenRenderer setDividerLocation(double location) {
+		this.dividerLocation = location;
 		return this;
 	}
 
+	/**
+	 * Sets the split orientation.
+	 * @param verticalSplit, when true the renderers are put left and right, 
+	 * when false they are put top and bottom.
+	 * @return this for chaining
+	 */
 	public SplitScreenRenderer setVerticalSplit(boolean verticalSplit) {
 		this.verticalSplit = verticalSplit;
 		return this;
 	}
 
+	/**
+	 * Sets the top/left renderer.
+	 * @param r1 renderer to render in the top/left view port.
+	 * @return this for chaining
+	 */
 	public SplitScreenRenderer setR1(Renderer r1) {
 		this.r1 = r1;
 		return this;
 	}
 
+	/**
+	 * Sets the bottom/right renderer.
+	 * @param r2 renderer to render in the bottom/right view port.
+	 * @return this for chaining
+	 */
 	public SplitScreenRenderer setR2(Renderer r2) {
 		this.r2 = r2;
 		return this;
 	}
 
+	/**
+	 * @return the top/left renderer.
+	 */
 	public Renderer getR1() {
 		return r1;
 	}
 
+	/**
+	 * @return the bottom/right renderer.
+	 */
 	public Renderer getR2() {
 		return r2;
 	}
 
-	public double getSpaceRatio() {
-		return spaceRatio;
+	/**
+	 * @return the relative location of the divider.
+	 */
+	public double getDividerLocation() {
+		return dividerLocation;
 	}
 
+	/**
+	 * @return whether the split orientation is vertical
+	 */
 	public boolean isVerticalSplit() {
 		return verticalSplit;
-	}
-
-	@Override
-	public void setView(Rectangle2D view) {
-		if(r1 instanceof AdaptableView)
-			((AdaptableView) r1).setView(view);
-		if(r2 instanceof AdaptableView)
-			((AdaptableView) r2).setView(view);
 	}
 
 	@Override
@@ -91,8 +140,8 @@ public class SplitScreenRenderer implements Renderer, AdaptableView {
 
 		glInit();
 
-		int w1 = verticalSplit ? (int)Math.round(w*spaceRatio):w;
-		int h1 = verticalSplit ? h:(int)Math.round(h*spaceRatio);
+		int w1 = verticalSplit ? (int)Math.round(w*dividerLocation):w;
+		int h1 = verticalSplit ? h:(int)Math.round(h*dividerLocation);
 		int w2 = verticalSplit ? w-w1:w;
 		int h2 = verticalSplit ? h:h-h1;
 		int x1 = 0;
@@ -116,8 +165,8 @@ public class SplitScreenRenderer implements Renderer, AdaptableView {
 		if(!isEnabled())
 			return;
 
-		int w1 = verticalSplit ? (int)Math.round(w*spaceRatio):w;
-		int h1 = verticalSplit ? h:(int)Math.round(h*spaceRatio);
+		int w1 = verticalSplit ? (int)Math.round(w*dividerLocation):w;
+		int h1 = verticalSplit ? h:(int)Math.round(h*dividerLocation);
 		int w2 = verticalSplit ? w-w1:w;
 		int h2 = verticalSplit ? h:h-h1;
 		int x1 = 0;
