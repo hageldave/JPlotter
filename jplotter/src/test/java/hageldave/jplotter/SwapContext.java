@@ -18,6 +18,7 @@ import hageldave.jplotter.renderers.TrianglesRenderer;
 
 public class SwapContext {
 	
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		BlankCanvas canvas1 = new BlankCanvas();
 		BlankCanvas canvas2 = new BlankCanvas();
