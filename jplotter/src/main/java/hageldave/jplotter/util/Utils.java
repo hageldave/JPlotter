@@ -17,6 +17,8 @@ import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.renderables.Triangles;
 
 /**
  * Class containing utility methods
@@ -281,4 +283,35 @@ public class Utils {
 		BufferedImage bimg = new BufferedImage(cm, raster, false, null);
 		return bimg;
 	}
+	
+	public static Triangles colormap2Tris(ColorMap cmap, boolean vertical){
+		Triangles tris = new Triangles();
+		for(int i=0; i<cmap.numColors()-1;i++){
+			int c1 = cmap.getColor(i);
+			int c2 = cmap.getColor(i+1);
+			double d1 = cmap.getLocation(i);
+			double d2 = cmap.getLocation(i+1);
+			if(vertical){
+				tris.addTriangle(0, d1, 1, d1, 0, d2)
+					.setColor0(c1).setColor1(c1).setColor2(c2);
+				tris.addTriangle(1, d2, 1, d1, 0, d2)
+					.setColor0(c2).setColor1(c1).setColor2(c2);
+			} else {
+				tris.addTriangle(d1, 0, d1, 1, d2, 0)
+					.setColor0(c1).setColor1(c1).setColor2(c2);
+				tris.addTriangle(d2, 1, d1, 1, d2, 0)
+					.setColor0(c2).setColor1(c1).setColor2(c2);
+			}
+		}
+		return tris;
+	}
+	
+	
+	
+	
 }
+
+
+
+
+

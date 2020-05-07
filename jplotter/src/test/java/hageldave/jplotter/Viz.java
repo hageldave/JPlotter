@@ -23,6 +23,8 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -36,6 +38,7 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.SplitScreenRenderer;
 import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Utils;
 
 public class Viz {
 
@@ -84,7 +87,7 @@ public class Viz {
 			lines.setGlobalThicknessMultiplier(2);
 			lines.setGlobalAlphaMultiplier(0.8);
 			content.lines.addItemToRender(lines);
-			content.triangles.addItemToRender(tris);
+			content.triangles.addItemToRender(tris).addItemToRender(Utils.colormap2Tris(DefaultColorMap.D_COOL_WARM, false));
 			
 			Points trianglepoints = new Points(DefaultGlyph.TRIANGLE_F);
 			Points quiver = new Points(DefaultGlyph.ARROW);
@@ -106,6 +109,7 @@ public class Viz {
 		legend.addGlyphLabel(DefaultGlyph.ARROW, 0xff377eb8, "-(x,y)");
 		legend.addLineLabel(2, 0xffff00ff, 0xf790, "sin(x)", 0);
 		legend.addLineLabel(2, 0xff00ff00, "x=y");
+		legend.addColormapLabel("asdasd", DefaultColorMap.D_COOL_WARM, true, new double[]{0,0.5,1}, new String[]{"lo","mid","hi"});
 		coordsys.setLegendRight(legend);
 		coordsys.setLegendRightWidth(80);
 		

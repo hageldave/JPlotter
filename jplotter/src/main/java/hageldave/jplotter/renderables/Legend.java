@@ -4,6 +4,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -12,11 +13,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The Legend class is {@link Renderable} and its own {@link Renderer} at once.
@@ -37,13 +40,17 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  */
 public class Legend implements Renderable, Renderer {
 	
-	protected ArrayList<GlyphLabel> glyphLabels = new ArrayList<>();
+	protected ArrayList<GlyphLabel> glyphLabels = new ArrayList<>(0);
 	
-	protected ArrayList<LineLabel> lineLabels = new ArrayList<>();
+	protected ArrayList<LineLabel> lineLabels = new ArrayList<>(0);
+	
+	protected ArrayList<ColormapLabel> colormapLabels = new ArrayList<>(0);
 	
 	protected Map<Glyph, Points> glyph2points = new LinkedHashMap<>();
 	
 	protected Map<Integer, Lines> pattern2lines = new LinkedHashMap<>();
+	
+	protected LinkedList<Triangles> triangles = new LinkedList<>();
 	
 	protected LinkedList<Text> texts = new LinkedList<>();
 	
@@ -90,6 +97,34 @@ public class Legend implements Renderable, Renderer {
 		public LineLabel(String labelText, double thickness, int color, int pickColor){
 			this(labelText, thickness, color, pickColor, 0xffff);
 		}
+	}
+	
+	protected static class ColormapLabel {
+		public String labelText;
+		public ColorMap cmap;
+		public boolean vertical;
+		public int pickColor;
+		public double[] ticks;
+		public String[] ticklabels;
+		
+		public ColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor, double[] ticks, String[] ticklabels) {
+			this.labelText = labelText;
+			this.cmap = cmap;
+			this.vertical = vertical;
+			this.pickColor = pickColor;
+			this.ticks = ticks == null ? new double[0]:ticks;
+			this.ticklabels = ticklabels == null ? new String[0]:ticklabels;
+		}
+		
+		public ColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor, double[] ticks) {
+			this(labelText, cmap, vertical, pickColor, ticks, null);
+		}
+		
+		public ColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor) {
+			this(labelText, cmap, vertical, pickColor, null, null);
+		}
+		
+		
 	}
 	
 	/**
@@ -165,6 +200,82 @@ public class Legend implements Renderable, Renderer {
 	}
 	
 	/**
+	 * Adds a label for a color map to this legend.
+	 * @param labelText text for the label
+	 * @param cmap color map to label
+	 * @param vertical orientation of the colormap
+	 * @param pickColor picking color (see {@link FBOCanvas})
+	 * @param ticks tick marks for the map
+	 * @param ticklabels labels for the tick marks
+	 * @return this for chaining
+	 */
+	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor, double[] ticks, String[] ticklabels){
+		colormapLabels.add(new ColormapLabel(labelText, cmap, vertical, pickColor, ticks, ticklabels));
+		return setDirty();
+	}
+	
+	/**
+	 * Adds a label for a color map to this legend.
+	 * @param labelText text for the label
+	 * @param cmap color map to label
+	 * @param vertical orientation of the colormap
+	 * @param pickColor picking color (see {@link FBOCanvas})
+	 * @param ticks tick marks for the map
+	 * @return this for chaining
+	 */
+	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor, double[] ticks){
+		return addColormapLabel(labelText, cmap, vertical, pickColor, ticks, null);
+	}
+	
+	/**
+	 * Adds a label for a color map to this legend.
+	 * @param labelText text for the label
+	 * @param cmap color map to label
+	 * @param vertical orientation of the colormap
+	 * @param pickColor picking color (see {@link FBOCanvas})
+	 * @return this for chaining
+	 */
+	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor){
+		return addColormapLabel(labelText, cmap, vertical, pickColor, null, null);
+	}
+	
+	/**
+	 * Adds a label for a color map to this legend.
+	 * @param labelText text for the label
+	 * @param cmap color map to label
+	 * @param vertical orientation of the colormap
+	 * @param ticks tick marks for the map
+	 * @param ticklabels labels for the tick marks
+	 * @return this for chaining
+	 */
+	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, double[] ticks, String[] ticklabels){
+		return addColormapLabel(labelText, cmap, vertical, 0, ticks, ticklabels);
+	}
+	
+	/**
+	 * Adds a label for a color map to this legend.
+	 * @param labelText text for the label
+	 * @param cmap color map to label
+	 * @param vertical orientation of the colormap
+	 * @param ticks tick marks for the map
+	 * @return this for chaining
+	 */
+	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, double[] ticks){
+		return addColormapLabel(labelText, cmap, vertical, 0, ticks, null);
+	}
+	
+	/**
+	 * Adds a label for a color map to this legend.
+	 * @param labelText text for the label
+	 * @param cmap color map to label
+	 * @param vertical orientation of the colormap
+	 * @return this for chaining
+	 */
+	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical){
+		return addColormapLabel(labelText, cmap, vertical, 0, null, null);
+	}
+	
+	/**
 	 * NOOP
 	 */
 	@Override
@@ -178,7 +289,7 @@ public class Legend implements Renderable, Renderer {
 	}
 
 	/**
-	 * Purges all {@link Points}, {@link Lines} and {@link Text}s of this Legend.
+	 * Purges all {@link Points}, {@link Lines}, {@link Triangles} and {@link Text}s of this Legend.
 	 * Then these Renderables are created again while laying them out according to
 	 * the available viewport size.
 	 */
@@ -256,6 +367,65 @@ public class Legend implements Renderable, Renderer {
 				currentY -= Math.max(10, fontHeight)+5; 
 			}
 		}
+		// colormaps third
+		for(ColormapLabel cmlabel : colormapLabels) {
+			Text lbltxt = new Text(cmlabel.labelText, fontSize, fontStyle);
+			lbltxt.setPickColor(cmlabel.pickColor);
+			if(!lbltxt.getTextString().isEmpty())
+				texts.add(lbltxt);
+			int pattern = 0xffff;
+			if(!pattern2lines.containsKey(pattern)){
+				Lines lines = new Lines();
+				lines
+				.setStrokePattern(pattern)
+				.setVertexRoundingEnabled(true);
+				pattern2lines.put(pattern, lines);
+			}
+			Lines lines = pattern2lines.get(pattern);
+			Triangles tris = Utils.colormap2Tris(cmlabel.cmap, cmlabel.vertical);
+			triangles.add(tris);
+			int cmapSize = 12;
+			if(cmlabel.vertical){
+				// put label on top
+				int currX = currentX+4;
+				int currY;
+				if(!lbltxt.getTextString().isEmpty()){
+					lbltxt.setOrigin(currentX, currentY);
+					currY = currentY-fontSize+2;
+				} else {
+					currY = currentY;
+				}
+				int w = cmapSize;
+				int h = Math.max(cmapSize*3, (fontSize+2)*cmlabel.ticklabels.length);
+				// stretch triangles to correct size and translate to correct location
+				tris.getTriangleDetails().forEach(t->{
+					Arrays.asList(t.p0,t.p1,t.p2).forEach(p->{
+						p.setLocation(p.getX()*w+currX, currY-h+p.getY()*h);
+					});
+				});
+				// draw frame
+				lines.addLineStrip(currX,currY, currX+w,currY, currX+w,currY-h, currX,currY-h, currX,currY);
+				// add ticks (& tick labels)
+				for(int i=0; i<cmlabel.ticks.length; i++){
+					double tick = cmlabel.ticks[i];
+					String lbl = cmlabel.ticklabels.length==0 ? "":cmlabel.ticklabels[i];
+					double x = currX+w; double y=currY-h+tick*h;
+					lines.addSegment(x, y, x+3, y);
+					if(!lbl.isEmpty()){
+						Text ticklbl = new Text(lbl, fontSize-2, fontStyle).setOrigin((int)(x+5), (int)(y-(fontSize-2)/2));
+						texts.add(ticklbl);
+					}
+				}
+				
+			} else {
+				/*
+				 * 
+				 * TODO
+				 * 
+				 * 
+				 */
+			}
+		}
 		
 		// initialize renderables
 		glyph2points.values().forEach(p->{
@@ -267,6 +437,10 @@ public class Legend implements Renderable, Renderer {
 			delegate.addItemToRender(l);
 		});
 		texts.forEach(t->{
+			t.initGL();
+			delegate.addItemToRender(t);
+		});
+		triangles.forEach(t->{
 			t.initGL();
 			delegate.addItemToRender(t);
 		});
@@ -293,6 +467,11 @@ public class Legend implements Renderable, Renderer {
 			l.close();
 		});
 		pattern2lines.clear();
+		triangles.forEach(t->{
+			t.close();
+			delegate.triangles.removeItemToRender(t);
+		});
+		triangles.clear();
 		texts.forEach(t->{
 			delegate.text.removeItemToRender(t);
 			t.close();
