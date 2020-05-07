@@ -316,6 +316,19 @@ public class Legend implements Renderable, Renderer {
 				.max()
 				.orElseGet(()->0)
 		);
+		maxTextWidth = Math.max(maxTextWidth,colormapLabels.stream()
+				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width-20)
+				.mapToInt(i->i)
+				.max()
+				.orElseGet(()->0)
+		);
+		maxTextWidth = Math.max(maxTextWidth,colormapLabels.stream()
+				.flatMap(l->Arrays.stream(l.ticklabels))
+				.map(t->CharacterAtlas.boundsForText(t.length(), fontSize-2, fontStyle).getBounds().width)
+				.mapToInt(i->i)
+				.max()
+				.orElseGet(()->0)
+		);
 		int currentX = leftPadding;
 		int currentY = viewPortHeight-fontHeight-2;
 		// glyphs first
@@ -364,15 +377,23 @@ public class Legend implements Renderable, Renderer {
 			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
 				// new line
 				currentX = leftPadding;
-				currentY -= Math.max(10, fontHeight)+5; 
+				currentY -= Math.max(10, fontHeight)+5;
 			}
 		}
 		// colormaps third
+		int currentRowHeight = 0;
 		for(ColormapLabel cmlabel : colormapLabels) {
+			// label text
 			Text lbltxt = new Text(cmlabel.labelText, fontSize, fontStyle);
 			lbltxt.setPickColor(cmlabel.pickColor);
-			if(!lbltxt.getTextString().isEmpty())
+			int elementHeight = 0;
+			if(!lbltxt.getTextString().isEmpty()){
 				texts.add(lbltxt);
+				elementHeight += fontHeight;
+			}
+			// keep track of current element's width
+			int elementWidth = lbltxt.getTextSize().width;
+			// get line object for outline
 			int pattern = 0xffff;
 			if(!pattern2lines.containsKey(pattern)){
 				Lines lines = new Lines();
@@ -382,18 +403,24 @@ public class Legend implements Renderable, Renderer {
 				pattern2lines.put(pattern, lines);
 			}
 			Lines lines = pattern2lines.get(pattern);
+			// create color map element
 			Triangles tris = Utils.colormap2Tris(cmlabel.cmap, cmlabel.vertical);
 			triangles.add(tris);
 			int cmapSize = 12;
+			
+			// VERTICAL CMAP
 			if(cmlabel.vertical){
 				// put label on top
-				int currX = currentX+4;
+				int colormapinset = 3;
+				int maptextoffset = 5;
+				int currX = currentX+colormapinset;
 				int currY;
 				if(!lbltxt.getTextString().isEmpty()){
 					lbltxt.setOrigin(currentX, currentY);
-					currY = currentY-fontSize+2;
+					currY = currentY-fontSize+4;
+					elementHeight += fontSize;
 				} else {
-					currY = currentY;
+					currY = currentY+4; 
 				}
 				int w = cmapSize;
 				int h = Math.max(cmapSize*3, (fontSize+2)*cmlabel.ticklabels.length);
@@ -403,8 +430,13 @@ public class Legend implements Renderable, Renderer {
 						p.setLocation(p.getX()*w+currX, currY-h+p.getY()*h);
 					});
 				});
+				elementHeight += h+(fontSize-2)/2;
 				// draw frame
 				lines.addLineStrip(currX,currY, currX+w,currY, currX+w,currY-h, currX,currY-h, currX,currY);
+				
+				// update element width
+				elementWidth = Math.max(elementWidth, colormapinset+cmapSize);
+				
 				// add ticks (& tick labels)
 				for(int i=0; i<cmlabel.ticks.length; i++){
 					double tick = cmlabel.ticks[i];
@@ -412,11 +444,15 @@ public class Legend implements Renderable, Renderer {
 					double x = currX+w; double y=currY-h+tick*h;
 					lines.addSegment(x, y, x+3, y);
 					if(!lbl.isEmpty()){
-						Text ticklbl = new Text(lbl, fontSize-2, fontStyle).setOrigin((int)(x+5), (int)(y-(fontSize-2)/2));
+						Text ticklbl = new Text(lbl, fontSize-2, fontStyle);
+						ticklbl.setOrigin((int)(x+maptextoffset), (int)(y-(fontSize-2)/2));
 						texts.add(ticklbl);
+						// update element width
+						elementWidth = Math.max(elementWidth, colormapinset+cmapSize+maptextoffset+ticklbl.getTextSize().width);
 					}
 				}
-				
+				currentX += elementWidth;
+				currentRowHeight = Math.max(currentRowHeight, elementHeight);
 			} else {
 				/*
 				 * 
@@ -425,6 +461,15 @@ public class Legend implements Renderable, Renderer {
 				 * 
 				 */
 			}
+			
+			
+			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
+				// new line
+				currentX = leftPadding;
+				currentY -= currentRowHeight+5+fontHeight; 
+				currentRowHeight = 0;
+			}
+			
 		}
 		
 		// initialize renderables

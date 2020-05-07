@@ -109,7 +109,8 @@ public class Viz {
 		legend.addGlyphLabel(DefaultGlyph.ARROW, 0xff377eb8, "-(x,y)");
 		legend.addLineLabel(2, 0xffff00ff, 0xf790, "sin(x)", 0);
 		legend.addLineLabel(2, 0xff00ff00, "x=y");
-		legend.addColormapLabel("asdasd", DefaultColorMap.D_COOL_WARM, true, new double[]{0,0.5,1}, new String[]{"lo","mid","hi"});
+		legend.addColormapLabel("", DefaultColorMap.D_COOL_WARM, true, new double[]{0,0.5,0.4,0.2,1}, new String[]{"lo","mid","", "", "hi"});
+		legend.addColormapLabel("sads", DefaultColorMap.D_COOL_WARM, true, new double[]{0,0.5,0.4,0.2,1}, new String[]{"lo","mid","", "", "hi"});
 		coordsys.setLegendRight(legend);
 		coordsys.setLegendRightWidth(80);
 		
