@@ -73,6 +73,11 @@ public class Utils {
 		return (T) r.clone();
 	}
 	
+	public static <T extends Point2D> T translate(T p, double dx, double dy){
+		p.setLocation(p.getX()+dx, p.getY()+dy);
+		return p;
+	}
+	
 	/**
 	 * Swaps between GL and AWT coordinates, AWT coordinate system
 	 * has its origin in the top left corner of a component and downwards pointing

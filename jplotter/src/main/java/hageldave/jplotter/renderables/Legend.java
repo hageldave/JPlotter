@@ -2,11 +2,13 @@ package hageldave.jplotter.renderables;
 
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.w3c.dom.Document;
@@ -16,6 +18,8 @@ import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
+import hageldave.jplotter.renderables.Lines.SegmentDetails;
+import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -123,8 +127,12 @@ public class Legend implements Renderable, Renderer {
 		public ColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor) {
 			this(labelText, cmap, vertical, pickColor, null, null);
 		}
+	}
+	
+	protected static interface LegendElement {
+		public void translate(int dx, int dy);
 		
-		
+		public Rectangle2D getSize();
 	}
 	
 	/**
@@ -329,6 +337,180 @@ public class Legend implements Renderable, Renderer {
 				.max()
 				.orElseGet(()->0)
 		);
+		
+		LinkedList<LegendElement> elements = new LinkedList<>();
+		for(GlyphLabel glyphLabel : glyphLabels) {
+			Glyph glyph = glyphLabel.glyph;
+			if(!glyph2points.containsKey(glyph)){
+				glyph2points.put(glyph, new Points(glyph));
+			}
+			Points points = glyph2points.get(glyph);
+			elements.add(new LegendElement() {
+				Text lbltxt;
+				PointDetails pd;
+				Rectangle2D rect;
+				{
+					lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle)
+							.setPickColor(glyphLabel.pickColor)
+							.setOrigin(itemWidth+itemTextSpacing,0);
+					texts.add(lbltxt);
+					pd = points.addPoint(itemWidth/2, fontHeight/2+1);
+					rect = new Rectangle(itemWidth+itemTextSpacing+lbltxt.getTextSize().width, fontHeight);
+				}
+				@Override
+				public void translate(int dx, int dy) {
+					Utils.translate(lbltxt.getOrigin(), dx, dy);
+					Utils.translate(pd.location, dx, dy);
+				}
+				@Override
+				public Rectangle2D getSize() {
+					return rect;
+				}
+			});
+		}
+		for(LineLabel lineLabel : lineLabels) {
+			int pattern = lineLabel.strokePattern;
+			if(!pattern2lines.containsKey(pattern)){
+				Lines lines = new Lines();
+				lines
+				.setStrokePattern(pattern)
+				.setVertexRoundingEnabled(true);
+				pattern2lines.put(pattern, lines);
+			}
+			Lines lines = pattern2lines.get(pattern);
+			elements.add(new LegendElement() {
+				Text lbltxt;
+				SegmentDetails seg;
+				Rectangle2D rect;
+				{
+					lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle)
+							.setPickColor(lineLabel.pickColor)
+							.setOrigin(itemWidth+itemTextSpacing, 0);
+							;
+					texts.add(lbltxt);
+					seg = lines.addSegment(0, fontHeight/2+1, itemWidth, fontHeight/2+1)
+					.setColor(lineLabel.color)
+					.setPickColor(lineLabel.pickColor)
+					.setThickness(lineLabel.thickness);
+					rect = new Rectangle(itemWidth+itemTextSpacing+lbltxt.getTextSize().width, fontHeight);
+				}
+				@Override
+				public void translate(int dx, int dy) {
+					Utils.translate(lbltxt.getOrigin(), dx, dy);
+					Utils.translate(seg.p0, dx, dy);
+					Utils.translate(seg.p1, dx, dy);
+				}
+				
+				@Override
+				public Rectangle2D getSize() {
+					return rect;
+				}
+			});
+		}
+		for(ColormapLabel cmlabel : colormapLabels) {
+			// get line object for outline
+			int pattern = 0xffff;
+			if(!pattern2lines.containsKey(pattern)){
+				Lines lines = new Lines();
+				lines
+				.setStrokePattern(pattern)
+				.setVertexRoundingEnabled(true);
+				pattern2lines.put(pattern, lines);
+			}
+			Lines lines = pattern2lines.get(pattern);
+			elements.add(new LegendElement() {
+				Text lbltxt;
+				List<Text> ticks=new LinkedList<>();
+				List<SegmentDetails> segs;
+				Triangles tris;
+				Rectangle2D rect;
+				{
+					int elementHeight = 0;
+					lbltxt = new Text(cmlabel.labelText, fontSize, fontStyle)
+							.setPickColor(cmlabel.pickColor);
+					if(!lbltxt.getTextString().isEmpty()){
+						texts.add(lbltxt);
+						elementHeight += fontHeight;
+					}
+					// keep track of current element's width
+					int elementWidth = lbltxt.getTextSize().width;
+					// create color map element
+					tris = Utils.colormap2Tris(cmlabel.cmap, cmlabel.vertical);
+					triangles.add(tris);
+					int cmapSize = 12;
+					// VERTICAL CMAP
+					if(cmlabel.vertical){
+						// put label on top
+						int colormapinset = 3;
+						int maptextoffset = 5;
+						int currX = colormapinset;
+						int currY;
+						if(!lbltxt.getTextString().isEmpty()){
+							currY = -fontSize+4;
+							elementHeight += fontSize;
+						} else {
+							currY = 4; 
+						}
+						int w = cmapSize;
+						int h = Math.max(cmapSize*3, (fontSize+2)*cmlabel.ticklabels.length);
+						// stretch triangles to correct size and translate to correct location
+						tris.getTriangleDetails().forEach(t->{
+							Arrays.asList(t.p0,t.p1,t.p2).forEach(p->{
+								p.setLocation(p.getX()*w+currX, currY-h+p.getY()*h);
+							});
+						});
+						elementHeight += h+(fontSize-2)/2;
+						// draw frame
+						segs = lines.addLineStrip(currX,currY, currX+w,currY, currX+w,currY-h, currX,currY-h, currX,currY);
+						// update element width
+						elementWidth = Math.max(elementWidth, colormapinset+cmapSize);
+						// add ticks (& tick labels)
+						for(int i=0; i<cmlabel.ticks.length; i++){
+							double tick = cmlabel.ticks[i];
+							String lbl = cmlabel.ticklabels.length==0 ? "":cmlabel.ticklabels[i];
+							double x = currX+w; double y=currY-h+tick*h;
+							segs.add(lines.addSegment(x, y, x+3, y));
+							if(!lbl.isEmpty()){
+								Text ticklbl = new Text(lbl, fontSize-2, fontStyle);
+								ticklbl.setOrigin((int)(x+maptextoffset), (int)(y-(fontSize-2)/2));
+								texts.add(ticklbl);
+								// update element width
+								elementWidth = Math.max(elementWidth, colormapinset+cmapSize+maptextoffset+ticklbl.getTextSize().width);
+							}
+						}
+						rect = new Rectangle(elementWidth, elementHeight);
+					} else {
+						/*
+						 * 
+						 * TODO
+						 * 
+						 * 
+						 */
+					}
+				}
+				@Override
+				public void translate(int dx, int dy) {
+					Utils.translate(lbltxt.getOrigin(), dx, dy);
+					ticks.forEach(t->Utils.translate(t.getOrigin(), dx, dy));
+					segs.forEach(s->{
+						Utils.translate(s.p0, dx, dy);
+						Utils.translate(s.p1, dx, dy);
+					});
+					tris.getTriangleDetails().forEach(t->{
+						Utils.translate(t.p0, dx, dy);
+						Utils.translate(t.p1, dx, dy);
+						Utils.translate(t.p2, dx, dy);
+					});
+				}
+				
+				@Override
+				public Rectangle2D getSize() {
+					return rect;
+				}
+			});
+		}
+		// TODO: layout algorithm for elements
+		
 		int currentX = leftPadding;
 		int currentY = viewPortHeight-fontHeight-2;
 		// glyphs first
