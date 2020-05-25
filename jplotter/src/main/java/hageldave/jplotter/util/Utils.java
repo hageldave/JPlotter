@@ -78,6 +78,11 @@ public class Utils {
 		return p;
 	}
 	
+	public static <T extends Rectangle2D> T translate(T r, double dx, double dy){
+		r.setRect(r.getX()+dx, r.getY()+dy, r.getWidth(), r.getHeight());
+		return r;
+	}
+	
 	/**
 	 * Swaps between GL and AWT coordinates, AWT coordinate system
 	 * has its origin in the top left corner of a component and downwards pointing

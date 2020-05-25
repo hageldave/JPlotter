@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderables;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Rectangle;
@@ -23,6 +24,7 @@ import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.RectangleLayout;
 import hageldave.jplotter.util.Utils;
 
 /**
@@ -307,6 +309,8 @@ public class Legend implements Renderable, Renderer {
 		clearGL();
 		// do layout
 		final int leftPadding = 4;
+		final int elementVSpace = 4;
+		final int elementHSpace = 6;
 		final int fontStyle = Font.PLAIN;
 		final int fontSize = 11;
 		final int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
@@ -361,6 +365,7 @@ public class Legend implements Renderable, Renderer {
 				public void translate(int dx, int dy) {
 					Utils.translate(lbltxt.getOrigin(), dx, dy);
 					Utils.translate(pd.location, dx, dy);
+					Utils.translate(rect, dx, dy);
 				}
 				@Override
 				public Rectangle2D getSize() {
@@ -368,6 +373,26 @@ public class Legend implements Renderable, Renderer {
 				}
 			});
 		}
+		// layout
+		int currentY = viewPortHeight;
+		RectangleLayout layout = new RectangleLayout();
+		for(LegendElement e:elements){
+			LegendElement e_=e;
+			layout.addComponent(()->{
+					Rectangle2D size = e_.getSize();
+					return new Dimension((int)size.getWidth(), (int)size.getHeight());
+				}, 
+					(x,y)->e_.translate(x, y)
+			);
+		}
+		currentY -= layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
+				.flipYAxis(0)
+				.translate(leftPadding, currentY)
+				.apply()
+				.getLayoutSize().height+elementVSpace;
+		elements.clear();
+		
+		
 		for(LineLabel lineLabel : lineLabels) {
 			int pattern = lineLabel.strokePattern;
 			if(!pattern2lines.containsKey(pattern)){
@@ -399,6 +424,7 @@ public class Legend implements Renderable, Renderer {
 					Utils.translate(lbltxt.getOrigin(), dx, dy);
 					Utils.translate(seg.p0, dx, dy);
 					Utils.translate(seg.p1, dx, dy);
+					Utils.translate(rect, dx, dy);
 				}
 				
 				@Override
@@ -407,6 +433,25 @@ public class Legend implements Renderable, Renderer {
 				}
 			});
 		}
+		// layout
+		layout = new RectangleLayout();
+		for(LegendElement e:elements){
+			LegendElement e_=e;
+			layout.addComponent(()->{
+					Rectangle2D size = e_.getSize();
+					return new Dimension((int)size.getWidth(), (int)size.getHeight());
+				}, 
+					(x,y)->e_.translate(x, y)
+			);
+		}
+		currentY -= layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
+				.flipYAxis(0)
+				.translate(leftPadding, currentY)
+				.apply()
+				.getLayoutSize().height+elementVSpace;
+		elements.clear();
+		
+		
 		for(ColormapLabel cmlabel : colormapLabels) {
 			// get line object for outline
 			int pattern = 0xffff;
@@ -473,6 +518,7 @@ public class Legend implements Renderable, Renderer {
 							if(!lbl.isEmpty()){
 								Text ticklbl = new Text(lbl, fontSize-2, fontStyle);
 								ticklbl.setOrigin((int)(x+maptextoffset), (int)(y-(fontSize-2)/2));
+								ticks.add(ticklbl);
 								texts.add(ticklbl);
 								// update element width
 								elementWidth = Math.max(elementWidth, colormapinset+cmapSize+maptextoffset+ticklbl.getTextSize().width);
@@ -501,6 +547,7 @@ public class Legend implements Renderable, Renderer {
 						Utils.translate(t.p1, dx, dy);
 						Utils.translate(t.p2, dx, dy);
 					});
+					Utils.translate(rect, dx, dy);
 				}
 				
 				@Override
@@ -509,150 +556,166 @@ public class Legend implements Renderable, Renderer {
 				}
 			});
 		}
-		// TODO: layout algorithm for elements
+		// layout
+		layout = new RectangleLayout();
+		for(LegendElement e:elements){
+			LegendElement e_=e;
+			layout.addComponent(()->{
+					Rectangle2D size = e_.getSize();
+					return new Dimension((int)size.getWidth(), (int)size.getHeight());
+				}, 
+				(x,y)->e_.translate(x, y)
+			);
+		}
+		currentY -= layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
+				.flipYAxis(0)
+				.translate(leftPadding, currentY)
+				.apply()
+				.getLayoutSize().height+elementVSpace;
+		elements.clear();
 		
-		int currentX = leftPadding;
-		int currentY = viewPortHeight-fontHeight-2;
-		// glyphs first
-		for(GlyphLabel glyphLabel : glyphLabels) {
-			Text lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle);
-			lbltxt.setPickColor(glyphLabel.pickColor);
-			texts.add(lbltxt);
-			Glyph glyph = glyphLabel.glyph;
-			if(!glyph2points.containsKey(glyph)){
-				glyph2points.put(glyph, new Points(glyph));
-			}
-			Points points = glyph2points.get(glyph);
-			points.addPoint(currentX+itemWidth/2, currentY+fontHeight/2+1)
-				.setColor(glyphLabel.color)
-				.setPickColor(glyphLabel.pickColor);
-			currentX += itemWidth+itemTextSpacing;
-			lbltxt.setOrigin(currentX, currentY);
-			currentX += lbltxt.getTextSize().width + fontHeight;
-			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
-				// new line
-				currentX = leftPadding;
-				currentY -= Math.max(10, fontHeight)+5; 
-			}
-		}
-		// lines second
-		for(LineLabel lineLabel : lineLabels) {
-			Text lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle);
-			lbltxt.setPickColor(lineLabel.pickColor);
-			texts.add(lbltxt);
-			int pattern = lineLabel.strokePattern;
-			if(!pattern2lines.containsKey(pattern)){
-				Lines lines = new Lines();
-				lines
-				.setStrokePattern(pattern)
-				.setVertexRoundingEnabled(true);
-				pattern2lines.put(pattern, lines);
-			}
-			Lines lines = pattern2lines.get(pattern);
-			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+itemWidth, currentY+fontHeight/2+1)
-				.setColor(lineLabel.color)
-				.setPickColor(lineLabel.pickColor)
-				.setThickness(lineLabel.thickness);
-			currentX += itemWidth+itemTextSpacing;
-			lbltxt.setOrigin(currentX, currentY);
-			currentX += lbltxt.getTextSize().width + fontHeight;
-			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
-				// new line
-				currentX = leftPadding;
-				currentY -= Math.max(10, fontHeight)+5;
-			}
-		}
-		// colormaps third
-		int currentRowHeight = 0;
-		for(ColormapLabel cmlabel : colormapLabels) {
-			// label text
-			Text lbltxt = new Text(cmlabel.labelText, fontSize, fontStyle);
-			lbltxt.setPickColor(cmlabel.pickColor);
-			int elementHeight = 0;
-			if(!lbltxt.getTextString().isEmpty()){
-				texts.add(lbltxt);
-				elementHeight += fontHeight;
-			}
-			// keep track of current element's width
-			int elementWidth = lbltxt.getTextSize().width;
-			// get line object for outline
-			int pattern = 0xffff;
-			if(!pattern2lines.containsKey(pattern)){
-				Lines lines = new Lines();
-				lines
-				.setStrokePattern(pattern)
-				.setVertexRoundingEnabled(true);
-				pattern2lines.put(pattern, lines);
-			}
-			Lines lines = pattern2lines.get(pattern);
-			// create color map element
-			Triangles tris = Utils.colormap2Tris(cmlabel.cmap, cmlabel.vertical);
-			triangles.add(tris);
-			int cmapSize = 12;
-			
-			// VERTICAL CMAP
-			if(cmlabel.vertical){
-				// put label on top
-				int colormapinset = 3;
-				int maptextoffset = 5;
-				int currX = currentX+colormapinset;
-				int currY;
-				if(!lbltxt.getTextString().isEmpty()){
-					lbltxt.setOrigin(currentX, currentY);
-					currY = currentY-fontSize+4;
-					elementHeight += fontSize;
-				} else {
-					currY = currentY+4; 
-				}
-				int w = cmapSize;
-				int h = Math.max(cmapSize*3, (fontSize+2)*cmlabel.ticklabels.length);
-				// stretch triangles to correct size and translate to correct location
-				tris.getTriangleDetails().forEach(t->{
-					Arrays.asList(t.p0,t.p1,t.p2).forEach(p->{
-						p.setLocation(p.getX()*w+currX, currY-h+p.getY()*h);
-					});
-				});
-				elementHeight += h+(fontSize-2)/2;
-				// draw frame
-				lines.addLineStrip(currX,currY, currX+w,currY, currX+w,currY-h, currX,currY-h, currX,currY);
-				
-				// update element width
-				elementWidth = Math.max(elementWidth, colormapinset+cmapSize);
-				
-				// add ticks (& tick labels)
-				for(int i=0; i<cmlabel.ticks.length; i++){
-					double tick = cmlabel.ticks[i];
-					String lbl = cmlabel.ticklabels.length==0 ? "":cmlabel.ticklabels[i];
-					double x = currX+w; double y=currY-h+tick*h;
-					lines.addSegment(x, y, x+3, y);
-					if(!lbl.isEmpty()){
-						Text ticklbl = new Text(lbl, fontSize-2, fontStyle);
-						ticklbl.setOrigin((int)(x+maptextoffset), (int)(y-(fontSize-2)/2));
-						texts.add(ticklbl);
-						// update element width
-						elementWidth = Math.max(elementWidth, colormapinset+cmapSize+maptextoffset+ticklbl.getTextSize().width);
-					}
-				}
-				currentX += elementWidth;
-				currentRowHeight = Math.max(currentRowHeight, elementHeight);
-			} else {
-				/*
-				 * 
-				 * TODO
-				 * 
-				 * 
-				 */
-			}
-			
-			
-			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
-				// new line
-				currentX = leftPadding;
-				currentY -= currentRowHeight+5+fontHeight; 
-				currentRowHeight = 0;
-			}
-			
-		}
+//		int currentX = leftPadding;
+//		int currentY = viewPortHeight-fontHeight-2;
+//		// glyphs first
+//		for(GlyphLabel glyphLabel : glyphLabels) {
+//			Text lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle);
+//			lbltxt.setPickColor(glyphLabel.pickColor);
+//			texts.add(lbltxt);
+//			Glyph glyph = glyphLabel.glyph;
+//			if(!glyph2points.containsKey(glyph)){
+//				glyph2points.put(glyph, new Points(glyph));
+//			}
+//			Points points = glyph2points.get(glyph);
+//			points.addPoint(currentX+itemWidth/2, currentY+fontHeight/2+1)
+//				.setColor(glyphLabel.color)
+//				.setPickColor(glyphLabel.pickColor);
+//			currentX += itemWidth+itemTextSpacing;
+//			lbltxt.setOrigin(currentX, currentY);
+//			currentX += lbltxt.getTextSize().width + fontHeight;
+//			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
+//				// new line
+//				currentX = leftPadding;
+//				currentY -= Math.max(10, fontHeight)+5; 
+//			}
+//		}
+//		// lines second
+//		for(LineLabel lineLabel : lineLabels) {
+//			Text lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle);
+//			lbltxt.setPickColor(lineLabel.pickColor);
+//			texts.add(lbltxt);
+//			int pattern = lineLabel.strokePattern;
+//			if(!pattern2lines.containsKey(pattern)){
+//				Lines lines = new Lines();
+//				lines
+//				.setStrokePattern(pattern)
+//				.setVertexRoundingEnabled(true);
+//				pattern2lines.put(pattern, lines);
+//			}
+//			Lines lines = pattern2lines.get(pattern);
+//			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+itemWidth, currentY+fontHeight/2+1)
+//				.setColor(lineLabel.color)
+//				.setPickColor(lineLabel.pickColor)
+//				.setThickness(lineLabel.thickness);
+//			currentX += itemWidth+itemTextSpacing;
+//			lbltxt.setOrigin(currentX, currentY);
+//			currentX += lbltxt.getTextSize().width + fontHeight;
+//			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
+//				// new line
+//				currentX = leftPadding;
+//				currentY -= Math.max(10, fontHeight)+5;
+//			}
+//		}
+//		// colormaps third
+//		int currentRowHeight = 0;
+//		for(ColormapLabel cmlabel : colormapLabels) {
+//			// label text
+//			Text lbltxt = new Text(cmlabel.labelText, fontSize, fontStyle);
+//			lbltxt.setPickColor(cmlabel.pickColor);
+//			int elementHeight = 0;
+//			if(!lbltxt.getTextString().isEmpty()){
+//				texts.add(lbltxt);
+//				elementHeight += fontHeight;
+//			}
+//			// keep track of current element's width
+//			int elementWidth = lbltxt.getTextSize().width;
+//			// get line object for outline
+//			int pattern = 0xffff;
+//			if(!pattern2lines.containsKey(pattern)){
+//				Lines lines = new Lines();
+//				lines
+//				.setStrokePattern(pattern)
+//				.setVertexRoundingEnabled(true);
+//				pattern2lines.put(pattern, lines);
+//			}
+//			Lines lines = pattern2lines.get(pattern);
+//			// create color map element
+//			Triangles tris = Utils.colormap2Tris(cmlabel.cmap, cmlabel.vertical);
+//			triangles.add(tris);
+//			int cmapSize = 12;
+//			
+//			// VERTICAL CMAP
+//			if(cmlabel.vertical){
+//				// put label on top
+//				int colormapinset = 3;
+//				int maptextoffset = 5;
+//				int currX = currentX+colormapinset;
+//				int currY;
+//				if(!lbltxt.getTextString().isEmpty()){
+//					lbltxt.setOrigin(currentX, currentY);
+//					currY = currentY-fontSize+4;
+//					elementHeight += fontSize;
+//				} else {
+//					currY = currentY+4; 
+//				}
+//				int w = cmapSize;
+//				int h = Math.max(cmapSize*3, (fontSize+2)*cmlabel.ticklabels.length);
+//				// stretch triangles to correct size and translate to correct location
+//				tris.getTriangleDetails().forEach(t->{
+//					Arrays.asList(t.p0,t.p1,t.p2).forEach(p->{
+//						p.setLocation(p.getX()*w+currX, currY-h+p.getY()*h);
+//					});
+//				});
+//				elementHeight += h+(fontSize-2)/2;
+//				// draw frame
+//				lines.addLineStrip(currX,currY, currX+w,currY, currX+w,currY-h, currX,currY-h, currX,currY);
+//				
+//				// update element width
+//				elementWidth = Math.max(elementWidth, colormapinset+cmapSize);
+//				
+//				// add ticks (& tick labels)
+//				for(int i=0; i<cmlabel.ticks.length; i++){
+//					double tick = cmlabel.ticks[i];
+//					String lbl = cmlabel.ticklabels.length==0 ? "":cmlabel.ticklabels[i];
+//					double x = currX+w; double y=currY-h+tick*h;
+//					lines.addSegment(x, y, x+3, y);
+//					if(!lbl.isEmpty()){
+//						Text ticklbl = new Text(lbl, fontSize-2, fontStyle);
+//						ticklbl.setOrigin((int)(x+maptextoffset), (int)(y-(fontSize-2)/2));
+//						texts.add(ticklbl);
+//						// update element width
+//						elementWidth = Math.max(elementWidth, colormapinset+cmapSize+maptextoffset+ticklbl.getTextSize().width);
+//					}
+//				}
+//				currentX += elementWidth;
+//				currentRowHeight = Math.max(currentRowHeight, elementHeight);
+//			} else {
+//				/*
+//				 * 
+//				 * TODO
+//				 * 
+//				 * 
+//				 */
+//			}
+//			
+//			
+//			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
+//				// new line
+//				currentX = leftPadding;
+//				currentY -= currentRowHeight+5+fontHeight; 
+//				currentRowHeight = 0;
+//			}
+//			
+//		}
 		
 		// initialize renderables
 		glyph2points.values().forEach(p->{
