@@ -374,7 +374,7 @@ public class Legend implements Renderable, Renderer {
 			});
 		}
 		// layout
-		int currentY = viewPortHeight;
+		int currentY = viewPortHeight-fontHeight;
 		RectangleLayout layout = new RectangleLayout();
 		for(LegendElement e:elements){
 			LegendElement e_=e;
@@ -385,11 +385,12 @@ public class Legend implements Renderable, Renderer {
 					(x,y)->e_.translate(x, y)
 			);
 		}
-		currentY -= layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
+		int layoutH = layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
 				.flipYAxis(0)
 				.translate(leftPadding, currentY)
 				.apply()
-				.getLayoutSize().height+elementVSpace;
+				.getLayoutSize().height;
+		currentY -= layoutH + (layoutH > 0 ? elementVSpace:0);
 		elements.clear();
 		
 		
@@ -444,11 +445,12 @@ public class Legend implements Renderable, Renderer {
 					(x,y)->e_.translate(x, y)
 			);
 		}
-		currentY -= layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
+		layoutH = layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
 				.flipYAxis(0)
 				.translate(leftPadding, currentY)
 				.apply()
-				.getLayoutSize().height+elementVSpace;
+				.getLayoutSize().height;
+		currentY -= layoutH + (layoutH > 0 ? elementVSpace:0);
 		elements.clear();
 		
 		
@@ -466,13 +468,13 @@ public class Legend implements Renderable, Renderer {
 			elements.add(new LegendElement() {
 				Text lbltxt;
 				List<Text> ticks=new LinkedList<>();
-				List<SegmentDetails> segs;
+				List<SegmentDetails> segs=new LinkedList<>();
 				Triangles tris;
 				Rectangle2D rect;
 				{
 					int elementHeight = 0;
-					lbltxt = new Text(cmlabel.labelText, fontSize, fontStyle)
-							.setPickColor(cmlabel.pickColor);
+					lbltxt = new Text(cmlabel.labelText, fontSize, fontStyle);
+					lbltxt.setPickColor(cmlabel.pickColor);
 					if(!lbltxt.getTextString().isEmpty()){
 						texts.add(lbltxt);
 						elementHeight += fontHeight;
@@ -485,7 +487,7 @@ public class Legend implements Renderable, Renderer {
 					int cmapSize = 12;
 					// VERTICAL CMAP
 					if(cmlabel.vertical){
-						// put label on top
+						// put color map beneath label
 						int colormapinset = 3;
 						int maptextoffset = 5;
 						int currX = colormapinset;
@@ -526,12 +528,50 @@ public class Legend implements Renderable, Renderer {
 						}
 						rect = new Rectangle(elementWidth, elementHeight);
 					} else {
-						/*
-						 * 
-						 * TODO
-						 * 
-						 * 
-						 */
+						// put color map beneath label
+						int colormapinset = 0;
+						int maptextoffset = 5;
+						int currX = colormapinset;
+						int currY;
+						if(!lbltxt.getTextString().isEmpty()){
+							currY = -fontSize+8;
+						} else {
+							currY = 8;
+						}
+						int h = cmapSize;
+						int w = Math.max(cmapSize*3, (fontSize+2)*cmlabel.ticklabels.length);
+						// stretch triangles to correct size and translate to correct location
+						int currY_ = currY;
+						tris.getTriangleDetails().forEach(t->{
+							Arrays.asList(t.p0,t.p1,t.p2).forEach(p->{
+								p.setLocation(p.getX()*w+currX, currY_-h+p.getY()*h);
+							});
+						});
+						elementWidth = Math.max(elementWidth, w);
+						// draw frame
+						segs = lines.addLineStrip(currX,currY, currX+w,currY, currX+w,currY-h, currX,currY-h, currX,currY);
+						currY -= h;
+						// add ticks (& tick labels)
+						for(int i=0; i<cmlabel.ticks.length; i++){
+							double tick = cmlabel.ticks[i];
+							String lbl = cmlabel.ticklabels.length==0 ? "":cmlabel.ticklabels[i];
+							double x = currX+tick*w; double y=currY;
+							segs.add(lines.addSegment(x, y, x, y-3));
+							if(!lbl.isEmpty()){
+								Text ticklbl = new Text(lbl, fontSize-2, fontStyle);
+								int tickW = ticklbl.getTextSize().width;
+								int xtick = (tick==0.0 ? 0 : ( tick==1.0 ? (int)(x-tickW+2) : (int)(x-tickW/2)));
+								ticklbl.setOrigin(xtick, (int)(y-maptextoffset-(fontSize-2)));
+								ticks.add(ticklbl);
+								texts.add(ticklbl);
+								// update element width
+								elementWidth = Math.max(elementWidth, xtick+tickW);
+							}
+						}
+						currY -= maptextoffset+fontSize-2;
+						elementHeight = -currY+fontHeight;
+						rect = new Rectangle(elementWidth, elementHeight);
+//						tris.addQuad(Utils.translate(Utils.copy(rect),0,-rect.getHeight()+fontHeight)).forEach(tri->tri.setColor(0x55000000));
 					}
 				}
 				@Override
@@ -567,155 +607,14 @@ public class Legend implements Renderable, Renderer {
 				(x,y)->e_.translate(x, y)
 			);
 		}
-		currentY -= layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
+		layoutH = layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
 				.flipYAxis(0)
 				.translate(leftPadding, currentY)
 				.apply()
-				.getLayoutSize().height+elementVSpace;
+				.getLayoutSize().height;
+		currentY -= layoutH + (layoutH > 0 ? elementVSpace:0);
 		elements.clear();
 		
-//		int currentX = leftPadding;
-//		int currentY = viewPortHeight-fontHeight-2;
-//		// glyphs first
-//		for(GlyphLabel glyphLabel : glyphLabels) {
-//			Text lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle);
-//			lbltxt.setPickColor(glyphLabel.pickColor);
-//			texts.add(lbltxt);
-//			Glyph glyph = glyphLabel.glyph;
-//			if(!glyph2points.containsKey(glyph)){
-//				glyph2points.put(glyph, new Points(glyph));
-//			}
-//			Points points = glyph2points.get(glyph);
-//			points.addPoint(currentX+itemWidth/2, currentY+fontHeight/2+1)
-//				.setColor(glyphLabel.color)
-//				.setPickColor(glyphLabel.pickColor);
-//			currentX += itemWidth+itemTextSpacing;
-//			lbltxt.setOrigin(currentX, currentY);
-//			currentX += lbltxt.getTextSize().width + fontHeight;
-//			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
-//				// new line
-//				currentX = leftPadding;
-//				currentY -= Math.max(10, fontHeight)+5; 
-//			}
-//		}
-//		// lines second
-//		for(LineLabel lineLabel : lineLabels) {
-//			Text lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle);
-//			lbltxt.setPickColor(lineLabel.pickColor);
-//			texts.add(lbltxt);
-//			int pattern = lineLabel.strokePattern;
-//			if(!pattern2lines.containsKey(pattern)){
-//				Lines lines = new Lines();
-//				lines
-//				.setStrokePattern(pattern)
-//				.setVertexRoundingEnabled(true);
-//				pattern2lines.put(pattern, lines);
-//			}
-//			Lines lines = pattern2lines.get(pattern);
-//			lines.addSegment(currentX, currentY+fontHeight/2+1, currentX+itemWidth, currentY+fontHeight/2+1)
-//				.setColor(lineLabel.color)
-//				.setPickColor(lineLabel.pickColor)
-//				.setThickness(lineLabel.thickness);
-//			currentX += itemWidth+itemTextSpacing;
-//			lbltxt.setOrigin(currentX, currentY);
-//			currentX += lbltxt.getTextSize().width + fontHeight;
-//			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
-//				// new line
-//				currentX = leftPadding;
-//				currentY -= Math.max(10, fontHeight)+5;
-//			}
-//		}
-//		// colormaps third
-//		int currentRowHeight = 0;
-//		for(ColormapLabel cmlabel : colormapLabels) {
-//			// label text
-//			Text lbltxt = new Text(cmlabel.labelText, fontSize, fontStyle);
-//			lbltxt.setPickColor(cmlabel.pickColor);
-//			int elementHeight = 0;
-//			if(!lbltxt.getTextString().isEmpty()){
-//				texts.add(lbltxt);
-//				elementHeight += fontHeight;
-//			}
-//			// keep track of current element's width
-//			int elementWidth = lbltxt.getTextSize().width;
-//			// get line object for outline
-//			int pattern = 0xffff;
-//			if(!pattern2lines.containsKey(pattern)){
-//				Lines lines = new Lines();
-//				lines
-//				.setStrokePattern(pattern)
-//				.setVertexRoundingEnabled(true);
-//				pattern2lines.put(pattern, lines);
-//			}
-//			Lines lines = pattern2lines.get(pattern);
-//			// create color map element
-//			Triangles tris = Utils.colormap2Tris(cmlabel.cmap, cmlabel.vertical);
-//			triangles.add(tris);
-//			int cmapSize = 12;
-//			
-//			// VERTICAL CMAP
-//			if(cmlabel.vertical){
-//				// put label on top
-//				int colormapinset = 3;
-//				int maptextoffset = 5;
-//				int currX = currentX+colormapinset;
-//				int currY;
-//				if(!lbltxt.getTextString().isEmpty()){
-//					lbltxt.setOrigin(currentX, currentY);
-//					currY = currentY-fontSize+4;
-//					elementHeight += fontSize;
-//				} else {
-//					currY = currentY+4; 
-//				}
-//				int w = cmapSize;
-//				int h = Math.max(cmapSize*3, (fontSize+2)*cmlabel.ticklabels.length);
-//				// stretch triangles to correct size and translate to correct location
-//				tris.getTriangleDetails().forEach(t->{
-//					Arrays.asList(t.p0,t.p1,t.p2).forEach(p->{
-//						p.setLocation(p.getX()*w+currX, currY-h+p.getY()*h);
-//					});
-//				});
-//				elementHeight += h+(fontSize-2)/2;
-//				// draw frame
-//				lines.addLineStrip(currX,currY, currX+w,currY, currX+w,currY-h, currX,currY-h, currX,currY);
-//				
-//				// update element width
-//				elementWidth = Math.max(elementWidth, colormapinset+cmapSize);
-//				
-//				// add ticks (& tick labels)
-//				for(int i=0; i<cmlabel.ticks.length; i++){
-//					double tick = cmlabel.ticks[i];
-//					String lbl = cmlabel.ticklabels.length==0 ? "":cmlabel.ticklabels[i];
-//					double x = currX+w; double y=currY-h+tick*h;
-//					lines.addSegment(x, y, x+3, y);
-//					if(!lbl.isEmpty()){
-//						Text ticklbl = new Text(lbl, fontSize-2, fontStyle);
-//						ticklbl.setOrigin((int)(x+maptextoffset), (int)(y-(fontSize-2)/2));
-//						texts.add(ticklbl);
-//						// update element width
-//						elementWidth = Math.max(elementWidth, colormapinset+cmapSize+maptextoffset+ticklbl.getTextSize().width);
-//					}
-//				}
-//				currentX += elementWidth;
-//				currentRowHeight = Math.max(currentRowHeight, elementHeight);
-//			} else {
-//				/*
-//				 * 
-//				 * TODO
-//				 * 
-//				 * 
-//				 */
-//			}
-//			
-//			
-//			if(viewPortWidth-currentX < (itemWidth+itemTextSpacing+maxTextWidth) ){
-//				// new line
-//				currentX = leftPadding;
-//				currentY -= currentRowHeight+5+fontHeight; 
-//				currentRowHeight = 0;
-//			}
-//			
-//		}
 		
 		// initialize renderables
 		glyph2points.values().forEach(p->{

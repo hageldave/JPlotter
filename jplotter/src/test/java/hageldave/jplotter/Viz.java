@@ -23,7 +23,6 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
-import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -105,14 +104,17 @@ public class Viz {
 			content.points.addItemToRender(trianglepoints).addItemToRender(quiver);
 		}
 		Legend legend = new Legend();
+		Legend legendB = new Legend();
 		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, 0xffe41a1c, "rand pnts");
 		legend.addGlyphLabel(DefaultGlyph.ARROW, 0xff377eb8, "-(x,y)");
 		legend.addLineLabel(2, 0xffff00ff, 0xf790, "sin(x)", 0);
 		legend.addLineLabel(2, 0xff00ff00, "x=y");
-		legend.addColormapLabel(" ", DefaultColorMap.S_RISING_DEEP_PURPLE, true, new double[]{0,0.5,1,0.75,0.25}, new String[]{"lo","mid","hi", "", ""});
-		legend.addColormapLabel("sads", DefaultColorMap.S_PLASMA, true, new double[]{0,0.5,0.4,0.2,1}, new String[]{"lo","mid","", "", "hi"});
+		legendB.addColormapLabel("M", DefaultColorMap.S_RISING_DEEP_PURPLE, false, new double[]{0,0.5,1,0.75,0.25}, new String[]{"lo","mid","hi", "", ""});
+		legendB.addColormapLabel("sads", DefaultColorMap.S_PLASMA, false, new double[]{0,0.5,0.4,0.2,1}, new String[]{"Lo","mig","", "", "hiN"});
 		coordsys.setLegendRight(legend);
 		coordsys.setLegendRightWidth(80);
+		coordsys.setLegendBottom(legendB);
+		coordsys.setLegendBottomHeight(60);
 		
 		CompleteRenderer overlay = new CompleteRenderer();
 		coordsys.setOverlay(overlay);
