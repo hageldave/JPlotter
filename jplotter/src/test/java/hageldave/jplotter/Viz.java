@@ -173,9 +173,14 @@ public class Viz {
 		canvas2.setPreferredSize(new Dimension(100, 100));
 		TextRenderer textRenderer = new TextRenderer();
 		CurveRenderer curverenderer = new CurveRenderer();
-		canvas2.setRenderer(textRenderer.withAppended(curverenderer));
+		canvas2.setRenderer(textRenderer);
 		textRenderer.addItemToRender(new Text("blank", 15, Font.PLAIN).setOrigin(40, 40));
-		curverenderer.addItemToRender(new Curves().setGlobalThicknessMultiplier(3).addCurve(10,30, 200,30, 10-100,100, 50,100));
+		Curves curves = new Curves().setGlobalThicknessMultiplier(3);
+		curves.addCurve(10,30, 200,30, 10-100,100, 50,100);
+		curves.addCurveStrip(0,0, 10,0, 10,0, 10,10, 10,20, 10,20, 0,20);
+		curverenderer.addItemToRender(curves);
+		
+		coordsys.setContent(content.withAppended(curverenderer));
 		
 		JSplitPane pane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,canvas,canvas2);
 		canvas.setMinimumSize(new Dimension(1, 1));

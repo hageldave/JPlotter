@@ -253,24 +253,53 @@ public class Curves implements Renderable {
 		return curves.size();
 	}
 	
-	public Curves addCurve(CurveDetails cd){
+	public CurveDetails addCurve(CurveDetails cd){
 		this.curves.add(cd);
-		return setDirty();
+		setDirty();
+		return cd;
 	}
 	
-	public Curves addCurve(Point2D p0, Point2D cp0, Point2D cp1, Point2D p1){
+	public CurveDetails addCurve(Point2D p0, Point2D cp0, Point2D cp1, Point2D p1){
 		return this.addCurve(new CurveDetails(p0, cp0, cp1, p1));
 	}
 	
-	public Curves addCurve(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3){
+	public CurveDetails addCurve(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3){
 		return this.addCurve(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), new Point2D.Double(x2, y2), new Point2D.Double(x3, y3));
 	}
+	
+	public ArrayList<CurveDetails> addCurveStrip(Point2D... points){
+		if((points.length-1)%3 != 0){
+			throw new IllegalArgumentException("Not enough points for curve strip. Need 4+n*3, but provided " + points.length + ", missing " + (3-((points.length-1)%3)) + ".");
+		}
+		int n = points.length/3;
+		ArrayList<CurveDetails> curves = new ArrayList<>(n);
+		for(int i=0; i < n; i++){
+			curves.add(this.addCurve(points[i*3+0], points[i*3+1], points[i*3+2], points[i*3+3]));
+		}
+		return curves;
+	}
+	
+	public ArrayList<CurveDetails> addCurveStrip(double... coords){
+		if(coords.length % 2 != 0){
+			throw new IllegalArgumentException("Need to provide even number of coordinates. Provided " + coords.length);
+		}
+		int m = coords.length/2;
+		if((m-1)%3 != 0){
+			throw new IllegalArgumentException("Not enough points for curve strip. Need 4+n*3, but provided " + m + ", missing " + (3-((m-1)%3)) + ".");
+		}
+		int n = m/3;
+		ArrayList<CurveDetails> curves = new ArrayList<>(n);
+		for(int i=0; i < n; i++){
+			curves.add(this.addCurve(coords[i*6+0],coords[i*6+1], coords[i*6+2],coords[i*6+3], coords[i*6+4],coords[i*6+5], coords[i*6+6],coords[i*6+7]));
+		}
+		return curves;
+	}
 
-	public Curves addStraight(Point2D p0, Point2D p1){
+	public CurveDetails addStraight(Point2D p0, Point2D p1){
 		return addCurve(new CurveDetails(p0,p0,p1,p1));
 	}
 	
-	public Curves addStraight(double x0, double y0, double x1, double y1){
+	public CurveDetails addStraight(double x0, double y0, double x1, double y1){
 		return addStraight(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1));
 	}
 	

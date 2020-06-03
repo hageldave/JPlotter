@@ -134,7 +134,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			
 			+ NL + "   vec4 bbox = boundingBox(p1,p2,cp1,cp2);"
 			+ NL + "   int area = int(bbox.z*bbox.w);"
-			+ NL + "   int numSegs = max(1,min(34, area/128));"
+			+ NL + "   int numSegs = max(3,min(34, int(sqrt(area)/2.0)));"
 			
 			+ NL + "   float i2t = 1.0/float(numSegs);"
 			+ NL + "   for(int i=0; i<numSegs+1; i++){"
@@ -146,6 +146,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "      if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "      gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "      gcolor = vcolor[0];"
+			+ NL + "      gcolor = i%2 == 0 ? vec4(0,1,0,1):vec4(0,0,1,1);"
 			+ NL + "      gpick = vpick[0];"
 			+ NL + "      gpathlen = vpathlen[0];"
 			+ NL + "      EmitVertex();"
@@ -155,6 +156,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "      if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "      gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "      gcolor = vcolor[0];"
+			+ NL + "      gcolor = i%2 == 0 ? vec4(0,1,0,1):vec4(0,0,1,1);"
 			+ NL + "      gpick = vpick[0];"
 			+ NL + "      gpathlen = vpathlen[0];"
 			+ NL + "      EmitVertex();"

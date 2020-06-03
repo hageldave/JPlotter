@@ -127,7 +127,7 @@ public class Lines implements Renderable {
 	 * @param points which are connected by line segments
 	 * @return the added segments
 	 */
-	public ArrayList<SegmentDetails> addLineStrip(Point2D...points){
+	public ArrayList<SegmentDetails> addLineStrip(Point2D... points){
 		ArrayList<SegmentDetails> segments = new ArrayList<>(points.length-1);
 		for(int i = 0; i < points.length-1; i++){
 			segments.add( this.addSegment(points[i], points[i+1]) );
