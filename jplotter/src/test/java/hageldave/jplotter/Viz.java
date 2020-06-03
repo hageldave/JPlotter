@@ -27,6 +27,7 @@ import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
+import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
@@ -34,6 +35,7 @@ import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.renderers.CurveRenderer;
 import hageldave.jplotter.renderers.SplitScreenRenderer;
 import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -170,8 +172,10 @@ public class Viz {
 		canvas2.setDisposeOnRemove(false);
 		canvas2.setPreferredSize(new Dimension(100, 100));
 		TextRenderer textRenderer = new TextRenderer();
-		canvas2.setRenderer(textRenderer);
+		CurveRenderer curverenderer = new CurveRenderer();
+		canvas2.setRenderer(textRenderer.withAppended(curverenderer));
 		textRenderer.addItemToRender(new Text("blank", 15, Font.PLAIN).setOrigin(40, 40));
+		curverenderer.addItemToRender(new Curves().setGlobalThicknessMultiplier(3).addCurve(10,30, 200,30, 10-100,100, 50,100));
 		
 		JSplitPane pane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,canvas,canvas2);
 		canvas.setMinimumSize(new Dimension(1, 1));

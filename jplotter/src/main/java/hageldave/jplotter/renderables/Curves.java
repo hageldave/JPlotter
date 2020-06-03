@@ -19,12 +19,23 @@ public class Curves implements Renderable {
 	protected float strokeLength = 16;
 	protected boolean isDirty;
 	protected boolean hidden = false;
+	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
+	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 	
 	
 	@Override
 	public boolean isDirty() {
-		// TODO Auto-generated method stub
-		return true;
+		return isDirty;
+	}
+	
+	/**
+	 * Sets the {@link #isDirty()} state of this renderable to true.
+	 * This indicates that an {@link #updateGL()} call is necessary to sync GL resources.
+	 * @return this for chaining
+	 */
+	public Curves setDirty() {
+		this.isDirty = true;
+		return this;
 	}
 	
 	@Override
@@ -109,7 +120,7 @@ public class Curves implements Renderable {
 				pathLen = pathLen % strokeLength;
 				xprev = x1; yprev = y1;
 			}
-			va.setBuffer(0, 2, segmentCoordBuffer);
+			va.setBuffer(0, 4, segmentCoordBuffer);
 			va.setBuffer(1, 1, false, colorBuffer);
 			va.setBuffer(2, 1, false, pickBuffer);
 			va.setBuffer(3, 1, thicknessBuffer);
@@ -125,6 +136,40 @@ public class Curves implements Renderable {
 			va = null;
 		}
 	}
+	
+	/**
+	 * Returns the vertex array of this lines object.
+	 * The vertex array's first attribute contains the 2D point pairs of
+	 * the line segments, the second attribute contains integer packed RGB
+	 * value pairs for the line segments.
+	 * @return the vertex array associated with this lines object or null if
+	 * {@link #initGL()} was not yet called or this object was already closed.
+	 */
+	public VertexArray getVertexArray() {
+		return va;
+	}
+
+
+	/**
+	 * Binds this object's vertex array and enables the corresponding attributes 
+	 * (first and second attribute).
+	 * @throws NullPointerException unless {@link #initGL()} was called (and this has not yet been closed)
+	 */
+	@GLContextRequired
+	public void bindVertexArray() {
+		va.bindAndEnableAttributes(0,1,2,3,4);
+	}
+
+
+	/**
+	 * Releases this objects vertex array and disables the corresponding attributes
+	 * @throws NullPointerException unless {@link #initGL()} was called (and this has not yet been closed)
+	 */
+	@GLContextRequired
+	public void releaseVertexArray() {
+		va.releaseAndDisableAttributes(0,1,2,3,4);
+	}
+
 
 	@Override
 	public boolean intersects(Rectangle2D rect) {
@@ -145,6 +190,88 @@ public class Curves implements Renderable {
 		public DoubleSupplier thickness0 = PREDEFINED_THICKNESSES[1];
 		public DoubleSupplier thickness1 = PREDEFINED_THICKNESSES[1];
 		public int pickColor;
+		
+		public CurveDetails(Point2D p0, Point2D pc0, Point2D pc1, Point2D p1) {
+			this.p0=p0;
+			this.p1=p1;
+			this.pc0=pc0;
+			this.pc1=pc1;
+			this.color0 = this.color1 = ()->0xff555555;
+		}
+		
 	}
 
+	public float getGlobalThicknessMultiplier() {
+		return (float)globalThicknessMultiplier.getAsDouble();
+	}
+	
+	/**
+	 * Sets the line thickness for this {@link Lines} object in pixels.
+	 * @param thickness of the lines, default is 1.
+	 * @return this for chaining
+	 */
+	public Curves setGlobalThicknessMultiplier(DoubleSupplier thickness) {
+		this.globalThicknessMultiplier = thickness;
+		return this;
+	}
+
+	/**
+	 * Sets the line thickness for this {@link Lines} object in pixels.
+	 * @param thickness of the lines, default is 1.
+	 * @return this for chaining
+	 */
+	public Curves setGlobalThicknessMultiplier(double thickness) {
+		return setGlobalThicknessMultiplier(() -> thickness); 
+	}
+
+	
+	public float getGlobalAlphaMultiplier() {
+		return (float)globalAlphaMultiplier.getAsDouble();
+	}
+
+	public boolean isVertexRoundingEnabled() {
+		return false;
+	}
+
+	public short getStrokePattern() {
+		return strokePattern;
+	}
+
+	public float getStrokeLength() {
+		return strokeLength;
+	}
+	
+	/**
+	 * Whether this Lines object has a stroke pattern other than 0xffff (completely solid).
+	 * @return true when stroke pattern != 0xffff
+	 */
+	public boolean hasStrokePattern() {
+		return this.strokePattern != (short)0xffff;
+	}
+
+	public int numSegments() {
+		return curves.size();
+	}
+	
+	public Curves addCurve(CurveDetails cd){
+		this.curves.add(cd);
+		return setDirty();
+	}
+	
+	public Curves addCurve(Point2D p0, Point2D cp0, Point2D cp1, Point2D p1){
+		return this.addCurve(new CurveDetails(p0, cp0, cp1, p1));
+	}
+	
+	public Curves addCurve(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3){
+		return this.addCurve(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), new Point2D.Double(x2, y2), new Point2D.Double(x3, y3));
+	}
+
+	public Curves addStraight(Point2D p0, Point2D p1){
+		return addCurve(new CurveDetails(p0,p0,p1,p1));
+	}
+	
+	public Curves addStraight(double x0, double y0, double x1, double y1){
+		return addStraight(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1));
+	}
+	
 }
