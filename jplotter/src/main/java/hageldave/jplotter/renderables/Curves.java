@@ -199,6 +199,17 @@ public class Curves implements Renderable {
 			this.color0 = this.color1 = ()->0xff555555;
 		}
 		
+		public Point2D curvature(double t){
+			Point2D a = Utils.plus(pc1, -2, pc0); a = Utils.plus(a, 1, p0);
+			Point2D b = Utils.plus(p1, -2, pc1); b = Utils.plus(b, 1, pc0);
+			return Utils.plus(Utils.plus(null, 6*(1-t), a), 6*t, b);
+		}
+		
+		public double crvtr(double t){
+			Point2D p = curvature(t);
+			return Math.sqrt(p.getX()*p.getX()+p.getY()*p.getY());
+		}
+		
 	}
 
 	public float getGlobalThicknessMultiplier() {

@@ -66,9 +66,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 	protected static final String geometryShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(lines) in;"
-			/* max_comps=1024, num_comps_vertex=4+4+4+1+1=14, max_verts=1024/14=73 
-			 * this means we can output a triangle strip consisting of 1+(73-4)/2=35 quads 
-			 */
+			+ NL + "/* maxcomps=1024, we write 4+4+4+1+1=14 per vertex, so we can output 1024/14=73 vertices */"
 			+ NL + "layout(triangle_strip,max_vertices=73) out;"
 			+ NL + "uniform vec4 viewTransform;"
 			+ NL + "uniform mat4 projMX;"
@@ -81,48 +79,63 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "out vec4 gcolor;"
 			+ NL + "out vec4 gpick;"
 			+ NL + "out float gpathlen;"
-
+			+ NL + ""
 			+ NL + "float rnd(float f){return float(int(f+0.5));}"
-
+			+ NL + ""
 			+ NL + "vec2 roundToIntegerValuedVec(vec2 v){"
 			+ NL + "   return vec2(rnd(v.x),rnd(v.y));"
 			+ NL + "}"
-			
-			
+			+ NL + ""
 			+ NL + "vec2 transformToView(vec2 v){"
 			+ NL + "   vec3 pos = vec3(v,1);"
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
 			+ NL + "   return pos.xy;"
 			+ NL + "}"
-			
-			+ NL + "vec4 bezier(vec2 p1, vec2 p2, vec2 cp1, vec2 cp2, float t){"
+			+ NL + ""
+			+ NL + "vec4 cubic_bezier(vec2 p1, vec2 p2, vec2 cp1, vec2 cp2, float t){"
 			+ NL + "   float t_ = 1-t;"
 			+ NL + "   float t2 = t*t;"
 			+ NL + "   float t2_= t_*t_;"
 			+ NL + "   float t23 = 3*t2;"
 			+ NL + "   float t23_= 3*t2_;"
-			
 			+ NL + "   vec2 v1 = (t2_* t_) * p1;"
 			+ NL + "   vec2 v2 = (t2 * t ) * p2;"
 			+ NL + "   vec2 v3 = (t23_* t) * cp1;"
 			+ NL + "   vec2 v4 = (t_* t23) * cp2;"
-			
 			+ NL + "   vec2 dv1 = (t23_) * (cp1-p1);"
 			+ NL + "   vec2 dv2 = (t23 ) * (p2-cp2);"
 			+ NL + "   vec2 dv3 = (6 * t_* t ) * (cp2-cp1);"
-			
 			+ NL + "   return vec4(v1+v2+v3+v4, dv1+dv2+dv3);"
 			+ NL + "}"
-			
+			+ NL + ""
+			+ NL + "vec2 bezier(vec2 p1, vec2 p2, vec2 cp, float t){"
+			+ NL + "   float t_ = 1-t;"
+			+ NL + "   vec2 v1 = (t_*t_) * p1;"
+			+ NL + "   vec2 v2 = (t *t ) * p2;"
+			+ NL + "   vec2 v3 = (2* t_* t) * cp;"
+			+ NL + "   return v1+v2+v3;"
+			+ NL + "}"
+			+ NL + ""
+			+ NL + "vec2 d_bezier(vec2 p1, vec2 p2, vec2 cp, float t){"
+			+ NL + "   float t_ = 1-t;"
+			+ NL + "   vec2 dv1 = (2*t_) * (cp-p1);"
+			+ NL + "   vec2 dv2 = (2*t ) * (p2-cp);"
+			+ NL + "   return dv1+dv2;"
+			+ NL + "}"
+			+ NL + ""
 			+ NL + "vec4 boundingBox(vec2 v1, vec2 v2, vec2 v3, vec2 v4){"
 			+ NL + "   vec2 vmin = min(min(v1,v2),min(v3,v4));"
 			+ NL + "   vec2 vmax = max(max(v1,v2),max(v3,v4));"
 			+ NL + "   return vec4(vmin, vmax-vmin);"
 			+ NL + "}"
-
+			+ NL + ""
+			+ NL + "float warpT(float t){"
+			+ NL + "   t = t*2-1;"
+			+ NL + "   return (2+t*t*t+t)/4;"
+			+ NL + "}"
+			+ NL + ""
 			+ NL + "void main() {"
-			/* unpacking two vec2s from vec4 inputs */
 			+ NL + "   vec2 p1 = gl_in[0].gl_Position.xy;"
 			+ NL + "   vec2 p2 = gl_in[0].gl_Position.zw;"
 			+ NL + "   vec2 cp1 = gl_in[1].gl_Position.xy;"
@@ -131,18 +144,29 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "   p2 = transformToView(p2);"
 			+ NL + "   cp1 = transformToView(cp1);"
 			+ NL + "   cp2 = transformToView(cp2);"
-			
+			+ NL + "   "
 			+ NL + "   vec4 bbox = boundingBox(p1,p2,cp1,cp2);"
 			+ NL + "   int area = int(bbox.z*bbox.w);"
 			+ NL + "   int numSegs = max(3,min(34, int(sqrt(area)/2.0)));"
-			
+			+ NL + "   vec4 dt_startEnd = vec4(normalize(d_bezier(p1,p2,cp1, 0.0)),normalize(d_bezier(p1,p2,cp1,1.0)));"
+			+ NL + "   "
 			+ NL + "   float i2t = 1.0/float(numSegs);"
 			+ NL + "   for(int i=0; i<numSegs+1; i++){"
-			+ NL + "      float t = i*i2t;"
-			+ NL + "      vec4 bzr = bezier(p1,p2,cp1,cp2, t);"
-			+ NL + "      vec2 miter = normalize(vec2(bzr.w, -bzr.z))*0.5*linewidthMultiplier;"
-			
-			+ NL + "      vec2 p = bzr.xy+miter;"
+			+ NL + "      float t = warpT(i*i2t);"
+			+ NL + "      float t_prev = warpT((i-1)*i2t);"
+			+ NL + "      float t_next = warpT((i+1)*i2t);"
+			+ NL + "      vec2 q = bezier(p1,p2,cp1, t);"
+			+ NL + "      "
+			+ NL + "      vec2 dir1 = i == 0       ? dt_startEnd.xy : normalize(q-bezier(p1,p2,cp1, t_prev));"
+			+ NL + "      vec2 dir2 = i == numSegs ? -dt_startEnd.zw : normalize(q-bezier(p1,p2,cp1, t_next));"
+			+ NL + "      if(i==numSegs){dir1 = -dir2;}"
+			+ NL + "      vec2 dir12 = dir1+dir2;"
+			+ NL + "      vec2 miter = vec2(dir1.y, -dir1.x);"
+			+ NL + "      float extend = 0.5*linewidthMultiplier;"
+			+ NL + "      float dotm = dot(miter,dir12);"
+			+ NL + "      miter = abs(dotm) < 1e-4 ? miter : (1/dotm)*dir12;"
+			+ NL + "      "
+			+ NL + "      vec2 p = q+extend*miter;"
 			+ NL + "      if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "      gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "      gcolor = vcolor[0];"
@@ -150,9 +174,8 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "      gpick = vpick[0];"
 			+ NL + "      gpathlen = vpathlen[0];"
 			+ NL + "      EmitVertex();"
-			
-			
-			+ NL + "      p = bzr.xy-miter;"
+			+ NL + "      "
+			+ NL + "      p = q-extend*miter;"
 			+ NL + "      if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "      gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "      gcolor = vcolor[0];"
@@ -161,44 +184,6 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "      gpathlen = vpathlen[0];"
 			+ NL + "      EmitVertex();"
 			+ NL + "   }"
-			
-//			+ NL + "   vec2 dir = p1-p2;"
-//			+ NL + "   vec2 miterDir = normalize(vec2(dir.y, -dir.x));"
-//			+ NL + "   miterDir = miterDir * 0.5*linewidthMultiplier;"
-//			+ NL + "   vec2 p;"
-//
-//			+ NL + "   p = p1+miterDir*vthickness[0];"
-//			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
-//			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
-//			+ NL + "   gcolor = vcolor[0];"
-//			+ NL + "   gpick = vpick[0];"
-//			+ NL + "   gpathlen = vpathlen[0];"
-//			+ NL + "   EmitVertex();"
-//
-//			+ NL + "   p = p1-miterDir*vthickness[0];"
-//			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
-//			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
-//			+ NL + "   gcolor = vcolor[0];"
-//			+ NL + "   gpick = vpick[0];"
-//			+ NL + "   gpathlen = vpathlen[0];"
-//			+ NL + "   EmitVertex();"
-//
-//			+ NL + "   p = p2+miterDir*vthickness[1];"
-//			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
-//			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
-//			+ NL + "   gcolor = vcolor[1];"
-//			+ NL + "   gpick = vpick[1];"
-//			+ NL + "   gpathlen = vpathlen[1];"
-//			+ NL + "   EmitVertex();"
-//
-//			+ NL + "   p = p2-miterDir*vthickness[1];"
-//			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
-//			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
-//			+ NL + "   gcolor = vcolor[1];"
-//			+ NL + "   gpick = vpick[1];"
-//			+ NL + "   gpathlen = vpathlen[1];"
-//			+ NL + "   EmitVertex();"
-
 			+ NL + "   EndPrimitive();"
 			+ NL + "}"
 			+ NL
@@ -541,4 +526,9 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 		}
 		return target;
 	}
+	
+//	public static void main(String[] args) {
+//		System.out.println(geometryShaderSrc);
+//	}
+	
 }

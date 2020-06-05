@@ -316,7 +316,13 @@ public class Utils {
 		return tris;
 	}
 	
-	
+	public static Point2D plus(Point2D a, double m, Point2D b){
+		if(a == null){
+			return new Point2D.Double(m*b.getX(), m*b.getY());
+		}
+		return new Point2D.Double(a.getX()+m*b.getX(), a.getY()+m*b.getY());
+		
+	}
 	
 	
 }

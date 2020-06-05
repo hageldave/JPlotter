@@ -13,7 +13,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
 import java.io.File;
+import java.util.LinkedList;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -24,10 +26,12 @@ import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Curves;
+import hageldave.jplotter.renderables.Curves.CurveDetails;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
@@ -52,59 +56,15 @@ public class Viz {
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
 		BlankCanvas canvas = new BlankCanvas();
-		SplitScreenRenderer splitscreen = new SplitScreenRenderer(0.5,false);
 		CoordSysRenderer coordsys = new CoordSysRenderer();
-		splitscreen.setR1(coordsys);
-		canvas.setRenderer(splitscreen);
+		canvas.setRenderer(coordsys);
 		canvas.setDisposeOnRemove(false);
 		coordsys.setyAxisLabel("Y-Axis");
 		CompleteRenderer content = new CompleteRenderer();
-		content.setRenderOrder(PNT, LIN, TRI, TXT);
+		content.setRenderOrder(TRI, PNT, LIN, TXT);
 		coordsys.setContent(content);
 		canvas.setPreferredSize(new Dimension(300, 300));
 		
-		// setup content
-		{
-			Triangles tris = new Triangles();
-			Lines lines = new Lines();
-			lines.setStrokePattern(0xf790);
-			double scaling = 0.1;
-			Color triColor = new Color(0xff6633aa,true);
-			for(int i = 0; i < 100; i++){
-				double x1 = i*scaling;
-				double x2 = (i+1)*scaling;
-				double y1 = Math.sin(x1);
-				double y2 = Math.sin(x2);
-				lines.addSegment(x1, y1, x2, y2)
-					.setColor0(0xffff00ff)
-					.setColor1(0xffff00ff)
-					.setPickColor(0xbabe01);
-				tris.addQuad(x1,0, x1, y1, x2, y2, x2, 0)
-					.forEach(tri->tri.setColor(triColor));
-			}
-			lines.addSegment(0, 0, 100, 100)
-				.setColor0(0xff00ff00).setColor1(0xff00ffff);
-			tris.setGlobalAlphaMultiplier(0.2);
-			lines.setGlobalThicknessMultiplier(2);
-			lines.setGlobalAlphaMultiplier(0.8);
-			content.lines.addItemToRender(lines);
-			content.triangles.addItemToRender(tris).addItemToRender(Utils.colormap2Tris(DefaultColorMap.D_COOL_WARM, false));
-			
-			Points trianglepoints = new Points(DefaultGlyph.TRIANGLE_F);
-			Points quiver = new Points(DefaultGlyph.ARROW);
-			Color color1 = new Color(0xffe41a1c);
-			Color color2 = new Color(0xff377eb8);
-			for(int i = 0; i < 100; i++){
-				trianglepoints.addPoint(Math.random(), Math.random()).setColor(color1);
-				double x = Math.random();
-				double y = Math.random();
-				quiver.addPoint(x,y)
-					.setRotation(Math.atan2(-y, -x))
-					.setScaling(Math.sqrt(x*x+y*y))
-					.setColor(color2);
-			}
-			content.points.addItemToRender(trianglepoints).addItemToRender(quiver);
-		}
 		Legend legend = new Legend();
 		Legend legendB = new Legend();
 		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, 0xffe41a1c, "rand pnts");
@@ -118,8 +78,8 @@ public class Viz {
 		coordsys.setLegendBottom(legendB);
 		coordsys.setLegendBottomHeight(60);
 		
-		CompleteRenderer overlay = new CompleteRenderer();
-		coordsys.setOverlay(overlay);
+		new CoordSysPanning(canvas, coordsys).register();
+		new CoordSysScrollZoom(canvas, coordsys).register();
 		new CoordSysViewSelector(canvas,coordsys) {
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
@@ -128,7 +88,6 @@ public class Viz {
 		}.register();
 		
 		coordsys.setCoordinateView(0, 0, 2, 1);
-//		frame.getContentPane().add(canvas, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -148,8 +107,6 @@ public class Viz {
 				System.out.println(Integer.toHexString(pixel));
 			}
 		});
-//		new CoordSysPanning(canvas,coordsys).register();
-		new CoordSysScrollZoom(canvas,coordsys).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);
@@ -166,28 +123,28 @@ public class Viz {
 				}
 			}
 		});
-		
-		
-		BlankCanvas canvas2 = new BlankCanvas();
-		canvas2.setDisposeOnRemove(false);
-		canvas2.setPreferredSize(new Dimension(100, 100));
-		TextRenderer textRenderer = new TextRenderer();
 		CurveRenderer curverenderer = new CurveRenderer();
-		canvas2.setRenderer(textRenderer);
-		textRenderer.addItemToRender(new Text("blank", 15, Font.PLAIN).setOrigin(40, 40));
-		Curves curves = new Curves().setGlobalThicknessMultiplier(3);
-		curves.addCurve(10,30, 200,30, 10-100,100, 50,100);
-		curves.addCurveStrip(0,0, 10,0, 10,0, 10,10, 10,20, 10,20, 0,20);
+		Curves curves = new Curves().setGlobalThicknessMultiplier(1);
+//		CurveDetails curve = curves.addCurve(10,30, 200,30, 10-100,100, 50,100);
+		CurveDetails curve = curves.addCurve(0,0, .5,0, .1,0, .2,.1);
+		curves.addStraight(0, 0, 40,40);
+//		curves.addCurveStrip(0,0, 10,0, 10,0, 10,10, 10,20, 10,20, 0,20);
 		curverenderer.addItemToRender(curves);
-		
 		coordsys.setContent(content.withAppended(curverenderer));
-		
-		JSplitPane pane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,canvas,canvas2);
 		canvas.setMinimumSize(new Dimension(1, 1));
-		canvas2.setMinimumSize(new Dimension(1, 1));
-		pane.setDividerLocation(150);
+		frame.getContentPane().add(canvas);
 		
-		frame.setContentPane(pane);
+		
+		Lines l = new Lines();
+		double[] coords = new double[101*2];
+		for(int i=0; i<101; i++){
+			double t=coords[i*2+0]=i/100.0;
+			coords[i*2+1]=curve.crvtr(t);
+		}
+		l.addLineStrip(coords);
+		content.addItemToRender(l);
+		
+		
 	}
 
 }
