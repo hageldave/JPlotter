@@ -153,6 +153,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			;
 
 	protected boolean viewHasChanged = true;
+	protected int preVpW = 0;
+	protected int preVpH = 0;
 	private final int[] strokePattern = new int[16];
 
 
@@ -177,6 +179,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		if(!isEnabled()){
 			return;
 		}
+		boolean vpHasChanged = w != preVpW || h != preVpH;
 		if(Objects.nonNull(shader) && w>0 && h>0 && !itemsToRender.isEmpty()){
 			// initialize all objects first
 			for(Lines item: itemsToRender){
@@ -193,7 +196,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			boolean viewHasChanged_ = this.viewHasChanged;
 			this.viewHasChanged = false;
 			for(Lines item: itemsToRender){
-				if(item.isDirty() || (viewHasChanged_ && item.hasStrokePattern() )){
+				if(item.isDirty() || ((viewHasChanged_ || vpHasChanged) && item.hasStrokePattern() )){
 					// update items gl state if necessary
 					item.updateGL(scaleX,scaleY);
 				}
@@ -205,6 +208,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			renderEnd();
 			shader.release();
 		}
+		preVpW = w;
+		preVpH = h;
 	}
 
 
@@ -264,8 +269,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 	@Override
 	public void setView(Rectangle2D view) {
+		boolean sameView = Objects.equals(view, this.view);
 		super.setView(view);
-		this.viewHasChanged = true;
+		this.viewHasChanged = !sameView;
 	}
 
 	/**

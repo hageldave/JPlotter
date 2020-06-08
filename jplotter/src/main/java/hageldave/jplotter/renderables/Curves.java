@@ -15,7 +15,7 @@ public class Curves implements Renderable {
 
 	protected VertexArray va;
 	protected ArrayList<CurveDetails> curves = new ArrayList<>();
-	protected short strokePattern = (short)0xf0f0;
+	protected short strokePattern = (short)0xffff;
 	protected float strokeLength = 16;
 	protected boolean isDirty;
 	protected boolean hidden = false;
@@ -191,7 +191,7 @@ public class Curves implements Renderable {
 		double l2 = (wx*wx*.25+wy*wy*.25)*2;
 		double c = l1/l2;
 		
-		if(c > 1.0025){
+		if(c > 1.01){
 			subdivideCubicBezier(x1, y1, xA, yA, x, y, tS, t, list);
 			subdivideCubicBezier(x, y, xB, yB, x3, y3, t, tE, list);
 		} else {

@@ -211,6 +211,8 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			;
 
 	protected boolean viewHasChanged = true;
+	protected int preVpW = 0;
+	protected int preVpH = 0;
 	private final int[] strokePattern = new int[16];
 
 
@@ -235,6 +237,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 		if(!isEnabled()){
 			return;
 		}
+		boolean vpHasChanged = w != preVpW || h != preVpH;
 		if(Objects.nonNull(shader) && w>0 && h>0 && !itemsToRender.isEmpty()){
 			// initialize all objects first
 			for(Curves item: itemsToRender){
@@ -251,7 +254,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			boolean viewHasChanged_ = this.viewHasChanged;
 			this.viewHasChanged = false;
 			for(Curves item: itemsToRender){
-				if(item.isDirty() || (viewHasChanged_ )){
+				if(item.isDirty() || viewHasChanged_ || vpHasChanged){
 					// update items gl state if necessary
 					item.updateGL(scaleX,scaleY);
 				}
@@ -263,6 +266,8 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			renderEnd();
 			shader.release();
 		}
+		preVpW = w;
+		preVpH = h;
 	}
 
 
@@ -322,8 +327,9 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 
 	@Override
 	public void setView(Rectangle2D view) {
+		boolean sameView = Objects.equals(view, this.view);
 		super.setView(view);
-		this.viewHasChanged = true;
+		this.viewHasChanged = !sameView;
 	}
 
 	/**
