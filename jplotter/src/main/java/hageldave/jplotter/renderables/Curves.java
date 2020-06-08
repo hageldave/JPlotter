@@ -107,7 +107,7 @@ public class Curves implements Renderable {
 			double xprev = 0, yprev=0, pathLen = 0;
 			int i=0;
 			for(int j=0; j<curves.size(); j++){
-				CurveDetails curv = curves.get(i);
+				CurveDetails curv = curves.get(j);
 				for(int k=0; k<numSegs[j]; k++){
 					double x0 = segments.get(i*6+0);
 					double y0 = segments.get(i*6+1);
@@ -187,11 +187,12 @@ public class Curves implements Renderable {
 		double ux = x-x1; double uy = y-y1; 
 		double vx = x3-x; double vy = y3-y;
 		double wx = x3-x1;double wy = y3-y1;
-		double l1 = ux*ux+uy*uy + vx*vx+vy*vy;
-		double l2 = (wx*wx*.25+wy*wy*.25)*2;
-		double c = l1/l2;
-		
-		if(c > 1.01){
+		double l1 = ux*ux+uy*uy;
+		double l2 = vx*vx+vy*vy;
+		double l3 = (wx*wx*.25+wy*wy*.25)*2;
+		/* curvature = (l1+l2)/l3; */
+		// subdivide if segments are longer than 32px (32^2=1024) or if curvature is too extreme
+		if(l1 > 1024.0 || l2 > 1024.0 || (l1+l2)/l3 > 1.005 ){
 			subdivideCubicBezier(x1, y1, xA, yA, x, y, tS, t, list);
 			subdivideCubicBezier(x, y, xB, yB, x3, y3, t, tE, list);
 		} else {
