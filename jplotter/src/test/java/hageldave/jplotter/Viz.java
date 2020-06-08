@@ -124,25 +124,15 @@ public class Viz {
 			}
 		});
 		CurveRenderer curverenderer = new CurveRenderer();
-		Curves curves = new Curves().setGlobalThicknessMultiplier(1);
+		Curves curves = new Curves().setGlobalThicknessMultiplier(10);
 //		CurveDetails curve = curves.addCurve(10,30, 200,30, 10-100,100, 50,100);
-		CurveDetails curve = curves.addCurve(0,0, .5,0, .1,0, .2,.1);
-		curves.addStraight(0, 0, 40,40);
+		CurveDetails curve = curves.addCurve(0,0, .5,0, .2,.1);
+//		curves.addStraight(0, 0, 40,40);
 //		curves.addCurveStrip(0,0, 10,0, 10,0, 10,10, 10,20, 10,20, 0,20);
 		curverenderer.addItemToRender(curves);
 		coordsys.setContent(content.withAppended(curverenderer));
 		canvas.setMinimumSize(new Dimension(1, 1));
 		frame.getContentPane().add(canvas);
-		
-		
-		Lines l = new Lines();
-		double[] coords = new double[101*2];
-		for(int i=0; i<101; i++){
-			double t=coords[i*2+0]=i/100.0;
-			coords[i*2+1]=curve.crvtr(t);
-		}
-		l.addLineStrip(coords);
-		content.addItemToRender(l);
 		
 		
 	}

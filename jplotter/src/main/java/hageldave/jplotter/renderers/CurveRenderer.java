@@ -147,7 +147,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "   "
 			+ NL + "   vec4 bbox = boundingBox(p1,p2,cp1,cp2);"
 			+ NL + "   int area = int(bbox.z*bbox.w);"
-			+ NL + "   int numSegs = max(3,min(34, int(sqrt(area)/2.0)));"
+			+ NL + "   int numSegs = max(1,min(1, int(sqrt(area)/2.0)));"
 			+ NL + "   vec4 dt_startEnd = vec4(normalize(d_bezier(p1,p2,cp1, 0.0)),normalize(d_bezier(p1,p2,cp1,1.0)));"
 			+ NL + "   "
 			+ NL + "   float i2t = 1.0/float(numSegs);"
@@ -172,7 +172,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "      gcolor = vcolor[0];"
 			+ NL + "      gcolor = i%2 == 0 ? vec4(0,1,0,1):vec4(0,0,1,1);"
 			+ NL + "      gpick = vpick[0];"
-			+ NL + "      gpathlen = vpathlen[0];"
+			+ NL + "      gpathlen = vpathlen[i];"
 			+ NL + "      EmitVertex();"
 			+ NL + "      "
 			+ NL + "      p = q-extend*miter;"
@@ -181,7 +181,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "      gcolor = vcolor[0];"
 			+ NL + "      gcolor = i%2 == 0 ? vec4(0,1,0,1):vec4(0,0,1,1);"
 			+ NL + "      gpick = vpick[0];"
-			+ NL + "      gpathlen = vpathlen[0];"
+			+ NL + "      gpathlen = vpathlen[i];"
 			+ NL + "      EmitVertex();"
 			+ NL + "   }"
 			+ NL + "   EndPrimitive();"
@@ -251,7 +251,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			boolean viewHasChanged_ = this.viewHasChanged;
 			this.viewHasChanged = false;
 			for(Curves item: itemsToRender){
-				if(item.isDirty() || (viewHasChanged_ && item.hasStrokePattern() )){
+				if(item.isDirty() || (viewHasChanged_ )){
 					// update items gl state if necessary
 					item.updateGL(scaleX,scaleY);
 				}
@@ -305,7 +305,7 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 		GL20.glUniform1f(loc, lines.hasStrokePattern() ? lines.getStrokeLength():0);
 		// draw things
 		lines.bindVertexArray();
-		GL11.glDrawArrays(GL11.GL_LINES, 0, lines.numSegments()*2);
+		GL11.glDrawArrays(GL11.GL_LINES, 0, lines.getNumEffectiveSegments()*2);
 		lines.releaseVertexArray();
 	}
 
