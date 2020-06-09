@@ -340,6 +340,32 @@ public class Curves implements Renderable {
 	public boolean isVertexRoundingEnabled() {
 		return false;
 	}
+	
+	/**
+	 * Sets this Curves object's stroke pattern.
+	 * The stroke pattern is a 16bit number that defines a sequence of solid and empty parts of a stroke.
+	 * <br>
+	 * <b>An error message is printed on System.err when more than the first 16bits are non zero</b> since
+	 * this method only takes an int for convenience to save you the cast to (short).
+	 * <p>
+	 * Here are some examples:
+	 * <ul>
+	 * <li>{@code 0xffff = 0b1111_1111_1111_1111 =} completely solid</li>
+	 * <li>{@code 0x0000 = 0b0000_0000_0000_0000 =} completely empty (invisible)</li>
+	 * <li>{@code 0xff00 = 0b1111_1111_0000_0000 =} first half solid, second half empty </li>
+	 * <li>{@code 0x0f0f = 0b0000_1111_0000_1111 =} first and third quarter empty, second and fourth solid</li>
+	 * <li>{@code 0xaaaa = 0b1010_1010_1010_1010 =} alternating every 16th of the stroke</li>
+	 * </ul>
+	 * @param strokePattern 16bit pattern
+	 * @return this for chaining
+	 */
+	public Curves setStrokePattern(int strokePattern) {
+		if(strokePattern >> 16 != 0){
+			System.err.println("specified stroke pattern should only be 16 bits but is " + Integer.toBinaryString(strokePattern));
+		}
+		this.strokePattern = (short)strokePattern;
+		return this;
+	}
 
 	public short getStrokePattern() {
 		return strokePattern;
