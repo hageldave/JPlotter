@@ -432,15 +432,10 @@ public class Lines implements Renderable {
 		 * @return copy of this segment
 		 */
 		public SegmentDetails copy() {
-			try {
-	            SegmentDetails clone = (SegmentDetails) super.clone();
-	            clone.p0 = Utils.copy(clone.p0);
-	            clone.p1 = Utils.copy(clone.p1);
-	            return clone;
-	        } catch (CloneNotSupportedException e) {
-	            // this shouldn't happen, since we are Cloneable
-	            throw new InternalError(e);
-	        }
+			SegmentDetails clone = this.clone();
+			clone.p0 = Utils.copy(clone.p0);
+			clone.p1 = Utils.copy(clone.p1);
+			return clone;
 		}
 		
 		@Override

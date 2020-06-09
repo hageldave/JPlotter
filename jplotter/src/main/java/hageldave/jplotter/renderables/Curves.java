@@ -80,6 +80,7 @@ public class Curves implements Renderable {
 	public void updateGL(double scaleX, double scaleY){
 		if(Objects.nonNull(va)){
 			final double sx=scaleX, sy=scaleY, isx=1.0/scaleX, isy=1.0/scaleY;
+			// subdivide bezier curves
 			ArrayList<Double> segments = new ArrayList<>(curves.size()*6*32);
 			int[] numSegs = new int[curves.size()];
 			int n = 0;
@@ -98,6 +99,7 @@ public class Curves implements Renderable {
 			}
 			this.numEffectiveSegments = n;
 			
+			// create buffers for vertex array
 			float[] segmentCoordBuffer = new float[n*8];
 			int[] colorBuffer = new int[n*2];
 			int[] pickBuffer = new int[n*2];
@@ -127,14 +129,15 @@ public class Curves implements Renderable {
 					segmentCoordBuffer[i*8+6] = 0f;
 					segmentCoordBuffer[i*8+7] = 0f;
 							
-
-					colorBuffer[i*2+0] = curv.color0.getAsInt();
-					colorBuffer[i*2+1] = curv.color1.getAsInt();
+					int color = curv.color.getAsInt();
+					colorBuffer[i*2+0] = color;
+					colorBuffer[i*2+1] = color;
 
 					pickBuffer[i*2+0] = pickBuffer[i*2+1] = curv.pickColor;
 
-					thicknessBuffer[i*2+0] = (float)curv.thickness0.getAsDouble();
-					thicknessBuffer[i*2+1] = (float)curv.thickness1.getAsDouble();
+					float thickness = (float)curv.thickness.getAsDouble();
+					thicknessBuffer[i*2+0] = thickness;
+					thicknessBuffer[i*2+1] = thickness;
 
 					if(xprev != x0 || yprev != y0){
 						pathLen = 0;
@@ -251,28 +254,57 @@ public class Curves implements Renderable {
 
 	@Override
 	public boolean intersects(Rectangle2D rect) {
-		// TODO Auto-generated method stub
-		return true;
+		boolean useParallelStreaming = numCurves() > 1000;
+		return Utils.parallelize(getCurveDetails().stream(), useParallelStreaming)
+				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
+						rect, 
+						tri.p0.getX(), tri.p0.getY(), 
+						tri.p1.getX(), tri.p1.getY(), 
+						tri.pc.getX(), tri.pc.getY()
+						))
+				.findAny()
+				.isPresent();
 	}
 	
-	public static class CurveDetails {
+	public static class CurveDetails implements Cloneable {
 		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
 				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
 		
 		public Point2D p0;
 		public Point2D pc;
 		public Point2D p1;
-		public IntSupplier color0;
-		public IntSupplier color1;
-		public DoubleSupplier thickness0 = PREDEFINED_THICKNESSES[1];
-		public DoubleSupplier thickness1 = PREDEFINED_THICKNESSES[1];
+		public IntSupplier color;
+		public DoubleSupplier thickness = PREDEFINED_THICKNESSES[1];
 		public int pickColor;
 		
 		public CurveDetails(Point2D p0, Point2D pc0, Point2D p1) {
 			this.p0=p0;
 			this.p1=p1;
 			this.pc=pc0;
-			this.color0 = this.color1 = ()->0xff555555;
+			this.color = ()->0xff555555;
+		}
+		
+		/**
+		 * Returns a shallow copy of this curve with deep copied
+		 * positions {@link #p0} and {@link #p1}.
+		 * @return copy of this curve
+		 */
+		public CurveDetails copy() {
+			CurveDetails clone = this.clone();
+			clone.p0 = Utils.copy(clone.p0);
+			clone.pc = Utils.copy(clone.pc);
+			clone.p1 = Utils.copy(clone.p1);
+			return clone;
+		}
+		
+		@Override
+		public CurveDetails clone() {
+			try {
+				return (CurveDetails) super.clone();
+			} catch (CloneNotSupportedException e) {
+				// should never happen since cloneable
+				throw new InternalError(e);
+			}
 		}
 		
 	}
@@ -325,8 +357,12 @@ public class Curves implements Renderable {
 		return this.strokePattern != (short)0xffff;
 	}
 
-	public int numSegments() {
+	public int numCurves() {
 		return curves.size();
+	}
+	
+	public ArrayList<CurveDetails> getCurveDetails() {
+		return curves;
 	}
 	
 	public CurveDetails addCurve(CurveDetails cd){
