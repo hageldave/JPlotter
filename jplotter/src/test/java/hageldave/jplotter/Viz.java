@@ -124,7 +124,7 @@ public class Viz {
 			}
 		});
 		CurveRenderer curverenderer = new CurveRenderer();
-		Curves curves = new Curves().setGlobalThicknessMultiplier(1).setStrokePattern(0xffff);
+		Curves curves = new Curves().setGlobalThicknessMultiplier(10).setGlobalAlphaMultiplier(0.5).setStrokePattern(0xffff);
 		curves.addCurveStrip(0,0, 1,0, 1,1, .5,1, 0,1, .5,.5, 1,1);
 		curverenderer.addItemToRender(curves);
 		coordsys.setContent(content.withAppended(curverenderer));

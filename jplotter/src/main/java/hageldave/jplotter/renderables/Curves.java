@@ -46,7 +46,7 @@ public class Curves implements Renderable {
 	@Override
 	public void initGL() {
 		if(Objects.isNull(va)){
-			va = new VertexArray(5);
+			va = new VertexArray(6);
 			updateGL();
 		}
 	}
@@ -81,7 +81,7 @@ public class Curves implements Renderable {
 		if(Objects.nonNull(va)){
 			final double sx=scaleX, sy=scaleY, isx=1.0/scaleX, isy=1.0/scaleY;
 			// subdivide bezier curves
-			ArrayList<Double> segments = new ArrayList<>(curves.size()*8*32);
+			ArrayList<Double> segments = new ArrayList<>(curves.size()*6*32);
 			int[] numSegs = new int[curves.size()];
 			int n = 0;
 			for(int i=0; i<curves.size(); i++){
@@ -95,7 +95,7 @@ public class Curves implements Renderable {
 				double xc1 = seg.pc1.getX();
 				double yc1 = seg.pc1.getY();
 				subdivideCubicBezier(x0*sx, y0*sy, xc0*sx, yc0*sy, xc1*sx, yc1*sy, x1*sx, y1*sy, 0,1, segments);
-				int segs = (segments.size()/8)-n;
+				int segs = (segments.size()/6)-n;
 				numSegs[i] = segs;
 				n += segs;
 			}
@@ -107,31 +107,42 @@ public class Curves implements Renderable {
 			int[] pickBuffer = new int[n*2];
 			float[] thicknessBuffer = new float[n*2];
 			float[] pathLengthBuffer = new float[n*2];
+			float[] paramBuffer = new float[n*2];
 			
 			double xprev = 0, yprev=0, pathLen = 0;
 			int i=0;
 			for(int j=0; j<curves.size(); j++){
 				CurveDetails curv = curves.get(j);
+				double x0_ = curv.p0.getX();
+				double y0_ = curv.p0.getY();
+				double x1_ = curv.p1.getX();
+				double y1_ = curv.p1.getY();
+				double xc0_ = curv.pc0.getX();
+				double yc0_ = curv.pc0.getY();
+				double xc1_ = curv.pc1.getX();
+				double yc1_ = curv.pc1.getY();
 				for(int k=0; k<numSegs[j]; k++){
-					double x0 = segments.get(i*8+0);
-					double y0 = segments.get(i*8+1);
-					double xc0 = segments.get(i*8+2);
-					double yc0 = segments.get(i*8+3);
-					double xc1 = segments.get(i*8+4);
-					double yc1 = segments.get(i*8+5);
-					double x1 = segments.get(i*8+6);
-					double y1 = segments.get(i*8+7);
+					// segment from subdivision (aspect ratio scaled)
+					double x0 = segments.get(i*6+0);
+					double y0 = segments.get(i*6+1);
+					double x1 = segments.get(i*6+2);
+					double y1 = segments.get(i*6+3);
+					double tS = segments.get(i*6+4);
+					double tE = segments.get(i*6+5);
 
 					// start & end point
-					segmentCoordBuffer[i*8+0] = (float) (x0*isx);
-					segmentCoordBuffer[i*8+1] = (float) (y0*isy);
-					segmentCoordBuffer[i*8+2] = (float) (x1*isx);
-					segmentCoordBuffer[i*8+3] = (float) (y1*isy);
+					segmentCoordBuffer[i*8+0] = (float) (x0_);
+					segmentCoordBuffer[i*8+1] = (float) (y0_);
+					segmentCoordBuffer[i*8+2] = (float) (x1_);
+					segmentCoordBuffer[i*8+3] = (float) (y1_);
 					// control point
-					segmentCoordBuffer[i*8+4] = (float) (xc0*isx);
-					segmentCoordBuffer[i*8+5] = (float) (yc0*isy);
-					segmentCoordBuffer[i*8+6] = (float) (xc1*isx);
-					segmentCoordBuffer[i*8+7] = (float) (yc1*isy);
+					segmentCoordBuffer[i*8+4] = (float) (xc0_);
+					segmentCoordBuffer[i*8+5] = (float) (yc0_);
+					segmentCoordBuffer[i*8+6] = (float) (xc1_);
+					segmentCoordBuffer[i*8+7] = (float) (yc1_);
+					// parameters
+					paramBuffer[i*2+0] = (float)tS;
+					paramBuffer[i*2+1] = (float)tE;
 							
 					int color = curv.color.getAsInt();
 					colorBuffer[i*2+0] = color;
@@ -160,6 +171,7 @@ public class Curves implements Renderable {
 			va.setBuffer(2, 1, false, pickBuffer);
 			va.setBuffer(3, 1, thicknessBuffer);
 			va.setBuffer(4, 1, pathLengthBuffer);
+			va.setBuffer(5, 1, paramBuffer);
 			isDirty = false;
 		}
 	}
@@ -181,9 +193,8 @@ public class Curves implements Renderable {
 		double dy34 = (y4-y3);
 		if(dx12*dx12+dy12*dy12 < 2.0 && dx23*dx23+dy23*dy23 < 2.0 && dx34*dx34+dy34*dy34 < 2.0){
 			list.add(x1); list.add(y1);
-			list.add(x2); list.add(y2);
-			list.add(x3); list.add(y3);
 			list.add(x4); list.add(y4);
+			list.add(tS); list.add(tE);
 			return;
 		}
 		// calc midpoint
@@ -214,14 +225,12 @@ public class Curves implements Renderable {
 			subdivideCubicBezier(x, y, xBC, yBC, xC, yC, x4, y4, t, tE, list);
 		} else {
 			list.add(x1); list.add(y1);
-			list.add(xA); list.add(yA);
-			list.add(xAB);list.add(yAB);
 			list.add(x);  list.add(y);
+			list.add(tS); list.add(t);
 			
 			list.add(x);  list.add(y);
-			list.add(xBC);list.add(yBC);
-			list.add(xC); list.add(yC);
 			list.add(x4); list.add(y4);
+			list.add(t);  list.add(tE);
 		}
 	}
 	
@@ -254,7 +263,7 @@ public class Curves implements Renderable {
 	 */
 	@GLContextRequired
 	public void bindVertexArray() {
-		va.bindAndEnableAttributes(0,1,2,3,4);
+		va.bindAndEnableAttributes(0,1,2,3,4,5);
 	}
 
 
@@ -357,6 +366,32 @@ public class Curves implements Renderable {
 	}
 
 	
+	/**
+	 * Sets the global alpha multiplier parameter of this {@link Lines} object.
+	 * The value will be multiplied with each segment point's alpha color value when rendering.
+	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+	 * @param globalAlphaMultiplier of the segments in this collection
+	 * @return this for chaining
+	 */
+	public Curves setGlobalAlphaMultiplier(DoubleSupplier globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = globalAlphaMultiplier;
+		return this;
+	}
+	
+	/**
+	 * Sets the global alpha multiplier parameter of this {@link Lines} object.
+	 * The value will be multiplied with each segment point's alpha color value when rendering.
+	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+	 * @param globalAlphaMultiplier of the segments in this collection
+	 * @return this for chaining
+	 */
+	public Curves setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
+		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
+	}
+
+	/**
+	 * @return the global alpha multiplier of the segments in this collection
+	 */
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
