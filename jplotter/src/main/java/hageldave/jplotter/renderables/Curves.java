@@ -81,7 +81,7 @@ public class Curves implements Renderable {
 		if(Objects.nonNull(va)){
 			final double sx=scaleX, sy=scaleY, isx=1.0/scaleX, isy=1.0/scaleY;
 			// subdivide bezier curves
-			ArrayList<Double> segments = new ArrayList<>(curves.size()*6*32);
+			ArrayList<Double> segments = new ArrayList<>(curves.size()*8*32);
 			int[] numSegs = new int[curves.size()];
 			int n = 0;
 			for(int i=0; i<curves.size(); i++){
@@ -90,10 +90,12 @@ public class Curves implements Renderable {
 				double y0 = seg.p0.getY();
 				double x1 = seg.p1.getX();
 				double y1 = seg.p1.getY();
-				double xc = seg.pc.getX();
-				double yc = seg.pc.getY();
-				subdivideCubicBezier(x0*sx, y0*sy, xc*sx, yc*sy, x1*sx, y1*sy, 0,1, segments);
-				int segs = (segments.size()/6)-n;
+				double xc0 = seg.pc0.getX();
+				double yc0 = seg.pc0.getY();
+				double xc1 = seg.pc1.getX();
+				double yc1 = seg.pc1.getY();
+				subdivideCubicBezier(x0*sx, y0*sy, xc0*sx, yc0*sy, xc1*sx, yc1*sy, x1*sx, y1*sy, 0,1, segments);
+				int segs = (segments.size()/8)-n;
 				numSegs[i] = segs;
 				n += segs;
 			}
@@ -111,12 +113,14 @@ public class Curves implements Renderable {
 			for(int j=0; j<curves.size(); j++){
 				CurveDetails curv = curves.get(j);
 				for(int k=0; k<numSegs[j]; k++){
-					double x0 = segments.get(i*6+0);
-					double y0 = segments.get(i*6+1);
-					double xc = segments.get(i*6+2);
-					double yc = segments.get(i*6+3);
-					double x1 = segments.get(i*6+4);
-					double y1 = segments.get(i*6+5);
+					double x0 = segments.get(i*8+0);
+					double y0 = segments.get(i*8+1);
+					double xc0 = segments.get(i*8+2);
+					double yc0 = segments.get(i*8+3);
+					double xc1 = segments.get(i*8+4);
+					double yc1 = segments.get(i*8+5);
+					double x1 = segments.get(i*8+6);
+					double y1 = segments.get(i*8+7);
 
 					// start & end point
 					segmentCoordBuffer[i*8+0] = (float) (x0*isx);
@@ -124,10 +128,10 @@ public class Curves implements Renderable {
 					segmentCoordBuffer[i*8+2] = (float) (x1*isx);
 					segmentCoordBuffer[i*8+3] = (float) (y1*isy);
 					// control point
-					segmentCoordBuffer[i*8+4] = (float) (xc*isx);
-					segmentCoordBuffer[i*8+5] = (float) (yc*isy);
-					segmentCoordBuffer[i*8+6] = 0f;
-					segmentCoordBuffer[i*8+7] = 0f;
+					segmentCoordBuffer[i*8+4] = (float) (xc0*isx);
+					segmentCoordBuffer[i*8+5] = (float) (yc0*isy);
+					segmentCoordBuffer[i*8+6] = (float) (xc1*isx);
+					segmentCoordBuffer[i*8+7] = (float) (yc1*isy);
 							
 					int color = curv.color.getAsInt();
 					colorBuffer[i*2+0] = color;
@@ -163,7 +167,8 @@ public class Curves implements Renderable {
 	private static void subdivideCubicBezier(
 			double x1, double y1, 
 			double x2, double y2, 
-			double x3, double y3, 
+			double x3, double y3,
+			double x4, double y4, 
 			double tS, double tE,
 			ArrayList<Double> list)
 	{
@@ -172,10 +177,13 @@ public class Curves implements Renderable {
 		double dy12 = (y2-y1);
 		double dx23 = (x3-x2);
 		double dy23 = (y3-y2);
-		if(dx12*dx12+dy12*dy12 < 2.0 && dx23*dx23+dy23*dy23 < 2.0){
+		double dx34 = (x4-x3);
+		double dy34 = (y4-y3);
+		if(dx12*dx12+dy12*dy12 < 2.0 && dx23*dx23+dy23*dy23 < 2.0 && dx34*dx34+dy34*dy34 < 2.0){
 			list.add(x1); list.add(y1);
 			list.add(x2); list.add(y2);
 			list.add(x3); list.add(y3);
+			list.add(x4); list.add(y4);
 			return;
 		}
 		// calc midpoint
@@ -183,29 +191,37 @@ public class Curves implements Renderable {
 		double yA = y1+dy12*.5;
 		double xB = x2+dx23*.5;
 		double yB = y2+dy23*.5;
-		double x = xA+(xB-xA)*.5;
-		double y = yA+(yB-yA)*.5;
+		double xC = x3+dx34*.5;
+		double yC = y3+dy34*.5;
+		double xAB = xA+(xB-xA)*.5;
+		double yAB = yA+(yB-yA)*.5;
+		double xBC = xB+(xC-xB)*.5;
+		double yBC = yB+(yC-yB)*.5;
+		double x = xAB+(xBC-xAB)*.5;
+		double y = yAB+(yBC-yAB)*.5;
 		double t = tS+(tE-tS)*.5;
 		// calc pseudo curvature
 		double ux = x-x1; double uy = y-y1; 
-		double vx = x3-x; double vy = y3-y;
-		double wx = x3-x1;double wy = y3-y1;
+		double vx = x4-x; double vy = y4-y;
+		double wx = x4-x1;double wy = y4-y1;
 		double l1 = ux*ux+uy*uy;
 		double l2 = vx*vx+vy*vy;
 		double l3 = (wx*wx*.25+wy*wy*.25)*2;
 		/* curvature = (l1+l2)/l3; */
 		// subdivide if segments are longer than 32px (32^2=1024) or if curvature is too extreme
 		if(l1 > 1024.0 || l2 > 1024.0 || (l1+l2)/l3 > 1.005 ){
-			subdivideCubicBezier(x1, y1, xA, yA, x, y, tS, t, list);
-			subdivideCubicBezier(x, y, xB, yB, x3, y3, t, tE, list);
+			subdivideCubicBezier(x1, y1, xA, yA, xAB, yAB, x, y, tS, t, list);
+			subdivideCubicBezier(x, y, xBC, yBC, xC, yC, x4, y4, t, tE, list);
 		} else {
 			list.add(x1); list.add(y1);
 			list.add(xA); list.add(yA);
-			list.add(x); list.add(y);
+			list.add(xAB);list.add(yAB);
+			list.add(x);  list.add(y);
 			
-			list.add(x); list.add(y);
-			list.add(xB); list.add(yB);
-			list.add(x3); list.add(y3);
+			list.add(x);  list.add(y);
+			list.add(xBC);list.add(yBC);
+			list.add(xC); list.add(yC);
+			list.add(x4); list.add(y4);
 		}
 	}
 	
@@ -259,9 +275,14 @@ public class Curves implements Renderable {
 				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
 						rect, 
 						tri.p0.getX(), tri.p0.getY(), 
+						tri.pc1.getX(), tri.pc1.getY(), 
+						tri.pc0.getX(), tri.pc0.getY()
+						) || Utils.rectIntersectsOrIsContainedInTri(
+						rect, 
 						tri.p1.getX(), tri.p1.getY(), 
-						tri.pc.getX(), tri.pc.getY()
-						))
+						tri.pc1.getX(), tri.pc1.getY(), 
+						tri.pc0.getX(), tri.pc0.getY()
+								))
 				.findAny()
 				.isPresent();
 	}
@@ -271,16 +292,18 @@ public class Curves implements Renderable {
 				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
 		
 		public Point2D p0;
-		public Point2D pc;
+		public Point2D pc0;
+		public Point2D pc1;
 		public Point2D p1;
 		public IntSupplier color;
 		public DoubleSupplier thickness = PREDEFINED_THICKNESSES[1];
 		public int pickColor;
 		
-		public CurveDetails(Point2D p0, Point2D pc0, Point2D p1) {
+		public CurveDetails(Point2D p0, Point2D pc0, Point2D pc1, Point2D p1) {
 			this.p0=p0;
 			this.p1=p1;
-			this.pc=pc0;
+			this.pc0=pc0;
+			this.pc1=pc1;
 			this.color = ()->0xff555555;
 		}
 		
@@ -292,7 +315,8 @@ public class Curves implements Renderable {
 		public CurveDetails copy() {
 			CurveDetails clone = this.clone();
 			clone.p0 = Utils.copy(clone.p0);
-			clone.pc = Utils.copy(clone.pc);
+			clone.pc0 = Utils.copy(clone.pc0);
+			clone.pc1 = Utils.copy(clone.pc1);
 			clone.p1 = Utils.copy(clone.p1);
 			return clone;
 		}
@@ -397,22 +421,22 @@ public class Curves implements Renderable {
 		return cd;
 	}
 	
-	public CurveDetails addCurve(Point2D p0, Point2D cp0, Point2D p1){
-		return this.addCurve(new CurveDetails(p0, cp0, p1));
+	public CurveDetails addCurve(Point2D p0, Point2D cp0,Point2D cp1, Point2D p1){
+		return this.addCurve(new CurveDetails(p0, cp0,cp1, p1));
 	}
 	
-	public CurveDetails addCurve(double x0, double y0, double x1, double y1, double x2, double y2){
-		return this.addCurve(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+	public CurveDetails addCurve(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3){
+		return this.addCurve(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), new Point2D.Double(x2, y2), new Point2D.Double(x3, y3));
 	}
 	
 	public ArrayList<CurveDetails> addCurveStrip(Point2D... points){
-		if((points.length%2) != 1){
-			throw new IllegalArgumentException("Not enough points for curve strip. Need 3+n*2, but provided " + points.length + ", missing 1.");
+		if((points.length-1)%3 != 0){
+			throw new IllegalArgumentException("Not enough points for curve strip. Need 4+n*3, but provided " + points.length + ", missing " + (3-((points.length-1)%3)) + ".");
 		}
-		int n = points.length/2;
+		int n = points.length/3;
 		ArrayList<CurveDetails> curves = new ArrayList<>(n);
 		for(int i=0; i < n; i++){
-			curves.add(this.addCurve(points[i*2+0], points[i*2+1], points[i*2+2]));
+			curves.add(this.addCurve(points[i*3+0], points[i*3+1], points[i*3+2], points[i*3+3]));
 		}
 		return curves;
 	}
@@ -422,19 +446,19 @@ public class Curves implements Renderable {
 			throw new IllegalArgumentException("Need to provide even number of coordinates. Provided " + coords.length);
 		}
 		int m = coords.length/2;
-		if((m%2) != 1){
-			throw new IllegalArgumentException("Not enough points for curve strip. Need 3+n*2, but provided " + m + ", missing 1.");
+		if((m-1)%3 != 0){
+			throw new IllegalArgumentException("Not enough points for curve strip. Need 4+n*3, but provided " + m + ", missing " + (3-((m-1)%3)) + ".");
 		}
-		int n = m/2;
+		int n = m/3;
 		ArrayList<CurveDetails> curves = new ArrayList<>(n);
 		for(int i=0; i < n; i++){
-			curves.add(this.addCurve(coords[i*4+0],coords[i*4+1], coords[i*4+2],coords[i*4+3], coords[i*4+4],coords[i*4+5]));
+			curves.add(this.addCurve(coords[i*6+0],coords[i*6+1], coords[i*6+2],coords[i*6+3], coords[i*6+4],coords[i*6+5], coords[i*6+6],coords[i*6+7]));
 		}
 		return curves;
 	}
 
 	public CurveDetails addStraight(Point2D p0, Point2D p1){
-		return addCurve(new CurveDetails(p0,p0,p1));
+		return addCurve(new CurveDetails(p0,p0,p1,p1));
 	}
 	
 	public CurveDetails addStraight(double x0, double y0, double x1, double y1){
