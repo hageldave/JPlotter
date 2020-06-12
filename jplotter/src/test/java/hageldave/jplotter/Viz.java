@@ -124,14 +124,24 @@ public class Viz {
 			}
 		});
 		CurveRenderer curverenderer = new CurveRenderer();
-		Curves curves = new Curves().setGlobalThicknessMultiplier(10).setGlobalAlphaMultiplier(0.5).setStrokePattern(0xffff);
-		curves.addCurveStrip(0,0, 1,0, 1,1, .5,1, 0,1, .5,.5, 1,1);
+		Curves curves = new Curves().setGlobalThicknessMultiplier(2).setGlobalAlphaMultiplier(0.5).setStrokePattern(0xffff);
+//		curves.addCurveStrip(0,0, 1,0, 1,1, .5,1, 0,1, .5,.5, 1,1);
+		Point2D[] points = new Point2D[] {p(0,0), p(1,0), p(1,.8), p(.5,1), p(1,1)};
+		Points maPoints = new Points(DefaultGlyph.CIRCLE_F);
+		for(Point2D x:points)
+			maPoints.addPoint(x);
+		content.addItemToRender(maPoints);
+		curves.addCurvesThrough(points);
 		curverenderer.addItemToRender(curves);
 		coordsys.setContent(content.withAppended(curverenderer));
 		canvas.setMinimumSize(new Dimension(1, 1));
 		frame.getContentPane().add(canvas);
 		
 		
+	}
+	
+	static Point2D p(double x, double y) {
+		return new Point2D.Double(x, y);
 	}
 
 }

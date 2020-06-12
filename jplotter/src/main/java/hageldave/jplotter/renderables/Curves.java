@@ -491,6 +491,70 @@ public class Curves implements Renderable {
 		}
 		return curves;
 	}
+	
+	public ArrayList<CurveDetails> addCurvesThrough(Point2D... points){
+		int nPoints = points.length;
+		int nControl = (nPoints-1)*2;
+		Point2D[] curves = new Point2D[nPoints+nControl];
+		final double eps=1e-6;
+		for(int i=0; i<nPoints; i++) {
+			int i_prev = i-1;
+			int i_next = i+1;
+			Point2D curr = points[i];
+			Point2D prev = i_prev < 0        ? curr:points[i_prev];
+			Point2D next = i_next >= nPoints ? curr:points[i_next];
+			// vector coords
+			double xA=prev.getX();
+			double yA=prev.getY();
+			double xB=curr.getX();
+			double yB=curr.getY();
+			double xC=next.getX();
+			double yC=next.getY();
+			// connecting vectors
+			double xBA = xA-xB;
+			double yBA = yA-yB;
+			double xBC = xC-xB;
+			double yBC = yC-yB;
+			double xAC = xC-xA;
+			double yAC = yC-yA;
+			
+			if(i==0) {
+				curves[i*3+0]=curr;
+				curves[i*3+1]=new Point2D.Double(xB+.3*xBC, yB+.3*yBC);
+				continue;
+			}
+			if(i==nPoints-1) {
+				curves[i*3+0]=curr;
+				curves[i*3-1]=new Point2D.Double(xB+.3*xBA, yB+.3*yBA);
+				continue;
+			}
+			
+			// normalization
+			double lBA = Utils.hypot(xBA, yBA);
+			double lBC = Utils.hypot(xBC, yBC);
+			double lAC = Utils.hypot(xAC, yAC);
+			if(lBA > eps) {xBA/=lBA; yBA/=lBA;}
+			if(lBC > eps) {xBC/=lBC; yBC/=lBC;}
+			if(lAC > eps) {xAC/=lAC; yAC/=lAC;}
+			// halfway vector & tangent
+			double xH=xBA+xBC;
+			double yH=yBA+yBC;
+			double lH=Utils.hypot(xH, yH);
+			final double xT,yT;
+			if(lH > eps) {
+				xH/=lH; yH/=lH;
+				// rotate clckws
+				xT=yH; yT=-xH;
+			} else {
+				xT=xBC; yT=yBC;
+			}
+			
+			curves[i*3+0]=curr;
+			curves[i*3-1]=new Point2D.Double(xB-xT*.3*lBA, yB-yT*.3*lBA);
+			curves[i*3+1]=new Point2D.Double(xB+xT*.3*lBC, yB+yT*.3*lBC);
+		}
+		return addCurveStrip(curves);
+	}
 
 	public CurveDetails addStraight(Point2D p0, Point2D p1){
 		return addCurve(new CurveDetails(p0,p0,p1,p1));
