@@ -132,17 +132,17 @@ public class Viz {
 			maPoints.addPoint(x);
 		LinkedList<Point2D> samples = new LinkedList<>();
 		for(int i = 0; i<100; i++){
-			double x = i/20.0;
-			double y = Math.sin(x)*(x+1)/x;
+			double x = i/3.0;
+			double y = Math.sin(x)*(x+1);
 			Point2D p = p(x,y);
-			maPoints.addPoint(p).setColor(0xffff0000);
+			maPoints.addPoint(p).setColor(0x44ff0000);
 			samples.add(p);
 		}
 		
 		
 		content.addItemToRender(maPoints);
 		curves.addCurvesThrough(points);
-		curves.addCurvesThrough(samples.toArray(new Point2D[0])).forEach(c->c.color=()->(0xff3333)));
+		curves.addCurvesThrough(samples.toArray(new Point2D[0])).forEach(c->c.color=()->0xffff3333);
 		curverenderer.addItemToRender(curves);
 		coordsys.setContent(content.withAppended(curverenderer));
 		canvas.setMinimumSize(new Dimension(1, 1));
