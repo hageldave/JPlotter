@@ -126,12 +126,23 @@ public class Viz {
 		CurveRenderer curverenderer = new CurveRenderer();
 		Curves curves = new Curves().setGlobalThicknessMultiplier(2).setGlobalAlphaMultiplier(0.5).setStrokePattern(0xffff);
 //		curves.addCurveStrip(0,0, 1,0, 1,1, .5,1, 0,1, .5,.5, 1,1);
-		Point2D[] points = new Point2D[] {p(0,0), p(1,0), p(1,.8), p(.5,1), p(1,1)};
+		Point2D[] points = new Point2D[] {p(0,0), p(1,0), p(1,.8), p(.5,1), p(1,1),p(.5,1), p(1,1),p(.5,1),p(1,1),p(1.5,1),p(.5,1)};
 		Points maPoints = new Points(DefaultGlyph.CIRCLE_F);
 		for(Point2D x:points)
 			maPoints.addPoint(x);
+		LinkedList<Point2D> samples = new LinkedList<>();
+		for(int i = 0; i<100; i++){
+			double x = i/20.0;
+			double y = Math.sin(x)*(x+1)/x;
+			Point2D p = p(x,y);
+			maPoints.addPoint(p).setColor(0xffff0000);
+			samples.add(p);
+		}
+		
+		
 		content.addItemToRender(maPoints);
 		curves.addCurvesThrough(points);
+		curves.addCurvesThrough(samples.toArray(new Point2D[0])).forEach(c->c.color=()->(0xff3333)));
 		curverenderer.addItemToRender(curves);
 		coordsys.setContent(content.withAppended(curverenderer));
 		canvas.setMinimumSize(new Dimension(1, 1));

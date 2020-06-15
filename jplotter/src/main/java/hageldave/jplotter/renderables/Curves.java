@@ -540,11 +540,25 @@ public class Curves implements Renderable {
 			double xH=xBA+xBC;
 			double yH=yBA+yBC;
 			double lH=Utils.hypot(xH, yH);
-			final double xT,yT;
+			double xT,yT;
 			if(lH > eps) {
 				xH/=lH; yH/=lH;
 				// rotate clckws
 				xT=yH; yT=-xH;
+				// check if correctly rotated
+				if(xT*xBA+yT*yBA > eps){
+					xT=-xT;
+					yT=-yT;
+				}
+				if(lAC < eps && i > 0){
+					Point2D ctrl_prev = curves[i*3-2];
+					double xBP=ctrl_prev.getX()-xB;
+					double yBP=ctrl_prev.getY()-yB;
+					if(xT*xBP+yT*yBP > eps){
+						xT=-xT;
+						yT=-yT;
+					}
+				}
 			} else {
 				xT=xBC; yT=yBC;
 			}
