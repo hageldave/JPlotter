@@ -23,9 +23,13 @@ package hageldave.jplotter.color;
  * @author hageldave
  */
 public enum DefaultColorMap implements ColorMap {
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_BLACK_WHITE.png"/> */
 	S_BLACK_WHITE(0xff_000000,0xff_ffffff),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_GRAY_WHITE.png"/> */
 	S_GRAY_WHITE(0xff_888888,0xff_ffffff),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_BLACK_GRAY.png"/> */
 	S_BLACK_GRAY(0xff_000000,0xff_888888),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_RISING_DEEP_PURPLE.png"/> */
 	S_RISING_DEEP_PURPLE(
 			0xff_49006a,
 			0xff_8a0179,
@@ -35,6 +39,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_fcd6d2,
 			0xff_fff7f3
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_COPPER.png"/> */
 	S_COPPER(
 			0xff_000000,
 			0xff_330000,
@@ -44,10 +49,12 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_ff9966,
 			0xff_ffcc88
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_BLACKBODYRAD.png"/> */
 	S_BLACKBODYRAD(
 			new int[]{0xff_000000, 0xff_aa2222, 0xff_dd6605, 0xff_eedd22, 0xff_ffffff},
 			new double[]{       0,        0.39,        0.58,        0.84,           1}
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_PLASMA.png"/> */
 	S_PLASMA(
 			0xff_0c0786,
 			0xff_5c00a5,
@@ -57,6 +64,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_fdb22e,
 			0xff_eff821
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_VIRIDIS.png"/> */
 	S_VIRIDIS(
 			0xff_440154,
 			0xff_433982,
@@ -66,6 +74,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_8fd643,
 			0xff_fde724
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_BEACH.png"/> */
 	S_BEACH(0xff_081d58,
 			0xff_24419a,
 			0xff_1e80b8,
@@ -74,6 +83,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_dff2b2,
 			0xff_ffffd9
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_RAINBOW.png"/> */
 	S_RAINBOW(
 			0xff_dd00dd,
 			0xff_8800ee,
@@ -87,6 +97,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_ee8800, 
 			0xff_ff0000
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_TERRAIN.png"/> */
 	S_TERRAIN(
 			0xff_333399,
 			0xff_1075db,
@@ -100,9 +111,13 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_cabbb8,
 			0xff_fdfcfc
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_BLACK_WHITE_BLACK.png"/> */
 	D_BLACK_WHITE_BLACK(0xff000000, 0xff_ffffff, 0xff_000000),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_BLACK_GRAY_BLACK.png"/> */
 	D_BLACK_GRAY_BLACK(0xff_000000, 0xff_888888, 0xff_000000),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_GRAY_WHITE_GRAY.png"/> */
 	D_GRAY_WHITE_GRAY(0xff_888888, 0xff_ffffff, 0xff_888888),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_COOL_WARM.png"/> */
 	D_COOL_WARM(
 			0xff_3b4cc0,
 			0xff_6688ee,
@@ -114,9 +129,13 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_dd6644,
 			0xff_b40426
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_BLUE_WHITE_RED.png"/> */
 	D_BLUE_WHITE_RED(0xff_0000ff, 0xff_eeeeee, 0xff_ff0000),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_FRANCE.png"/> */
 	D_FRANCE(0xff_002395, 0xff_ffffff, 0xff_ed2939),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_IRELAND.png"/> */
 	D_IRELAND(0xff_169b62, 0xff_ffffff, 0xff_ff883e),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_SPECTRAL.png"/> */
 	D_SPECTRAL(
 			0xff_9e0142,
 			0xff_e95d46,
@@ -126,6 +145,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_54aeac,
 			0xff_5e4fa2
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/Q_8_DARK2.png"/> */
 	Q_8_DARK2(
 			0xff_1b9e77,
 			0xff_d95f02,
@@ -136,6 +156,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_a6761d,
 			0xff_666666
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/Q_8_SET2.png"/> */
 	Q_8_SET2(
 			0xff_66c2a5,
 			0xff_fc8d62,
@@ -146,6 +167,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_e5c494,
 			0xff_b3b3b3
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/Q_8_PASTEL2.png"/> */
 	Q_8_PASTEL2(
 			0xff_b3e2cd,
 			0xff_fdcdac,
@@ -156,6 +178,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_f1e2cc,
 			0xff_cccccc
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/Q_8_ACCENT.png"/> */
 	Q_8_ACCENT(
 			0xff_7fc97f,
 			0xff_beaed4,
@@ -166,6 +189,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_bf5b17,
 			0xff_666666
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/Q_9_SET1.png"/> */
 	Q_9_SET1(
 			0xff_e41a1c,
 			0xff_377eb8,
@@ -177,6 +201,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_f781bf,
 			0xff_999999
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/Q_9_PASTEL1.png"/> */
 	Q_9_PASTEL1(
 			0xff_fbb4ae,
 			0xff_b3cde3,
@@ -188,6 +213,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_fddaec,
 			0xff_f2f2f2
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/Q_12_PAIRED.png"/> */
 	Q_12_PAIRED(
 			0xff_a6cee3,
 			0xff_1f78b4,
@@ -202,6 +228,7 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_ffff99,
 			0xff_b15928
 			),
+	/** <img src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/Q_12_SET3.png"/> */
 	Q_12_SET3(
 			0xff_8dd3c7,
 			0xff_ffffb3,
