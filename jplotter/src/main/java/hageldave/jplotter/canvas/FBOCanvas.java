@@ -346,7 +346,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 						fbo.getFBOid(), 
 						attachment, 
 						x-areaSize/2, 
-						fbo.height-1-y+areaSize/2, 
+						fbo.height-1-y-areaSize/2, 
 						areaSize, 
 						areaSize, 
 						colors
@@ -366,7 +366,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		int count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
 		int maxCount=count;
 		for(int i = 1; i < colors.length; i++){
-			if(colors[i]==currentValue && currentValue != 0){
+			if(colors[i]==currentValue && currentValue != 0xff000000){
 				count++;
 			} else {
 				if(count > maxCount){
