@@ -211,26 +211,32 @@ public class Curves implements Renderable {
 		double x = xAB+(xBC-xAB)*.5;
 		double y = yAB+(yBC-yAB)*.5;
 		double t = tS+(tE-tS)*.5;
-		// calc pseudo curvature
-		double ux = x-x1; double uy = y-y1; 
-		double vx = x4-x; double vy = y4-y;
-		double wx = x4-x1;double wy = y4-y1;
-		double l1 = ux*ux+uy*uy;
-		double l2 = vx*vx+vy*vy;
-		double l3 = (wx*wx*.25+wy*wy*.25)*2;
-		/* curvature = (l1+l2)/l3; */
-		// subdivide if segments are longer than 32px (32^2=1024) or if curvature is too extreme
-		if(l1 > 1024.0 || l2 > 1024.0 || (l1+l2)/l3 > 1.005 ){
+		if(tE-tS > 0.25){
+			// not enough subdivisions yet (want at least 4 segments)
 			subdivideCubicBezier(x1, y1, xA, yA, xAB, yAB, x, y, tS, t, list);
 			subdivideCubicBezier(x, y, xBC, yBC, xC, yC, x4, y4, t, tE, list);
 		} else {
-			list.add(x1); list.add(y1);
-			list.add(x);  list.add(y);
-			list.add(tS); list.add(t);
-			
-			list.add(x);  list.add(y);
-			list.add(x4); list.add(y4);
-			list.add(t);  list.add(tE);
+			// calc pseudo curvature
+			double ux = x-x1; double uy = y-y1; 
+			double vx = x4-x; double vy = y4-y;
+			double wx = x4-x1;double wy = y4-y1;
+			double l1 = ux*ux+uy*uy;
+			double l2 = vx*vx+vy*vy;
+			double l3 = (wx*wx*.25+wy*wy*.25)*2;
+			/* curvature = (l1+l2)/l3; */
+			// subdivide if segments are longer than 32px (32^2=1024) or if curvature is too extreme
+			if(l1 > 1024.0 || l2 > 1024.0 || (l1+l2)/l3 > 1.005 ){
+				subdivideCubicBezier(x1, y1, xA, yA, xAB, yAB, x, y, tS, t, list);
+				subdivideCubicBezier(x, y, xBC, yBC, xC, yC, x4, y4, t, tE, list);
+			} else {
+				list.add(x1); list.add(y1);
+				list.add(x);  list.add(y);
+				list.add(tS); list.add(t);
+
+				list.add(x);  list.add(y);
+				list.add(x4); list.add(y4);
+				list.add(t);  list.add(tE);
+			}
 		}
 	}
 	
