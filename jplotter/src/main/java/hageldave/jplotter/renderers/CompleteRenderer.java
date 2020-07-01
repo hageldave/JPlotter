@@ -5,6 +5,7 @@ import java.awt.geom.Rectangle2D;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Renderable;
@@ -22,17 +23,18 @@ import hageldave.jplotter.renderables.Triangles;
  * <ol>
  * <li>{@link Triangles}</li>
  * <li>{@link Lines}</li>
+ * <li>{@link Curves}</li>
  * <li>{@link Points}</li>
  * <li>{@link Text}</li>
  * </ol>
  * This implies that Lines will be drawn over Triangles,
- * Points over Lines and Text over Points.
- * Using the {@link #setRenderOrder(int, int, int, int)} method
+ * Curves over Lines, Points over Curves, and Text over Points.
+ * Using the {@link #setRenderOrder(int, int, int, int, int)} method
  * the order of renderers can be changed.
  * <p>
  * To add {@link Renderable}s to this Renderer either use the public attributes
- * {@link #triangles}, {@link #lines}, {@link #points}, {@link #text} to directly
- * access the desired renderer or use the {@link #addItemToRender(Renderable)}
+ * {@link #triangles}, {@link #lines}, {@link #curves} , {@link #points}, {@link #text} 
+ * to directly access the desired renderer or use the {@link #addItemToRender(Renderable)}
  * method.
  * 
  * @author hageldave
@@ -45,32 +47,34 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	public final TrianglesRenderer triangles = new TrianglesRenderer();
 	public final CurvesRenderer curves = new CurvesRenderer();
 	
-	private final Renderer[] rendererLUT = {triangles,lines,points,text};
-	public static final int TRI = 0, LIN = 1, PNT = 2, TXT = 3;
-	private final int[] renderOrder = {TRI,LIN,PNT,TXT};
+	private final Renderer[] rendererLUT = {triangles,lines,curves,points,text};
+	public static final int TRI = 0, LIN = 1, PNT = 2, TXT = 3, CRV = 4;
+	private final int[] renderOrder = {TRI,LIN,CRV,PNT,TXT};
 	boolean isEnabled = true;
 	
 	/**
 	 * Sets the order of the renderers. 
-	 * You can use the constants {@link #TRI}, {@link #LIN}, {@link #PNT}, {@link #TXT}
-	 * to set the order, e.g. {@code setRenderOrder(TRI, LIN, PNT, TXT);} to set
-	 * the order {@link TrianglesRenderer} before {@link LinesRenderer} before {@link PointsRenderer}
-	 * before {@link TextRenderer}.
+	 * You can use the constants {@link #TRI}, {@link #LIN}, {@link #PNT}, {@link #TXT}, {@link #CRV}
+	 * to set the order, e.g. {@code setRenderOrder(TRI, LIN, CRV, PNT, TXT);} to set
+	 * the order {@link TrianglesRenderer} before {@link LinesRenderer} before {@link CurvesRenderer} 
+	 * before {@link PointsRenderer} before {@link TextRenderer}.
 	 * <br>
 	 * Of course if one renderer is missing in this order or occurs multiple times,
 	 * this renderer is not being processed (or processed multiple times respectively).
 	 * 
-	 * @param first one of {0,1,2,3} or {TRI,LIN,PNT,TXT}
-	 * @param second one of {0,1,2,3} or {TRI,LIN,PNT,TXT}
-	 * @param third one of {0,1,2,3} or {TRI,LIN,PNT,TXT}
-	 * @param fourth one of {0,1,2,3} or {TRI,LIN,PNT,TXT}
+	 * @param first one of {0,1,2,3,4} or {TRI,LIN,PNT,TXT,CRV}
+	 * @param second one of {0,1,2,3,4} or {TRI,LIN,PNT,TXT,CRV}
+	 * @param third one of {0,1,2,3,4} or {TRI,LIN,PNT,TXT,CRV}
+	 * @param fourth one of {0,1,2,3,4} or {TRI,LIN,PNT,TXT,CRV}
+	 * @param fifth one of {0,1,2,3,4} or {TRI,LIN,PNT,TXT,CRV}
 	 * @return this for chaining
 	 */
-	public CompleteRenderer setRenderOrder(int first, int second, int third, int fourth){
+	public CompleteRenderer setRenderOrder(int first, int second, int third, int fourth, int fifth){
 		renderOrder[0] = first;
 		renderOrder[1] = second;
 		renderOrder[2] = third;
 		renderOrder[3] = fourth;
+		renderOrder[4] = fifth;
 		return this;
 	}
 
@@ -83,6 +87,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		lines.setView(rect);
 		points.setView(rect);
 		text.setView(rect);
+		curves.setView(rect);
 	}
 
 	/**
@@ -94,6 +99,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		lines.glInit();
 		points.glInit();
 		text.glInit();
+		curves.glInit();
 	}
 
 	/**
@@ -109,6 +115,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		rendererLUT[renderOrder[1]].render(vpx,vpy,w, h);
 		rendererLUT[renderOrder[2]].render(vpx,vpy,w, h);
 		rendererLUT[renderOrder[3]].render(vpx,vpy,w, h);
+		rendererLUT[renderOrder[4]].render(vpx,vpy,w, h);
 	}
 
 	/**
@@ -120,6 +127,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		lines.close();
 		points.close();
 		text.close();
+		curves.close();
 	}
 	
 	@Override
@@ -152,6 +160,9 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		} else
 		if(item instanceof Text){
 			text.addItemToRender((Text) item);
+		} else
+		if(item instanceof Curves){
+			curves.addItemToRender((Curves) item);
 		} else {
 			throw new IllegalArgumentException(
 					"Cannot add Renderable of type " 
@@ -171,6 +182,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		rendererLUT[renderOrder[1]].renderSVG(doc, parent, w, h);
 		rendererLUT[renderOrder[2]].renderSVG(doc, parent, w, h);
 		rendererLUT[renderOrder[3]].renderSVG(doc, parent, w, h);
+		rendererLUT[renderOrder[4]].renderSVG(doc, parent, w, h);
 	}
 
 }

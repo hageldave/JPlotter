@@ -1,9 +1,6 @@
 package hageldave.jplotter;
 
-import static hageldave.jplotter.renderers.CompleteRenderer.LIN;
-import static hageldave.jplotter.renderers.CompleteRenderer.PNT;
-import static hageldave.jplotter.renderers.CompleteRenderer.TRI;
-import static hageldave.jplotter.renderers.CompleteRenderer.TXT;
+import static hageldave.jplotter.renderers.CompleteRenderer.*;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -61,7 +58,7 @@ public class Viz {
 		canvas.setDisposeOnRemove(false);
 		coordsys.setyAxisLabel("Y-Axis");
 		CompleteRenderer content = new CompleteRenderer();
-		content.setRenderOrder(TRI, PNT, LIN, TXT);
+		content.setRenderOrder(TRI, PNT, CRV, LIN, TXT);
 		coordsys.setContent(content);
 		canvas.setPreferredSize(new Dimension(300, 300));
 		
