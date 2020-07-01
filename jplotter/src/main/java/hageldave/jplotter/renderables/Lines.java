@@ -225,7 +225,9 @@ public class Lines implements Renderable {
 	}
 	
 	/**
-	 * Sets the line thickness for this {@link Lines} object in pixels.
+	 * Sets the line thickness multiplier for this {@link Lines} object in pixels.
+	 * The effective thickness of a segment results from multiplication of its 
+	 * thickness with this value.
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
@@ -235,7 +237,9 @@ public class Lines implements Renderable {
 	}
 
 	/**
-	 * Sets the line thickness for this {@link Lines} object in pixels.
+	 * Sets the line thickness multiplier for this {@link Lines} object in pixels.
+	 * The effective thickness of a segment results from multiplication of its 
+	 * thickness with this value.
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
@@ -244,7 +248,7 @@ public class Lines implements Renderable {
 	}
 
 	/**
-	 * @return the line thickness of this {@link Lines} object
+	 * @return the line thickness multiplier of this {@link Lines} object
 	 */
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
@@ -370,7 +374,7 @@ public class Lines implements Renderable {
 	}
 	
 	/**
-	 * Returns the stroke length in pixels, which is by default 16pixels.
+	 * Returns the stroke length in pixels, which is by default 16 pixels.
 	 * @return stroke length
 	 */
 	public float getStrokeLength() {
@@ -405,7 +409,7 @@ public class Lines implements Renderable {
 	}
 
 	/**
-	 * Specification of a line segment which comprises vertex locations, colors and picking color.
+	 * Specification of a line segment which comprises vertex locations, colors, picking color, and thicknesses.
 	 * @author hageldave
 	 */
 	public static class SegmentDetails implements Cloneable {
