@@ -43,6 +43,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	public final PointsRenderer points = new PointsRenderer();
 	public final TextRenderer text = new TextRenderer();
 	public final TrianglesRenderer triangles = new TrianglesRenderer();
+	public final CurvesRenderer curves = new CurvesRenderer();
 	
 	private final Renderer[] rendererLUT = {triangles,lines,points,text};
 	public static final int TRI = 0, LIN = 1, PNT = 2, TXT = 3;

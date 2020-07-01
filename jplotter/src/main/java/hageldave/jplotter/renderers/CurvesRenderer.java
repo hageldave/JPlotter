@@ -31,7 +31,7 @@ import hageldave.jplotter.util.Utils;
  * 
  * @author hageldave
  */
-public class CurveRenderer extends GenericRenderer<Curves> {
+public class CurvesRenderer extends GenericRenderer<Curves> {
 
 	protected static final char NL = '\n';
 	protected static final String vertexShaderSrc = ""

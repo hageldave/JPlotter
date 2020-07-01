@@ -39,7 +39,7 @@ import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.CurveRenderer;
+import hageldave.jplotter.renderers.CurvesRenderer;
 import hageldave.jplotter.renderers.SplitScreenRenderer;
 import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -123,7 +123,7 @@ public class Viz {
 				}
 			}
 		});
-		CurveRenderer curverenderer = new CurveRenderer();
+		CurvesRenderer curverenderer = new CurvesRenderer();
 		Curves curves = new Curves().setGlobalThicknessMultiplier(2).setGlobalAlphaMultiplier(0.5).setStrokePattern(0xffff);
 //		curves.addCurveStrip(0,0, 1,0, 1,1, .5,1, 0,1, .5,.5, 1,1);
 		Point2D[] points = new Point2D[] {p(0,0), p(1,0), p(1,.8), p(.5,1), p(1,1),p(.5,1), p(1,1),p(.5,1),p(1,1),p(1.5,1),p(.5,1)};
