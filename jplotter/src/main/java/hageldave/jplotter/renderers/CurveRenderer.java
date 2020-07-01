@@ -72,7 +72,6 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "uniform vec4 viewTransform;"
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform float linewidthMultiplier;"
-			+ NL + "uniform bool roundposition;"
 			+ NL + "in vec4 vcolor[];"
 			+ NL + "in vec4 vpick[];"
 			+ NL + "in float vthickness[];"
@@ -81,12 +80,6 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "out vec4 gcolor;"
 			+ NL + "out vec4 gpick;"
 			+ NL + "out float gpathlen;"
-			+ NL + ""
-			+ NL + "float rnd(float f){return float(int(f+0.5));}"
-			+ NL + ""
-			+ NL + "vec2 roundToIntegerValuedVec(vec2 v){"
-			+ NL + "   return vec2(rnd(v.x),rnd(v.y));"
-			+ NL + "}"
 			+ NL + ""
 			+ NL + "vec2 transformToView(vec2 v){"
 			+ NL + "   vec3 pos = vec3(v,1);"
@@ -147,7 +140,6 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "   extra = abs(extra) < 0.4 ? 1.0:1.0/extra;"
 			+ NL + "   "
 			+ NL + "   vec2 p = q+extend*extra*normal;"
-			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[0];"
 			+ NL + "   gpick = vpick[0];"
@@ -155,7 +147,6 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "   EmitVertex();"
 			+ NL + "   "
 			+ NL + "   p = q-extend*extra*normal;"
-			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[0];"
 			+ NL + "   gpick = vpick[0];"
@@ -172,7 +163,6 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "   "
 			+ NL + "   "
 			+ NL + "   p = q+extend*extra*normal;"
-			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[1];"
 			+ NL + "   gpick = vpick[1];"
@@ -180,7 +170,6 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 			+ NL + "   EmitVertex();"
 			+ NL + "   "
 			+ NL + "   p = q-extend*extra*normal;"
-			+ NL + "   if(roundposition){p = roundToIntegerValuedVec(p);}"
 			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
 			+ NL + "   gcolor = vcolor[1];"
 			+ NL + "   gpick = vpick[1];"
@@ -305,8 +294,6 @@ public class CurveRenderer extends GenericRenderer<Curves> {
 		// set projection matrix in shader
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");
-		GL20.glUniform1i(loc, lines.isVertexRoundingEnabled() ? 1:0);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokePattern");
 		GL20.glUniform1iv(loc, transferBits(lines.getStrokePattern(), strokePattern));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokeLength");

@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderables;
 
+import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -79,7 +80,8 @@ public class Curves implements Renderable {
 	@GLContextRequired
 	public void updateGL(double scaleX, double scaleY){
 		if(Objects.nonNull(va)){
-			final double sx=scaleX, sy=scaleY, isx=1.0/scaleX, isy=1.0/scaleY;
+			final double sx=scaleX, sy=scaleY; 
+			//final double isx=1.0/scaleX, isy=1.0/scaleY;
 			// subdivide bezier curves
 			ArrayList<Double> segments = new ArrayList<>(curves.size()*6*32);
 			int[] numSegs = new int[curves.size()];
@@ -301,59 +303,18 @@ public class Curves implements Renderable {
 				.findAny()
 				.isPresent();
 	}
-	
-	public static class CurveDetails implements Cloneable {
-		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
-				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
-		
-		public Point2D p0;
-		public Point2D pc0;
-		public Point2D pc1;
-		public Point2D p1;
-		public IntSupplier color;
-		public DoubleSupplier thickness = PREDEFINED_THICKNESSES[1];
-		public int pickColor;
-		
-		public CurveDetails(Point2D p0, Point2D pc0, Point2D pc1, Point2D p1) {
-			this.p0=p0;
-			this.p1=p1;
-			this.pc0=pc0;
-			this.pc1=pc1;
-			this.color = ()->0xff555555;
-		}
-		
-		/**
-		 * Returns a shallow copy of this curve with deep copied
-		 * positions {@link #p0} and {@link #p1}.
-		 * @return copy of this curve
-		 */
-		public CurveDetails copy() {
-			CurveDetails clone = this.clone();
-			clone.p0 = Utils.copy(clone.p0);
-			clone.pc0 = Utils.copy(clone.pc0);
-			clone.pc1 = Utils.copy(clone.pc1);
-			clone.p1 = Utils.copy(clone.p1);
-			return clone;
-		}
-		
-		@Override
-		public CurveDetails clone() {
-			try {
-				return (CurveDetails) super.clone();
-			} catch (CloneNotSupportedException e) {
-				// should never happen since cloneable
-				throw new InternalError(e);
-			}
-		}
-		
-	}
 
+	/**
+	 * @return the line thickness multiplier of this {@link Curves} object
+	 */
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
 	}
 	
 	/**
-	 * Sets the line thickness for this {@link Lines} object in pixels.
+	 * Sets the line thickness multiplier for this {@link Curves} object in pixels.
+	 * The effective thickness of a segment results from multiplication of its 
+	 * thickness with this value.
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
@@ -363,7 +324,9 @@ public class Curves implements Renderable {
 	}
 
 	/**
-	 * Sets the line thickness for this {@link Lines} object in pixels.
+	 * Sets the line thickness multiplier for this {@link Curves} object in pixels.
+	 * The effective thickness of a segment results from multiplication of its 
+	 * thickness with this value.
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
@@ -373,10 +336,9 @@ public class Curves implements Renderable {
 
 	
 	/**
-	 * Sets the global alpha multiplier parameter of this {@link Lines} object.
-	 * The value will be multiplied with each segment point's alpha color value when rendering.
-	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
-	 * @param globalAlphaMultiplier of the segments in this collection
+	 * Sets the global alpha multiplier parameter of this {@link Curves} object.
+	 * The value will be multiplied with each curve's alpha color value when rendering.
+	 * @param globalAlphaMultiplier of the curves in this collection
 	 * @return this for chaining
 	 */
 	public Curves setGlobalAlphaMultiplier(DoubleSupplier globalAlphaMultiplier) {
@@ -385,10 +347,9 @@ public class Curves implements Renderable {
 	}
 	
 	/**
-	 * Sets the global alpha multiplier parameter of this {@link Lines} object.
-	 * The value will be multiplied with each segment point's alpha color value when rendering.
-	 * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
-	 * @param globalAlphaMultiplier of the segments in this collection
+	 * Sets the global alpha multiplier parameter of this {@link Curves} object.
+	 * The value will be multiplied with each curve's alpha color value when rendering.
+	 * @param globalAlphaMultiplier of the curves in this collection
 	 * @return this for chaining
 	 */
 	public Curves setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
@@ -396,14 +357,10 @@ public class Curves implements Renderable {
 	}
 
 	/**
-	 * @return the global alpha multiplier of the segments in this collection
+	 * @return the global alpha multiplier of the curves in this collection
 	 */
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
-	}
-
-	public boolean isVertexRoundingEnabled() {
-		return false;
 	}
 	
 	/**
@@ -432,44 +389,103 @@ public class Curves implements Renderable {
 		return this;
 	}
 
+	/**
+	 * Returns this {@link Curves} object's stroke pattern
+	 * @return stroke pattern
+	 */
 	public short getStrokePattern() {
 		return strokePattern;
 	}
 
+	/**
+	 * Returns the stroke length in pixels, which is by default 16 pixels.
+	 * @return stroke length
+	 */
 	public float getStrokeLength() {
 		return strokeLength;
 	}
 	
 	/**
-	 * Whether this Lines object has a stroke pattern other than 0xffff (completely solid).
+	 * Sets the stroke length in pixels. The specified stroke pattern will repeat every
+	 * strokeLength pixels.
+	 * @param strokeLength length of the stroke
+	 * @return this for chaining
+	 */
+	public Curves setStrokeLength(double strokeLength) {
+		this.strokeLength = (float) Math.max(0, strokeLength);
+		return this;
+	}
+	
+	/**
+	 * Whether this Curves object has a stroke pattern other than 0xffff (completely solid).
 	 * @return true when stroke pattern != 0xffff
 	 */
 	public boolean hasStrokePattern() {
 		return this.strokePattern != (short)0xffff;
 	}
 
+	/**
+	 * @return the number of curve elements contained in this object.
+	 */
 	public int numCurves() {
 		return curves.size();
 	}
 	
+	/**
+	 * @return the individual curve detail objects contained in this object
+	 */
 	public ArrayList<CurveDetails> getCurveDetails() {
 		return curves;
 	}
 	
+	/**
+	 * Adds a curve to the collection
+	 * @param cd curve to add
+	 * @return the argument
+	 */
 	public CurveDetails addCurve(CurveDetails cd){
 		this.curves.add(cd);
 		setDirty();
 		return cd;
 	}
 	
+	/**
+	 * Adds a cubic Bezier curve to this {@link Curves} object. 
+	 * @param p0 start point
+	 * @param cp0 1st control point (affects tangent direction from start)
+	 * @param cp1 2nd control point (affects tangent direction to end)
+	 * @param p1 end point
+	 * @return the added {@link CurveDetails} object for further settings
+	 */
 	public CurveDetails addCurve(Point2D p0, Point2D cp0,Point2D cp1, Point2D p1){
 		return this.addCurve(new CurveDetails(p0, cp0,cp1, p1));
 	}
 	
+	/**
+	 * Adds a cubic Bezier curve to this {@link Curves} object. 
+	 * @param x0 start point x
+	 * @param y0 start point y
+	 * @param x1 1st control point x
+	 * @param y1 1st control point y
+	 * @param x2 2nd control point x
+	 * @param y2 2nd control point y
+	 * @param x3 end point x
+	 * @param y3 end point y
+	 * @return the added {@link CurveDetails} object for further settings
+	 */
 	public CurveDetails addCurve(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3){
 		return this.addCurve(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1), new Point2D.Double(x2, y2), new Point2D.Double(x3, y3));
 	}
 	
+	/**
+	 * Adds a sequence of Bezier curves to this {@link Curves} object.
+	 * The first point is the start point, followed by a sequence of point triplets 
+	 * (2 control points and 1 intermediate/end point).
+	 * The number of specified points has to be 1+n*3 for n curves.
+	 * @param points sequence of points and control points defining the bezier curves to be added
+	 * @return list of added {@link CurveDetails}
+	 * @throws IllegalArgumentException when number of specified points is wrong.
+	 */
 	public ArrayList<CurveDetails> addCurveStrip(Point2D... points){
 		if((points.length-1)%3 != 0){
 			throw new IllegalArgumentException("Not enough points for curve strip. Need 4+n*3, but provided " + points.length + ", missing " + (3-((points.length-1)%3)) + ".");
@@ -482,6 +498,16 @@ public class Curves implements Renderable {
 		return curves;
 	}
 	
+	/**
+	 * Adds a sequence of Bezier curves to this {@link Curves} object.
+	 * The first point is the start point, followed by a sequence of point triplets 
+	 * (2 control points and 1 intermediate/end point).
+	 * The number of specified points has to be 1+n*3 (2+n*6 coordinates) for n curves.
+	 * @param coords sequence of point and control point coordinates defining the bezier curves to be added. 
+	 * Coordinates are specified as (x,y) pairs so that x coordinates have even (y coordinates odd) indices.
+	 * @return list of added {@link CurveDetails}
+	 * @throws IllegalArgumentException when number of specified points is wrong or number of coordinates is odd.
+	 */
 	public ArrayList<CurveDetails> addCurveStrip(double... coords){
 		if(coords.length % 2 != 0){
 			throw new IllegalArgumentException("Need to provide even number of coordinates. Provided " + coords.length);
@@ -498,6 +524,14 @@ public class Curves implements Renderable {
 		return curves;
 	}
 	
+	/**
+	 * Adds a sequence of Bezier curves to smoothly connect the specified points.
+	 * The control points are calculated in such a way that the tangents are perpendicular
+	 * to the angle bisector between 3 consecutive points.
+	 * @param points the points through which a continuous smooth curve is created using
+	 * a cubic Bezier curve between each consecutive pair of points. 
+	 * @return list of added {@link CurveDetails}
+	 */
 	public ArrayList<CurveDetails> addCurvesThrough(Point2D... points){
 		int nPoints = points.length;
 		int nControl = (nPoints-1)*2;
@@ -576,12 +610,134 @@ public class Curves implements Renderable {
 		return addCurveStrip(curves);
 	}
 
+	/**
+	 * Adds a straight line to this Curves object.
+	 * The specified start and end point are used as their respective control points.
+	 * @param p0 start point
+	 * @param p1 end point
+	 * @return the added {@link CurveDetails} object
+	 */
 	public CurveDetails addStraight(Point2D p0, Point2D p1){
 		return addCurve(new CurveDetails(p0,p0,p1,p1));
 	}
 	
+	/**
+	 * Adds a straight line to this Curves object.
+	 * The specified start and end point are used as their respective control points.
+	 * @param x0 start point x
+	 * @param y0 start point y
+	 * @param x1 end point x
+	 * @param y1 end point y
+	 * @return the added {@link CurveDetails} object
+	 */
 	public CurveDetails addStraight(double x0, double y0, double x1, double y1){
 		return addStraight(new Point2D.Double(x0, y0), new Point2D.Double(x1, y1));
 	}
 	
+	/**
+	 * Specification of a cubic Bezier curve element, comprising start/end point positions,
+	 * control point positions, as well as, line color, picking color and thickness.
+	 * @author hageldave
+	 */
+	public static class CurveDetails implements Cloneable {
+		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
+				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
+		
+		public Point2D p0;
+		public Point2D pc0;
+		public Point2D pc1;
+		public Point2D p1;
+		public IntSupplier color;
+		public DoubleSupplier thickness = PREDEFINED_THICKNESSES[1];
+		public int pickColor;
+		
+		public CurveDetails(Point2D p0, Point2D pc0, Point2D pc1, Point2D p1) {
+			this.p0=p0;
+			this.p1=p1;
+			this.pc0=pc0;
+			this.pc1=pc1;
+			this.color = ()->0xff555555;
+		}
+		
+		/**
+		 * Returns a shallow copy of this curve with deep copied
+		 * positions {@link #p0} and {@link #p1}.
+		 * @return copy of this curve
+		 */
+		public CurveDetails copy() {
+			CurveDetails clone = this.clone();
+			clone.p0 = Utils.copy(clone.p0);
+			clone.pc0 = Utils.copy(clone.pc0);
+			clone.pc1 = Utils.copy(clone.pc1);
+			clone.p1 = Utils.copy(clone.p1);
+			return clone;
+		}
+		
+		@Override
+		public CurveDetails clone() {
+			try {
+				return (CurveDetails) super.clone();
+			} catch (CloneNotSupportedException e) {
+				// should never happen since cloneable
+				throw new InternalError(e);
+			}
+		}
+		
+		/**
+		 * Sets the picking color.
+		 * When a non 0 transparent color is specified its alpha channel will be set to 0xff to make it opaque.
+		 * @param pickID picking color of the curve (see {@link Curves} for details)
+		 * @return this for chaining
+		 */
+		public CurveDetails setPickColor(int pickID){
+			if(pickID != 0)
+				pickID = pickID | 0xff000000;
+			this.pickColor = pickID;
+			return this;
+		}
+		
+		/**
+		 * Sets the color of the curve
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public CurveDetails setColor(IntSupplier color){
+			this.color = color;
+			return this;
+		}
+		
+		/**
+		 * Sets the color of the curve
+		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
+		 * @return this for chaining
+		 */
+		public CurveDetails setColor(int color){
+			return setColor(()->color);
+		}
+		
+		/**
+		 * Sets the color of the curve
+		 * @param color of the curve
+		 * @return this for chaining
+		 */
+		public CurveDetails setColor(Color color){
+			return setColor(color.getRGB());
+		}
+		
+		public CurveDetails setThickness(DoubleSupplier t){
+			this.thickness = t;
+			return this;
+		}
+		
+		public CurveDetails setThickness(double t){
+			return setThickness(sup4thick(t));
+		}
+		
+		protected static DoubleSupplier sup4thick(double t){
+			if( t == ((int)t) && t >= 0 && t < PREDEFINED_THICKNESSES.length){
+				return PREDEFINED_THICKNESSES[(int)t];
+			}
+			return ()->t;
+		}
+	}
 }
