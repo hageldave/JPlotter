@@ -8,10 +8,31 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 
+import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Utils;
 
+/**
+ * The Curves class is a collection of cubic Bezier curves.
+ * Each curve is defined by a 2D start & end point as well as two
+ * control points that affect the tangents at start/end.
+ * A curve also has a color and thickness attribute, as well as a
+ * picking color with which the curve is rendered into the (invisible) picking color attachment
+ * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
+ * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values) or 0.
+ * <p>
+ * There is also a global alpha multiplier ({@link #setGlobalAlphaMultiplier(double)}) 
+ * which scales every curves color alpha value, which can be used to introduce transparency for all segments of this 
+ * collection. This may come in handy to visualize density when plotting a huge amount of curves. <br>
+ * Similarly, the global thickness multiplier ({@link #setGlobalThicknessMultiplier(double)}) can be used to
+ * scale every curve's thickness of this Curves object by a specific factor.
+ * <p>
+ * The curves of this object can be rendered using a stroke pattern ({@link #setStrokePattern(int)}) to draw
+ * dashed or dotted lines.
+ * 
+ * @author hageldave
+ */
 public class Curves implements Renderable {
 
 	protected VertexArray va;

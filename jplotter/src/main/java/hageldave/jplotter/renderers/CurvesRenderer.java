@@ -20,11 +20,11 @@ import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
 
 /**
- * The LinesRenderer is an implementation of the {@link GenericRenderer}
- * for {@link Lines}.
+ * The CurvesRenderer is an implementation of the {@link GenericRenderer}
+ * for {@link Curves}.
  * This renderer uses a geometry shader that extends a line primitive
- * into a quad of width that corresponds to the line width of the Lines
- * object.
+ * into a quad of width that corresponds to the line width of the Curves
+ * object. The whole Bezier curve is approximated by a sequence of such quads.
  * <br>
  * Its fragment shader draws the picking color into the second render buffer
  * alongside the 'visible' color that is drawn into the first render buffer.

@@ -26,12 +26,18 @@ import hageldave.jplotter.util.Utils;
  * Per default the thickness of the line segments is 1 pixel but can be
  * altered for all segments in a {@link Lines} object (not per segment).
  * Each segment has a single picking color.
- * The picking color is the color with which the lines are rendered into the (invisible) picking color attachment
+ * The picking color is the color with which the segment is rendered into the (invisible) picking color attachment
  * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
  * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values) or 0.
  * <p>
- * There is also a global alpha multiplier which scales every segments color alpha value, which can be used to introduce transparency
- * for all segments of this collection. This may come in handy to visualize density when plotting a huge amount of lines.
+ * There is also a global alpha multiplier ({@link #setGlobalAlphaMultiplier(double)}) 
+ * which scales every segments color alpha value, which can be used to introduce transparency for all segments of this 
+ * collection. This may come in handy to visualize density when plotting a huge amount of lines. <br>
+ * Similarly, the global thickness multiplier ({@link #setGlobalThicknessMultiplier(double)}) can be used to
+ * scale every segment's thickness of this Lines object by a specific factor.
+ * <p>
+ * The segments of this object can be rendered using a stroke pattern ({@link #setStrokePattern(int)}) to draw
+ * dashed or dotted lines.
  * 
  * @author hageldave
  */
