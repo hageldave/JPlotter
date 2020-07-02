@@ -2,7 +2,6 @@ package hageldave.jplotter.renderers;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -11,18 +10,17 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Curves.CurveDetails;
+import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The CurvesRenderer is an implementation of the {@link GenericRenderer}

@@ -1,11 +1,14 @@
 package hageldave.jplotter;
 
-import static hageldave.jplotter.renderers.CompleteRenderer.*;
+import static hageldave.jplotter.renderers.CompleteRenderer.CRV;
+import static hageldave.jplotter.renderers.CompleteRenderer.LIN;
+import static hageldave.jplotter.renderers.CompleteRenderer.PNT;
+import static hageldave.jplotter.renderers.CompleteRenderer.TRI;
+import static hageldave.jplotter.renderers.CompleteRenderer.TXT;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -16,7 +19,6 @@ import java.util.LinkedList;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
 import org.w3c.dom.Document;
@@ -28,19 +30,12 @@ import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Curves;
-import hageldave.jplotter.renderables.Curves.CurveDetails;
 import hageldave.jplotter.renderables.Legend;
-import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
-import hageldave.jplotter.renderables.Text;
-import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.CurvesRenderer;
-import hageldave.jplotter.renderers.SplitScreenRenderer;
-import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.Utils;
 
 public class Viz {
 
@@ -121,7 +116,7 @@ public class Viz {
 			}
 		});
 		CurvesRenderer curverenderer = new CurvesRenderer();
-		Curves curves = new Curves().setGlobalThicknessMultiplier(2).setGlobalAlphaMultiplier(0.5).setStrokePattern(0xffff);
+		Curves curves = new Curves().setGlobalThicknessMultiplier(2).setGlobalAlphaMultiplier(0.5).setStrokePattern(0x0f0f);
 //		curves.addCurveStrip(0,0, 1,0, 1,1, .5,1, 0,1, .5,.5, 1,1);
 		Point2D[] points = new Point2D[] {p(0,0), p(1,0), p(1,.8), p(.5,1), p(1,1),p(.5,1), p(1,1),p(.5,1),p(1,1),p(1.5,1),p(.5,1)};
 		Points maPoints = new Points(DefaultGlyph.CIRCLE_F);
