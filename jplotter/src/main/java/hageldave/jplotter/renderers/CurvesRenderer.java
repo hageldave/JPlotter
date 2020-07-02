@@ -1,7 +1,11 @@
 package hageldave.jplotter.renderers;
 
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -12,6 +16,7 @@ import org.w3c.dom.Node;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Curves;
+import hageldave.jplotter.renderables.Curves.CurveDetails;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -337,183 +342,133 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	}
 
 
-//	@Override
-//	public void renderSVG(Document doc, Element parent, int w, int h) {
-//		if(!isEnabled()){
-//			return;
-//		}
-//		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
-//		parent.appendChild(mainGroup);
-//
-//		double translateX = Objects.isNull(view) ? 0:view.getX();
-//		double translateY = Objects.isNull(view) ? 0:view.getY();
-//		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
-//		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
-//
-//		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
-//
-//		for(Curves lines : getItemsToRender()){
-//			if(lines.isHidden() || lines.getStrokePattern()==0){
-//				// line is invisible
-//				continue;
-//			}
-//			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
-//			linesGroup.setAttributeNS(null, "stroke-width", "0");
-//			mainGroup.appendChild(linesGroup);
-//			double dist = 0;
-//			double prevX = 0;
-//			double prevY = 0;
-//			for(SegmentDetails seg : lines.getSegments()){
-//				double x1,y1,x2,y2;
-//				x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
-//
-//				x1-=translateX; x2-=translateX;
-//				y1-=translateY; y2-=translateY;
-//				x1*=scaleX; x2*=scaleX;
-//				y1*=scaleY; y2*=scaleY;
-//
-//				// path length calculations
-//				double dx = x2-x1;
-//				double dy = y2-y1;
-//				double len = Utils.hypot(dx, dy);
-//				double l1,l2;
-//				if(prevX==x1 && prevY==y1){
-//					l1 = dist;
-//					l2 = dist+len;
-//					dist += len;
-//					dist = dist % lines.getStrokeLength();
-//				} else {
-//					l1 = 0;
-//					l2 = len;
-//					dist = len;
-//				}
-//				prevX = x2;
-//				prevY = y2;
-//				
-//				if(lines.isVertexRoundingEnabled()){
-//					x1 = (int)(x1+0.5);
-//					x2 = (int)(x2+0.5);
-//					y1 = (int)(y1+0.5);
-//					y2 = (int)(y2+0.5);
-//				}
-//
-//				// visibility check
-//				if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
-//					continue;
-//				}
-//
-//				// miter vector stuff
-//				double normalize = 1/len;
-//				double miterX =  dy*normalize*0.5;
-//				double miterY = -dx*normalize*0.5;
-//				double t1 = seg.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier();
-//				double t2 = seg.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier();
-//
-//				
-//				String defID = "";
-//				if(seg.color0.getAsInt() != seg.color1.getAsInt()){
-//					// create gradient for line
-//					Node defs = SVGUtils.getDefs(doc);
-//					Element gradient = SVGUtils.createSVGElement(doc, "linearGradient");
-//					defs.appendChild(gradient);
-//					defID = SVGUtils.newDefId();
-//					gradient.setAttributeNS(null, "id", defID);
-//					gradient.setAttributeNS(null, "x1", SVGUtils.svgNumber(x1));
-//					gradient.setAttributeNS(null, "y1", SVGUtils.svgNumber(y1));
-//					gradient.setAttributeNS(null, "x2", SVGUtils.svgNumber(x2));
-//					gradient.setAttributeNS(null, "y2", SVGUtils.svgNumber(y2));
-//					gradient.setAttributeNS(null, "gradientUnits", "userSpaceOnUse");
-//					Element stop1 = SVGUtils.createSVGElement(doc, "stop");
-//					gradient.appendChild(stop1);
-//					stop1.setAttributeNS(null, "offset", "0%");
-//					stop1.setAttributeNS(null, "style", 
-//							"stop-color:"+SVGUtils.svgRGBhex(seg.color0.getAsInt())+";"+
-//									"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
-//					Element stop2 = SVGUtils.createSVGElement(doc, "stop");
-//					gradient.appendChild(stop2);
-//					stop2.setAttributeNS(null, "offset", "100%");
-//					stop2.setAttributeNS(null, "style", 
-//							"stop-color:"+SVGUtils.svgRGBhex(seg.color1.getAsInt())+";"+
-//									"stop-opacity:"+SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color1.getAsInt())));
-//				}
-//				
-//				if(!lines.hasStrokePattern()){
-//					Element segment = SVGUtils.createSVGElement(doc, "polygon");
-//					linesGroup.appendChild(segment);
-//					segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
-//							x1+miterX*t1,y1+miterY*t1, x2+miterX*t2,y2+miterY*t2, 
-//							x2-miterX*t2,y2-miterY*t2, x1-miterX*t1,y1-miterY*t1));
-//					if(seg.color0.getAsInt() == seg.color1.getAsInt()){
-//						segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-//						segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
-//					} else {
-//						// use gradient for line stroke
-//						segment.setAttributeNS(null, "fill", "url(#"+defID+")");
-//					}
-//				} else {
-//					double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
-//					while(strokeInterval[0] < l2){
-//						double start = strokeInterval[0];
-//						double end = Math.min(strokeInterval[1], l2);
-//						// interpolation factors
-//						double m1 = Math.max((start-l1)/(l2-l1), 0);
-//						double m2 = (end-l1)/(l2-l1);
-//						// interpolate miters
-//						double t1_ = t1*(1-m1)+t2*m1;
-//						double t2_ = t1*(1-m2)+t2*m2;
-//						// interpolate segment
-//						double x1_ = x1 + dx*m1;
-//						double x2_ = x1 + dx*m2;
-//						double y1_ = y1 + dy*m1;
-//						double y2_ = y1 + dy*m2;
-//
-//						Element segment = SVGUtils.createSVGElement(doc, "polygon");
-//						linesGroup.appendChild(segment);
-//						segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
-//								x1_+miterX*t1_,y1_+miterY*t1_, x2_+miterX*t2_,y2_+miterY*t2_, 
-//								x2_-miterX*t2_,y2_-miterY*t2_, x1_-miterX*t1_,y1_-miterY*t1_));
-//
-//						strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-//
-//						if(seg.color0.getAsInt() == seg.color1.getAsInt()){
-//							segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-//							segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
-//						} else {
-//							// use gradient for line stroke
-//							segment.setAttributeNS(null, "fill", "url(#"+defID+")");
-//						}
-//					}
-//				}
-//
-//			}
-//		}
-//	}
+	@Override
+	public void renderSVG(Document doc, Element parent, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
+		parent.appendChild(mainGroup);
 
-	protected static double[] findStrokeInterval(double current, double strokeLen, short pattern){
-		double patternStart = current - (current%strokeLen);
-		double patternPos = (current%strokeLen) * (16/strokeLen);
-		int bit = (int)patternPos;
-		int steps = bit;
-		int[] pat = transferBits(pattern, new int[16]);
-		// find next part of stroke pattern that is solid
-		while( pat[bit] != 1 ){
-			bit = (bit+1)%16;
-			steps++;
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+
+		for(Curves curves : getItemsToRender()){
+			if(curves.isHidden() || curves.getStrokePattern()==0 || curves.numCurves() == 0){
+				// line is invisible
+				continue;
+			}
+			// find connected curves
+			ArrayList<CurveDetails> currentStrip = new ArrayList<>(1);
+			LinkedList<ArrayList<CurveDetails>> allStrips = new LinkedList<>();
+			ArrayList<CurveDetails> allCurves = curves.streamIntersecting(Objects.isNull(view) ? viewportRect : view)
+					.collect(Collectors.toCollection(ArrayList::new));
+			currentStrip.add(allCurves.get(0));
+			allStrips.add(currentStrip);
+			for(int i=1; i<allCurves.size(); i++){
+				CurveDetails curr = allCurves.get(i);
+				CurveDetails prev = currentStrip.get(currentStrip.size()-1);
+				if(	!(prev.p1.equals(curr.p0)) || 
+					!(prev.thickness.getAsDouble()==curr.thickness.getAsDouble()) ||
+					!(prev.color.getAsInt()==curr.color.getAsInt())
+				){
+					currentStrip = new ArrayList<>(1);
+					allStrips.add(currentStrip);
+				}
+				currentStrip.add(curr);
+			}
+			
+			
+			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
+			linesGroup.setAttributeNS(null, "fill", "transparent");
+			if(curves.hasStrokePattern()){
+				linesGroup.setAttributeNS(null, "stroke-dasharray", strokePattern2dashArray(curves.getStrokePattern(), curves.getStrokeLength()));
+			}
+			mainGroup.appendChild(linesGroup);
+			
+			for(ArrayList<CurveDetails> curvestrip : allStrips){
+				Element path = SVGUtils.createSVGElement(doc, "path");
+				path.setAttributeNS(null, "d", pathSVGCoordinates(curvestrip, translateX, translateY, scaleX, scaleY));
+				double strokew = curvestrip.get(0).thickness.getAsDouble() * curves.getGlobalThicknessMultiplier();
+				path.setAttributeNS(null, "stroke-width", SVGUtils.svgNumber(strokew));
+				int color = curvestrip.get(0).color.getAsInt();
+				path.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(color));
+				double opacity = Pixel.a_normalized(color)*curves.getGlobalAlphaMultiplier();
+				if(opacity != 1.0){
+					path.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(opacity));
+				}
+				linesGroup.appendChild(path);
+			}
 		}
-		double intervalStart = steps==0 ? current : patternStart+steps*(strokeLen/16);
-		// find next part of stroke pattern that is empty
-		while( pat[bit] == 1 ){
-			bit = (bit+1)%16;
-			steps++;
+	}
+	
+	protected static String pathSVGCoordinates(ArrayList<CurveDetails> curveStrip, double tx, double ty, double sx, double sy){
+		double[] coordsX = new double[(1+curveStrip.size()*3)];
+		double[] coordsY = coordsX.clone();
+		// extract path coordinates
+		coordsX[0]=curveStrip.get(0).p0.getX();
+		coordsY[0]=curveStrip.get(0).p0.getY();
+		for(int i=0; i<curveStrip.size(); i++){
+			CurveDetails c = curveStrip.get(i);
+			coordsX[i*3+1] = c.pc0.getX();
+			coordsY[i*3+1] = c.pc0.getY();
+			coordsX[i*3+2] = c.pc1.getX();
+			coordsY[i*3+2] = c.pc1.getY();
+			coordsX[i*3+3] = c.p1.getX();
+			coordsY[i*3+3] = c.p1.getY();
 		}
-		double intervalEnd = patternStart+steps*(strokeLen/16);
-		// find next solid again
-		while( pat[bit] != 1 ){
-			bit = (bit+1)%16;
-			steps++;
+		// view transformation
+		for(int i=0; i<coordsX.length; i++){
+			double x = coordsX[i];
+			double y = coordsY[i];
+			x-=tx;
+			y-=ty;
+			x*=sx;
+			y*=sy;
+			coordsX[i] = x;
+			coordsY[i] = y;
 		}
-		double nextIntervalStart = patternStart+steps*(strokeLen/16);
-		return new double[]{intervalStart,intervalEnd,nextIntervalStart};
+		StringBuilder sb = new StringBuilder();
+		sb.append('M');
+		sb.append(SVGUtils.svgNumber(coordsX[0]));
+		sb.append(' ');
+		sb.append(SVGUtils.svgNumber(coordsY[0]));
+		sb.append(" C ");
+		for(int i=1; i<coordsX.length; i++){
+			sb.append(SVGUtils.svgNumber(coordsX[i]));
+			sb.append(' ');
+			sb.append(SVGUtils.svgNumber(coordsY[i]));
+			if(i < coordsX.length-1)
+				sb.append(',');
+		}
+		return sb.toString();
+	}
+
+	protected static String strokePattern2dashArray(short pattern, double len){
+		int[] onoff = transferBits(pattern, new int[16]);
+		LinkedList<Integer> dashes = new LinkedList<>();
+		int curr = onoff[0];
+		int l=0;
+		for(int i=0; i<onoff.length; i++){
+			if(onoff[i]==curr){
+				l++;
+			} else {
+				dashes.add(l);
+				curr=onoff[i];
+				l=1;
+			}
+		}
+		dashes.add(l);
+		if(onoff[0]==0)
+			dashes.add(0, 0);
+		if(dashes.size()%2==1)
+			dashes.add(0);
+		double scaling = len/16;
+		return dashes.stream().map(i->SVGUtils.svgNumber(i*scaling)).reduce((a,b)->a+" "+b).get();
 	}
 
 	protected static int[] transferBits(short bits, int[] target){
@@ -524,7 +479,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	}
 	
 //	public static void main(String[] args) {
-//		System.out.println(geometryShaderSrc);
+//		System.out.println(strokePattern2dashArray((short)0x0f0f, 16));
 //	}
 	
 }

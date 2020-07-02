@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
+import java.util.stream.Stream;
 
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
@@ -308,7 +309,13 @@ public class Curves implements Renderable {
 
 	@Override
 	public boolean intersects(Rectangle2D rect) {
-		boolean useParallelStreaming = numCurves() > 1000;
+		return streamIntersecting(rect)
+				.findAny()
+				.isPresent();
+	}
+	
+	public Stream<CurveDetails> streamIntersecting(Rectangle2D rect) {
+		boolean useParallelStreaming = numCurves() > 100;
 		return Utils.parallelize(getCurveDetails().stream(), useParallelStreaming)
 				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
 						rect, 
@@ -320,9 +327,7 @@ public class Curves implements Renderable {
 						tri.p1.getX(), tri.p1.getY(), 
 						tri.pc1.getX(), tri.pc1.getY(), 
 						tri.pc0.getX(), tri.pc0.getY()
-								))
-				.findAny()
-				.isPresent();
+				));
 	}
 
 	/**

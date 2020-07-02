@@ -139,3 +139,6 @@ fabric.properties
 *.tar.gz
 *.rar
 /target/
+
+# svg test export #
+svgtest.svg
