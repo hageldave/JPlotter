@@ -104,7 +104,7 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 
 	/**
 	 * Renders according to the set render order.<br>
-	 * (See {@link #setRenderOrder(int, int, int, int)})
+	 * (See {@link #setRenderOrder(int, int, int, int, int)})
 	 */
 	@Override
 	public void render(int vpx, int vpy, int w, int h) {
