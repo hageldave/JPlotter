@@ -16,7 +16,7 @@ import hageldave.jplotter.util.Utils;
 
 /**
  * The Curves class is a collection of cubic Bezier curves.
- * Each curve is defined by a 2D start & end point as well as two
+ * Each curve is defined by a 2D start and end point as well as two
  * control points that affect the tangents at start/end.
  * A curve also has a color and thickness attribute, as well as a
  * picking color with which the curve is rendered into the (invisible) picking color attachment
