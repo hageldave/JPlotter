@@ -1,19 +1,39 @@
 package hageldave.jplotter.howto;
 
+import java.awt.Dimension;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.function.BiFunction;
 import java.util.stream.IntStream;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageLoader;
+import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.interaction.CoordSysPanning;
+import hageldave.jplotter.interaction.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.CoordSysViewSelector;
+import hageldave.jplotter.misc.DefaultGlyph;
+import hageldave.jplotter.renderables.Curves;
+import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.renderers.CurvesRenderer;
+import hageldave.jplotter.renderers.PointsRenderer;
 
 public class BezierDemo {
 
 	private static class LinAlg {
 
-		static double[][] XTX(double[][] x){
+		static double[][] XTX(double[][] x, BiFunction<double[], double[], Double> kernel){
 			int nrows = x.length; int ncols = x[0].length;
 			double[][] xtx = new double[ncols][ncols];
 			for(int r=0; r<ncols; r++){
@@ -25,6 +45,14 @@ public class BezierDemo {
 				}
 			}
 			return xtx;
+		}
+		
+		static double SIGMA = 8;
+		static double gaussian(double[] a, double[] b){
+			double[] diff = add(a.clone(), b, -1);
+			double dot = dot(diff,diff);
+			double sig2 = SIGMA*SIGMA;
+			return Math.exp(-dot/sig2);
 		}
 
 		static double[][] center(double[][] x){
@@ -45,10 +73,7 @@ public class BezierDemo {
 		}
 
 		static double[] normalize(double[] v){
-			double len=0;
-			for(int i=0; i<v.length; i++) 
-				len += v[i]*v[i];
-			len = Math.sqrt(len);
+			double len = Math.sqrt(dot(v, v));
 			double normalization = 1.0/len;
 			for(int i=0; i<v.length; i++)
 				v[i] *= normalization;
@@ -106,12 +131,12 @@ public class BezierDemo {
 			return sum;
 		}
 		
-		static double[][] project2D(double[][] x, double[] v1, double[] v2){
+		static double[][] project2D(double[][] x, double[] v1, double[] v2, BiFunction<double[], double[], Double> kernel){
 			int nrows = x.length;
 			double[][] p = new double[nrows][2];
 			for(int r=0; r<nrows; r++){
-				p[r][0] = dot(x[r], v1);
-				p[r][1] = dot(x[r], v2);
+				p[r][0] = kernel.apply(x[r], v1);
+				p[r][1] = kernel.apply(x[r], v2);
 			}
 			return p;
 		}
@@ -131,19 +156,70 @@ public class BezierDemo {
 		}
 	}
 	
-	static double[][] reduceDimensionality(double[][] data){
+	static double[][] reduceDimensionality(double[][] data, BiFunction<double[], double[], Double> kernel){
 		double[][] x = LinAlg.center(data);
-		double[][] xtx = LinAlg.XTX(x);
+		double[][] xtx = LinAlg.XTX(x, kernel);
 		// PCA - compute 1st and 2nd eigenvector
 		double[] v1 = LinAlg.eigenV1(xtx);
 		double[] v2 = LinAlg.eigenV2(xtx, v1);
-		// project
-		return LinAlg.project2D(x, v1, v2);
+		// projection
+		return LinAlg.project2D(x, v1, v2, kernel);
 	}
 
 	public static void main(String[] args) {
 		double[][] data = loadDataset();
-		double[][] projection = reduceDimensionality(data);
+		double[][] projection = reduceDimensionality(data, LinAlg::gaussian);
+		Point2D[] pointset = Arrays.stream(projection).map(p->new Point2D.Double(p[0], p[1])).toArray(Point2D[]::new);
+		// visual elements
+		ColorMap cmap = DefaultColorMap.S_VIRIDIS.resample(pointset.length, 0, 0.8);
+		Points points = new Points(DefaultGlyph.CIRCLE_F);
+		for(int i=0; i<pointset.length; i++)
+			points.addPoint(pointset[i]).setColor(cmap.getColor(i));
+		Curves curves = new Curves();
+		curves.addCurvesThrough(pointset);
+		
+		// UI
+		BlankCanvas timeCurveCanvas = new BlankCanvas();
+		timeCurveCanvas.setPreferredSize(new Dimension(400, 400));
+		CoordSysRenderer timecurvesCoordsys = new CoordSysRenderer();
+		timeCurveCanvas.setRenderer(timecurvesCoordsys);
+		timecurvesCoordsys.setContent(
+								new PointsRenderer().addItemToRender(points)
+				.withAppended(	new CurvesRenderer().addItemToRender(curves)));
+		timecurvesCoordsys.setCoordinateView(points.getBounds());
+		new CoordSysPanning(timeCurveCanvas,timecurvesCoordsys).register();
+		new CoordSysScrollZoom(timeCurveCanvas, timecurvesCoordsys).register();
+		new CoordSysViewSelector(timeCurveCanvas,timecurvesCoordsys) {
+			@Override
+			public void areaSelected(double minX, double minY, double maxX, double maxY) {
+				timecurvesCoordsys.setCoordinateView(minX, minY, maxX, maxY);
+			}
+		}.register();
+		
+		// boiler plate JFrame
+		JFrame frame = new JFrame();
+		frame.getContentPane().add(timeCurveCanvas);
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				timeCurveCanvas.runInContext(()->timeCurveCanvas.close());
+			}
+		});
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// launch
+		SwingUtilities.invokeLater(()->{
+			frame.pack();
+			frame.setVisible(true);
+		});
 		
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
