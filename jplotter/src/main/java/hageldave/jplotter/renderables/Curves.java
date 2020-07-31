@@ -84,7 +84,7 @@ public class Curves implements Renderable {
 	@GLContextRequired
 	@Deprecated(/* use updateGL(scaleX,scaleY) instead */)
 	public void updateGL(){
-		updateGL(1, 1);
+		updateGL(1, 1, 0,3000, 0,3000);
 	}
 	
 	/**
@@ -100,9 +100,10 @@ public class Curves implements Renderable {
 	 * @param scaleY scaling of the y coordinate of the current view transform
 	 */
 	@GLContextRequired
-	public void updateGL(double scaleX, double scaleY){
+	public void updateGL(double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){
 		if(Objects.nonNull(va)){
-			final double sx=scaleX, sy=scaleY; 
+			final double sx=scaleX, sy=scaleY;
+			double[] clip = new double[]{xmin,xmax,ymin,ymax};
 			//final double isx=1.0/scaleX, isy=1.0/scaleY;
 			// subdivide bezier curves
 			ArrayList<Double> segments = new ArrayList<>(curves.size()*6*32);
@@ -118,7 +119,7 @@ public class Curves implements Renderable {
 				double yc0 = seg.pc0.getY();
 				double xc1 = seg.pc1.getX();
 				double yc1 = seg.pc1.getY();
-				subdivideCubicBezier(x0*sx, y0*sy, xc0*sx, yc0*sy, xc1*sx, yc1*sy, x1*sx, y1*sy, 0,1, segments);
+				subdivideCubicBezier(x0*sx, y0*sy, xc0*sx, yc0*sy, xc1*sx, yc1*sy, x1*sx, y1*sy, 0,1, segments, clip);
 				int segs = (segments.size()/6)-n;
 				numSegs[i] = segs;
 				n += segs;
@@ -206,8 +207,18 @@ public class Curves implements Renderable {
 			double x3, double y3,
 			double x4, double y4, 
 			double tS, double tE,
-			ArrayList<Double> list)
+			ArrayList<Double> list,
+			double[] clip)
 	{
+		// check intersection with clip rect
+		int out = 0b1111;
+		out &= Utils.outcode(x1, y1, clip[0], clip[1], clip[2], clip[3]);
+		out &= Utils.outcode(x2, y2, clip[0], clip[1], clip[2], clip[3]);
+		out &= Utils.outcode(x3, y3, clip[0], clip[1], clip[2], clip[3]);
+		out &= Utils.outcode(x4, y4, clip[0], clip[1], clip[2], clip[3]);
+		if(out != 0) { /* all points are out on the same boundary */
+			return;
+		}
 		// calc distances
 		double dx12 = (x2-x1);
 		double dy12 = (y2-y1);
@@ -237,8 +248,8 @@ public class Curves implements Renderable {
 		double t = tS+(tE-tS)*.5;
 		if(tE-tS > 0.25){
 			// not enough subdivisions yet (want at least 4 segments)
-			subdivideCubicBezier(x1, y1, xA, yA, xAB, yAB, x, y, tS, t, list);
-			subdivideCubicBezier(x, y, xBC, yBC, xC, yC, x4, y4, t, tE, list);
+			subdivideCubicBezier(x1, y1, xA, yA, xAB, yAB, x, y, tS, t, list, clip);
+			subdivideCubicBezier(x, y, xBC, yBC, xC, yC, x4, y4, t, tE, list, clip);
 		} else {
 			// calc pseudo curvature
 			double ux = x-x1; double uy = y-y1; 
@@ -250,8 +261,8 @@ public class Curves implements Renderable {
 			/* curvature = (l1+l2)/l3; */
 			// subdivide if segments are longer than 32px (32^2=1024) or if curvature is too extreme
 			if(l1 > 1024.0 || l2 > 1024.0 || (l1+l2)/l3 > 1.005 ){
-				subdivideCubicBezier(x1, y1, xA, yA, xAB, yAB, x, y, tS, t, list);
-				subdivideCubicBezier(x, y, xBC, yBC, xC, yC, x4, y4, t, tE, list);
+				subdivideCubicBezier(x1, y1, xA, yA, xAB, yAB, x, y, tS, t, list, clip);
+				subdivideCubicBezier(x, y, xBC, yBC, xC, yC, x4, y4, t, tE, list, clip);
 			} else {
 				list.add(x1); list.add(y1);
 				list.add(x);  list.add(y);

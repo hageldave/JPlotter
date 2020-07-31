@@ -246,12 +246,17 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			// render every item
 			double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 			double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+			// screen space clip coordinates
+			double xmin = Objects.isNull(view) ? 0:view.getMinX()*scaleX;
+			double xmax = Objects.isNull(view) ? w:view.getMaxX()*scaleX;
+			double ymin = Objects.isNull(view) ? 0:view.getMinY()*scaleY; 
+			double ymax = Objects.isNull(view) ? h:view.getMaxY()*scaleY;
 			boolean viewHasChanged_ = this.viewHasChanged;
 			this.viewHasChanged = false;
 			for(Curves item: itemsToRender){
 				if(item.isDirty() || viewHasChanged_ || vpHasChanged){
 					// update items gl state if necessary
-					item.updateGL(scaleX,scaleY);
+					item.updateGL(scaleX, scaleY, xmin, xmax, ymin, ymax);
 				}
 				if(!item.isHidden()){
 					renderItem(item);

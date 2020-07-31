@@ -321,7 +321,16 @@ public class Utils {
 			return new Point2D.Double(m*b.getX(), m*b.getY());
 		}
 		return new Point2D.Double(a.getX()+m*b.getX(), a.getY()+m*b.getY());
-		
+	}
+	
+	public static int outcode(double x, double y, double xmin, double xmax, double ymin, double ymax) {
+		int out = 0;
+		// bit pattern is |left|right|top|bottom
+		out |= x<xmin ? 0b1000:0;
+		out |= x>xmax ? 0b0100:0;
+		out |= y<ymin ? 0b0010:0;
+		out |= y>ymax ? 0b0001:0;
+		return out;
 	}
 	
 	
