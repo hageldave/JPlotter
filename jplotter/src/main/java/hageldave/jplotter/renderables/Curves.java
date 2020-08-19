@@ -672,6 +672,16 @@ public class Curves implements Renderable {
 	}
 	
 	/**
+	 * Removes all curves of this object.
+	 * Sets the {@link #isDirty()} state to true.
+	 * @return this for chaining
+	 */
+	public Curves removeAllCurves() {
+		this.curves.clear();
+		return this.setDirty();
+	}
+	
+	/**
 	 * Specification of a cubic Bezier curve element, comprising start/end point positions,
 	 * control point positions, as well as, line color, picking color and thickness.
 	 * @author hageldave
