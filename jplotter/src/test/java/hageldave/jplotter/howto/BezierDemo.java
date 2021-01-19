@@ -47,7 +47,7 @@ public class BezierDemo {
 			return xtx;
 		}
 		
-		static double SIGMA = 8;
+		static double SIGMA = 4;
 		static double gaussian(double[] a, double[] b){
 			double[] diff = add(a.clone(), b, -1);
 			double dot = dot(diff,diff);
@@ -90,9 +90,16 @@ public class BezierDemo {
 			return q;
 		}
 
-		static double[] add(double[] a, double[] b, double c){
+		static double[] add(double[] a, double[] b, double m){
 			for(int i=0; i<a.length; i++){
-				a[i] += b[i]*c;
+				a[i] += b[i]*m;
+			}
+			return a;
+		}
+		
+		static double[] add(double[] a, double[] b, double m, double c){
+			for(int i=0; i<a.length; i++){
+				a[i] += b[i]*m + c;
 			}
 			return a;
 		}
@@ -143,17 +150,49 @@ public class BezierDemo {
 	}
 	
 	static double[][] loadDataset() {
-		Class<?> loader = BezierDemo.class;
-		try(InputStream is = loader.getResourceAsStream("/stopmotionframes64x64.png")){
-			BufferedImage image = ImageLoader.loadImage(is, BufferedImage.TYPE_INT_ARGB);
-			Img img = Img.createRemoteImg(image);
-			double[][] data = new double[img.getHeight()][img.getWidth()];
-			double toUnit = 1/255.0;
-			img.forEach(true, px -> data[px.getY()][px.getX()]=px.getLuminance()*toUnit);
-			return data;
-		} catch (IOException e) {
-			throw new RuntimeException("sorry something went wrong on loading resource", e);
+//		Class<?> loader = BezierDemo.class;
+//		try(InputStream is = loader.getResourceAsStream("/stopmotionframes64x64.png")){
+//			BufferedImage image = ImageLoader.loadImage(is, BufferedImage.TYPE_INT_ARGB);
+//			int w = image.getWidth()/16;
+//			int h = image.getHeight();
+//			Img img = new Img(w,h);
+//			img.paint(g->g.drawImage(image,0,0,w,h,null));
+//			double[][] data = new double[img.getHeight()][img.getWidth()];
+//			double toUnit = 1/255.0;
+//			img.forEach(true, px -> data[px.getY()][px.getX()]=px.getLuminance()*toUnit);
+//			return data;
+//		} catch (IOException e) {
+//			throw new RuntimeException("sorry something went wrong on loading resource", e);
+//		}
+		int d = 56;
+		int n = d*5;
+		double[] init = IntStream.range(0, d).mapToDouble(i->Math.random()).toArray();
+		double[][] data = new double[n][];
+		data[0] = averageNeighbors(averageNeighbors(init));
+		for(int i=1; i<n; i++) {
+			data[i] = shift(data[i-1]);
+			if(i%(d/3)==0) {
+//				data[i] = averageNeighbors(data[i]);
+				LinAlg.add(data[i], LinAlg.add(new double[d], init, (i/(d/3))%2 == 0 ? 1:-1, -.5), 0.01);
+			}
 		}
+		return data;
+	}
+	
+	static double[] shift(double[] a) {
+		double[] b = new double[a.length];
+		for(int i=0; i<a.length; i++)
+			b[(i+1)%a.length] = a[i];
+		return b;
+	}
+	
+	static double[] averageNeighbors(double[] a) {
+		double[] b = new double[a.length];
+		for(int i=0; i<a.length; i++) {
+			b[i] = a[i]+a[(i+1)%a.length]+a[(i+a.length-1)%a.length];
+			b[i]/= 3;
+		}
+		return b;
 	}
 	
 	static double[][] reduceDimensionality(double[][] data, BiFunction<double[], double[], Double> kernel){
