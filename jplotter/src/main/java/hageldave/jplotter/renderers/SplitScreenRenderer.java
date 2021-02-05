@@ -1,5 +1,7 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.Graphics2D;
+
 import org.lwjgl.opengl.GL11;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -158,6 +160,34 @@ public class SplitScreenRenderer implements Renderer {
 			r2.render(       x2+vpx, y2+vpy, w2, h2 );
 		}
 		GL11.glViewport(vpx, vpy, w, h);
+	}
+
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled())
+			return;
+
+		int w1 = verticalSplit ? (int)Math.round(w*dividerLocation):w;
+		int h1 = verticalSplit ? h:(int)Math.round(h*dividerLocation);
+		int w2 = verticalSplit ? w-w1:w;
+		int h2 = verticalSplit ? h:h-h1;
+		int x1 = 0;
+		int y1 = verticalSplit ? 0:h2;
+		int x2 = verticalSplit ? w1:0;
+		int y2 = 0;
+
+		if(r1 != null) {
+			// create translated and clipped graphics for the content
+			Graphics2D g_ = (Graphics2D)g.create(x1,y1,w1,h1);
+			Graphics2D p_ = (Graphics2D)p.create(x1,y1,w1,h1);
+			r1.renderFallback(g_,p_, w1, h1);
+		}
+		if(r2 != null) {
+			// create translated and clipped graphics for the content
+			Graphics2D g_ = (Graphics2D)g.create(x2,y2,w2,h2);
+			Graphics2D p_ = (Graphics2D)p.create(x2,y2,w2,h2);
+			r2.renderFallback(g_,p_, w2, h2);
+		}
 	}
 
 	@Override

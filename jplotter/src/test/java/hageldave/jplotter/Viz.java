@@ -24,6 +24,7 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
@@ -31,10 +32,12 @@ import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Legend;
+import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.CurvesRenderer;
+import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
 public class Viz {
@@ -47,99 +50,21 @@ public class Viz {
 		frame.getContentPane().setBackground(Color.white);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
-		BlankCanvas canvas = new BlankCanvas();
-		CoordSysRenderer coordsys = new CoordSysRenderer();
-		canvas.setRenderer(coordsys);
-		canvas.setDisposeOnRemove(false);
-		coordsys.setyAxisLabel("Y-Axis");
-		CompleteRenderer content = new CompleteRenderer();
-		content.setRenderOrder(TRI, PNT, CRV, LIN, TXT);
-		coordsys.setContent(content);
-		canvas.setPreferredSize(new Dimension(300, 300));
 		
-		Legend legend = new Legend();
-		Legend legendB = new Legend();
-		legend.addGlyphLabel(DefaultGlyph.TRIANGLE_F, 0xffe41a1c, "rand pnts");
-		legend.addGlyphLabel(DefaultGlyph.ARROW, 0xff377eb8, "-(x,y)");
-		legend.addLineLabel(2, 0xffff00ff, 0xf790, "sin(x)", 0);
-		legend.addLineLabel(2, 0xff00ff00, "x=y");
-		legendB.addColormapLabel("M", DefaultColorMap.S_RISING_DEEP_PURPLE, false, new double[]{0,0.5,1,0.75,0.25}, new String[]{"lo","mid","hi", "", ""});
-		legendB.addColormapLabel("sads", DefaultColorMap.S_PLASMA, false, new double[]{0,0.5,0.4,0.2,1}, new String[]{"Lo","mig","", "", "hiN"});
-		coordsys.setLegendRight(legend);
-		coordsys.setLegendRightWidth(80);
-		coordsys.setLegendBottom(legendB);
-		coordsys.setLegendBottomHeight(60);
+		BlankCanvasFallback canvas = new BlankCanvasFallback();
+		LinesRenderer render = new LinesRenderer();
+		Lines lines = new Lines();
+		render.addItemToRender(lines);
+		canvas.setRenderer(render);
+		lines.addSegment(0, 0, 40, 50).setColor0(0xff00ff00).setColor1(0xffff0000);
 		
-		new CoordSysPanning(canvas, coordsys).register();
-		new CoordSysScrollZoom(canvas, coordsys).register();
-		new CoordSysViewSelector(canvas,coordsys) {
-			@Override
-			public void areaSelected(double minX, double minY, double maxX, double maxY) {
-				coordsys.setCoordinateView(minX, minY, maxX, maxY);
-			}
-		}.register();
+		frame.getContentPane().add(canvas);
 		
-		coordsys.setCoordinateView(0, 0, 2, 1);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				canvas.runInContext(()->canvas.close());
-				canvas.disposePlatformCanvas();
-			}
-		});
-		
-		canvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				int pixel = canvas.getPixel(
-						e.getX(), 
-						e.getY(), 
-						SwingUtilities.isRightMouseButton(e), 
-						5);
-				System.out.println(Integer.toHexString(pixel));
-			}
-		});
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);
 			frame.transferFocus();
 		});
-		canvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isRightMouseButton(e)){
-					Document doc = canvas.paintSVG();
-					SVGUtils.documentToXMLFile(doc, new File("svgtest.svg"));
-					System.out.println("svg exported:");
-					System.out.println(SVGUtils.documentToXMLString(doc));
-				}
-			}
-		});
-		CurvesRenderer curverenderer = new CurvesRenderer();
-		Curves curves = new Curves().setGlobalThicknessMultiplier(2).setGlobalAlphaMultiplier(0.5).setStrokePattern(0x0f0f);
-//		curves.addCurveStrip(0,0, 1,0, 1,1, .5,1, 0,1, .5,.5, 1,1);
-		Point2D[] points = new Point2D[] {p(0,0), p(1,0), p(1,.8), p(.5,1), p(1,1),p(.5,1), p(1,1),p(.5,1),p(1,1),p(1.5,1),p(.5,1)};
-		Points maPoints = new Points(DefaultGlyph.CIRCLE_F);
-		for(Point2D x:points)
-			maPoints.addPoint(x);
-		LinkedList<Point2D> samples = new LinkedList<>();
-		for(int i = 0; i<100; i++){
-			double x = i/3.0;
-			double y = Math.sin(x)*(x+1);
-			Point2D p = p(x,y);
-			maPoints.addPoint(p).setColor(0x44ff0000);
-			samples.add(p);
-		}
-		
-		
-		content.addItemToRender(maPoints);
-		curves.addCurvesThrough(points);
-		curves.addCurvesThrough(samples.toArray(new Point2D[0])).forEach(c->c.color=()->0xffff3333);
-		curverenderer.addItemToRender(curves);
-		coordsys.setContent(content.withAppended(curverenderer));
-		canvas.setMinimumSize(new Dimension(1, 1));
-		frame.getContentPane().add(canvas);
-		
 		
 	}
 	

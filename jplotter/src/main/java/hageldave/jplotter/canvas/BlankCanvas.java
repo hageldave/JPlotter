@@ -50,7 +50,7 @@ public class BlankCanvas extends FBOCanvas {
 	}
 	
 	@Override
-	protected void paintToSVG(Document doc, Element parent, int w, int h) {
+	public void paintToSVG(Document doc, Element parent, int w, int h) {
 		renderer.renderSVG(doc, parent, w, h);
 	}
 

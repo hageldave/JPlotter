@@ -1,5 +1,7 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.Graphics2D;
+
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
@@ -44,6 +46,8 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	@GLContextRequired
 	public void render(int vpx, int vpy, int w, int h);
 	
+	public default void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {};
+
 	/**
 	 * Disposes of any GL resources belonging to this object.
 	 */

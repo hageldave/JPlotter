@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 
 import org.w3c.dom.Document;
@@ -19,12 +20,12 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 
 	protected Renderer r1,r2;
 	protected boolean isEnabled=true;
-	
+
 	public ChainedRenderer(Renderer r1, Renderer r2) {
 		this.r1 = r1;
 		this.r2 = r2;
 	}
-	
+
 	@Override
 	public void setView(Rectangle2D rect) {
 		if(r1 instanceof AdaptableView)
@@ -51,6 +52,15 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 	}
 
 	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		r1.renderFallback(g,p, w, h);
+		r2.renderFallback(g,p, w, h);
+	}
+
+	@Override
 	@GLContextRequired
 	public void close() {
 		if(r1 != null)
@@ -58,17 +68,17 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 		if(r2 != null)
 			r2.close();
 	}
-	
+
 	@Override
 	public void setEnabled(boolean enable) {
 		this.isEnabled = enable;
 	}
-	
+
 	@Override
 	public boolean isEnabled() {
 		return isEnabled;
 	}
-	
+
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
@@ -77,6 +87,6 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 		r1.renderSVG(doc, parent, w, h);
 		r2.renderSVG(doc, parent, w, h);
 	}
-	
-	
+
+
 }

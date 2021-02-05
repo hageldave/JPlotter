@@ -83,7 +83,7 @@ import hageldave.jplotter.util.Utils;
  * 
  * @author hageldave
  */
-public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
+public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable, JPlotterCanvas {
 	private static final long serialVersionUID = 1L;
 	
 	public static final AtomicInteger ATOMIC_COUNTER = new AtomicInteger(0);
@@ -536,20 +536,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			paintToSVG(document, rootGroup, w,h);
 		}
 	}
-	
-	/**
-	 * Renders this {@link FBOCanvas} in terms of SVG elements
-	 * to the specified parent element of the specified SVG document.
-	 * <p>
-	 * This method has to be overridden when the implementing
-	 * class can express its contents in terms of SVG.
-	 * 
-	 * @param doc document to create svg elements with
-	 * @param parent to append svg elements to
-	 * @param w width of the viewport (the width of this Canvas)
-	 * @param h height of the viewport (the height of this Canvas)
-	 */
-	protected void paintToSVG(Document doc, Element parent, int w, int h){}
 
 	/**
 	 * Disposes of this {@link FBOCanvas} GL resources, i.e. closes the shaders, 

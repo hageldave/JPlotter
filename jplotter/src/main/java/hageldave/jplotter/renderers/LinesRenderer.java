@@ -1,5 +1,11 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.GradientPaint;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
@@ -288,6 +294,47 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		closeAllItems();
 	}
 
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+		
+		for(Lines lines : getItemsToRender()){
+			if(lines.isHidden() || lines.getStrokePattern()==0 || lines.numSegments() == 0){
+				// line is invisible
+				continue;
+			}
+			
+			for(SegmentDetails seg : lines.getSegments()){
+				double x1,y1,x2,y2;
+				x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
+
+				x1-=translateX; x2-=translateX;
+				y1-=translateY; y2-=translateY;
+				x1*=scaleX; x2*=scaleX;
+				y1*=scaleY; y2*=scaleY;
+				
+				if(lines.isVertexRoundingEnabled()){
+					x1 = (int)(x1+0.5);
+					x2 = (int)(x2+0.5);
+					y1 = (int)(y1+0.5);
+					y2 = (int)(y2+0.5);
+				}
+				// this is just testing
+				// TODO: actually implement all the line and segment features (color gradient, miter, stroke patterns, !variable thickness!)
+				g.setPaint(new GradientPaint((int)x1, (int)y1, new Color(seg.color0.getAsInt(), true), (int)x2, (int)y2, new Color(seg.color1.getAsInt(), true)));
+				g.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
+			}
+			
+		}
+		
+	}
 
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
