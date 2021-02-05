@@ -358,7 +358,7 @@ public class Legend implements Renderable, Renderer {
 							.setPickColor(glyphLabel.pickColor)
 							.setOrigin(itemWidth+itemTextSpacing,0);
 					texts.add(lbltxt);
-					pd = points.addPoint(itemWidth/2, fontHeight/2+1);
+					pd = points.addPoint(itemWidth/2, fontHeight/2+1).setColor(glyphLabel.color);
 					rect = new Rectangle(itemWidth+itemTextSpacing+lbltxt.getTextSize().width, fontHeight);
 				}
 				@Override
