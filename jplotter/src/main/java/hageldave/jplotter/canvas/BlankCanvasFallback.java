@@ -76,7 +76,11 @@ public class BlankCanvasFallback extends Canvas implements JPlotterCanvas {
 		// setup render graphics
 		Graphics2D g=null,p=null;
 		try {
-			render(g=mainRenderBuffer.createGraphics(), p=pickingRenderBuffer.createGraphics(), w,h);
+			g=mainRenderBuffer.createGraphics();
+			p=pickingRenderBuffer.createGraphics();
+			g.translate(0, h);
+			g.scale(1.0, -1.0);
+			render(g,p, w,h);
 		} finally {
 			if(g!=null)g.dispose();
 			if(p!=null)p.dispose();

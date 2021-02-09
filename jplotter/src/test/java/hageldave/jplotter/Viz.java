@@ -21,10 +21,12 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
@@ -52,13 +54,32 @@ public class Viz {
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
 		
 		BlankCanvasFallback canvas = new BlankCanvasFallback();
+//		BlankCanvas canvas = new BlankCanvas();
 		LinesRenderer render = new LinesRenderer();
 		Lines lines = new Lines();
 		render.addItemToRender(lines);
-		canvas.setRenderer(render);
 		lines.addSegment(0, 0, 40, 50).setColor0(0xff00ff00).setColor1(0xffff0000);
 		
+		CoordSysRenderer csr = new CoordSysRenderer();
+		csr.setContent(render);
+		Legend legend = new Legend();
+		csr.setLegendBottom(legend);
+		legend.addLineLabel(2, 0xffff0055, "a pink line");
+		
+		canvas.setRenderer(csr);
+		
 		frame.getContentPane().add(canvas);
+		
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				Object subject = canvas;
+				if(subject instanceof FBOCanvas) {
+					FBOCanvas cnvs = (FBOCanvas)subject;
+					cnvs.runInContext(()->cnvs.close());
+				}
+			}
+		});
 		
 		SwingUtilities.invokeLater(()->{
 			frame.pack();

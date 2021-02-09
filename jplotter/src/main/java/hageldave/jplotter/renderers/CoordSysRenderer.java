@@ -4,6 +4,7 @@ import java.awt.AWTEventMulticaster;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,7 +28,6 @@ import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Annotations.GLCoordinates;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
@@ -362,7 +362,6 @@ public class CoordSysRenderer implements Renderer {
 	 * <li>the areas for the legends (right and bottom legend)</li>
 	 * </ul>
 	 */
-	@GLContextRequired
 	protected void setupAndLayout() {
 		Pair<double[],String[]> xticksAndLabels = tickMarkGenerator.genTicksAndLabels(
 				coordinateView.getMinX(), 
@@ -602,6 +601,52 @@ public class CoordSysRenderer implements Renderer {
 		if(Objects.nonNull(overlay)){
 			overlay.glInit();
 			overlay.render(vpx,vpy,w,h);
+		}
+	}
+	
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		currentViewPort.setRect(0, 0, w, h);
+		if(isDirty || viewportwidth != w || viewportheight != h){
+			// update axes
+			axes.setDirty();
+			viewportwidth = w;
+			viewportheight = h;
+			setupAndLayout();
+			isDirty = false;
+		}
+		preContentLinesR.renderFallback(g, p, w, h);
+		preContentTextR.renderFallback(g, p, w, h);
+		if(content != null){
+			int viewPortX = (int)coordsysAreaLB.getX();
+			int viewPortY = (int)coordsysAreaLB.getY();
+			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
+			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
+			if(content instanceof AdaptableView){
+				((AdaptableView) content).setView(coordinateView);
+			}
+			// create viewport graphics
+			Graphics2D g_ = (Graphics2D)g.create(viewPortX, viewPortY, viewPortW, viewPortH);
+			Graphics2D p_ = (Graphics2D)p.create(viewPortX, viewPortY, viewPortW, viewPortH);
+			content.renderFallback(g_, p_, viewPortW, viewPortH);
+		}
+		postContentLinesR.renderFallback(g, p, w, h);
+		postContentTextR.renderFallback(g, p, w, h);
+		// draw legends
+		if(Objects.nonNull(legendRight)){
+			// create viewport graphics
+			Graphics2D g_ = (Graphics2D)g.create(legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+			Graphics2D p_ = (Graphics2D)p.create(legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+			legendRight.renderFallback(g_, p_, legendRightViewPort.width, legendRightViewPort.height);
+		}
+		if(Objects.nonNull(legendBottom)){
+			// create viewport graphics
+			Graphics2D g_ = (Graphics2D)g.create(legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+			Graphics2D p_ = (Graphics2D)p.create(legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+			legendBottom.renderFallback(g_, p_, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
 	}
 	

@@ -8,6 +8,7 @@ import java.awt.Paint;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -305,11 +306,18 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 		
+		Rectangle2D viewportRect = new Rectangle2D.Float(0, 0, w, h);
+		int[][] polygonCoords = new int[2][4];
+		
 		for(Lines lines : getItemsToRender()){
 			if(lines.isHidden() || lines.getStrokePattern()==0 || lines.numSegments() == 0){
 				// line is invisible
 				continue;
 			}
+			
+			double dist = 0;
+			double prevX = 0;
+			double prevY = 0;
 			
 			for(SegmentDetails seg : lines.getSegments()){
 				double x1,y1,x2,y2;
@@ -319,6 +327,24 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				y1-=translateY; y2-=translateY;
 				x1*=scaleX; x2*=scaleX;
 				y1*=scaleY; y2*=scaleY;
+
+				// path length calculations
+				double dx = x2-x1;
+				double dy = y2-y1;
+				double len = Utils.hypot(dx, dy);
+				double l1,l2;
+				if(prevX==x1 && prevY==y1){
+					l1 = dist;
+					l2 = dist+len;
+					dist += len;
+					dist = dist % lines.getStrokeLength();
+				} else {
+					l1 = 0;
+					l2 = len;
+					dist = len;
+				}
+				prevX = x2;
+				prevY = y2;
 				
 				if(lines.isVertexRoundingEnabled()){
 					x1 = (int)(x1+0.5);
@@ -326,10 +352,65 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					y1 = (int)(y1+0.5);
 					y2 = (int)(y2+0.5);
 				}
-				// this is just testing
-				// TODO: actually implement all the line and segment features (color gradient, miter, stroke patterns, !variable thickness!)
-				g.setPaint(new GradientPaint((int)x1, (int)y1, new Color(seg.color0.getAsInt(), true), (int)x2, (int)y2, new Color(seg.color1.getAsInt(), true)));
-				g.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
+
+				// visibility check
+				if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
+					continue;
+				}
+
+				// miter vector stuff
+				double normalize = 1/len;
+				double miterX =  dy*normalize*0.5;
+				double miterY = -dx*normalize*0.5;
+				double t1 = seg.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier();
+				double t2 = seg.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier();
+
+				
+				Paint paint; int c1,c2;
+				if((c1=seg.color0.getAsInt()) != (c2=seg.color1.getAsInt())){
+					paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
+				} else paint = new Color(c1,true);
+				g.setPaint(paint);
+				
+				if(!lines.hasStrokePattern()){
+					int[][] pc=polygonCoords;
+					pc[0][0]=(int)(x1+miterX*t1);pc[1][0]=(int)(y1+miterY*t1); pc[0][1]=(int)(x2+miterX*t2);pc[1][1]=(int)(y2+miterY*t2);
+					pc[0][2]=(int)(x2-miterX*t2);pc[1][2]=(int)(y2-miterY*t2); pc[0][3]=(int)(x1-miterX*t1);pc[1][3]=(int)(y1-miterY*t1);
+					g.fillPolygon(pc[0], pc[1], 4);
+				} else {
+					double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+//					while(strokeInterval[0] < l2){
+//						double start = strokeInterval[0];
+//						double end = Math.min(strokeInterval[1], l2);
+//						// interpolation factors
+//						double m1 = Math.max((start-l1)/(l2-l1), 0);
+//						double m2 = (end-l1)/(l2-l1);
+//						// interpolate miters
+//						double t1_ = t1*(1-m1)+t2*m1;
+//						double t2_ = t1*(1-m2)+t2*m2;
+//						// interpolate segment
+//						double x1_ = x1 + dx*m1;
+//						double x2_ = x1 + dx*m2;
+//						double y1_ = y1 + dy*m1;
+//						double y2_ = y1 + dy*m2;
+//
+//						Element segment = SVGUtils.createSVGElement(doc, "polygon");
+//						linesGroup.appendChild(segment);
+//						segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
+//								x1_+miterX*t1_,y1_+miterY*t1_, x2_+miterX*t2_,y2_+miterY*t2_, 
+//								x2_-miterX*t2_,y2_-miterY*t2_, x1_-miterX*t1_,y1_-miterY*t1_));
+//
+//						strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
+//
+//						if(seg.color0.getAsInt() == seg.color1.getAsInt()){
+//							segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
+//							segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
+//						} else {
+//							// use gradient for line stroke
+//							segment.setAttributeNS(null, "fill", "url(#"+defID+")");
+//						}
+//					}
+				}
 			}
 			
 		}
