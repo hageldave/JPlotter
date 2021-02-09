@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 
 import org.w3c.dom.Document;
@@ -116,6 +117,18 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		rendererLUT[renderOrder[2]].render(vpx,vpy,w, h);
 		rendererLUT[renderOrder[3]].render(vpx,vpy,w, h);
 		rendererLUT[renderOrder[4]].render(vpx,vpy,w, h);
+	}
+	
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		rendererLUT[renderOrder[0]].renderFallback(g, p, w, h);
+		rendererLUT[renderOrder[1]].renderFallback(g, p, w, h);
+		rendererLUT[renderOrder[2]].renderFallback(g, p, w, h);
+		rendererLUT[renderOrder[3]].renderFallback(g, p, w, h);
+		rendererLUT[renderOrder[4]].renderFallback(g, p, w, h);
 	}
 
 	/**

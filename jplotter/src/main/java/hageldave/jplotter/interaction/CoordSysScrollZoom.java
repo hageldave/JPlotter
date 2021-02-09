@@ -1,5 +1,6 @@
 package hageldave.jplotter.interaction;
 
+import java.awt.Component;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.Arrays;
@@ -21,12 +22,12 @@ import hageldave.jplotter.util.Utils;
  */
 public class CoordSysScrollZoom implements MouseWheelListener, InteractionConstants {
 
-	protected FBOCanvas canvas;
+	protected Component canvas;
 	protected CoordSysRenderer coordsys;
 	protected double zoomFactor = 2;
 	protected int axes = X_AXIS | Y_AXIS;
 	
-	public CoordSysScrollZoom(FBOCanvas canvas, CoordSysRenderer coordsys) {
+	public CoordSysScrollZoom(Component canvas, CoordSysRenderer coordsys) {
 		this.canvas = canvas;
 		this.coordsys = coordsys;
 	}

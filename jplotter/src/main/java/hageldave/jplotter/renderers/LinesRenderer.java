@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Polygon;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
@@ -25,7 +26,7 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-import hageldave.jplotter.util.Utils;
+import static hageldave.jplotter.util.Utils.*;
 
 /**
  * The LinesRenderer is an implementation of the {@link GenericRenderer}
@@ -331,7 +332,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				// path length calculations
 				double dx = x2-x1;
 				double dy = y2-y1;
-				double len = Utils.hypot(dx, dy);
+				double len = hypot(dx, dy);
 				double l1,l2;
 				if(prevX==x1 && prevY==y1){
 					l1 = dist;
@@ -374,8 +375,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				
 				if(!lines.hasStrokePattern()){
 					int[][] pc=polygonCoords;
-					pc[0][0]=(int)(x1+miterX*t1);pc[1][0]=(int)(y1+miterY*t1); pc[0][1]=(int)(x2+miterX*t2);pc[1][1]=(int)(y2+miterY*t2);
-					pc[0][2]=(int)(x2-miterX*t2);pc[1][2]=(int)(y2-miterY*t2); pc[0][3]=(int)(x1-miterX*t1);pc[1][3]=(int)(y1-miterY*t1);
+					pc[0][0]=rnd(x1+miterX*t1);pc[1][0]=rnd(y1+miterY*t1); pc[0][1]=rnd(x2+miterX*t2);pc[1][1]=rnd(y2+miterY*t2);
+					pc[0][2]=rnd(x2-miterX*t2);pc[1][2]=rnd(y2-miterY*t2); pc[0][3]=rnd(x1-miterX*t1);pc[1][3]=rnd(y1-miterY*t1);
 					g.fillPolygon(pc[0], pc[1], 4);
 				} else {
 					double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
@@ -414,7 +415,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			}
 			
 		}
-		
 	}
 
 	@Override
@@ -455,7 +455,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				// path length calculations
 				double dx = x2-x1;
 				double dy = y2-y1;
-				double len = Utils.hypot(dx, dy);
+				double len = hypot(dx, dy);
 				double l1,l2;
 				if(prevX==x1 && prevY==y1){
 					l1 = dist;

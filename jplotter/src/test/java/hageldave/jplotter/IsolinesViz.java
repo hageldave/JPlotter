@@ -20,6 +20,8 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
@@ -42,7 +44,8 @@ public class IsolinesViz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 450));
-		BlankCanvas canvas = new BlankCanvas();
+		BlankCanvasFallback canvas = new BlankCanvasFallback();
+//		BlankCanvas canvas = new BlankCanvas();
 		CoordSysRenderer coordsys = new CoordSysRenderer();
 		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
@@ -146,7 +149,9 @@ public class IsolinesViz {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				canvas.runInContext(()->canvas.close());
+				Object obj = canvas;
+				if(obj instanceof FBOCanvas)
+					((FBOCanvas)obj).runInContext(()->((FBOCanvas)obj).close());
 			}
 		});
 		SwingUtilities.invokeLater(()->{

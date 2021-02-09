@@ -1,5 +1,6 @@
 package hageldave.jplotter.interaction;
 
+import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
@@ -35,7 +36,7 @@ import hageldave.jplotter.util.Utils;
 public class CoordSysPanning extends MouseAdapter implements InteractionConstants {
 	
 	protected Point startPoint;
-	protected FBOCanvas canvas;
+	protected Component canvas;
 	protected CoordSysRenderer coordsys;
 	protected int extModifierMask = InputEvent.CTRL_DOWN_MASK;
 	protected int axes = X_AXIS | Y_AXIS;
@@ -45,7 +46,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	 * @param canvas displaying the coordsys
 	 * @param coordsys the coordinate system to apply the panning in
 	 */
-	public CoordSysPanning(FBOCanvas canvas, CoordSysRenderer coordsys) {
+	public CoordSysPanning(Component canvas, CoordSysRenderer coordsys) {
 		this.canvas = canvas;
 		this.coordsys = coordsys;
 	}

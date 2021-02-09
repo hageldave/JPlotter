@@ -173,6 +173,11 @@ public class Utils {
 		return Math.max(Math.max(v0, v1), v2);
 	}
 	
+	public static int rnd(double v) {
+//		return Math.round((float)v);
+		return (int) v;
+	}
+	
 	/**
 	 * Calculates the average (arithmetic mean) color of the
 	 * specified colors. Each channel (ARGB) is treated separately.

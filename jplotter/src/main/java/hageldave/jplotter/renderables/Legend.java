@@ -46,37 +46,37 @@ import hageldave.jplotter.util.Utils;
  * @author hageldave
  */
 public class Legend implements Renderable, Renderer {
-	
+
 	protected ArrayList<GlyphLabel> glyphLabels = new ArrayList<>(0);
-	
+
 	protected ArrayList<LineLabel> lineLabels = new ArrayList<>(0);
-	
+
 	protected ArrayList<ColormapLabel> colormapLabels = new ArrayList<>(0);
-	
+
 	protected Map<Glyph, Points> glyph2points = new LinkedHashMap<>();
-	
+
 	protected Map<Integer, Lines> pattern2lines = new LinkedHashMap<>();
-	
+
 	protected LinkedList<Triangles> triangles = new LinkedList<>();
-	
+
 	protected LinkedList<Text> texts = new LinkedList<>();
-	
+
 	protected CompleteRenderer delegate = new CompleteRenderer();
-	
+
 	protected boolean isDirty = true;
-	
+
 	protected int viewPortWidth = 0;
-	
+
 	protected int viewPortHeight = 0;
-	
+
 	protected boolean isEnabled=true;
-	
+
 	protected static class GlyphLabel {
 		public String labelText;
 		public Glyph glyph;
 		public int color;
 		public int pickColor;
-		
+
 		public GlyphLabel(String labelText, Glyph glyph, int color, int pickColor) {
 			this.labelText = labelText;
 			this.glyph = glyph;
@@ -84,14 +84,14 @@ public class Legend implements Renderable, Renderer {
 			this.pickColor = pickColor;
 		}
 	}
-	
+
 	protected static class LineLabel {
 		public String labelText;
 		public double thickness;
 		public int color;
 		public int pickColor;
 		public int strokePattern;
-		
+
 		public LineLabel(String labelText, double thickness, int color, int pickColor, int strokePattern) {
 			this.labelText = labelText;
 			this.thickness = thickness;
@@ -99,13 +99,13 @@ public class Legend implements Renderable, Renderer {
 			this.pickColor = pickColor;
 			this.strokePattern = strokePattern;
 		}
-		
-		
+
+
 		public LineLabel(String labelText, double thickness, int color, int pickColor){
 			this(labelText, thickness, color, pickColor, 0xffff);
 		}
 	}
-	
+
 	protected static class ColormapLabel {
 		public String labelText;
 		public ColorMap cmap;
@@ -113,7 +113,7 @@ public class Legend implements Renderable, Renderer {
 		public int pickColor;
 		public double[] ticks;
 		public String[] ticklabels;
-		
+
 		public ColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor, double[] ticks, String[] ticklabels) {
 			this.labelText = labelText;
 			this.cmap = cmap;
@@ -122,22 +122,22 @@ public class Legend implements Renderable, Renderer {
 			this.ticks = ticks == null ? new double[0]:ticks;
 			this.ticklabels = ticklabels == null ? new String[0]:ticklabels;
 		}
-		
+
 		public ColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor, double[] ticks) {
 			this(labelText, cmap, vertical, pickColor, ticks, null);
 		}
-		
+
 		public ColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor) {
 			this(labelText, cmap, vertical, pickColor, null, null);
 		}
 	}
-	
+
 	protected static interface LegendElement {
 		public void translate(int dx, int dy);
-		
+
 		public Rectangle2D getSize();
 	}
-	
+
 	/**
 	 * Sets the {@link #isDirty()} state of this legend to true.
 	 * This indicates that a call to {@link #updateGL()} is necessary
@@ -148,7 +148,7 @@ public class Legend implements Renderable, Renderer {
 		this.isDirty = true;
 		return this;
 	}
-	
+
 	/**
 	 * Adds a label for a glyph to this legend.
 	 * @param glyph to appear in front of the label text
@@ -161,7 +161,7 @@ public class Legend implements Renderable, Renderer {
 		glyphLabels.add(new GlyphLabel(labeltxt, glyph, color, pickColor));
 		return setDirty();
 	}
-	
+
 	/**
 	 * Adds a label for a glyph to this legend.
 	 * @param glyph to appear in front of the label text
@@ -172,7 +172,7 @@ public class Legend implements Renderable, Renderer {
 	public Legend addGlyphLabel(Glyph glyph, int color, String labeltxt){
 		return addGlyphLabel(glyph, color, labeltxt, 0);
 	}
-	
+
 	/**
 	 * Adds a label for a line to this legend.
 	 * @param thickness of the line to appear in front of the label text
@@ -186,7 +186,7 @@ public class Legend implements Renderable, Renderer {
 		this.lineLabels.add(new LineLabel(labeltxt, thickness, color, pickColor, strokePattern));
 		return setDirty();
 	}
-	
+
 	/**
 	 * Adds a label for a line to this legend.
 	 * @param thickness of the line to appear in front of the label text
@@ -198,7 +198,7 @@ public class Legend implements Renderable, Renderer {
 	public Legend addLineLabel(double thickness, int color, String labeltxt, int pickColor){
 		return addLineLabel(thickness, color, 0xffff, labeltxt, pickColor);
 	}
-	
+
 	/**
 	 * Adds a label for a line to this legend.
 	 * @param thickness of the line to appear in front of the label text
@@ -209,7 +209,7 @@ public class Legend implements Renderable, Renderer {
 	public Legend addLineLabel(double thickness, int color, String labeltxt){
 		return addLineLabel(thickness, color, labeltxt, 0);
 	}
-	
+
 	/**
 	 * Adds a label for a color map to this legend.
 	 * @param labelText text for the label
@@ -224,7 +224,7 @@ public class Legend implements Renderable, Renderer {
 		colormapLabels.add(new ColormapLabel(labelText, cmap, vertical, pickColor, ticks, ticklabels));
 		return setDirty();
 	}
-	
+
 	/**
 	 * Adds a label for a color map to this legend.
 	 * @param labelText text for the label
@@ -237,7 +237,7 @@ public class Legend implements Renderable, Renderer {
 	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor, double[] ticks){
 		return addColormapLabel(labelText, cmap, vertical, pickColor, ticks, null);
 	}
-	
+
 	/**
 	 * Adds a label for a color map to this legend.
 	 * @param labelText text for the label
@@ -249,7 +249,7 @@ public class Legend implements Renderable, Renderer {
 	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, int pickColor){
 		return addColormapLabel(labelText, cmap, vertical, pickColor, null, null);
 	}
-	
+
 	/**
 	 * Adds a label for a color map to this legend.
 	 * @param labelText text for the label
@@ -262,7 +262,7 @@ public class Legend implements Renderable, Renderer {
 	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, double[] ticks, String[] ticklabels){
 		return addColormapLabel(labelText, cmap, vertical, 0, ticks, ticklabels);
 	}
-	
+
 	/**
 	 * Adds a label for a color map to this legend.
 	 * @param labelText text for the label
@@ -274,7 +274,7 @@ public class Legend implements Renderable, Renderer {
 	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical, double[] ticks){
 		return addColormapLabel(labelText, cmap, vertical, 0, ticks, null);
 	}
-	
+
 	/**
 	 * Adds a label for a color map to this legend.
 	 * @param labelText text for the label
@@ -285,7 +285,7 @@ public class Legend implements Renderable, Renderer {
 	public Legend addColormapLabel(String labelText, ColorMap cmap, boolean vertical){
 		return addColormapLabel(labelText, cmap, vertical, 0, null, null);
 	}
-	
+
 	/**
 	 * NOOP
 	 */
@@ -308,6 +308,13 @@ public class Legend implements Renderable, Renderer {
 	@GLContextRequired
 	public void updateGL() {
 		clearGL();
+		setup();
+	}
+
+	/**
+	 * creates the legend elements and computes the layout
+	 */
+	protected void setup() {
 		// do layout
 		final int leftPadding = 4;
 		final int elementVSpace = 4;
@@ -322,27 +329,27 @@ public class Legend implements Renderable, Renderer {
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0
-		);
+						);
 		maxTextWidth = Math.max(maxTextWidth,lineLabels.stream()
 				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0)
-		);
+				);
 		maxTextWidth = Math.max(maxTextWidth,colormapLabels.stream()
 				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width-20)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0)
-		);
+				);
 		maxTextWidth = Math.max(maxTextWidth,colormapLabels.stream()
 				.flatMap(l->Arrays.stream(l.ticklabels))
 				.map(t->CharacterAtlas.boundsForText(t.length(), fontSize-2, fontStyle).getBounds().width)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0)
-		);
-		
+				);
+
 		LinkedList<LegendElement> elements = new LinkedList<>();
 		for(GlyphLabel glyphLabel : glyphLabels) {
 			Glyph glyph = glyphLabel.glyph;
@@ -380,11 +387,11 @@ public class Legend implements Renderable, Renderer {
 		for(LegendElement e:elements){
 			LegendElement e_=e;
 			layout.addComponent(()->{
-					Rectangle2D size = e_.getSize();
-					return new Dimension((int)size.getWidth(), (int)size.getHeight());
-				}, 
+				Rectangle2D size = e_.getSize();
+				return new Dimension((int)size.getWidth(), (int)size.getHeight());
+			}, 
 					(x,y)->e_.translate(x, y)
-			);
+					);
 		}
 		int layoutH = layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
 				.flipYAxis(0)
@@ -393,8 +400,8 @@ public class Legend implements Renderable, Renderer {
 				.getLayoutSize().height;
 		currentY -= layoutH + (layoutH > 0 ? elementVSpace:0);
 		elements.clear();
-		
-		
+
+
 		for(LineLabel lineLabel : lineLabels) {
 			int pattern = lineLabel.strokePattern;
 			if(!pattern2lines.containsKey(pattern)){
@@ -413,12 +420,12 @@ public class Legend implements Renderable, Renderer {
 					lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle)
 							.setPickColor(lineLabel.pickColor)
 							.setOrigin(itemWidth+itemTextSpacing, 0);
-							;
+					;
 					texts.add(lbltxt);
 					seg = lines.addSegment(0, fontHeight/2+1, itemWidth, fontHeight/2+1)
-					.setColor(lineLabel.color)
-					.setPickColor(lineLabel.pickColor)
-					.setThickness(lineLabel.thickness);
+							.setColor(lineLabel.color)
+							.setPickColor(lineLabel.pickColor)
+							.setThickness(lineLabel.thickness);
 					rect = new Rectangle(itemWidth+itemTextSpacing+lbltxt.getTextSize().width, fontHeight);
 				}
 				@Override
@@ -428,7 +435,7 @@ public class Legend implements Renderable, Renderer {
 					Utils.translate(seg.p1, dx, dy);
 					Utils.translate(rect, dx, dy);
 				}
-				
+
 				@Override
 				public Rectangle2D getSize() {
 					return rect;
@@ -440,11 +447,11 @@ public class Legend implements Renderable, Renderer {
 		for(LegendElement e:elements){
 			LegendElement e_=e;
 			layout.addComponent(()->{
-					Rectangle2D size = e_.getSize();
-					return new Dimension((int)size.getWidth(), (int)size.getHeight());
-				}, 
+				Rectangle2D size = e_.getSize();
+				return new Dimension((int)size.getWidth(), (int)size.getHeight());
+			}, 
 					(x,y)->e_.translate(x, y)
-			);
+					);
 		}
 		layoutH = layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
 				.flipYAxis(0)
@@ -453,8 +460,8 @@ public class Legend implements Renderable, Renderer {
 				.getLayoutSize().height;
 		currentY -= layoutH + (layoutH > 0 ? elementVSpace:0);
 		elements.clear();
-		
-		
+
+
 		for(ColormapLabel cmlabel : colormapLabels) {
 			// get line object for outline
 			int pattern = 0xffff;
@@ -572,7 +579,7 @@ public class Legend implements Renderable, Renderer {
 						currY -= maptextoffset+fontSize-2;
 						elementHeight = -currY+fontHeight;
 						rect = new Rectangle(elementWidth, elementHeight);
-//						tris.addQuad(Utils.translate(Utils.copy(rect),0,-rect.getHeight()+fontHeight)).forEach(tri->tri.setColor(0x55000000));
+						//								tris.addQuad(Utils.translate(Utils.copy(rect),0,-rect.getHeight()+fontHeight)).forEach(tri->tri.setColor(0x55000000));
 					}
 				}
 				@Override
@@ -590,7 +597,7 @@ public class Legend implements Renderable, Renderer {
 					});
 					Utils.translate(rect, dx, dy);
 				}
-				
+
 				@Override
 				public Rectangle2D getSize() {
 					return rect;
@@ -602,11 +609,11 @@ public class Legend implements Renderable, Renderer {
 		for(LegendElement e:elements){
 			LegendElement e_=e;
 			layout.addComponent(()->{
-					Rectangle2D size = e_.getSize();
-					return new Dimension((int)size.getWidth(), (int)size.getHeight());
-				}, 
-				(x,y)->e_.translate(x, y)
-			);
+				Rectangle2D size = e_.getSize();
+				return new Dimension((int)size.getWidth(), (int)size.getHeight());
+			}, 
+					(x,y)->e_.translate(x, y)
+					);
 		}
 		layoutH = layout.calculateFlowLayout(viewPortWidth-leftPadding, elementHSpace, elementVSpace)
 				.flipYAxis(0)
@@ -615,23 +622,19 @@ public class Legend implements Renderable, Renderer {
 				.getLayoutSize().height;
 		currentY -= layoutH + (layoutH > 0 ? elementVSpace:0);
 		elements.clear();
-		
-		
-		// initialize renderables
+
+
+		// add renderables to delegate
 		glyph2points.values().forEach(p->{
-			p.initGL();
 			delegate.addItemToRender(p);
 		});
 		pattern2lines.values().forEach(l->{
-			l.initGL();
 			delegate.addItemToRender(l);
 		});
 		texts.forEach(t->{
-			t.initGL();
 			delegate.addItemToRender(t);
 		});
 		triangles.forEach(t->{
-			t.initGL();
 			delegate.addItemToRender(t);
 		});
 		isDirty = false;
@@ -643,8 +646,8 @@ public class Legend implements Renderable, Renderer {
 		clearGL();
 		delegate.close();
 	}
-	
-	
+
+
 	@GLContextRequired
 	protected void clearGL() {
 		glyph2points.values().forEach(p->{
@@ -677,7 +680,7 @@ public class Legend implements Renderable, Renderer {
 		delegate.glInit();
 	}
 
-	
+
 	@Override
 	public void render(int vpx, int vpy, int w, int h) {
 		if(!isEnabled()){
@@ -693,7 +696,23 @@ public class Legend implements Renderable, Renderer {
 		}
 		delegate.render(vpx, vpy, w, h);
 	}
-	
+
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		if(w == 0 || h == 0){
+			return;
+		}
+		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
+			viewPortWidth = w;
+			viewPortHeight = h;
+			updateGL(); // only clearGL requires GL context, but all GL resources are null, so no prob.
+		}
+		delegate.renderFallback(g, p, w, h);
+	}
+
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
@@ -701,18 +720,18 @@ public class Legend implements Renderable, Renderer {
 		}
 		delegate.renderSVG(doc, parent, w, h);
 	}
-	
+
 	@Override
 	public void setEnabled(boolean enable) {
 		this.isEnabled = enable;	
 	}
-	
+
 	@Override
 	public boolean isEnabled() {
 		return isEnabled;
 	}
-	
-	
+
+
 	/**
 	 * Always return false.
 	 */

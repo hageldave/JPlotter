@@ -3,6 +3,7 @@ package hageldave.jplotter.canvas;
 import java.awt.Canvas;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,9 +67,9 @@ public class BlankCanvasFallback extends Canvas implements JPlotterCanvas {
 
 	protected void render() {
 		int w=getWidth(); int h=getHeight();
-		if(mainRenderBuffer.getWidth()!=w || mainRenderBuffer.getHeight()!=h) {
-			mainRenderBuffer = new Img(w, h);
-			pickingRenderBuffer = new Img(w, h);
+		if(mainRenderBuffer.getWidth()!=w*2 || mainRenderBuffer.getHeight()!=h*2) {
+			mainRenderBuffer = new Img(w*2, h*2);
+			pickingRenderBuffer = new Img(w*2, h*2);
 		}
 		// clear / fill with clear color
 		mainRenderBuffer.fill(getBackground().getRGB());
@@ -78,8 +79,9 @@ public class BlankCanvasFallback extends Canvas implements JPlotterCanvas {
 		try {
 			g=mainRenderBuffer.createGraphics();
 			p=pickingRenderBuffer.createGraphics();
-			g.translate(0, h);
+			g.translate(0, h*2);
 			g.scale(1.0, -1.0);
+			g.scale(2, 2);
 			render(g,p, w,h);
 		} finally {
 			if(g!=null)g.dispose();
@@ -99,7 +101,7 @@ public class BlankCanvasFallback extends Canvas implements JPlotterCanvas {
 		int h=mainRenderBuffer.getHeight();
 		if(w>0&&h>0) {
 			g.drawImage(mainRenderBuffer.getRemoteBufferedImage(), 
-					0, 0, w, h, 
+					0, 0, getWidth(), getHeight(), 
 					0, 0, w, h, 
 					null);
 		}
