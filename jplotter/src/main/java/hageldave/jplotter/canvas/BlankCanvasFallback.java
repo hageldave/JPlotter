@@ -1,24 +1,28 @@
 package hageldave.jplotter.canvas;
 
-import java.awt.Canvas;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.image.ImageObserver;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderers.Renderer;
+import hageldave.jplotter.util.Utils;
 
-public class BlankCanvasFallback extends Canvas implements JPlotterCanvas {
+public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	private static final long serialVersionUID = 1L;
+	private static final ImageObserver obs_allbits = Utils.imageObserver(ImageObserver.ALLBITS);
 
 	protected AtomicBoolean repaintIsSheduled = new AtomicBoolean(false);
 	protected Img mainRenderBuffer = new Img(0,0);
 	protected Img pickingRenderBuffer = new Img(0,0);
+	protected Img displayBuffer = new Img(0,0);
 	protected Renderer renderer;
 	
 	public BlankCanvasFallback() {
@@ -67,10 +71,12 @@ public class BlankCanvasFallback extends Canvas implements JPlotterCanvas {
 
 	protected void render() {
 		int w=getWidth(); int h=getHeight();
-		if(mainRenderBuffer.getWidth()!=w*2 || mainRenderBuffer.getHeight()!=h*2) {
-			mainRenderBuffer = new Img(w*2, h*2);
-			pickingRenderBuffer = new Img(w*2, h*2);
+		if(mainRenderBuffer.getWidth()!=w || mainRenderBuffer.getHeight()!=h) {
+			mainRenderBuffer = new Img(w, h);
+			pickingRenderBuffer = new Img(w, h);
 		}
+		if(w==0 && h==0)
+			return;
 		// clear / fill with clear color
 		mainRenderBuffer.fill(getBackground().getRGB());
 		pickingRenderBuffer.fill(0xff000000);
@@ -79,9 +85,11 @@ public class BlankCanvasFallback extends Canvas implements JPlotterCanvas {
 		try {
 			g=mainRenderBuffer.createGraphics();
 			p=pickingRenderBuffer.createGraphics();
-			g.translate(0, h*2);
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			p.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+			g.translate(0, h);
 			g.scale(1.0, -1.0);
-			g.scale(2, 2);
+//			g.scale(2, 2);
 			render(g,p, w,h);
 		} finally {
 			if(g!=null)g.dispose();
@@ -97,13 +105,14 @@ public class BlankCanvasFallback extends Canvas implements JPlotterCanvas {
 
 	@Override
 	public void paint(Graphics g) {
+		g.clearRect(0, 0, getWidth(), getHeight());
 		int w=mainRenderBuffer.getWidth();
 		int h=mainRenderBuffer.getHeight();
 		if(w>0&&h>0) {
 			g.drawImage(mainRenderBuffer.getRemoteBufferedImage(), 
 					0, 0, getWidth(), getHeight(), 
 					0, 0, w, h, 
-					null);
+					obs_allbits);
 		}
 	}
 

@@ -11,6 +11,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 import java.util.function.DoubleSupplier;
 
+import org.apache.batik.ext.awt.geom.Polygon2D;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
@@ -308,7 +309,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 		
 		Rectangle2D viewportRect = new Rectangle2D.Float(0, 0, w, h);
-		int[][] polygonCoords = new int[2][4];
+		float[][] polygonCoords = new float[2][4];
 		
 		for(Lines lines : getItemsToRender()){
 			if(lines.isHidden() || lines.getStrokePattern()==0 || lines.numSegments() == 0){
@@ -374,10 +375,11 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				g.setPaint(paint);
 				
 				if(!lines.hasStrokePattern()){
-					int[][] pc=polygonCoords;
-					pc[0][0]=rnd(x1+miterX*t1);pc[1][0]=rnd(y1+miterY*t1); pc[0][1]=rnd(x2+miterX*t2);pc[1][1]=rnd(y2+miterY*t2);
-					pc[0][2]=rnd(x2-miterX*t2);pc[1][2]=rnd(y2-miterY*t2); pc[0][3]=rnd(x1-miterX*t1);pc[1][3]=rnd(y1-miterY*t1);
-					g.fillPolygon(pc[0], pc[1], 4);
+					float[][] pc=polygonCoords;
+					pc[0][0]=(float)(x1+miterX*t1);pc[1][0]=(float)(y1+miterY*t1); pc[0][1]=(float)(x2+miterX*t2);pc[1][1]=(float)(y2+miterY*t2);
+					pc[0][2]=(float)(x2-miterX*t2);pc[1][2]=(float)(y2-miterY*t2); pc[0][3]=(float)(x1-miterX*t1);pc[1][3]=(float)(y1-miterY*t1);
+//					g.fillPolygon(pc[0], pc[1], 4);
+					g.fill(new Polygon2D(pc[0],pc[1],4));
 				} else {
 					double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
 //					while(strokeInterval[0] < l2){

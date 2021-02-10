@@ -6,6 +6,7 @@ import java.awt.geom.RectangularShape;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.image.DirectColorModel;
+import java.awt.image.ImageObserver;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.lang.reflect.InvocationTargetException;
@@ -173,11 +174,6 @@ public class Utils {
 		return Math.max(Math.max(v0, v1), v2);
 	}
 	
-	public static int rnd(double v) {
-//		return Math.round((float)v);
-		return (int) v;
-	}
-	
 	/**
 	 * Calculates the average (arithmetic mean) color of the
 	 * specified colors. Each channel (ARGB) is treated separately.
@@ -336,6 +332,10 @@ public class Utils {
 		out |= y<ymin ? 0b0010:0;
 		out |= y>ymax ? 0b0001:0;
 		return out;
+	}
+	
+	public static ImageObserver imageObserver(int flags) {
+		return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
 	}
 	
 	
