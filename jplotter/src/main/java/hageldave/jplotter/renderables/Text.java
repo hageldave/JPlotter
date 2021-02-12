@@ -216,8 +216,8 @@ public class Text implements Renderable {
 	public Rectangle2D getBoundsWithRotation() {
 		Rectangle2D bounds = new Rectangle2D.Double(0, 0, getTextSize().width, getTextSize().height);
 		AffineTransform transform = new AffineTransform();
-		transform.rotate(angle);
 		transform.translate(origin.getX(), origin.getY());
+		transform.rotate(angle);
 		return transform.createTransformedShape(bounds).getBounds2D();
 	}
 

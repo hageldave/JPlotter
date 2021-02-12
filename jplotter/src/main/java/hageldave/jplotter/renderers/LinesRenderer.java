@@ -1,15 +1,13 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.BasicStroke;
+import static hageldave.jplotter.util.Utils.hypot;
+
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.Polygon;
-import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
-import java.util.function.DoubleSupplier;
 
 import org.apache.batik.ext.awt.geom.Polygon2D;
 import org.lwjgl.opengl.GL11;
@@ -27,7 +25,6 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-import static hageldave.jplotter.util.Utils.*;
 
 /**
  * The LinesRenderer is an implementation of the {@link GenericRenderer}
@@ -374,45 +371,37 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				} else paint = new Color(c1,true);
 				g.setPaint(paint);
 				
+				// TODO: optimized fast paths when segments don't have variable thickness
+				
 				if(!lines.hasStrokePattern()){
 					float[][] pc=polygonCoords;
 					pc[0][0]=(float)(x1+miterX*t1);pc[1][0]=(float)(y1+miterY*t1); pc[0][1]=(float)(x2+miterX*t2);pc[1][1]=(float)(y2+miterY*t2);
 					pc[0][2]=(float)(x2-miterX*t2);pc[1][2]=(float)(y2-miterY*t2); pc[0][3]=(float)(x1-miterX*t1);pc[1][3]=(float)(y1-miterY*t1);
-//					g.fillPolygon(pc[0], pc[1], 4);
 					g.fill(new Polygon2D(pc[0],pc[1],4));
 				} else {
+					float[][] pc=polygonCoords;
 					double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
-//					while(strokeInterval[0] < l2){
-//						double start = strokeInterval[0];
-//						double end = Math.min(strokeInterval[1], l2);
-//						// interpolation factors
-//						double m1 = Math.max((start-l1)/(l2-l1), 0);
-//						double m2 = (end-l1)/(l2-l1);
-//						// interpolate miters
-//						double t1_ = t1*(1-m1)+t2*m1;
-//						double t2_ = t1*(1-m2)+t2*m2;
-//						// interpolate segment
-//						double x1_ = x1 + dx*m1;
-//						double x2_ = x1 + dx*m2;
-//						double y1_ = y1 + dy*m1;
-//						double y2_ = y1 + dy*m2;
-//
-//						Element segment = SVGUtils.createSVGElement(doc, "polygon");
-//						linesGroup.appendChild(segment);
-//						segment.setAttributeNS(null, "points", SVGUtils.svgPoints(
-//								x1_+miterX*t1_,y1_+miterY*t1_, x2_+miterX*t2_,y2_+miterY*t2_, 
-//								x2_-miterX*t2_,y2_-miterY*t2_, x1_-miterX*t1_,y1_-miterY*t1_));
-//
-//						strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-//
-//						if(seg.color0.getAsInt() == seg.color1.getAsInt()){
-//							segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-//							segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier()*Pixel.a_normalized(seg.color0.getAsInt())));
-//						} else {
-//							// use gradient for line stroke
-//							segment.setAttributeNS(null, "fill", "url(#"+defID+")");
-//						}
-//					}
+					while(strokeInterval[0] < l2){
+						double start = strokeInterval[0];
+						double end = Math.min(strokeInterval[1], l2);
+						// interpolation factors
+						double m1 = Math.max((start-l1)/(l2-l1), 0);
+						double m2 = (end-l1)/(l2-l1);
+						// interpolate miters
+						double t1_ = t1*(1-m1)+t2*m1;
+						double t2_ = t1*(1-m2)+t2*m2;
+						// interpolate segment
+						double x1_ = x1 + dx*m1;
+						double x2_ = x1 + dx*m2;
+						double y1_ = y1 + dy*m1;
+						double y2_ = y1 + dy*m2;
+
+						pc[0][0]=(float)(x1_+miterX*t1_);pc[1][0]=(float)(y1_+miterY*t1_); pc[0][1]=(float)(x2_+miterX*t2_);pc[1][1]=(float)(y2_+miterY*t2_);
+						pc[0][2]=(float)(x2_-miterX*t2_);pc[1][2]=(float)(y2_-miterY*t2_); pc[0][3]=(float)(x1_-miterX*t1_);pc[1][3]=(float)(y1_-miterY*t1_);
+						g.fill(new Polygon2D(pc[0],pc[1],4));
+
+						strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
+					}
 				}
 			}
 			
@@ -579,19 +568,19 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		int[] pat = transferBits(pattern, new int[16]);
 		// find next part of stroke pattern that is solid
 		while( pat[bit] != 1 ){
-			bit = (bit+1)%16;
+			bit = (bit+1) & 0xf;//%16;
 			steps++;
 		}
 		double intervalStart = steps==0 ? current : patternStart+steps*(strokeLen/16);
 		// find next part of stroke pattern that is empty
 		while( pat[bit] == 1 ){
-			bit = (bit+1)%16;
+			bit = (bit+1) & 0xf;//%16;
 			steps++;
 		}
 		double intervalEnd = patternStart+steps*(strokeLen/16);
 		// find next solid again
 		while( pat[bit] != 1 ){
-			bit = (bit+1)%16;
+			bit = (bit+1) & 0xf;//%16;
 			steps++;
 		}
 		double nextIntervalStart = patternStart+steps*(strokeLen/16);

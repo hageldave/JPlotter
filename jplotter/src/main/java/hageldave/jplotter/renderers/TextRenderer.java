@@ -1,6 +1,10 @@
 package hageldave.jplotter.renderers;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
@@ -234,6 +238,89 @@ public class TextRenderer extends GenericRenderer<Text> {
 		closeAllItems();
 	}
 	
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+		
+		Rectangle vpRect = new Rectangle(w, h);
+		
+		for(Text txt: getItemsToRender()){
+			if(txt.isHidden()){
+				continue;
+			}
+			{
+				double x1,y1;
+				x1 = txt.getOrigin().getX();
+				y1 = txt.getOrigin().getY();
+				
+				x1-=translateX;
+				y1-=translateY;
+				x1*=scaleX;
+				y1*=scaleY;
+				
+				y1+=1;
+				
+				double effectiveTx = x1-txt.getOrigin().getX();
+				double effectiveTy = y1-txt.getOrigin().getY();
+				
+				
+				// test if inside of view port
+				Rectangle2D txtrect = txt.getBoundsWithRotation();
+				txtrect.setRect(
+						txtrect.getX()+effectiveTx, 
+						txtrect.getY()+(y1-txt.getOrigin().getY()), 
+						txtrect.getWidth(), txtrect.getHeight()
+				);
+				
+				if(!txtrect.intersects(vpRect)) {
+					continue;
+				}
+				
+				if(txt.getBackground().getRGB() != 0){
+					Rectangle2D bounds = new Rectangle2D.Double(0, 0, txt.getTextSize().width, txt.getTextSize().height);
+					AffineTransform transform = new AffineTransform();
+					transform.translate(effectiveTx, effectiveTy);
+					transform.translate(txt.getOrigin().getX(), txt.getOrigin().getY());
+					if(txt.getAngle() != 0) 
+						transform.rotate(txt.getAngle());
+					Shape rotRect = transform.createTransformedShape(bounds);
+					g.setColor(txt.getBackground());
+					g.fill(rotRect);
+				}
+				
+				Graphics2D g_ = (Graphics2D) g.create();
+				Graphics2D p_ = (Graphics2D) p.create();
+				
+				
+//				Element text = SVGUtils.createSVGElement(doc, "text");
+//				textGroup.appendChild(text);
+//				
+//				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
+//				text.setTextContent(txt.getTextString());
+//				String fontfamily = "'Ubuntu Mono', monospace";
+//				text.setAttributeNS(null, "style",
+//						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
+//				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
+//				if(txt.getColorA() != 1){
+//					text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
+//				}
+//				text.setAttributeNS(null, "x", ""+0);
+//				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
+//				if(txt.getAngle() != 0){
+//					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+//				} else {
+//					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
+//				}
+			}
+		}
+	}
 	
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
