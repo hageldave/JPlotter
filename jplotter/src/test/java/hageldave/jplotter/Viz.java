@@ -3,6 +3,7 @@ package hageldave.jplotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
@@ -15,8 +16,10 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
+import hageldave.jplotter.renderers.TextRenderer;
 
 public class Viz {
 
@@ -33,6 +36,9 @@ public class Viz {
 //		BlankCanvas canvas = new BlankCanvas();
 		LinesRenderer render = new LinesRenderer();
 		Lines lines = new Lines().setStrokePattern(0b1110_0111_1001_0110);
+		TextRenderer txtrender = new TextRenderer();
+		Text txt = new Text("hellogy", 12, Font.PLAIN).setOrigin(10, 10);
+		txtrender.addItemToRender(txt);
 		render.addItemToRender(lines);
 		lines.addSegment(0, 0, 40, 50).setColor0(0xff00ff00).setColor1(0xffff0000);
 		
@@ -42,7 +48,7 @@ public class Viz {
 		csr.setLegendBottom(legend);
 		legend.addLineLabel(2, 0xffff0055, "a pink line");
 		
-		canvas.setRenderer(csr);
+		canvas.setRenderer(txtrender);
 		
 		frame.getContentPane().add(canvas);
 		

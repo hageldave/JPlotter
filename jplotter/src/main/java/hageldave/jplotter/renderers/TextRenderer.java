@@ -1,6 +1,9 @@
 package hageldave.jplotter.renderers;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -16,6 +19,7 @@ import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.font.CharacterAtlas;
+import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderables.Renderable;
@@ -256,9 +260,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 				continue;
 			}
 			{
-				double x1,y1;
+				double x1,y1,angle;
 				x1 = txt.getOrigin().getX();
 				y1 = txt.getOrigin().getY();
+				angle = txt.getAngle();
 				
 				x1-=translateX;
 				y1-=translateY;
@@ -269,55 +274,49 @@ public class TextRenderer extends GenericRenderer<Text> {
 				
 				double effectiveTx = x1-txt.getOrigin().getX();
 				double effectiveTy = y1-txt.getOrigin().getY();
-				
-				
 				// test if inside of view port
 				Rectangle2D txtrect = txt.getBoundsWithRotation();
 				txtrect.setRect(
 						txtrect.getX()+effectiveTx, 
-						txtrect.getY()+(y1-txt.getOrigin().getY()), 
+						txtrect.getY()+effectiveTy, 
 						txtrect.getWidth(), txtrect.getHeight()
 				);
 				
 				if(!txtrect.intersects(vpRect)) {
 					continue;
 				}
-				
-				if(txt.getBackground().getRGB() != 0){
-					Rectangle2D bounds = new Rectangle2D.Double(0, 0, txt.getTextSize().width, txt.getTextSize().height);
-					AffineTransform transform = new AffineTransform();
-					transform.translate(effectiveTx, effectiveTy);
-					transform.translate(txt.getOrigin().getX(), txt.getOrigin().getY());
-					if(txt.getAngle() != 0) 
-						transform.rotate(txt.getAngle());
-					Shape rotRect = transform.createTransformedShape(bounds);
-					g.setColor(txt.getBackground());
-					g.fill(rotRect);
-				}
-				
+				// create a proxy graphics object to draw the string to
 				Graphics2D g_ = (Graphics2D) g.create();
 				Graphics2D p_ = (Graphics2D) p.create();
 				
+				Font font = FontProvider.getUbuntuMono(txt.fontsize, txt.style);
+				g_.setFont(font);
+				p_.setFont(font);
 				
-//				Element text = SVGUtils.createSVGElement(doc, "text");
-//				textGroup.appendChild(text);
-//				
-//				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
-//				text.setTextContent(txt.getTextString());
-//				String fontfamily = "'Ubuntu Mono', monospace";
-//				text.setAttributeNS(null, "style",
-//						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
-//				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
-//				if(txt.getColorA() != 1){
-//					text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
-//				}
-//				text.setAttributeNS(null, "x", ""+0);
-//				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
-//				if(txt.getAngle() != 0){
-//					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
-//				} else {
-//					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
-//				}
+				/* translate to text origin, 
+				 * flip vertically (AWT coordinates, so text is not upside down), 
+				 * rotate according to angle */
+				AffineTransform trnsfrm = new AffineTransform();
+				trnsfrm.translate(x1, y1);
+				trnsfrm.scale(1, -1);
+				if(angle != 0.0)
+					trnsfrm.rotate(-angle);
+				g_.transform(trnsfrm);
+				p_.transform(trnsfrm);
+				
+				// draw background rectangle
+				if(txt.getBackground().getRGB() != 0){
+					g_.setColor(txt.getBackground());
+					Rectangle2D bounds = txt.getBounds();
+					float rightpadding = 0.4f*((float)bounds.getWidth()/txt.getTextString().length());
+					Rectangle2D rect = new Rectangle2D.Double(0.0, -bounds.getHeight(), bounds.getWidth()+rightpadding, bounds.getHeight());
+					g_.fill(rect);
+				}
+				// draw string
+				int maxDescent = g_.getFontMetrics().getMaxDescent();
+				g_.setColor(txt.getColor());
+				g_.drawString(txt.getTextString(), 0, -maxDescent);
+				
 			}
 		}
 	}
