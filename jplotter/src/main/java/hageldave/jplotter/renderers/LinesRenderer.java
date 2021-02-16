@@ -7,7 +7,10 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.apache.batik.ext.awt.geom.Polygon2D;
@@ -343,88 +346,66 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			Rectangle2D viewportRect, 
 			float thickness) 
 	{
-//		double dist = 0;
-//		double prevX = 0;
-//		double prevY = 0;
-//		
-//		BasicStroke stroke = new BasicStroke(thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0, dash, dash_phase)
-//		
-//		for(SegmentDetails seg : lines.getSegments()){
-//			double x1,y1,x2,y2;
-//			x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
-//
-//			x1-=translateX; x2-=translateX;
-//			y1-=translateY; y2-=translateY;
-//			x1*=scaleX; x2*=scaleX;
-//			y1*=scaleY; y2*=scaleY;
-//
-//			// path length calculations
-//			double dx = x2-x1;
-//			double dy = y2-y1;
-//			double len = hypot(dx, dy);
-//			double l1,l2;
-//			if(prevX==x1 && prevY==y1){
-//				l1 = dist;
-//				l2 = dist+len;
-//				dist += len;
-//				dist = dist % lines.getStrokeLength();
-//			} else {
-//				l1 = 0;
-//				l2 = len;
-//				dist = len;
-//			}
-//			prevX = x2;
-//			prevY = y2;
-//			
-//			if(lines.isVertexRoundingEnabled()){
-//				x1 = (int)(x1+0.5);
-//				x2 = (int)(x2+0.5);
-//				y1 = (int)(y1+0.5);
-//				y2 = (int)(y2+0.5);
-//			}
-//
-//			// visibility check
-//			if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
-//				continue;
-//			}
-//			
-//			Paint paint; int c1,c2;
-//			if((c1=seg.color0.getAsInt()) != (c2=seg.color1.getAsInt())){
-//				paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
-//			} else paint = new Color(c1,true);
-//			g.setPaint(paint);
-//			
-//			if(!lines.hasStrokePattern()){
-//				float[][] pc=polygonCoords;
-//				pc[0][0]=(float)(x1+miterX*t1);pc[1][0]=(float)(y1+miterY*t1); pc[0][1]=(float)(x2+miterX*t2);pc[1][1]=(float)(y2+miterY*t2);
-//				pc[0][2]=(float)(x2-miterX*t2);pc[1][2]=(float)(y2-miterY*t2); pc[0][3]=(float)(x1-miterX*t1);pc[1][3]=(float)(y1-miterY*t1);
-//				g.fill(new Polygon2D(pc[0],pc[1],4));
-//			} else {
-//				float[][] pc=polygonCoords;
-//				double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
-//				while(strokeInterval[0] < l2){
-//					double start = strokeInterval[0];
-//					double end = Math.min(strokeInterval[1], l2);
-//					// interpolation factors
-//					double m1 = Math.max((start-l1)/(l2-l1), 0);
-//					double m2 = (end-l1)/(l2-l1);
-//					// interpolate miters
-//					double t1_ = t1*(1-m1)+t2*m1;
-//					double t2_ = t1*(1-m2)+t2*m2;
-//					// interpolate segment
-//					double x1_ = x1 + dx*m1;
-//					double x2_ = x1 + dx*m2;
-//					double y1_ = y1 + dy*m1;
-//					double y2_ = y1 + dy*m2;
-//
-//					pc[0][0]=(float)(x1_+miterX*t1_);pc[1][0]=(float)(y1_+miterY*t1_); pc[0][1]=(float)(x2_+miterX*t2_);pc[1][1]=(float)(y2_+miterY*t2_);
-//					pc[0][2]=(float)(x2_-miterX*t2_);pc[1][2]=(float)(y2_-miterY*t2_); pc[0][3]=(float)(x1_-miterX*t1_);pc[1][3]=(float)(y1_-miterY*t1_);
-//					g.fill(new Polygon2D(pc[0],pc[1],4));
-//
-//					strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-//				}
-//			}
-//		}
+		double dist = 0;
+		double prevX = 0;
+		double prevY = 0;
+		
+		float[] dash = lines.hasStrokePattern() ? strokePattern2dashPattern(lines.getStrokePattern(), lines.getStrokeLength()):null;
+		
+		for(SegmentDetails seg : lines.getSegments()){
+			double x1,y1,x2,y2;
+			x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
+
+			x1-=translateX; x2-=translateX;
+			y1-=translateY; y2-=translateY;
+			x1*=scaleX; x2*=scaleX;
+			y1*=scaleY; y2*=scaleY;
+
+			// path length calculations
+			double dx = x2-x1;
+			double dy = y2-y1;
+			double len = hypot(dx, dy);
+			double l1,l2;
+			if(prevX==x1 && prevY==y1){
+				l1 = dist;
+				l2 = dist+len;
+				dist += len;
+				dist = dist % lines.getStrokeLength();
+			} else {
+				l1 = 0;
+				l2 = len;
+				dist = len;
+			}
+			prevX = x2;
+			prevY = y2;
+			
+			if(lines.isVertexRoundingEnabled()){
+				x1 = (int)(x1+0.5);
+				x2 = (int)(x2+0.5);
+				y1 = (int)(y1+0.5);
+				y2 = (int)(y2+0.5);
+			}
+
+			// visibility check
+			if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
+				continue;
+			}
+			
+			Paint paint; int c1,c2;
+			if((c1=seg.color0.getAsInt()) != (c2=seg.color1.getAsInt())){
+				paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
+			} else paint = new Color(c1,true);
+			g.setPaint(paint);
+			
+			BasicStroke stroke;
+			if(lines.hasStrokePattern()) {
+				stroke = new BasicStroke(thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, dash, (float)l1);
+			} else {
+				stroke = new BasicStroke(thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f);
+			}
+			g.setStroke(stroke);
+			g.draw(new Path2D.Double(new Line2D.Double(x1, y1, x2, y2)));
+		}
 	}
 	
 	private void renderFallbackLinesVT(
@@ -717,12 +698,31 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	
 	protected static float[] strokePattern2dashPattern(short pattern, float strokeLen) {
 		int[] bits = transferBits(pattern, new int[16]);
-		float unit = strokeLen/16f;
-		int currentBit = bits[0];
-		int currentLen = 1;
-		for(int i=1; i<16; i++) {
-			
+		// shift pattern to a valid start
+		int begin=0;
+		while(bits[0] != 1 && bits[15] != 0) {
+			int b0=bits[0];
+			for(int i=0; i<15; i++)
+				bits[i]=bits[i+1];
+			bits[15]=b0;
 		}
-		return null;
+		
+		float unit=strokeLen/16f;
+		int currentBit=bits[0];
+		int currentLen=1;
+		int iDash=0;
+		float[] dash=new float[16]; 
+		for(int i=1; i<16; i++) {
+			if(currentBit==bits[i]) {
+				currentLen++;
+			} else {
+				dash[iDash++]=currentLen*unit;
+				currentLen=1;
+				currentBit=bits[i];
+			}
+			if(i==15)
+				dash[iDash]=currentLen*unit;
+		}
+		return Arrays.copyOf(dash, iDash+1);
 	}
 }

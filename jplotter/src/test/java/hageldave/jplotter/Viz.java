@@ -36,13 +36,12 @@ public class Viz {
 //		BlankCanvasFallback canvas = new BlankCanvasFallback();
 		BlankCanvas canvas = new BlankCanvas();
 		LinesRenderer render = new LinesRenderer();
-		Lines lines = new Lines();//.setStrokePattern(0b1110_0111_1001_0110);
-		lines.setGlobalThicknessMultiplier(8);
+		Lines lines = new Lines().setStrokePattern(0xf0f0);
 		TextRenderer txtrender = new TextRenderer();
 		Text txt = new Text("hellogy", 12, Font.PLAIN).setOrigin(10, 10);
 		txtrender.addItemToRender(txt);
 		render.addItemToRender(lines);
-		lines.addLineStrip(0,0,0.5,0.0,0.5,0.5).forEach(seg->seg.setColor(0xff00ff00));
+		lines.addLineStrip(-.5,-.1,.5,0,1,.1).forEach(seg->seg.setColor(0xff00ff00));
 		
 		CoordSysRenderer csr = new CoordSysRenderer();
 		csr.setContent(render);
