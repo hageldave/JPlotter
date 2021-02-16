@@ -2,6 +2,7 @@ package hageldave.jplotter.renderers;
 
 import static hageldave.jplotter.util.Utils.hypot;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
@@ -309,104 +310,224 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		float[][] polygonCoords = new float[2][4];
 		
 		for(Lines lines : getItemsToRender()){
-			if(lines.isHidden() || lines.getStrokePattern()==0 || lines.numSegments() == 0){
+			if(lines.isHidden() || lines.getStrokePattern()==0 || lines.numSegments()==0){
 				// line is invisible
 				continue;
 			}
 			
-			double dist = 0;
-			double prevX = 0;
-			double prevY = 0;
-			
-			for(SegmentDetails seg : lines.getSegments()){
-				double x1,y1,x2,y2;
-				x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
-
-				x1-=translateX; x2-=translateX;
-				y1-=translateY; y2-=translateY;
-				x1*=scaleX; x2*=scaleX;
-				y1*=scaleY; y2*=scaleY;
-
-				// path length calculations
-				double dx = x2-x1;
-				double dy = y2-y1;
-				double len = hypot(dx, dy);
-				double l1,l2;
-				if(prevX==x1 && prevY==y1){
-					l1 = dist;
-					l2 = dist+len;
-					dist += len;
-					dist = dist % lines.getStrokeLength();
-				} else {
-					l1 = 0;
-					l2 = len;
-					dist = len;
-				}
-				prevX = x2;
-				prevY = y2;
-				
-				if(lines.isVertexRoundingEnabled()){
-					x1 = (int)(x1+0.5);
-					x2 = (int)(x2+0.5);
-					y1 = (int)(y1+0.5);
-					y2 = (int)(y2+0.5);
-				}
-
-				// visibility check
-				if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
-					continue;
-				}
-
-				// miter vector stuff
-				double normalize = 1/len;
-				double miterX =  dy*normalize*0.5;
-				double miterY = -dx*normalize*0.5;
-				double t1 = seg.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier();
-				double t2 = seg.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier();
-
-				
-				Paint paint; int c1,c2;
-				if((c1=seg.color0.getAsInt()) != (c2=seg.color1.getAsInt())){
-					paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
-				} else paint = new Color(c1,true);
-				g.setPaint(paint);
-				
-				// TODO: optimized fast paths when segments don't have variable thickness
-				
-				if(!lines.hasStrokePattern()){
-					float[][] pc=polygonCoords;
-					pc[0][0]=(float)(x1+miterX*t1);pc[1][0]=(float)(y1+miterY*t1); pc[0][1]=(float)(x2+miterX*t2);pc[1][1]=(float)(y2+miterY*t2);
-					pc[0][2]=(float)(x2-miterX*t2);pc[1][2]=(float)(y2-miterY*t2); pc[0][3]=(float)(x1-miterX*t1);pc[1][3]=(float)(y1-miterY*t1);
-					g.fill(new Polygon2D(pc[0],pc[1],4));
-				} else {
-					float[][] pc=polygonCoords;
-					double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
-					while(strokeInterval[0] < l2){
-						double start = strokeInterval[0];
-						double end = Math.min(strokeInterval[1], l2);
-						// interpolation factors
-						double m1 = Math.max((start-l1)/(l2-l1), 0);
-						double m2 = (end-l1)/(l2-l1);
-						// interpolate miters
-						double t1_ = t1*(1-m1)+t2*m1;
-						double t2_ = t1*(1-m2)+t2*m2;
-						// interpolate segment
-						double x1_ = x1 + dx*m1;
-						double x2_ = x1 + dx*m2;
-						double y1_ = y1 + dy*m1;
-						double y2_ = y1 + dy*m2;
-
-						pc[0][0]=(float)(x1_+miterX*t1_);pc[1][0]=(float)(y1_+miterY*t1_); pc[0][1]=(float)(x2_+miterX*t2_);pc[1][1]=(float)(y2_+miterY*t2_);
-						pc[0][2]=(float)(x2_-miterX*t2_);pc[1][2]=(float)(y2_-miterY*t2_); pc[0][3]=(float)(x1_-miterX*t1_);pc[1][3]=(float)(y1_-miterY*t1_);
-						g.fill(new Polygon2D(pc[0],pc[1],4));
-
-						strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-					}
+			boolean hasVaryingThickness = false;
+			double thick=lines.getSegments().get(0).thickness0.getAsDouble();
+			for(int i=0; i<lines.numSegments(); i++) {
+				SegmentDetails seg = lines.getSegments().get(i);
+				if(seg.thickness0.getAsDouble() != thick || seg.thickness1.getAsDouble() != thick) {
+					hasVaryingThickness = true;
+					break;
 				}
 			}
+			if(hasVaryingThickness)
+				renderFallbackLinesVT(g,p, lines, translateX, translateY, scaleX, scaleY, viewportRect, polygonCoords);
+			else
+				renderFallbackLinesCT(g,p, lines, translateX, translateY, scaleX, scaleY, viewportRect, (float)(thick*lines.getGlobalThicknessMultiplier()));
 			
 		}
 	}
+	
+	private void renderFallbackLinesCT(
+			Graphics2D g, 
+			Graphics2D p, 
+			Lines lines, 
+			double translateX, 
+			double translateY, 
+			double scaleX, 
+			double scaleY, 
+			Rectangle2D viewportRect, 
+			float thickness) 
+	{
+//		double dist = 0;
+//		double prevX = 0;
+//		double prevY = 0;
+//		
+//		BasicStroke stroke = new BasicStroke(thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0, dash, dash_phase)
+//		
+//		for(SegmentDetails seg : lines.getSegments()){
+//			double x1,y1,x2,y2;
+//			x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
+//
+//			x1-=translateX; x2-=translateX;
+//			y1-=translateY; y2-=translateY;
+//			x1*=scaleX; x2*=scaleX;
+//			y1*=scaleY; y2*=scaleY;
+//
+//			// path length calculations
+//			double dx = x2-x1;
+//			double dy = y2-y1;
+//			double len = hypot(dx, dy);
+//			double l1,l2;
+//			if(prevX==x1 && prevY==y1){
+//				l1 = dist;
+//				l2 = dist+len;
+//				dist += len;
+//				dist = dist % lines.getStrokeLength();
+//			} else {
+//				l1 = 0;
+//				l2 = len;
+//				dist = len;
+//			}
+//			prevX = x2;
+//			prevY = y2;
+//			
+//			if(lines.isVertexRoundingEnabled()){
+//				x1 = (int)(x1+0.5);
+//				x2 = (int)(x2+0.5);
+//				y1 = (int)(y1+0.5);
+//				y2 = (int)(y2+0.5);
+//			}
+//
+//			// visibility check
+//			if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
+//				continue;
+//			}
+//			
+//			Paint paint; int c1,c2;
+//			if((c1=seg.color0.getAsInt()) != (c2=seg.color1.getAsInt())){
+//				paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
+//			} else paint = new Color(c1,true);
+//			g.setPaint(paint);
+//			
+//			if(!lines.hasStrokePattern()){
+//				float[][] pc=polygonCoords;
+//				pc[0][0]=(float)(x1+miterX*t1);pc[1][0]=(float)(y1+miterY*t1); pc[0][1]=(float)(x2+miterX*t2);pc[1][1]=(float)(y2+miterY*t2);
+//				pc[0][2]=(float)(x2-miterX*t2);pc[1][2]=(float)(y2-miterY*t2); pc[0][3]=(float)(x1-miterX*t1);pc[1][3]=(float)(y1-miterY*t1);
+//				g.fill(new Polygon2D(pc[0],pc[1],4));
+//			} else {
+//				float[][] pc=polygonCoords;
+//				double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+//				while(strokeInterval[0] < l2){
+//					double start = strokeInterval[0];
+//					double end = Math.min(strokeInterval[1], l2);
+//					// interpolation factors
+//					double m1 = Math.max((start-l1)/(l2-l1), 0);
+//					double m2 = (end-l1)/(l2-l1);
+//					// interpolate miters
+//					double t1_ = t1*(1-m1)+t2*m1;
+//					double t2_ = t1*(1-m2)+t2*m2;
+//					// interpolate segment
+//					double x1_ = x1 + dx*m1;
+//					double x2_ = x1 + dx*m2;
+//					double y1_ = y1 + dy*m1;
+//					double y2_ = y1 + dy*m2;
+//
+//					pc[0][0]=(float)(x1_+miterX*t1_);pc[1][0]=(float)(y1_+miterY*t1_); pc[0][1]=(float)(x2_+miterX*t2_);pc[1][1]=(float)(y2_+miterY*t2_);
+//					pc[0][2]=(float)(x2_-miterX*t2_);pc[1][2]=(float)(y2_-miterY*t2_); pc[0][3]=(float)(x1_-miterX*t1_);pc[1][3]=(float)(y1_-miterY*t1_);
+//					g.fill(new Polygon2D(pc[0],pc[1],4));
+//
+//					strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
+//				}
+//			}
+//		}
+	}
+	
+	private void renderFallbackLinesVT(
+			Graphics2D g, 
+			Graphics2D p, 
+			Lines lines, 
+			double translateX, 
+			double translateY, 
+			double scaleX, 
+			double scaleY, 
+			Rectangle2D viewportRect, 
+			float[][] polygonCoords) 
+	{
+		double dist = 0;
+		double prevX = 0;
+		double prevY = 0;
+		
+		for(SegmentDetails seg : lines.getSegments()){
+			double x1,y1,x2,y2;
+			x1=seg.p0.getX(); y1=seg.p0.getY(); x2=seg.p1.getX(); y2=seg.p1.getY();
+
+			x1-=translateX; x2-=translateX;
+			y1-=translateY; y2-=translateY;
+			x1*=scaleX; x2*=scaleX;
+			y1*=scaleY; y2*=scaleY;
+
+			// path length calculations
+			double dx = x2-x1;
+			double dy = y2-y1;
+			double len = hypot(dx, dy);
+			double l1,l2;
+			if(prevX==x1 && prevY==y1){
+				l1 = dist;
+				l2 = dist+len;
+				dist += len;
+				dist = dist % lines.getStrokeLength();
+			} else {
+				l1 = 0;
+				l2 = len;
+				dist = len;
+			}
+			prevX = x2;
+			prevY = y2;
+			
+			if(lines.isVertexRoundingEnabled()){
+				x1 = (int)(x1+0.5);
+				x2 = (int)(x2+0.5);
+				y1 = (int)(y1+0.5);
+				y2 = (int)(y2+0.5);
+			}
+
+			// visibility check
+			if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
+				continue;
+			}
+
+			// miter vector stuff
+			double normalize = 1/len;
+			double miterX =  dy*normalize*0.5;
+			double miterY = -dx*normalize*0.5;
+			double t1 = seg.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier();
+			double t2 = seg.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier();
+
+			
+			Paint paint; int c1,c2;
+			if((c1=seg.color0.getAsInt()) != (c2=seg.color1.getAsInt())){
+				paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
+			} else paint = new Color(c1,true);
+			g.setPaint(paint);
+			
+			if(!lines.hasStrokePattern()){
+				float[][] pc=polygonCoords;
+				pc[0][0]=(float)(x1+miterX*t1);pc[1][0]=(float)(y1+miterY*t1); pc[0][1]=(float)(x2+miterX*t2);pc[1][1]=(float)(y2+miterY*t2);
+				pc[0][2]=(float)(x2-miterX*t2);pc[1][2]=(float)(y2-miterY*t2); pc[0][3]=(float)(x1-miterX*t1);pc[1][3]=(float)(y1-miterY*t1);
+				g.fill(new Polygon2D(pc[0],pc[1],4));
+			} else {
+				float[][] pc=polygonCoords;
+				double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+				while(strokeInterval[0] < l2){
+					double start = strokeInterval[0];
+					double end = Math.min(strokeInterval[1], l2);
+					// interpolation factors
+					double m1 = Math.max((start-l1)/(l2-l1), 0);
+					double m2 = (end-l1)/(l2-l1);
+					// interpolate miters
+					double t1_ = t1*(1-m1)+t2*m1;
+					double t2_ = t1*(1-m2)+t2*m2;
+					// interpolate segment
+					double x1_ = x1 + dx*m1;
+					double x2_ = x1 + dx*m2;
+					double y1_ = y1 + dy*m1;
+					double y2_ = y1 + dy*m2;
+
+					pc[0][0]=(float)(x1_+miterX*t1_);pc[1][0]=(float)(y1_+miterY*t1_); pc[0][1]=(float)(x2_+miterX*t2_);pc[1][1]=(float)(y2_+miterY*t2_);
+					pc[0][2]=(float)(x2_-miterX*t2_);pc[1][2]=(float)(y2_-miterY*t2_); pc[0][3]=(float)(x1_-miterX*t1_);pc[1][3]=(float)(y1_-miterY*t1_);
+					g.fill(new Polygon2D(pc[0],pc[1],4));
+
+					strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
+				}
+			}
+		}
+	}
+	
 
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
@@ -592,5 +713,16 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			target[15-i] = (bits >> i) & 0b1;
 		}
 		return target;
+	}
+	
+	protected static float[] strokePattern2dashPattern(short pattern, float strokeLen) {
+		int[] bits = transferBits(pattern, new int[16]);
+		float unit = strokeLen/16f;
+		int currentBit = bits[0];
+		int currentLen = 1;
+		for(int i=1; i<16; i++) {
+			
+		}
+		return null;
 	}
 }

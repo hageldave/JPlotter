@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.renderables.Legend;
@@ -32,15 +33,16 @@ public class Viz {
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
 		
-		BlankCanvasFallback canvas = new BlankCanvasFallback();
-//		BlankCanvas canvas = new BlankCanvas();
+//		BlankCanvasFallback canvas = new BlankCanvasFallback();
+		BlankCanvas canvas = new BlankCanvas();
 		LinesRenderer render = new LinesRenderer();
-		Lines lines = new Lines().setStrokePattern(0b1110_0111_1001_0110);
+		Lines lines = new Lines();//.setStrokePattern(0b1110_0111_1001_0110);
+		lines.setGlobalThicknessMultiplier(8);
 		TextRenderer txtrender = new TextRenderer();
 		Text txt = new Text("hellogy", 12, Font.PLAIN).setOrigin(10, 10);
 		txtrender.addItemToRender(txt);
 		render.addItemToRender(lines);
-		lines.addSegment(0, 0, 40, 50).setColor0(0xff00ff00).setColor1(0xffff0000);
+		lines.addLineStrip(0,0,0.5,0.0,0.5,0.5).forEach(seg->seg.setColor(0xff00ff00));
 		
 		CoordSysRenderer csr = new CoordSysRenderer();
 		csr.setContent(render);
@@ -48,7 +50,7 @@ public class Viz {
 		csr.setLegendBottom(legend);
 		legend.addLineLabel(2, 0xffff0055, "a pink line");
 		
-		canvas.setRenderer(txtrender);
+		canvas.setRenderer(csr);
 		
 		frame.getContentPane().add(canvas);
 		
