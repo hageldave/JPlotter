@@ -8,7 +8,6 @@ import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.Objects;
@@ -365,15 +364,13 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			double dx = x2-x1;
 			double dy = y2-y1;
 			double len = hypot(dx, dy);
-			double l1,l2;
+			double l1;
 			if(prevX==x1 && prevY==y1){
 				l1 = dist;
-				l2 = dist+len;
 				dist += len;
 				dist = dist % lines.getStrokeLength();
 			} else {
 				l1 = 0;
-				l2 = len;
 				dist = len;
 			}
 			prevX = x2;
@@ -384,6 +381,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				x2 = (int)(x2+0.5);
 				y1 = (int)(y1+0.5);
 				y2 = (int)(y2+0.5);
+				if(thickness % 2 == 1f) {
+					x1+=.5f;
+					x2+=.5f;
+					y1+=.5f;
+					y2+=.5f;
+				}
 			}
 
 			// visibility check
@@ -404,7 +407,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				stroke = new BasicStroke(thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f);
 			}
 			g.setStroke(stroke);
-			g.draw(new Path2D.Double(new Line2D.Double(x1, y1, x2, y2)));
+			g.draw(new Line2D.Double(x1, y1, x2, y2));
 		}
 	}
 	
@@ -449,13 +452,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			}
 			prevX = x2;
 			prevY = y2;
-			
-			if(lines.isVertexRoundingEnabled()){
-				x1 = (int)(x1+0.5);
-				x2 = (int)(x2+0.5);
-				y1 = (int)(y1+0.5);
-				y2 = (int)(y2+0.5);
-			}
 
 			// visibility check
 			if(!viewportRect.intersectsLine(x1, y1, x2, y2)){
@@ -480,6 +476,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				float[][] pc=polygonCoords;
 				pc[0][0]=(float)(x1+miterX*t1);pc[1][0]=(float)(y1+miterY*t1); pc[0][1]=(float)(x2+miterX*t2);pc[1][1]=(float)(y2+miterY*t2);
 				pc[0][2]=(float)(x2-miterX*t2);pc[1][2]=(float)(y2-miterY*t2); pc[0][3]=(float)(x1-miterX*t1);pc[1][3]=(float)(y1-miterY*t1);
+				// vertex rounding
+				if(lines.isVertexRoundingEnabled()) {
+					for(int i=0; i<4; i++) {
+						pc[0][i]=(int)(pc[0][i]+.5f);
+						pc[1][i]=(int)(pc[1][i]+.5f);
+					}
+				}
+				// drawing
 				g.fill(new Polygon2D(pc[0],pc[1],4));
 			} else {
 				float[][] pc=polygonCoords;
@@ -501,6 +505,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 					pc[0][0]=(float)(x1_+miterX*t1_);pc[1][0]=(float)(y1_+miterY*t1_); pc[0][1]=(float)(x2_+miterX*t2_);pc[1][1]=(float)(y2_+miterY*t2_);
 					pc[0][2]=(float)(x2_-miterX*t2_);pc[1][2]=(float)(y2_-miterY*t2_); pc[0][3]=(float)(x1_-miterX*t1_);pc[1][3]=(float)(y1_-miterY*t1_);
+					// vertex rounding
+					if(lines.isVertexRoundingEnabled()) {
+						for(int i=0; i<4; i++) {
+							pc[0][i]=(int)(pc[0][i]+.5f);
+							pc[1][i]=(int)(pc[1][i]+.5f);
+						}
+					}
+					// drawing
 					g.fill(new Polygon2D(pc[0],pc[1],4));
 
 					strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());

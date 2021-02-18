@@ -629,12 +629,9 @@ public class CoordSysRenderer implements Renderer {
 				((AdaptableView) content).setView(coordinateView);
 			}
 			// create viewport graphics
-			g.scale(.5, .5);
-			Graphics2D g_ = (Graphics2D)g.create(viewPortX*2, viewPortY*2, viewPortW*2, viewPortH*2);
+			Graphics2D g_ = (Graphics2D)g.create(viewPortX, viewPortY, viewPortW, viewPortH);
 			Graphics2D p_ = (Graphics2D)p.create(viewPortX, viewPortY, viewPortW, viewPortH);
-			g_.scale(2, 2);
 			content.renderFallback(g_, p_, viewPortW, viewPortH);
-			g.scale(2, 2);
 		}
 		postContentLinesR.renderFallback(g, p, w, h);
 		postContentTextR.renderFallback(g, p, w, h);

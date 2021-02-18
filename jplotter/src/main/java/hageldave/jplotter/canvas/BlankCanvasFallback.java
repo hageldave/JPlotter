@@ -84,9 +84,16 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 		Graphics2D g=null,p=null;
 		try {
 			g=mainRenderBuffer.createGraphics();
+			
 			p=pickingRenderBuffer.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
+			
 			p.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+			p.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
+			p.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+			
 			g.translate(0, h);
 			g.scale(1.0, -1.0);
 //			g.scale(2, 2);
