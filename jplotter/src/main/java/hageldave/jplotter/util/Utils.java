@@ -339,6 +339,13 @@ public class Utils {
 	}
 	
 	
+	public static int scaleColorAlpha(int color, double m) {
+		double af = Pixel.a_normalized(color)*m;
+		int a = Pixel.argb_fromNormalized(af, 0,0,0);
+		return (color&0x00ffffff)|a;
+	}
+	
+	
 }
 
 

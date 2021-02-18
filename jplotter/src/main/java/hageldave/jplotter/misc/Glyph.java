@@ -1,5 +1,6 @@
 package hageldave.jplotter.misc;
 
+import java.awt.Graphics2D;
 import java.util.List;
 
 import org.lwjgl.opengl.GL11;
@@ -72,6 +73,8 @@ public interface Glyph {
 	 * @return list of SVG elements.
 	 */
 	public List<Element> createSVGElements(Document doc);
+	
+	public void drawFallback(Graphics2D g, float scaling);
 	
 	/**
 	 * @return name of this Glyph, used as part of an SVG identifier for

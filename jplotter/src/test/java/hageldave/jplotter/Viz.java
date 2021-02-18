@@ -15,11 +15,14 @@ import javax.swing.SwingUtilities;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
+import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.renderers.TextRenderer;
 
 public class Viz {
@@ -33,18 +36,25 @@ public class Viz {
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
 		
-//		BlankCanvasFallback canvas = new BlankCanvasFallback();
-		BlankCanvas canvas = new BlankCanvas();
+		BlankCanvasFallback canvas = new BlankCanvasFallback();
+//		BlankCanvas canvas = new BlankCanvas();
 		LinesRenderer render = new LinesRenderer();
-		Lines lines = new Lines().setStrokePattern(0xf0f0);
+		Lines lines = new Lines().setGlobalThicknessMultiplier(2).setStrokePattern(0xf0f0);
+		lines.addLineStrip(-.5,-.1,.5,0,1,.1).forEach(seg->seg.setColor(0xff00ff00));
+		render.addItemToRender(lines);
+		
 		TextRenderer txtrender = new TextRenderer();
 		Text txt = new Text("hellogy", 12, Font.PLAIN).setOrigin(10, 10);
 		txtrender.addItemToRender(txt);
-		render.addItemToRender(lines);
-		lines.addLineStrip(-.5,-.1,.5,0,1,.1).forEach(seg->seg.setColor(0xff00ff00));
+		
+		PointsRenderer prender = new PointsRenderer();
+		Points points = new Points(DefaultGlyph.CIRCLE_F);
+		prender.addItemToRender(points);
+		points.addPoint(0.5, 0.1);
+		
 		
 		CoordSysRenderer csr = new CoordSysRenderer();
-		csr.setContent(render);
+		csr.setContent(render.withAppended(prender));
 		Legend legend = new Legend();
 		csr.setLegendBottom(legend);
 		legend.addLineLabel(2, 0xffff0055, "a pink line");

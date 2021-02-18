@@ -1,10 +1,13 @@
 package hageldave.jplotter.misc;
 
+import java.awt.Graphics2D;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import org.apache.batik.ext.awt.geom.Polygon2D;
 import org.lwjgl.opengl.GL11;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -22,25 +25,25 @@ import hageldave.jplotter.svg.SVGUtils;
  */
 public enum DefaultGlyph implements Glyph {
 	/** a cross glyph, two diagonal lines */
-	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false, false, DefaultGlyph::mkCrossSVG),
+	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false, false, DefaultGlyph::mkCrossSVG, null),
 	/** a square glyph */
-	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false, false, DefaultGlyph::mkSquareSVG),
+	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false, false, DefaultGlyph::mkSquareSVG, null),
 	/** a filled square glyph */
-	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false, true, DefaultGlyph::mkSquareSVG),
+	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false, true, DefaultGlyph::mkSquareSVG, null),
 	/** a triangle glyph */
-	TRIANGLE(DefaultGlyph::mkTriangle, 3, GL11.GL_LINE_LOOP, 7, false, false, DefaultGlyph::mkTriangleSVG),
+	TRIANGLE(DefaultGlyph::mkTriangle, 3, GL11.GL_LINE_LOOP, 7, false, false, DefaultGlyph::mkTriangleSVG, null),
 	/** a filled triangle glyph */
-	TRIANGLE_F(DefaultGlyph::mkTriangle, 3, GL11.GL_TRIANGLES, 7, false, true, DefaultGlyph::mkTriangleSVG),
+	TRIANGLE_F(DefaultGlyph::mkTriangle, 3, GL11.GL_TRIANGLES, 7, false, true, DefaultGlyph::mkTriangleSVG, null),
 	/** a circle glyph  (20 line segments) */
-	CIRCLE(DefaultGlyph::mkCircle, 20, GL11.GL_LINE_LOOP, 8, true, false, DefaultGlyph::mkCircleSVG),
+	CIRCLE(DefaultGlyph::mkCircle, 20, GL11.GL_LINE_LOOP, 8, true, false, DefaultGlyph::mkCircleSVG, DefaultGlyph::drawCircle),
 	/** a filled circle glyph (20 line segments) */
-	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true, true, DefaultGlyph::mkCircleSVG),
+	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true, true, DefaultGlyph::mkCircleSVG, DefaultGlyph::drawCircleFilled),
 	/** an arrow glyph, pointing to the right */
-	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false, false, DefaultGlyph::mkArrowSVG),
+	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false, false, DefaultGlyph::mkArrowSVG, null),
 	/** an arrow head glyph, pointing to the right */
-	ARROWHEAD(DefaultGlyph::mkArrowHead, 4, GL11.GL_LINE_LOOP, 12, false, false, DefaultGlyph::mkArrowHeadSVG),
+	ARROWHEAD(DefaultGlyph::mkArrowHead, 4, GL11.GL_LINE_LOOP, 12, false, false, DefaultGlyph::mkArrowHeadSVG, null),
 	/** a filled arrow head glyph, pointing to the right */
-	ARROWHEAD_F(DefaultGlyph::mkArrowHead, 4, GL11.GL_TRIANGLE_FAN, 12, false, true, DefaultGlyph::mkArrowHeadSVG),
+	ARROWHEAD_F(DefaultGlyph::mkArrowHead, 4, GL11.GL_TRIANGLE_FAN, 12, false, true, DefaultGlyph::mkArrowHeadSVG, null),
 	;
 	
 	private Consumer<VertexArray> vertexGenerator;
@@ -50,8 +53,9 @@ public enum DefaultGlyph implements Glyph {
 	private boolean drawAsElements;
 	private boolean isFilled;
 	private BiFunction<Document,Integer,List<Element>> svgElementGenerator;
+	private Graphics2DDrawing fallbackDraw;
 	
-	private DefaultGlyph(Consumer<VertexArray> vertGen, int numVerts, int primType, int pixelSize, boolean elements, boolean isFilled, BiFunction<Document,Integer,List<Element>> svgGen) {
+	private DefaultGlyph(Consumer<VertexArray> vertGen, int numVerts, int primType, int pixelSize, boolean elements, boolean isFilled, BiFunction<Document,Integer,List<Element>> svgGen, Graphics2DDrawing fallbackDraw) {
 		this.vertexGenerator = vertGen;
 		this.numVertices = numVerts;
 		this.primitiveType = primType;
@@ -59,6 +63,7 @@ public enum DefaultGlyph implements Glyph {
 		this.drawAsElements = elements;
 		this.isFilled = isFilled;
 		this.svgElementGenerator = svgGen;
+		this.fallbackDraw = fallbackDraw;
 	}
 
 	@Override
@@ -101,17 +106,43 @@ public enum DefaultGlyph implements Glyph {
 		return name();
 	}
 	
+	@Override
+	public void drawFallback(Graphics2D g, float scaling) {
+		this.fallbackDraw.draw(g, pixelSize, scaling);
+	}
+	
+	
+	private static final int numCircVerts = 20;
+	private static final float[][] sincosLUT = ((Supplier<float[][]>)(()->{
+		float[][] lut = new float[2][numCircVerts];
+		for(int i=0; i<numCircVerts;i++){
+			lut[0][i] = (float)Math.sin(i*2*Math.PI/(numCircVerts));
+			lut[1][i] = (float)Math.cos(i*2*Math.PI/(numCircVerts));
+		}
+		return lut;
+	})).get();
+	
 	static void mkCircle(VertexArray va){
-		final int numVerts = 20;
+		final int numVerts = numCircVerts;
 		float[] verts = new float[numVerts*2];
 		int[] indices = new int[numVerts];
 		for(int i=0; i<numVerts;i++){
-			verts[i*2+0] = (float)Math.cos(i*2*Math.PI/numVerts)*0.5f;
-			verts[i*2+1] = (float)Math.sin(i*2*Math.PI/numVerts)*0.5f;
+			verts[i*2+0] = sincosLUT[1][i]*0.5f;//cos
+			verts[i*2+1] = sincosLUT[0][i]*0.5f;//sin
 			indices[i] = i;
 		}
 		va.setBuffer(0, 2, verts);
 		va.setIndices(indices);
+	}
+	
+	
+	static void drawCircle(Graphics2D g, int pixelSize, float scaling) {
+		float[][] verts = new float[2][numCircVerts];
+		for(int i=0; i<numCircVerts;i++){
+			verts[0][i] = sincosLUT[1][i]*0.5f*pixelSize*scaling;
+			verts[1][i] = sincosLUT[0][i]*0.5f*pixelSize*scaling;
+		}
+		g.draw(new Polygon2D(verts[0], verts[1], numCircVerts));
 	}
 	
 	static List<Element> mkCircleSVG(Document doc, Integer pixelSize){
@@ -149,6 +180,15 @@ public enum DefaultGlyph implements Glyph {
 		
 		va.setBuffer(0, 2, verts);
 		va.setIndices(indices);
+	}
+	
+	static void drawCircleFilled(Graphics2D g, int pixelSize, float scaling) {
+		float[][] verts = new float[2][numCircVerts];
+		for(int i=0; i<numCircVerts;i++){
+			verts[0][i] = sincosLUT[1][i]*0.5f*pixelSize*scaling;
+			verts[1][i] = sincosLUT[0][i]*0.5f*pixelSize*scaling;
+		}
+		g.fill(new Polygon2D(verts[0], verts[1], numCircVerts));
 	}
 	
 	static void mkSquare(VertexArray va){
@@ -209,6 +249,10 @@ public enum DefaultGlyph implements Glyph {
 	static List<Element> mkTriangleSVG(Document doc, Integer pixelSize){
 		return Arrays.asList(
 				SVGUtils.createSVGTriangle(doc, -.5*pixelSize, -.5*pixelSize, .5*pixelSize, -.5*pixelSize, 0, .5*pixelSize));
+	}
+	
+	private static interface Graphics2DDrawing {
+		public void draw(Graphics2D g, int pixelSize, float scaling);
 	}
 	
 }

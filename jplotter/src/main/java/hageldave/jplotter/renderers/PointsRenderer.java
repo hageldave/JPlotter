@@ -1,5 +1,8 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
@@ -17,6 +20,7 @@ import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.ShaderRegistry;
+import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -204,6 +208,60 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	protected void renderEnd() {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+	}
+	
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+	
+		g.setStroke(new BasicStroke());
+		p.setStroke(new BasicStroke());
+		
+		for(Points points : getItemsToRender()){
+			if(points.isHidden()){
+				continue;
+			}
+			Glyph glyph = points.glyph;
+			
+			for(PointDetails point : points.getPointDetails()){
+				double x1,y1;
+				x1=point.location.getX(); y1=point.location.getY();
+				
+				x1-=translateX;
+				y1-=translateY;
+				x1*=scaleX;
+				y1*=scaleY;
+				
+				if(!viewportRect.intersects(
+						x1-glyph.pixelSize()/2, 
+						y1-glyph.pixelSize()/2, 
+						glyph.pixelSize(), 
+						glyph.pixelSize()))
+				{
+					continue;
+				}
+				
+				
+				Graphics2D g_ = (Graphics2D) g.create();
+				g_.translate(x1, y1);
+				if(point.rot.getAsDouble() != 0.0){
+					g_.rotate(point.rot.getAsDouble());
+				}
+				int color = Utils.scaleColorAlpha(point.color.getAsInt(),points.getGlobalAlphaMultiplier());
+				g_.setColor(new Color(color, true));
+				
+				glyph.drawFallback(g_, (float)(points.getGlobalScaling()*point.scale.getAsDouble()));
+			}
+		}
+		
 	}
 	
 	@Override

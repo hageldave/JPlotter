@@ -28,6 +28,7 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The LinesRenderer is an implementation of the {@link GenericRenderer}
@@ -326,6 +327,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					break;
 				}
 			}
+			
 			if(hasVaryingThickness)
 				renderFallbackLinesVT(g,p, lines, translateX, translateY, scaleX, scaleY, viewportRect, polygonCoords);
 			else
@@ -395,7 +397,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			}
 			
 			Paint paint; int c1,c2;
-			if((c1=seg.color0.getAsInt()) != (c2=seg.color1.getAsInt())){
+			c1 = Utils.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
+			c2 = Utils.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
+			if(c1!= c2){
 				paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
 			} else paint = new Color(c1,true);
 			g.setPaint(paint);
@@ -467,7 +471,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 			
 			Paint paint; int c1,c2;
-			if((c1=seg.color0.getAsInt()) != (c2=seg.color1.getAsInt())){
+			c1 = Utils.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
+			c2 = Utils.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
+			if(c1!= c2){
 				paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
 			} else paint = new Color(c1,true);
 			g.setPaint(paint);
@@ -711,7 +717,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	protected static float[] strokePattern2dashPattern(short pattern, float strokeLen) {
 		int[] bits = transferBits(pattern, new int[16]);
 		// shift pattern to a valid start
-		int begin=0;
 		while(bits[0] != 1 && bits[15] != 0) {
 			int b0=bits[0];
 			for(int i=0; i<15; i++)
