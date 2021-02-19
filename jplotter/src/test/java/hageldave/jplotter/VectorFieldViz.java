@@ -24,6 +24,8 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
@@ -40,7 +42,8 @@ public class VectorFieldViz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 500));
-		BlankCanvas canvas = new BlankCanvas();
+//		BlankCanvas canvas = new BlankCanvas();
+		BlankCanvasFallback canvas = new BlankCanvasFallback();
 		CoordSysRenderer coordsys = new CoordSysRenderer();
 		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
@@ -50,7 +53,7 @@ public class VectorFieldViz {
 		DoubleBinaryOperator fu = (x,y)->(x+y)*(y+1);
 		DoubleBinaryOperator fv = (x,y)->(x*y)-(y+1)*y;
 		// make quiver plot
-		Points quiver = new Points(DefaultGlyph.ARROWHEAD);
+		Points quiver = new Points(DefaultGlyph.ARROW);
 		Color color = new Color(DefaultColorMap.Q_9_SET1.getColor(1));
 		final int resolution = 21;
 		for(int j = 0; j < resolution; j++){
@@ -131,7 +134,9 @@ public class VectorFieldViz {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				canvas.runInContext(()->canvas.close());
+				Object obj = canvas;
+				if(obj instanceof FBOCanvas)
+					((FBOCanvas)obj).runInContext(()->((FBOCanvas)obj).close());
 			}
 		});
 		

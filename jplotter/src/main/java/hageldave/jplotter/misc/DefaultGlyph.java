@@ -1,6 +1,8 @@
 package hageldave.jplotter.misc;
 
 import java.awt.Graphics2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -25,25 +27,25 @@ import hageldave.jplotter.svg.SVGUtils;
  */
 public enum DefaultGlyph implements Glyph {
 	/** a cross glyph, two diagonal lines */
-	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false, false, DefaultGlyph::mkCrossSVG, null),
+	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false, false, DefaultGlyph::mkCrossSVG, DefaultGlyph::drawCross),
 	/** a square glyph */
-	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false, false, DefaultGlyph::mkSquareSVG, null),
+	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false, false, DefaultGlyph::mkSquareSVG, DefaultGlyph::drawSquare),
 	/** a filled square glyph */
-	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false, true, DefaultGlyph::mkSquareSVG, null),
+	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false, true, DefaultGlyph::mkSquareSVG, DefaultGlyph::drawSquareF),
 	/** a triangle glyph */
-	TRIANGLE(DefaultGlyph::mkTriangle, 3, GL11.GL_LINE_LOOP, 7, false, false, DefaultGlyph::mkTriangleSVG, null),
+	TRIANGLE(DefaultGlyph::mkTriangle, 3, GL11.GL_LINE_LOOP, 7, false, false, DefaultGlyph::mkTriangleSVG, DefaultGlyph::drawTriangle),
 	/** a filled triangle glyph */
-	TRIANGLE_F(DefaultGlyph::mkTriangle, 3, GL11.GL_TRIANGLES, 7, false, true, DefaultGlyph::mkTriangleSVG, null),
+	TRIANGLE_F(DefaultGlyph::mkTriangle, 3, GL11.GL_TRIANGLES, 7, false, true, DefaultGlyph::mkTriangleSVG, DefaultGlyph::drawTriangleF),
 	/** a circle glyph  (20 line segments) */
 	CIRCLE(DefaultGlyph::mkCircle, 20, GL11.GL_LINE_LOOP, 8, true, false, DefaultGlyph::mkCircleSVG, DefaultGlyph::drawCircle),
 	/** a filled circle glyph (20 line segments) */
-	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true, true, DefaultGlyph::mkCircleSVG, DefaultGlyph::drawCircleFilled),
+	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true, true, DefaultGlyph::mkCircleSVG, DefaultGlyph::drawCircleF),
 	/** an arrow glyph, pointing to the right */
-	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false, false, DefaultGlyph::mkArrowSVG, null),
+	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false, false, DefaultGlyph::mkArrowSVG, DefaultGlyph::drawArrow),
 	/** an arrow head glyph, pointing to the right */
-	ARROWHEAD(DefaultGlyph::mkArrowHead, 4, GL11.GL_LINE_LOOP, 12, false, false, DefaultGlyph::mkArrowHeadSVG, null),
+	ARROWHEAD(DefaultGlyph::mkArrowHead, 4, GL11.GL_LINE_LOOP, 12, false, false, DefaultGlyph::mkArrowHeadSVG, DefaultGlyph::drawArrowHead),
 	/** a filled arrow head glyph, pointing to the right */
-	ARROWHEAD_F(DefaultGlyph::mkArrowHead, 4, GL11.GL_TRIANGLE_FAN, 12, false, true, DefaultGlyph::mkArrowHeadSVG, null),
+	ARROWHEAD_F(DefaultGlyph::mkArrowHead, 4, GL11.GL_TRIANGLE_FAN, 12, false, true, DefaultGlyph::mkArrowHeadSVG, DefaultGlyph::drawArrowHeadF),
 	;
 	
 	private Consumer<VertexArray> vertexGenerator;
@@ -182,7 +184,7 @@ public enum DefaultGlyph implements Glyph {
 		va.setIndices(indices);
 	}
 	
-	static void drawCircleFilled(Graphics2D g, int pixelSize, float scaling) {
+	static void drawCircleF(Graphics2D g, int pixelSize, float scaling) {
 		float[][] verts = new float[2][numCircVerts];
 		for(int i=0; i<numCircVerts;i++){
 			verts[0][i] = sincosLUT[1][i]*0.5f*pixelSize*scaling;
@@ -195,6 +197,11 @@ public enum DefaultGlyph implements Glyph {
 		va.setBuffer(0, 2,   -.5f,-.5f,  .5f,-.5f,  .5f,.5f, -.5f,.5f);
 	}
 	
+	static void drawSquare(Graphics2D g, int pixelSize, float scaling) {
+		float size = pixelSize*scaling;
+		g.draw(new Rectangle2D.Double(-.5*size, -.5*size, size, size));
+	}
+	
 	static List<Element> mkSquareSVG(Document doc, Integer pixelSize){
 		return Arrays.asList(
 				SVGUtils.createSVGRect(doc, -.5*pixelSize, -.5*pixelSize, pixelSize, pixelSize));
@@ -204,12 +211,20 @@ public enum DefaultGlyph implements Glyph {
 		va.setBuffer(0, 2,   -.5f,-.5f,  .5f,-.5f,  -.5f,.5f, .5f,.5f);
 	}
 	
+	static void drawSquareF(Graphics2D g, int pixelSize, float scaling) {
+		float size = pixelSize*scaling;
+		g.fill(new Rectangle2D.Float(-.5f*size, -.5f*size, size, size));
+	}
+	
 	static void mkArrow(VertexArray va){
 		va.setBuffer(0, 2,  -.5f,0f,  .5f,0f,  .1f,-.2f, .5,0, .1f,.2f, .5f,0f);
 	}
 	
-	static void mkArrowHead(VertexArray va){
-		va.setBuffer(0, 2,  -.2f,0f,  -.5f,-.3f,  .5f,0f, -.5,.3);
+	static void drawArrow(Graphics2D g, int pixelSize, float scaling) {
+		float size = pixelSize*scaling;
+		g.draw(new Line2D.Float(-.5f*size, 0f      , .5f*size, 0f));
+		g.draw(new Line2D.Float( .1f*size, .2f*size, .5f*size, 0f));
+		g.draw(new Line2D.Float( .1f*size,-.2f*size, .5f*size, 0f));
 	}
 	
 	static List<Element> mkArrowSVG(Document doc, Integer pixelSize){
@@ -218,6 +233,26 @@ public enum DefaultGlyph implements Glyph {
 		l1.setAttributeNS(null, "points", SVGUtils.svgPoints(-.5f*pixelSize,0,  .5f*pixelSize,0));
 		l2.setAttributeNS(null, "points", SVGUtils.svgPoints(.1f*pixelSize,.2f*pixelSize,  .5f*pixelSize,0, .1f*pixelSize,-.2f*pixelSize));
 		return Arrays.asList(l1,l2);
+	}
+	
+	static void mkArrowHead(VertexArray va){
+		va.setBuffer(0, 2,  -.2f,0f,  -.5f,-.3f,  .5f,0f, -.5,.3);
+	}
+	
+	static void drawArrowHead(Graphics2D g, int pixelSize, float scaling) {
+		float size = pixelSize*scaling;
+		g.draw(new Polygon2D(
+				new float[]{-.2f*size, -.5f*size, .5f*size, -.5f*size}, 
+				new float[]{  0f*size, -.3f*size,  0f*size,  .3f*size}, 
+				4));
+	}
+	
+	static void drawArrowHeadF(Graphics2D g, int pixelSize, float scaling) {
+		float size = pixelSize*scaling;
+		g.fill(new Polygon2D(
+				new float[]{-.2f*size, -.5f*size, .5f*size, -.5f*size}, 
+				new float[]{  0f*size, -.3f*size,  0f*size,  .3f*size}, 
+				4));
 	}
 	
 	static List<Element> mkArrowHeadSVG(Document doc, Integer pixelSize){
@@ -234,6 +269,12 @@ public enum DefaultGlyph implements Glyph {
 		va.setBuffer(0, 2,  -.5f,-.5f,  .5f,.5f,  .5f,-.5f,  -.5f,.5f);
 	}
 	
+	static void drawCross(Graphics2D g, int pixelSize, float scaling) {
+		float size = pixelSize*scaling*.5f;
+		g.draw(new Line2D.Float(-size, -size, size, size));
+		g.draw(new Line2D.Float( size, -size,-size, size));
+	}
+	
 	static List<Element> mkCrossSVG(Document doc, Integer pixelSize){
 		Element l1 = SVGUtils.createSVGElement(doc, "polyline");
 		Element l2 = SVGUtils.createSVGElement(doc, "polyline");
@@ -244,6 +285,22 @@ public enum DefaultGlyph implements Glyph {
 	
 	static void mkTriangle(VertexArray va){
 		va.setBuffer(0, 2,  -.5,-.5,  .5,-.5, 0,.5);
+	}
+	
+	static void drawTriangle(Graphics2D g, int pixelSize, float scaling) {
+		float size = pixelSize*scaling*.5f;
+		g.draw(new Polygon2D(
+				new float[] {-size, size, 0   }, 
+				new float[] {-size,-size, size},
+				3));
+	}
+	
+	static void drawTriangleF(Graphics2D g, int pixelSize, float scaling) {
+		float size = pixelSize*scaling*.5f;
+		g.fill(new Polygon2D(
+				new float[] {-size, size, 0   }, 
+				new float[] {-size,-size, size},
+				3));
 	}
 	
 	static List<Element> mkTriangleSVG(Document doc, Integer pixelSize){
