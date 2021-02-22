@@ -1,5 +1,6 @@
 package hageldave.jplotter.interaction;
 
+import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.InputEvent;
@@ -14,7 +15,6 @@ import java.util.LinkedList;
 
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
@@ -64,7 +64,7 @@ import hageldave.jplotter.util.Utils;
  */
 public abstract class CoordSysViewSelector extends MouseAdapter {
 	
-	protected FBOCanvas canvas;
+	protected Component canvas;
 	protected CoordSysRenderer coordsys;
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
@@ -73,7 +73,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 	
 	
-	public CoordSysViewSelector(FBOCanvas canvas, CoordSysRenderer coordsys) {
+	public CoordSysViewSelector(Component canvas, CoordSysRenderer coordsys) {
 		this.canvas = canvas;
 		this.coordsys = coordsys;
 		Renderer presentRenderer;
@@ -119,7 +119,6 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 				Math.max(p1.getX(), p2.getX()),
 				Math.max(p1.getY(), p2.getY())
 		);
-		
 		canvas.repaint();
 	}
 	

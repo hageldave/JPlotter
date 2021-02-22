@@ -1,5 +1,10 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.CubicCurve2D;
+import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -21,6 +26,7 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The CurvesRenderer is an implementation of the {@link GenericRenderer}
@@ -342,6 +348,74 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			ShaderRegistry.handbackShader(shader);
 		shader = null;
 		closeAllItems();
+	}
+	
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+
+		for(Curves curves : getItemsToRender()){
+			if(curves.isHidden() || curves.getStrokePattern()==0 || curves.numCurves() == 0){
+				// line is invisible
+				continue;
+			}
+			
+			// find connected curves
+			ArrayList<CurveDetails> currentStrip = new ArrayList<>(1);
+			LinkedList<ArrayList<CurveDetails>> allStrips = new LinkedList<>();
+			ArrayList<CurveDetails> allCurves = curves.streamIntersecting(Objects.isNull(view) ? viewportRect : view)
+					.collect(Collectors.toCollection(ArrayList::new));
+			currentStrip.add(allCurves.get(0));
+			allStrips.add(currentStrip);
+			for(int i=1; i<allCurves.size(); i++){
+				CurveDetails curr = allCurves.get(i);
+				CurveDetails prev = currentStrip.get(currentStrip.size()-1);
+				if(	!(prev.p1.equals(curr.p0)) || 
+					!(prev.thickness.getAsDouble()==curr.thickness.getAsDouble()) ||
+					!(prev.color.getAsInt()==curr.color.getAsInt())
+				){
+					currentStrip = new ArrayList<>(1);
+					allStrips.add(currentStrip);
+				}
+				currentStrip.add(curr);
+			}			
+			
+			for(ArrayList<CurveDetails> curvestrip : allStrips){
+				double strokew = curvestrip.get(0).thickness.getAsDouble() * curves.getGlobalThicknessMultiplier();
+				BasicStroke stroke;
+				if(!curves.hasStrokePattern()) {
+					stroke = new BasicStroke((float)strokew, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f);
+				} else {
+					stroke = new BasicStroke((float)strokew, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, 
+							LinesRenderer.strokePattern2dashPattern(curves.getStrokePattern(), (float)curves.getStrokeLength()), 0f); 
+				}
+				g.setStroke(stroke);
+				g.setColor(new Color(Utils.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
+				
+				for(CurveDetails cd : curvestrip) {
+					float x1 = (float)(scaleX*(cd.p0.getX()-translateX));
+					float y1 = (float)(scaleY*(cd.p0.getY()-translateY));
+					float x2 = (float)(scaleX*(cd.p1.getX()-translateX));
+					float y2 = (float)(scaleY*(cd.p1.getY()-translateY));
+					float ctrlx1 = (float)(scaleX*(cd.pc0.getX()-translateX));
+					float ctrly1 = (float)(scaleY*(cd.pc0.getY()-translateY));
+					float ctrlx2 = (float)(scaleX*(cd.pc1.getX()-translateX));
+					float ctrly2 = (float)(scaleY*(cd.pc1.getY()-translateY));
+					
+					CubicCurve2D cc2d = new CubicCurve2D.Float(x1, y1, ctrlx1, ctrly1, ctrlx2, ctrly2, x2, y2);
+					g.draw(cc2d);
+				}
+			}
+		}
 	}
 
 

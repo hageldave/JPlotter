@@ -328,7 +328,8 @@ public class Curves implements Renderable {
 	public Stream<CurveDetails> streamIntersecting(Rectangle2D rect) {
 		boolean useParallelStreaming = numCurves() > 100;
 		return Utils.parallelize(getCurveDetails().stream(), useParallelStreaming)
-				.filter(tri->Utils.rectIntersectsOrIsContainedInTri(
+				.filter(tri->
+					Utils.rectIntersectsOrIsContainedInTri(
 						rect, 
 						tri.p0.getX(), tri.p0.getY(), 
 						tri.pc1.getX(), tri.pc1.getY(), 

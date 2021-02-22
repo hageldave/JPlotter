@@ -648,6 +648,11 @@ public class CoordSysRenderer implements Renderer {
 			Graphics2D p_ = (Graphics2D)p.create(legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			legendBottom.renderFallback(g_, p_, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
+		
+		// draw overlay
+		if(Objects.nonNull(overlay)){
+			overlay.renderFallback(g, p, w, h);
+		}
 	}
 	
 	@Override

@@ -20,6 +20,8 @@ import javax.swing.SwingUtilities;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageLoader;
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
@@ -179,33 +181,33 @@ public class BezierDemo {
 	}
 	
 	static double[][] loadDataset() {
-//		Class<?> loader = BezierDemo.class;
-//		try(InputStream is = loader.getResourceAsStream("/stopmotionframes64x64.png")){
-//			BufferedImage image = ImageLoader.loadImage(is, BufferedImage.TYPE_INT_ARGB);
-//			int w = image.getWidth()/16;
-//			int h = image.getHeight();
-//			Img img = new Img(w,h);
-//			img.paint(g->g.drawImage(image,0,0,w,h,null));
-//			double[][] data = new double[img.getHeight()][img.getWidth()];
-//			double toUnit = 1/255.0;
-//			img.forEach(true, px -> data[px.getY()][px.getX()]=px.getLuminance()*toUnit);
-//			return data;
-//		} catch (IOException e) {
-//			throw new RuntimeException("sorry something went wrong on loading resource", e);
-//		}
-		int d = 56;
-		int n = d*5;
-		double[] init = IntStream.range(0, d).mapToDouble(i->Math.random()).toArray();
-		double[][] data = new double[n][];
-		data[0] = averageNeighbors(averageNeighbors(init));
-		for(int i=1; i<n; i++) {
-			data[i] = shift(data[i-1]);
-			if(i%(d/3)==0) {
-//				data[i] = averageNeighbors(data[i]);
-				LinAlg.add(data[i], LinAlg.add(new double[d], init, (i/(d/3))%2 == 0 ? 1:-1, -.5), 0.01);
-			}
+		Class<?> loader = BezierDemo.class;
+		try(InputStream is = loader.getResourceAsStream("/stopmotionframes64x64.png")){
+			BufferedImage image = ImageLoader.loadImage(is, BufferedImage.TYPE_INT_ARGB);
+			int w = image.getWidth()/16;
+			int h = image.getHeight();
+			Img img = new Img(w,h);
+			img.paint(g->g.drawImage(image,0,0,w,h,null));
+			double[][] data = new double[img.getHeight()][img.getWidth()];
+			double toUnit = 1/255.0;
+			img.forEach(true, px -> data[px.getY()][px.getX()]=px.getLuminance()*toUnit);
+			return data;
+		} catch (IOException e) {
+			throw new RuntimeException("sorry something went wrong on loading resource", e);
 		}
-		return data;
+//		int d = 56;
+//		int n = d*5;
+//		double[] init = IntStream.range(0, d).mapToDouble(i->Math.random()).toArray();
+//		double[][] data = new double[n][];
+//		data[0] = averageNeighbors(averageNeighbors(init));
+//		for(int i=1; i<n; i++) {
+//			data[i] = shift(data[i-1]);
+//			if(i%(d/3)==0) {
+////				data[i] = averageNeighbors(data[i]);
+//				LinAlg.add(data[i], LinAlg.add(new double[d], init, (i/(d/3))%2 == 0 ? 1:-1, -.5), 0.01);
+//			}
+//		}
+//		return data;
 	}
 	
 	static double[] shift(double[] a) {
@@ -276,7 +278,8 @@ public class BezierDemo {
 		.forEach(l->l.setColor(0xffff0000));
 		
 		// UI
-		BlankCanvas timeCurveCanvas = new BlankCanvas();
+//		BlankCanvas timeCurveCanvas = new BlankCanvas();
+		BlankCanvasFallback timeCurveCanvas = new BlankCanvasFallback();
 		timeCurveCanvas.setPreferredSize(new Dimension(400, 400));
 		CoordSysRenderer timecurvesCoordsys = new CoordSysRenderer();
 		timeCurveCanvas.setRenderer(timecurvesCoordsys);
@@ -335,7 +338,9 @@ public class BezierDemo {
 		frame.getContentPane().add(slider, BorderLayout.NORTH);
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				timeCurveCanvas.runInContext(()->timeCurveCanvas.close());
+				Object obj = timeCurveCanvas;
+				if(obj instanceof FBOCanvas)
+					((FBOCanvas)obj).runInContext(()->((FBOCanvas)obj).close());
 			}
 		});
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

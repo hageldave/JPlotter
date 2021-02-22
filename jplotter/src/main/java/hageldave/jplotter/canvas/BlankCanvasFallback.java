@@ -96,7 +96,6 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 			
 			g.translate(0, h);
 			g.scale(1.0, -1.0);
-//			g.scale(2, 2);
 			render(g,p, w,h);
 		} finally {
 			if(g!=null)g.dispose();
