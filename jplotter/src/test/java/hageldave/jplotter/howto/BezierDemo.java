@@ -278,8 +278,8 @@ public class BezierDemo {
 		.forEach(l->l.setColor(0xffff0000));
 		
 		// UI
-//		BlankCanvas timeCurveCanvas = new BlankCanvas();
-		BlankCanvasFallback timeCurveCanvas = new BlankCanvasFallback();
+		BlankCanvas timeCurveCanvas = new BlankCanvas();
+//		BlankCanvasFallback timeCurveCanvas = new BlankCanvasFallback();
 		timeCurveCanvas.setPreferredSize(new Dimension(400, 400));
 		CoordSysRenderer timecurvesCoordsys = new CoordSysRenderer();
 		timeCurveCanvas.setRenderer(timecurvesCoordsys);
