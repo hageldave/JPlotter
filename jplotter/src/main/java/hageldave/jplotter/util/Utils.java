@@ -148,6 +148,17 @@ public class Utils {
 	 * @param upper maximum value
 	 * @return max(lower,min(upper,v))
 	 */
+	public static float clamp(float lower, float v, float upper){
+		return Math.max(lower, Math.min(upper, v));
+	}
+	
+	/**
+	 * Clamps value between specified bounds
+	 * @param lower minimum value
+	 * @param v value to clamp
+	 * @param upper maximum value
+	 * @return max(lower,min(upper,v))
+	 */
 	public static int clamp(int lower, int v, int upper){
 		return Math.max(lower, Math.min(upper, v));
 	}
@@ -345,6 +356,14 @@ public class Utils {
 		return (color&0x00ffffff)|a;
 	}
 	
+
+	public static int mixColor3(int c1, int c2, int c3, float m1, float m2, float m3) {
+		float a = Pixel.a(c1)*m1 + Pixel.a(c2)*m2 + Pixel.a(c3)*m3;
+		float r = Pixel.r(c1)*m1 + Pixel.r(c2)*m2 + Pixel.r(c3)*m3;
+		float g = Pixel.g(c1)*m1 + Pixel.g(c2)*m2 + Pixel.g(c3)*m3;
+		float b = Pixel.b(c1)*m1 + Pixel.b(c2)*m2 + Pixel.b(c3)*m3;
+		return Pixel.argb((int)a, (int)r, (int)g, (int)b);
+	}
 	
 }
 

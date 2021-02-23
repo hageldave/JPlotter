@@ -15,6 +15,8 @@ import javax.swing.SwingUtilities;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Triangles;
@@ -66,7 +68,8 @@ public class LineChart {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+//		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+		BlankCanvasFallback canvas = new BlankCanvasFallback().setRenderer(coordsys);
 		canvas.setPreferredSize(new Dimension(700, 400));
 		canvas.setBackground(Color.WHITE);
 		frame.getContentPane().add(canvas);
@@ -76,7 +79,9 @@ public class LineChart {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				// code to clean up opengl resources
-				canvas.runInContext(()->canvas.close());
+				Object obj = canvas;
+				if(obj instanceof FBOCanvas)
+					((FBOCanvas)obj).runInContext(()->((FBOCanvas)obj).close());
 			}
 		});
 		// make visible on AWT event dispatch thread

@@ -7,7 +7,6 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.ColorModel;
@@ -16,9 +15,6 @@ import java.awt.image.DirectColorModel;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.lang.ref.WeakReference;
-
-import hageldave.imagingkit.core.Img;
-import sun.awt.image.IntegerComponentRaster;
 
 public class BarycentricGradientPaint implements Paint {
 	
@@ -37,6 +33,14 @@ public class BarycentricGradientPaint implements Paint {
 		this.color1 = color1;
 		this.color2 = color2;
 		this.color3 = color3;
+	}
+	
+	public BarycentricGradientPaint(float[] x, float[] y, Color color1, Color color2, Color color3) {
+		this(x[0],y[0],x[1],y[1],x[2],y[2], color1,color2,color3);
+	}
+	
+	public BarycentricGradientPaint(double x1, double y1, double x2, double y2, double x3, double y3, Color color1, Color color2, Color color3) {
+		this((float)x1,(float)y1,(float)x2,(float)y2,(float)x3,(float)y3, color1,color2,color3);
 	}
 	
 	public BarycentricGradientPaint(float x1, float y1, float x2, float y2, float x3, float y3, Color color1, Color color2, Color color3) {
@@ -71,52 +75,44 @@ public class BarycentricGradientPaint implements Paint {
 	}
     
 	private static class BarycentricGradientPaintContext implements PaintContext {
-		
-		Point2D.Float p1=new Point2D.Float();
-	    Point2D.Float p2=new Point2D.Float();
-	    Point2D.Float p3=new Point2D.Float();
 	    
-	    private float x1,x2,x3,y1,y2,y3;
-	    private float x12,x23,x13,y12,y23,y13;
-	    private float denom;
+	    private final float x1,x2,x3,y1,y2,y3;
+	    private final float x12,x23,x13,y12,y23,y13;
+	    private final float denom;
 	    
-	    Color color1;
-	    Color color2;
-	    Color color3;
-	    final DirectColorModel cm = new DirectColorModel(32,
+	    private final int c1,c2,c3;
+	    private final DirectColorModel cm = new DirectColorModel(32,
 				0x00ff0000,       // Red
                 0x0000ff00,       // Green
                 0x000000ff,       // Blue
                 0xff000000        // Alpha
-                );
-	    WritableRaster saved;
-	    WeakReference<int[]> cache;
+	    );
+	    private WritableRaster saved;
+	    private WeakReference<int[]> cache;
 
 		public BarycentricGradientPaintContext(
-				Point2D p1, Point2D p2, Point2D p3,
+				Point2D.Float p1, Point2D.Float p2, Point2D.Float p3,
 				Color color1, Color color2, Color color3,
 				AffineTransform xform) 
 		{
-			this.color1 = color1;
-			this.color2 = color2;
-			this.color3 = color3;
-			xform.transform(p1, this.p1);
-			xform.transform(p2, this.p2);
-			xform.transform(p3, this.p3);
+			c1 = color1.getRGB();
+			c2 = color2.getRGB();
+			c3 = color3.getRGB();
 			
-			setupBarycentricConstants();
-		}
-		
-		private void setupBarycentricConstants() {
+			p1 = (Point2D.Float) xform.transform(p1, new Point2D.Float());
+			p2 = (Point2D.Float) xform.transform(p2, new Point2D.Float());
+			p3 = (Point2D.Float) xform.transform(p3, new Point2D.Float());
 			// constants for barycentric coords
 	        x1=p1.x; x2=p2.x; x3=p3.x; y1=p1.y; y2=p2.y; y3=p3.y;
 	        x12=x1-x2; x23=x2-x3; x13=x1-x3; y12=y1-y2; y23=y2-y3; y13=y1-y3;
 	        denom=1f/((y23*x13)-(x23*y13));
 		}
 
+
 		@Override
 		public void dispose() {
-			cacheRaster(saved);
+			if(saved != null)
+				cacheRaster(saved);
 			saved = null;
 		}
 
@@ -144,11 +140,20 @@ public class BarycentricGradientPaint implements Paint {
 	        int[] data = dataFromRaster(rast);
 	        
 	        for(int i=0; i<h; i++) {
-	        	float y = yA+i;
+	        	float y = yA+i+.5f;
+	        	float ypart1 = -x23*(y-y3);
+	        	float ypart2 =  x13*(y-y3);
+	        	
 	        	for(int j=0; j<w; j++) {
-	        		int idx = i*w+j;
-	        		float x = xA+j;
-	        		// TODO: calculate coordinates and mix colors
+	        		float x = xA+j+.5f;
+	        		float l1 = ( y23*(x-x3)+ypart1)*denom;
+	        		float l2 = (-y13*(x-x3)+ypart2)*denom;
+	        		float l3 = 1f-l1-l2;
+
+	        		if(l1<0||l2<0||l3<0)
+	        			data[i*w+j] = 0;
+	        		else
+	        			data[i*w+j] = Utils.mixColor3(c1, c2, c3, l1, l2, l3);
 	        	}
 	        }
 	        

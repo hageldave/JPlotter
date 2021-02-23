@@ -1,8 +1,13 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
+import org.apache.batik.ext.awt.geom.Polygon2D;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
@@ -15,7 +20,9 @@ import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.svg.SVGTriangleRendering;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.ShaderRegistry;
+import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.BarycentricGradientPaint;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -145,6 +152,64 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	protected void renderEnd() {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+	}
+	
+	@Override
+	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+		
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+		
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+		
+		float[][] tricoords = new float[2][3];
+		for(Triangles tris : getItemsToRender()){
+			if(tris.isHidden()){
+				continue;
+			}
+			for(TriangleDetails tri : tris.getIntersectingTriangles(view != null ? view:viewportRect)){
+				double x0,y0, x1,y1, x2,y2;
+				x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
+				
+				x0-=translateX; x1-=translateX; x2-=translateX;
+				y0-=translateY; y1-=translateY; y2-=translateY;
+				x0*=scaleX; x1*=scaleX; x2*=scaleX;
+				y0*=scaleY; y1*=scaleY; y2*=scaleY;
+				
+				tricoords[0][0]=(float)x0; tricoords[0][1]=(float)x1; tricoords[0][2]=(float)x2;
+				tricoords[1][0]=(float)y0; tricoords[1][1]=(float)y1; tricoords[1][2]=(float)y2;
+				
+				
+				Color c0 = new Color(Utils.scaleColorAlpha(tri.c0.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
+				Color c1 = new Color(Utils.scaleColorAlpha(tri.c1.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
+				Color c2 = new Color(Utils.scaleColorAlpha(tri.c2.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
+				
+				Paint paint;
+				if(c0.getRGB()==c1.getRGB() && c1.getRGB()==c2.getRGB() && false) {
+					paint = c0;
+				} else {
+					paint = new BarycentricGradientPaint(tricoords[0], tricoords[1], c0, c1, c2);
+				}
+				g.setPaint(paint);
+				
+				
+//				g.fill(new Polygon2D(tricoords[0], tricoords[1], 3));
+				int minx = (int)Utils.min3(x0, x1, x2);
+				int miny = (int)Utils.min3(y0, y1, y2);
+				double maxx = Utils.max3(x0, x1, x2);
+				double maxy = Utils.max3(y0, y1, y2);
+				g.fillRect((minx), (miny), (int)Math.ceil(maxx-minx), (int)Math.ceil(maxy-miny));
+			}
+		}
+		
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	}
 	
 	@Override

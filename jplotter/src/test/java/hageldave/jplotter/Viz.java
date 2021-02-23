@@ -20,10 +20,12 @@ import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Text;
+import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.renderers.TextRenderer;
+import hageldave.jplotter.renderers.TrianglesRenderer;
 
 public class Viz {
 
@@ -52,9 +54,14 @@ public class Viz {
 		prender.addItemToRender(points);
 		points.addPoint(0.5, 0.1);
 		
+		TrianglesRenderer trirender = new TrianglesRenderer();
+		Triangles tris = new Triangles();
+		tris.addTriangle(-.5, 0, .5, .2, .4, .6).setColor0(0xff0000ff).setColor1(0xffff0000).setColor2(0xff00ff00);
+		trirender.addItemToRender(tris);
+		
 		
 		CoordSysRenderer csr = new CoordSysRenderer();
-		csr.setContent(render.withAppended(prender));
+		csr.setContent(render.withAppended(prender).withAppended(trirender));
 		Legend legend = new Legend();
 		csr.setLegendBottom(legend);
 		legend.addLineLabel(2, 0xffff0055, "a pink line");
