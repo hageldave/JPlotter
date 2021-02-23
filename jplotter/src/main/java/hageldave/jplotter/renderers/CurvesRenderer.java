@@ -398,6 +398,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 							LinesRenderer.strokePattern2dashPattern(curves.getStrokePattern(), (float)curves.getStrokeLength()), 0f); 
 				}
 				g.setStroke(stroke);
+				p.setStroke(stroke);
 				g.setColor(new Color(Utils.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
 				
 				for(CurveDetails cd : curvestrip) {
@@ -412,6 +413,10 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 					
 					CubicCurve2D cc2d = new CubicCurve2D.Float(x1, y1, ctrlx1, ctrly1, ctrlx2, ctrly2, x2, y2);
 					g.draw(cc2d);
+					if(cd.pickColor != 0) {
+						p.setColor(new Color(cd.pickColor));
+						p.draw(cc2d);
+					}
 				}
 			}
 		}

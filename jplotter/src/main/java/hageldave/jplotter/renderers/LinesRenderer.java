@@ -412,6 +412,13 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			}
 			g.setStroke(stroke);
 			g.draw(new Line2D.Double(x1, y1, x2, y2));
+			
+			if(seg.pickColor != 0) {
+				p.setStroke(stroke);
+				p.setColor(new Color(seg.pickColor));
+				p.draw(new Line2D.Double(x1, y1, x2, y2));
+			}
+			
 		}
 	}
 	
@@ -491,6 +498,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 				}
 				// drawing
 				g.fill(new Polygon2D(pc[0],pc[1],4));
+				if(seg.pickColor != 0) {
+					p.setColor(new Color(seg.pickColor));
+					p.fill(new Polygon2D(pc[0],pc[1],4));
+				}
 			} else {
 				float[][] pc=polygonCoords;
 				double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
@@ -520,6 +531,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 					}
 					// drawing
 					g.fill(new Polygon2D(pc[0],pc[1],4));
+					if(seg.pickColor != 0) {
+						p.setColor(new Color(seg.pickColor));
+						p.fill(new Polygon2D(pc[0],pc[1],4));
+					}
 
 					strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 				}

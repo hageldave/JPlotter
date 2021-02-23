@@ -2,12 +2,10 @@ package hageldave.jplotter.renderers;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
-import org.apache.batik.ext.awt.geom.Polygon2D;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
@@ -19,10 +17,10 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.svg.SVGTriangleRendering;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.ShaderRegistry;
-import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.BarycentricGradientPaint;
+import hageldave.jplotter.util.ShaderRegistry;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -194,21 +192,19 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				Color c1 = new Color(Utils.scaleColorAlpha(tri.c1.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
 				Color c2 = new Color(Utils.scaleColorAlpha(tri.c2.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
 				
-				Paint paint;
-				if(c0.getRGB()==c1.getRGB() && c1.getRGB()==c2.getRGB() && false) {
-					paint = c0;
-				} else {
-					paint = new BarycentricGradientPaint(tricoords[0], tricoords[1], c0, c1, c2);
-				}
-				g.setPaint(paint);
+				g.setPaint(new BarycentricGradientPaint(tricoords[0], tricoords[1], c0, c1, c2));
 				
 				
-//				g.fill(new Polygon2D(tricoords[0], tricoords[1], 3));
 				int minx = (int)Utils.min3(x0, x1, x2);
 				int miny = (int)Utils.min3(y0, y1, y2);
 				double maxx = Utils.max3(x0, x1, x2);
 				double maxy = Utils.max3(y0, y1, y2);
 				g.fillRect((minx), (miny), (int)Math.ceil(maxx-minx), (int)Math.ceil(maxy-miny));
+				if(tri.pickColor != 0) {
+					Color pick=new Color(tri.pickColor);
+					p.setPaint(new BarycentricGradientPaint(tricoords[0], tricoords[1], pick, pick, pick));
+					p.fillRect((minx), (miny), (int)Math.ceil(maxx-minx), (int)Math.ceil(maxy-miny));
+				}
 			}
 		}
 		

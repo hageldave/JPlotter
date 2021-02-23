@@ -2,6 +2,7 @@ package hageldave.jplotter;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -35,6 +36,7 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
@@ -93,7 +95,7 @@ public class IrisViz {
 		header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
 		frame.getContentPane().add(header, BorderLayout.NORTH);
 		
-		LinkedList<FBOCanvas> canvasCollection = new LinkedList<>();
+		LinkedList<Component> canvasCollection = new LinkedList<>();
 		String[] dimNames = new String[]{"sepal length","sepal width","petal length","petal width"};
 		String[] perClassNames = new String[]{"Setosa", "Versicolor", "Virginica"};
 		ColorMap perClassColors = DefaultColorMap.Q_8_SET2;
@@ -122,7 +124,8 @@ public class IrisViz {
 		// make scatter plot matrix
 		for(int j = 0; j < 4; j++){
 			for(int i = 0; i < 4; i++){
-				BlankCanvas canvas = new BlankCanvas(legendCanvas);
+//				BlankCanvas canvas = new BlankCanvas(legendCanvas);
+				BlankCanvasFallback canvas = new BlankCanvasFallback();
 				CoordSysRenderer coordsys = new CoordSysRenderer();
 				canvas.setRenderer(coordsys);
 				canvasCollection.add(canvas);
@@ -341,7 +344,7 @@ public class IrisViz {
 			}
 		}
 		
-		for(FBOCanvas cnvs:canvasCollection){
+		for(Component cnvs:canvasCollection){
 			// add a pop up menu (on right click) for exporting to SVG
 			PopupMenu menu = new PopupMenu();
 			MenuItem svgExport = new MenuItem("SVG export");
@@ -364,7 +367,11 @@ public class IrisViz {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				canvasCollection.forEach(c->c.runInContext(()->c.close()));
+				canvasCollection.forEach(c->{
+					if(c instanceof FBOCanvas) {
+						((FBOCanvas)c).runInContext(()->((FBOCanvas)c).close());
+					}
+				});
 			}
 		});
 		SwingUtilities.invokeLater(()->{

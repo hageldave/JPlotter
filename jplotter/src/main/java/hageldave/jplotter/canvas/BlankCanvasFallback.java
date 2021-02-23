@@ -6,6 +6,7 @@ import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.ImageObserver;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JComponent;
@@ -96,6 +97,8 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 			
 			g.translate(0, h);
 			g.scale(1.0, -1.0);
+			p.translate(0, h);
+			p.scale(1.0, -1.0);
 			render(g,p, w,h);
 		} finally {
 			if(g!=null)g.dispose();
@@ -136,14 +139,45 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 
 	@Override
 	public Img toImg() {
-		// TODO Auto-generated method stub
-		return null;
+		return mainRenderBuffer.copy();
 	}
 
 	@Override
 	public int getPixel(int x, int y, boolean picking, int areaSize) {
-		// TODO Auto-generated method stub
-		return 0;
+		Img img = picking ? pickingRenderBuffer:mainRenderBuffer;
+		Img area = new Img(areaSize, areaSize);
+		area.forEach(px->{
+			int v = img.getValue(x+px.getX()-areaSize/2, y+px.getY()-areaSize/2, 0);
+			px.setValue(v);
+		});
+		
+		int[] colors = area.getData();
+		
+		if(areaSize == 1){
+			return colors[0];
+		}
+		int center = areaSize*(areaSize/2)+(areaSize/2);
+		int centerValue = colors[center];
+		int centerBonus = centerValue == 0 ? 0:1;
+		// calculate most prominent color (mode)
+		Arrays.sort(colors);
+		int currentValue = colors[0]; 
+		int mostValue = currentValue; 
+		int count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
+		int maxCount=count;
+		for(int i = 1; i < colors.length; i++){
+			if(colors[i]==currentValue && currentValue != 0xff000000){
+				count++;
+			} else {
+				if(count > maxCount){
+					maxCount = count;
+					mostValue = currentValue;
+				}
+				currentValue = colors[i];
+				count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
+			}
+		}
+		return mostValue;
 	}
 
 }

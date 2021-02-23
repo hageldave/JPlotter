@@ -314,6 +314,13 @@ public class TextRenderer extends GenericRenderer<Text> {
 				g_.setColor(txt.getColor());
 				g_.drawString(txt.getTextString(), 0, -maxDescent);
 				
+				if(txt.getPickColor() != 0) {
+					p_.setColor(new Color(txt.getPickColor()));
+					Rectangle2D bounds = txt.getBounds();
+					float rightpadding = 0.4f*((float)bounds.getWidth()/txt.getTextString().length());
+					Rectangle2D rect = new Rectangle2D.Double(0.0, -bounds.getHeight(), bounds.getWidth()+rightpadding, bounds.getHeight());
+					p_.fill(rect);
+				}
 			}
 		}
 	}

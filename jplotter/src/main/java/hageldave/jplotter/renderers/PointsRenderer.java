@@ -3,6 +3,7 @@ package hageldave.jplotter.renderers;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
@@ -251,14 +252,22 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				
 				
 				Graphics2D g_ = (Graphics2D) g.create();
-				g_.translate(x1, y1);
+				AffineTransform xform = new AffineTransform();
+				xform.translate(x1, y1);
 				if(point.rot.getAsDouble() != 0.0){
-					g_.rotate(point.rot.getAsDouble());
+					xform.rotate(point.rot.getAsDouble());
 				}
+				g_.transform(xform);
 				int color = Utils.scaleColorAlpha(point.color.getAsInt(),points.getGlobalAlphaMultiplier());
 				g_.setColor(new Color(color, true));
-				
 				glyph.drawFallback(g_, (float)(points.getGlobalScaling()*point.scale.getAsDouble()));
+				
+				if(point.pickColor != 0) {
+					Graphics2D p_ = (Graphics2D) p.create();
+					p_.transform(xform);
+					p_.setColor(new Color(point.pickColor));
+					glyph.drawFallback(p_, (float)(points.getGlobalScaling()*point.scale.getAsDouble()));
+				}
 			}
 		}
 		
