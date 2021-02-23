@@ -174,6 +174,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			if(tris.isHidden()){
 				continue;
 			}
+			if(tris.isAAinFallbackEnabled()) g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			else g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+			
 			for(TriangleDetails tri : tris.getIntersectingTriangles(view != null ? view:viewportRect)){
 				double x0,y0, x1,y1, x2,y2;
 				x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();

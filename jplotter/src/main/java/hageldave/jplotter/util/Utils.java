@@ -358,12 +358,23 @@ public class Utils {
 	
 
 	public static int mixColor3(int c1, int c2, int c3, float m1, float m2, float m3) {
-		float a = Pixel.a(c1)*m1 + Pixel.a(c2)*m2 + Pixel.a(c3)*m3;
-		float r = Pixel.r(c1)*m1 + Pixel.r(c2)*m2 + Pixel.r(c3)*m3;
-		float g = Pixel.g(c1)*m1 + Pixel.g(c2)*m2 + Pixel.g(c3)*m3;
-		float b = Pixel.b(c1)*m1 + Pixel.b(c2)*m2 + Pixel.b(c3)*m3;
+		float normalize = 1f/(m1+m2+m3);
+		float a = (Pixel.a(c1)*m1 + Pixel.a(c2)*m2 + Pixel.a(c3)*m3)*normalize;
+		float r = (Pixel.r(c1)*m1 + Pixel.r(c2)*m2 + Pixel.r(c3)*m3)*normalize;
+		float g = (Pixel.g(c1)*m1 + Pixel.g(c2)*m2 + Pixel.g(c3)*m3)*normalize;
+		float b = (Pixel.b(c1)*m1 + Pixel.b(c2)*m2 + Pixel.b(c3)*m3)*normalize;
 		return Pixel.argb((int)a, (int)r, (int)g, (int)b);
 	}
+	
+	public static int mixColor4(int c1, int c2, int c3, int c4, float m1, float m2, float m3, float m4) {
+		float normalize = 1f/(m1+m2+m3+m4);
+		float a = (Pixel.a(c1)*m1 + Pixel.a(c2)*m2 + Pixel.a(c3)*m3 + Pixel.a(c4)*m4)*normalize;
+		float r = (Pixel.r(c1)*m1 + Pixel.r(c2)*m2 + Pixel.r(c3)*m3 + Pixel.r(c4)*m4)*normalize;
+		float g = (Pixel.g(c1)*m1 + Pixel.g(c2)*m2 + Pixel.g(c3)*m3 + Pixel.g(c4)*m4)*normalize;
+		float b = (Pixel.b(c1)*m1 + Pixel.b(c2)*m2 + Pixel.b(c3)*m3 + Pixel.b(c4)*m4)*normalize;
+		return Pixel.argb((int)a, (int)r, (int)g, (int)b);
+	}
+	
 	
 }
 

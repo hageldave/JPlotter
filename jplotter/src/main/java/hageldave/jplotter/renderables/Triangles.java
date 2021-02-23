@@ -40,6 +40,7 @@ public class Triangles implements Renderable {
 	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<TriangleDetails> triangles = new ArrayList<>();
 	protected boolean useCrispEdgesForSVG = true;
+	private boolean useAAinFallback = false;
 	protected boolean hidden=false;
 	
 	/**
@@ -596,9 +597,34 @@ public class Triangles implements Renderable {
 	 * En/Disables crisp edge rendering in SVG for this {@link Triangles} object.
 	 * See {@link #isCrispEdgesForSVGEnabled()} for details.
 	 * @param enable true when enabling
+	 * @return this for chaining
 	 */
-	public void enableCrispEdgesForSVG(boolean enable) {
+	public Triangles enableCrispEdgesForSVG(boolean enable) {
 		this.useCrispEdgesForSVG = enable;
+		return this;
+	}
+
+	/**
+	 * Return true when anti-aliasing is enabled for fallback (AWT) rendering (default=false).
+	 * <p>
+	 * Especially for triangle grids/meshes this option should be disabled to avoid visible triangle edges
+	 * inside the grid/mesh.
+	 * When triangles are not connected, this option can be enabled to get anti-aliased edges.
+	 * @return true when enabled
+	 */
+	public boolean isAAinFallbackEnabled() {
+		return this.useAAinFallback;
+	}
+	
+	/**
+	 * En/Disables anti-aliasing for this {@link Triangles} object during fallback rendering.
+	 * See {@link #isAAinFallbackEnabled()} for details.
+	 * @param enable true when enabling
+	 * @return this for chaining
+	 */
+	public Triangles enableAAinFallback(boolean enable) {
+		this.useAAinFallback = enable;
+		return this;
 	}
 	
 }
