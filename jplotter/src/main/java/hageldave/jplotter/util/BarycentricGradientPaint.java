@@ -5,7 +5,7 @@ import java.awt.Paint;
 import java.awt.PaintContext;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Transparency;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -16,16 +16,47 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.lang.ref.WeakReference;
 
+/**
+ * The BarycentricGradientPaint class provides a way to fill a {@link Shape}
+ * with a triangular color gradient. 
+ * Colors are specified for the vertices of a triangle and interpolated within
+ * the triangle according to barycentric coordinates.
+ * Only areas of the filled shape that are intersecting with the triangle of
+ * this paint are colored.
+ * <p>
+ * This paint supports the {@code ANTIALIASING} rendering hint 
+ * ({@link RenderingHints}) using a 4x multisampling approach. 
+ * When enabled, the edges of the triangle will appear anti-aliased.
+ * It is recommended to disable AA when filling a triangle mesh (where triangles
+ * are adjacent), since otherwise triangle edges become visible.
+ * <p>
+ * Note that it is not necessary to use a triangular {@link Shape} to render a 
+ * triangle. Instead a rectangle can be used as well, since only the intersecting 
+ * area will be filled.
+ * 
+ * @author hageldave
+ */
 public class BarycentricGradientPaint implements Paint {
 
-	Point2D.Float p1;
-	Point2D.Float p2;
-	Point2D.Float p3;
-	Color color1;
-	Color color2;
-	Color color3;
+	protected Point2D.Float p1;
+	protected Point2D.Float p2;
+	protected Point2D.Float p3;
+	protected Color color1;
+	protected Color color2;
+	protected Color color3;
 
 
+	/**
+	 * Creates a new {@link BarycentricGradientPaint} object with
+	 * specified triangle vertices and vertex colors.
+	 * 
+	 * @param p1 vertex of triangle
+	 * @param p2 vertex of triangle
+	 * @param p3 vertex of triangle
+	 * @param color1 color of vertex
+	 * @param color2 color of vertex
+	 * @param color3 color of vertex
+	 */
 	public BarycentricGradientPaint(Point2D p1, Point2D p2, Point2D p3, Color color1, Color color2, Color color3) {
 		this.p1 = new Point2D.Float((float)p1.getX(), (float)p1.getY());
 		this.p2 = new Point2D.Float((float)p2.getX(), (float)p2.getY());
@@ -35,14 +66,52 @@ public class BarycentricGradientPaint implements Paint {
 		this.color3 = color3;
 	}
 
+	/**
+	 * Creates a new {@link BarycentricGradientPaint} object with
+	 * specified triangle vertices and vertex colors.
+	 * 
+	 * @param x x-coordinates for the triangle vertices
+	 * @param y y-coordinates for the triangle vertices
+	 * @param color1 color of vertex
+	 * @param color2 color of vertex
+	 * @param color3 color of vertex
+	 */
 	public BarycentricGradientPaint(float[] x, float[] y, Color color1, Color color2, Color color3) {
 		this(x[0],y[0],x[1],y[1],x[2],y[2], color1,color2,color3);
 	}
 
+	/**
+	 * Creates a new {@link BarycentricGradientPaint} object with
+	 * specified triangle vertices and vertex colors.
+	 * 
+	 * @param x1 x-coord of triangle vertex
+	 * @param y1 y-coord of triangle vertex
+	 * @param x2 x-coord of triangle vertex
+	 * @param y2 y-coord of triangle vertex
+	 * @param x3 x-coord of triangle vertex
+	 * @param y3 y-coord of triangle vertex
+	 * @param color1 color of vertex
+	 * @param color2 color of vertex
+	 * @param color3 color of vertex
+	 */
 	public BarycentricGradientPaint(double x1, double y1, double x2, double y2, double x3, double y3, Color color1, Color color2, Color color3) {
 		this((float)x1,(float)y1,(float)x2,(float)y2,(float)x3,(float)y3, color1,color2,color3);
 	}
 
+	/**
+	 * Creates a new {@link BarycentricGradientPaint} object with
+	 * specified triangle vertices and vertex colors.
+	 * 
+	 * @param x1 x-coord of triangle vertex
+	 * @param y1 y-coord of triangle vertex
+	 * @param x2 x-coord of triangle vertex
+	 * @param y2 y-coord of triangle vertex
+	 * @param x3 x-coord of triangle vertex
+	 * @param y3 y-coord of triangle vertex
+	 * @param color1 color of vertex
+	 * @param color2 color of vertex
+	 * @param color3 color of vertex
+	 */
 	public BarycentricGradientPaint(float x1, float y1, float x2, float y2, float x3, float y3, Color color1, Color color2, Color color3) {
 		this.p1 = new Point2D.Float(x1, y1);
 		this.p2 = new Point2D.Float(x2, y2);
@@ -53,12 +122,7 @@ public class BarycentricGradientPaint implements Paint {
 	}
 
 
-	/**
-	 * Returns the transparency mode for this {@code GradientPaint}.
-	 * @return an integer value representing this {@code GradientPaint}
-	 * object's transparency mode.
-	 * @see Transparency
-	 */
+
 	@Override
 	public int getTransparency() {
 		int a1 = color1.getAlpha();
@@ -79,8 +143,20 @@ public class BarycentricGradientPaint implements Paint {
 		);
 	}
 
-	private static class BarycentricGradientPaintContext implements PaintContext {
-		private static final float[] MSAA_SAMPLES;
+	/**
+	 * This class is implements the {@link PaintContext} for 
+	 * {@link BarycentricGradientPaint}.
+	 * <p>
+	 * The context operates solely in ARGB color space (blue on least 
+	 * significant bits) with an integer packing {@link DirectColorModel}.
+	 * <p>
+	 * A cache for raster memory is implemented to avoid costly memory 
+	 * allocations.
+	 * 
+	 * @author hageldave
+	 */
+	public static class BarycentricGradientPaintContext implements PaintContext {
+		protected static final float[] MSAA_SAMPLES;
 
 		static {
 			MSAA_SAMPLES = new float[8];
@@ -92,20 +168,20 @@ public class BarycentricGradientPaint implements Paint {
 			xform.transform(new float[] {0,0, 1,0, 0,1, 1,1}, 0, MSAA_SAMPLES, 0, 4);
 		}
 
-		private final float x1,x2,x3,y1,y2,y3;
-		private final float x23,x13,y23,y13; //,x12,y12;
-		private final float denom;
+		protected final float x1,x2,x3,y1,y2,y3;
+		protected final float x23,x13,y23,y13; //,x12,y12;
+		protected final float denom;
 
-		private final int c1,c2,c3;
-		private final DirectColorModel cm = new DirectColorModel(32,
+		protected final int c1,c2,c3;
+		protected final DirectColorModel cm = new DirectColorModel(32,
 				0x00ff0000,       // Red
 				0x0000ff00,       // Green
 				0x000000ff,       // Blue
 				0xff000000        // Alpha
 				);
-		private final boolean antialiasing;
-		private WritableRaster saved;
-		private WeakReference<int[]> cache;
+		protected final boolean antialiasing;
+		protected WritableRaster saved;
+		protected WeakReference<int[]> cache;
 
 		public BarycentricGradientPaintContext(
 				Point2D.Float p1, Point2D.Float p2, Point2D.Float p3,
@@ -166,7 +242,30 @@ public class BarycentricGradientPaint implements Paint {
 			return rast;
 		}
 
-		private void fillRasterMSAA(int xA, int yA, int w, int h, int[] data) {
+		protected void fillRaster(int xA, int yA, int w, int h, int[] data) {
+			for(int i=0; i<h; i++) {
+				float y = yA+i+.5f;
+				float ypart11 = -x23*(y-y3);
+				float ypart21 =  x13*(y-y3);
+		
+				for(int j=0; j<w; j++) {
+					float x = xA+j+.5f;
+					// calculate barycentric coordinates for (x,y)
+					float l1 = ( y23*(x-x3)+ypart11)*denom;
+					float l2 = (-y13*(x-x3)+ypart21)*denom;
+					float l3 = 1f-l1-l2;
+		
+					// determine color
+					int mix1;
+					if(l1<0||l2<0||l3<0) mix1 = 0;
+					else mix1 = mixColor3(c1, c2, c3, l1, l2, l3);
+					data[i*w+j] = mix1;
+				}
+			}
+		}
+
+
+		protected void fillRasterMSAA(int xA, int yA, int w, int h, int[] data) {
 			for(int i=0; i<h; i++) {
 				float y = yA+i+MSAA_SAMPLES[1];
 				float ypart11 = -x23*(y-y3);
@@ -195,6 +294,7 @@ public class BarycentricGradientPaint implements Paint {
 					float xpart14 =  y23*(x-x3);
 					float xpart24 = -y13*(x-x3);
 
+					// calculate barycentric coordinates for the 4 sub pixel samples
 					float l11 = (xpart11+ypart11)*denom;
 					float l21 = (xpart21+ypart21)*denom;
 					float l31 = 1f-l11-l21;
@@ -211,48 +311,29 @@ public class BarycentricGradientPaint implements Paint {
 					float l24 = (xpart24+ypart24)*denom;
 					float l34 = 1f-l14-l24;
 
+					// determine sample colors and weights (out of triangle samples have 0 weight)
 					int mix1,mix2,mix3,mix4;
+					float w1,w2,w3,w4;
 
-					if(l11<0||l21<0||l31<0) mix1 = 0;
-					else mix1 = Utils.mixColor3(c1, c2, c3, l11, l21, l31);
+					if(l11<0||l21<0||l31<0) { mix1 = 0; w1=0f; }
+					else { mix1 = mixColor3(c1, c2, c3, l11, l21, l31); w1=1f; }
 
-					if(l12<0||l22<0||l32<0) mix2 = 0;
-					else mix2 = Utils.mixColor3(c1, c2, c3, l12, l22, l32);
+					if(l12<0||l22<0||l32<0) { mix2 = 0; w2=0f; }
+					else { mix2 = mixColor3(c1, c2, c3, l12, l22, l32); w2=1f; }
 
-					if(l13<0||l23<0||l33<0) mix3 = 0;
-					else mix3 = Utils.mixColor3(c1, c2, c3, l13, l23, l33);
+					if(l13<0||l23<0||l33<0) {mix3 = 0; w3=0f; }
+					else { mix3 = mixColor3(c1, c2, c3, l13, l23, l33); w3=1f; }
 
-					if(l14<0||l24<0||l34<0) mix4 = 0;
-					else mix4 = Utils.mixColor3(c1, c2, c3, l14, l24, l34);
+					if(l14<0||l24<0||l34<0) { mix4 = 0; w4=0f; }
+					else { mix4 = mixColor3(c1, c2, c3, l14, l24, l34); w4=1f; }
 
-					float w1=mix1==0?0f:1f, w2=mix2==0?0f:1f, w3=mix3==0?0f:1f, w4=mix4==0?0f:1f;
-
-					data[i*w+j] = Utils.scaleColorAlpha(Utils.mixColor4(mix1, mix2, mix3, mix4, w1,w2,w3,w4),Math.min((w1+w2+w3+w4)*.25,1.0));
+					int color = mixColor4(mix1, mix2, mix3, mix4, w1,w2,w3,w4);
+					data[i*w+j] = scaleColorAlpha(color,(w1+w2+w3+w4)*.25f);
 				}
 			}
 		}
 
-		private void fillRaster(int xA, int yA, int w, int h, int[] data) {
-			for(int i=0; i<h; i++) {
-				float y = yA+i+.5f;
-				float ypart11 = -x23*(y-y3);
-				float ypart21 =  x13*(y-y3);
-
-				for(int j=0; j<w; j++) {
-					float x = xA+j+.25f;
-					float l11 = ( y23*(x-x3)+ypart11)*denom;
-					float l21 = (-y13*(x-x3)+ypart21)*denom;
-					float l31 = 1f-l11-l21;
-
-					int mix1;
-					if(l11<0||l21<0||l31<0) mix1 = 0;
-					else mix1 = Utils.mixColor3(c1, c2, c3, l11, l21, l31);
-					data[i*w+j] = mix1;
-				}
-			}
-		}
-
-		private WritableRaster getCachedOrCreateRaster(int w, int h) {
+		protected WritableRaster getCachedOrCreateRaster(int w, int h) {
 			if(cache != null) {
 				int[] data = cache.get();
 				if (data != null && data.length >= w*h)
@@ -264,7 +345,7 @@ public class BarycentricGradientPaint implements Paint {
 			return createRaster(w, h, new int[w*h]);
 		}
 
-		private void cacheRaster(WritableRaster ras) {
+		protected void cacheRaster(WritableRaster ras) {
 			int[] toCache = dataFromRaster(ras);
 			if (cache != null) {
 				int[] data = cache.get();
@@ -277,7 +358,7 @@ public class BarycentricGradientPaint implements Paint {
 			cache = new WeakReference<>(toCache);
 		}
 
-		private WritableRaster createRaster(int w, int h, int[] data) {
+		protected WritableRaster createRaster(int w, int h, int[] data) {
 			DataBufferInt buffer = new DataBufferInt(data, w*h);
 			WritableRaster raster = Raster.createPackedRaster(buffer, w, h, w, cm.getMasks(), null);
 			return raster;
@@ -285,6 +366,51 @@ public class BarycentricGradientPaint implements Paint {
 
 		private static int[] dataFromRaster(WritableRaster wr) {
 			return ((DataBufferInt)wr.getDataBuffer()).getData();
+		}
+		
+		private static int mixColor3(int c1, int c2, int c3, float m1, float m2, float m3) {
+			float normalize = 1f/(m1+m2+m3);
+			float a = (a(c1)*m1 + a(c2)*m2 + a(c3)*m3)*normalize;
+			float r = (r(c1)*m1 + r(c2)*m2 + r(c3)*m3)*normalize;
+			float g = (g(c1)*m1 + g(c2)*m2 + g(c3)*m3)*normalize;
+			float b = (b(c1)*m1 + b(c2)*m2 + b(c3)*m3)*normalize;
+			return argb((int)a, (int)r, (int)g, (int)b);
+		}
+		
+		private static int mixColor4(int c1, int c2, int c3, int c4, float m1, float m2, float m3, float m4) {
+			float normalize = 1f/(m1+m2+m3+m4);
+			float a = (a(c1)*m1 + a(c2)*m2 + a(c3)*m3 + a(c4)*m4)*normalize;
+			float r = (r(c1)*m1 + r(c2)*m2 + r(c3)*m3 + r(c4)*m4)*normalize;
+			float g = (g(c1)*m1 + g(c2)*m2 + g(c3)*m3 + g(c4)*m4)*normalize;
+			float b = (b(c1)*m1 + b(c2)*m2 + b(c3)*m3 + b(c4)*m4)*normalize;
+			return argb((int)a, (int)r, (int)g, (int)b);
+		}
+		
+		private static int a(int argb) {
+			return (argb >> 24) & 0xff;
+		}
+		
+		private static int r(int argb) {
+			return (argb >> 16) & 0xff;
+		}
+		
+		private static int g(int argb) {
+			return (argb >> 8) & 0xff;
+		}
+		
+		private static int b(int argb) {
+			return (argb) & 0xff;
+		}
+		
+		private static int argb(final int a, final int r, final int g, final int b){
+			return (a<<24)|(r<<16)|(g<<8)|b;
+		}
+		
+		private static int scaleColorAlpha(int color, float m) {
+			float normalize = 1f/255f;
+			float af = a(color)*normalize*m;
+			int a = (((int)(af*255f)) & 0xff) << 24;
+			return (color&0x00ffffff)|a;
 		}
 
 	}

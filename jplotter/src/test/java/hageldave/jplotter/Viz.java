@@ -56,6 +56,7 @@ public class Viz {
 		
 		TrianglesRenderer trirender = new TrianglesRenderer();
 		Triangles tris = new Triangles();
+		tris.enableAAinFallback(true);
 		tris.addTriangle(-.5, 0, .5, .2, .4, .6).setColor0(0xff0000ff).setColor1(0xffff0000).setColor2(0xff00ff00);
 		trirender.addItemToRender(tris);
 		

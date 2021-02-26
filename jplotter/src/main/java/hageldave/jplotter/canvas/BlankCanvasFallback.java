@@ -12,6 +12,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
+import org.apache.batik.svggen.SVGGraphics2D;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
@@ -25,6 +29,7 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	protected Img pickingRenderBuffer = new Img(0,0);
 	protected Img displayBuffer = new Img(0,0);
 	protected Renderer renderer;
+	protected boolean isRenderSvgAsImage = false;
 	
 	public BlankCanvasFallback() {
 		this.addComponentListener(new ComponentAdapter() {
@@ -114,6 +119,11 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 
 	@Override
 	public void paint(Graphics g) {
+		// test if this is SVG painting
+		if(g instanceof SVGGraphics2D && !isSvgAsImageRenderingEnabled()){
+			return;
+		}
+		
 		g.clearRect(0, 0, getWidth(), getHeight());
 		int w=mainRenderBuffer.getWidth();
 		int h=mainRenderBuffer.getHeight();
@@ -126,15 +136,18 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	}
 
 	@Override
-	public void enableSvgAsImageRendering(boolean enable) {
-		// TODO Auto-generated method stub
-
+	public void enableSvgAsImageRendering(boolean enable){
+		this.isRenderSvgAsImage = enable;
 	}
-
+	
 	@Override
-	public boolean isSvgAsImageRenderingEnabled() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isSvgAsImageRenderingEnabled(){
+		return isRenderSvgAsImage;
+	}
+	
+	@Override
+	public void paintToSVG(Document doc, Element parent, int w, int h) {
+		renderer.renderSVG(doc, parent, w, h);
 	}
 
 	@Override
