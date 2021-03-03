@@ -31,7 +31,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import hageldave.imagingkit.core.Pixel;
-import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.misc.Glyph;
 
 /**
@@ -311,7 +311,10 @@ public class SVGUtils {
 		Element defs = createSVGElement(document, "defs");
 		defs.setAttributeNS(null, "id", "JPlotterDefs");
 		document.getDocumentElement().appendChild(defs);
-		{ // draw all non FBOCanvas components
+		{ /* draw all non JPlotterCanvas components 
+	       * (and those that are isSvgAsImageRenderingEnabled()==true 
+		   * which is checked by respective implementation's paint methods)
+		   */
 			SVGGraphics2D g2d = new SVGPatchedGraphics2D(document);
 			c.paintAll(g2d);
 			// set default font size to inherit by awt/swing elements (batik does not do this)
@@ -320,19 +323,20 @@ public class SVGUtils {
 			document.getDocumentElement().appendChild(awtgroup);
 			awtgroup.appendChild(g2d.getTopLevelGroup(true));
 		}
-		// draw FBOCanvases
+		// draw JPlotterCanvases
 		containerToSVG(c, document, document.getDocumentElement());
 		return document;
 	}
 
 	private static void containerToSVG(Container c, Document doc, Element parent){
 		for(Component comp:c.getComponents()){
-			if(comp instanceof FBOCanvas){
-				@SuppressWarnings("resource") /* I'm not creating a canvas so there is no leak */
-				FBOCanvas canvas = (FBOCanvas)comp;
+			if(comp instanceof JPlotterCanvas){
+				JPlotterCanvas canvas = (JPlotterCanvas)comp;
+				if(canvas.isSvgAsImageRenderingEnabled())
+					return; // was already rendered through SVGGraphics2D
 				Element group = SVGUtils.createSVGElement(doc, "g");
 				group.setAttributeNS(null, "transform", 
-						"translate("+(canvas.getX())+","+(canvas.getY())+")");
+						"translate("+(canvas.asComponent().getX())+","+(canvas.asComponent().getY())+")");
 				parent.appendChild(group);
 				canvas.paintSVG(doc, group);
 			} else { 
@@ -346,7 +350,5 @@ public class SVGUtils {
 			}
 		}
 	}
-
-
 
 }

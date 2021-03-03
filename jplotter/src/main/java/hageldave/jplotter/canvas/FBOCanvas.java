@@ -6,7 +6,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +29,6 @@ import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
@@ -83,7 +81,7 @@ import hageldave.jplotter.util.Utils;
  * 
  * @author hageldave
  */
-public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable, JPlotterCanvas {
+public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	private static final long serialVersionUID = 1L;
 	
 	public static final AtomicInteger ATOMIC_COUNTER = new AtomicInteger(0);
@@ -353,31 +351,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable, JP
 				);
 			});
 		});
-		if(areaSize == 1){
-			return colors[0];
-		}
-		int center = areaSize*(areaSize/2)+(areaSize/2);
-		int centerValue = colors[center];
-		int centerBonus = centerValue == 0 ? 0:1;
-		// calculate most prominent color (mode)
-		Arrays.sort(colors);
-		int currentValue = colors[0]; 
-		int mostValue = currentValue; 
-		int count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
-		int maxCount=count;
-		for(int i = 1; i < colors.length; i++){
-			if(colors[i]==currentValue && currentValue != 0xff000000){
-				count++;
-			} else {
-				if(count > maxCount){
-					maxCount = count;
-					mostValue = currentValue;
-				}
-				currentValue = colors[i];
-				count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
-			}
-		}
-		return mostValue;
+		return JPlotterCanvas.mostProminentColor(colors, areaSize);
 	}
 
 	/**
@@ -492,50 +466,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable, JP
 	 */
 	@GLContextRequired
 	protected abstract void paintToFBO(int width, int height);
-	
-	/**
-	 * Creates a new SVG {@link Document} and renders this canvas as SVG elements.
-	 * Will call {@link #paintToSVG(Document, Element, int, int)} after setting up
-	 * the document and creating the initial elements.
-	 * @return the created document
-	 */
-	public Document paintSVG(){
-		Document document = SVGUtils.createSVGDocument(getWidth(), getHeight());
-		paintSVG(document, document.getDocumentElement());
-		return document;
-	}
-	
-	/**
-	 * Renders this canvas as SVG elements under the specified parent element.
-	 * Will call {@link #paintToSVG(Document, Element, int, int)} after creating 
-	 * the initial elements.
-	 * @param document document to create SVG elements with
-	 * @param parent the parent node to which this canvas is supposed to be rendered
-	 * to.
-	 */
-	public void paintSVG(Document document, Element parent){
-		int w,h;
-		if((w=getWidth()) >0 && (h=getHeight()) >0){
-			if(SVGUtils.getDefs(document) == null){
-				Element defs = SVGUtils.createSVGElement(document, "defs");
-				defs.setAttributeNS(null, "id", "JPlotterDefs");
-				document.getDocumentElement().appendChild(defs);
-			}
-			
-			Element rootGroup = SVGUtils.createSVGElement(document, "g");
-			parent.appendChild(rootGroup);
-			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
-			
-			Element background = SVGUtils.createSVGElement(document, "rect");
-			rootGroup.appendChild(background);
-			background.setAttributeNS(null, "id", "background"+"@"+hashCode());
-			background.setAttributeNS(null, "width", ""+w);
-			background.setAttributeNS(null, "height", ""+h);
-			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(getBackground().getRGB()));
-			
-			paintToSVG(document, rootGroup, w,h);
-		}
-	}
 
 	/**
 	 * Disposes of this {@link FBOCanvas} GL resources, i.e. closes the shaders, 
@@ -740,4 +670,5 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable, JP
 	public void setDisposeOnRemove(boolean disposeOnRemove) {
 		this.disposeOnRemove = disposeOnRemove;
 	}
+	
 }

@@ -2,9 +2,6 @@ package hageldave.jplotter.canvas;
 
 import java.util.Objects;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -17,7 +14,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * 
  * @author hageldave
  */
-public class BlankCanvas extends FBOCanvas {
+public class BlankCanvas extends FBOCanvas implements JPlotterCanvas {
 	private static final long serialVersionUID = 1L;
 
 	protected Renderer renderer;
@@ -48,11 +45,6 @@ public class BlankCanvas extends FBOCanvas {
 			renderer.render(0, 0, width, height);
 		}
 	}
-	
-	@Override
-	public void paintToSVG(Document doc, Element parent, int w, int h) {
-		renderer.renderSVG(doc, parent, w, h);
-	}
 
 	@Override
 	@GLContextRequired
@@ -71,21 +63,20 @@ public class BlankCanvas extends FBOCanvas {
 		renderer = null;
 	}
 	
-	/**
-	 * Sets the renderer of this canvas.
-	 * @param renderer to draw contents.
-	 * @return this for chaining
-	 */
+	@Override
 	public BlankCanvas setRenderer(Renderer renderer) {
 		this.renderer = renderer;
 		return this;
 	}
 	
-	/**
-	 * @return the current renderer
-	 */
+	@Override
 	public Renderer getRenderer() {
 		return renderer;
+	}
+	
+	@Override
+	public BlankCanvas asComponent() {
+		return this;
 	}
 
 }

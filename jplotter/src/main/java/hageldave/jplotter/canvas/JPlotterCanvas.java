@@ -1,11 +1,13 @@
 package hageldave.jplotter.canvas;
 
-import java.awt.Color;
+import java.awt.Component;
+import java.util.Arrays;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
 
 public interface JPlotterCanvas {
@@ -24,7 +26,7 @@ public interface JPlotterCanvas {
 	 * resulting in a huge dom and file size when exporting as SVG.
 	 * 
 	 * @param enable true when no SVG elements should be created from the content
-	 * of this FBOCanvas but instead a simple image element with the framebuffer's
+	 * of this JPlotterCanvas but instead a simple image element with the framebuffer's
 	 * content.
 	 */
 	public void enableSvgAsImageRendering(boolean enable);
@@ -60,13 +62,6 @@ public interface JPlotterCanvas {
 	 */
 	public int getPixel(int x, int y, boolean picking, int areaSize);
 	
-	
-	public int getWidth();
-	
-	public int getHeight();
-	
-	public Color getBackground();
-	
 	/**
 	 * Creates a new SVG {@link Document} and renders this canvas as SVG elements.
 	 * Will call {@link #paintToSVG(Document, Element, int, int)} after setting up
@@ -74,7 +69,7 @@ public interface JPlotterCanvas {
 	 * @return the created document
 	 */
 	public default Document paintSVG(){
-		Document document = SVGUtils.createSVGDocument(getWidth(), getHeight());
+		Document document = SVGUtils.createSVGDocument(asComponent().getWidth(), asComponent().getHeight());
 		paintSVG(document, document.getDocumentElement());
 		return document;
 	}
@@ -89,7 +84,7 @@ public interface JPlotterCanvas {
 	 */
 	public default void paintSVG(Document document, Element parent) {
 		int w,h;
-		if((w=getWidth()) >0 && (h=getHeight()) >0){
+		if((w=asComponent().getWidth()) >0 && (h=asComponent().getHeight()) >0){
 			if(SVGUtils.getDefs(document) == null){
 				Element defs = SVGUtils.createSVGElement(document, "defs");
 				defs.setAttributeNS(null, "id", "JPlotterDefs");
@@ -105,14 +100,14 @@ public interface JPlotterCanvas {
 			background.setAttributeNS(null, "id", "background"+"@"+hashCode());
 			background.setAttributeNS(null, "width", ""+w);
 			background.setAttributeNS(null, "height", ""+h);
-			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(getBackground().getRGB()));
+			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(asComponent().getBackground().getRGB()));
 			
 			paintToSVG(document, rootGroup, w,h);
 		}
 	}
 	
 	/**
-	 * Renders this {@link FBOCanvas} in terms of SVG elements
+	 * Renders this {@link JPlotterCanvas} in terms of SVG elements
 	 * to the specified parent element of the specified SVG document.
 	 * <p>
 	 * This method has to be overridden when the implementing
@@ -123,5 +118,54 @@ public interface JPlotterCanvas {
 	 * @param w width of the viewport (the width of this Canvas)
 	 * @param h height of the viewport (the height of this Canvas)
 	 */
-	public default void paintToSVG(Document doc, Element parent, int w, int h){}
+	public default void paintToSVG(Document doc, Element parent, int w, int h){
+		Renderer renderer = getRenderer();
+		if(renderer != null) 
+			renderer.renderSVG(doc, parent, w, h);
+	}
+	
+	/**
+	 * Sets the renderer of this canvas.
+	 * @param renderer to draw contents.
+	 * @return this for chaining
+	 */
+	public JPlotterCanvas setRenderer(Renderer renderer);
+	
+	/**
+	 * @return the current renderer
+	 */
+	public Renderer getRenderer();
+	
+	public default Component asComponent() {
+		return (Component)this;
+	}
+	
+	public static int mostProminentColor(int[] colors, int areaSize) {
+		if(areaSize == 1){
+			return colors[0];
+		}
+		int center = areaSize*(areaSize/2)+(areaSize/2);
+		int centerValue = colors[center];
+		int centerBonus = centerValue == 0 ? 0:1;
+		// calculate most prominent color (mode)
+		Arrays.sort(colors);
+		int currentValue = colors[0]; 
+		int mostValue = currentValue; 
+		int count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
+		int maxCount=count;
+		for(int i = 1; i < colors.length; i++){
+			if(colors[i]==currentValue && currentValue != 0xff000000){
+				count++;
+			} else {
+				if(count > maxCount){
+					maxCount = count;
+					mostValue = currentValue;
+				}
+				currentValue = colors[i];
+				count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
+			}
+		}
+		return mostValue;
+	}
+	
 }

@@ -6,15 +6,12 @@ import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.ImageObserver;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderers.Renderer;
@@ -40,19 +37,13 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 		});
 	}
 
-	/**
-	 * Sets the renderer of this canvas.
-	 * @param renderer to draw contents.
-	 * @return this for chaining
-	 */
+	@Override
 	public BlankCanvasFallback setRenderer(Renderer renderer) {
 		this.renderer = renderer;
 		return this;
 	}
 
-	/**
-	 * @return the current renderer
-	 */
+	@Override
 	public Renderer getRenderer() {
 		return renderer;
 	}
@@ -112,7 +103,8 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	}
 
 	protected void render(Graphics2D g, Graphics2D p, int w, int h) {
-		renderer.renderFallback(g, p, w, h);
+		if(renderer != null)
+			renderer.renderFallback(g, p, w, h);
 	}
 	
 	
@@ -144,11 +136,6 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	public boolean isSvgAsImageRenderingEnabled(){
 		return isRenderSvgAsImage;
 	}
-	
-	@Override
-	public void paintToSVG(Document doc, Element parent, int w, int h) {
-		renderer.renderSVG(doc, parent, w, h);
-	}
 
 	@Override
 	public Img toImg() {
@@ -163,34 +150,13 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 			int v = img.getValue(x+px.getX()-areaSize/2, y+px.getY()-areaSize/2, 0);
 			px.setValue(v);
 		});
-		
 		int[] colors = area.getData();
-		
-		if(areaSize == 1){
-			return colors[0];
-		}
-		int center = areaSize*(areaSize/2)+(areaSize/2);
-		int centerValue = colors[center];
-		int centerBonus = centerValue == 0 ? 0:1;
-		// calculate most prominent color (mode)
-		Arrays.sort(colors);
-		int currentValue = colors[0]; 
-		int mostValue = currentValue; 
-		int count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
-		int maxCount=count;
-		for(int i = 1; i < colors.length; i++){
-			if(colors[i]==currentValue && currentValue != 0xff000000){
-				count++;
-			} else {
-				if(count > maxCount){
-					maxCount = count;
-					mostValue = currentValue;
-				}
-				currentValue = colors[i];
-				count = currentValue == centerValue ? 1+centerBonus:1; // center color gets bonus
-			}
-		}
-		return mostValue;
+		return JPlotterCanvas.mostProminentColor(colors, areaSize);
+	}
+	
+	@Override
+	public BlankCanvasFallback asComponent() {
+		return this;
 	}
 
 }
