@@ -2,8 +2,6 @@ package hageldave.jplotter.howto;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -21,7 +19,7 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageLoader;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
-import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
@@ -55,7 +53,7 @@ public class BezierDemo {
 		}
 		
 		static double[][] XXT(double[][] x, BiFunction<double[], double[], Double> kernel){
-			int nrows = x.length; int ncols = x[0].length;
+			int nrows = x.length;
 			double[][] xxt = new double[nrows][nrows];
 			for(int r=0; r<nrows; r++){
 				for(int c=r; c<nrows; c++){
@@ -195,19 +193,6 @@ public class BezierDemo {
 		} catch (IOException e) {
 			throw new RuntimeException("sorry something went wrong on loading resource", e);
 		}
-//		int d = 56;
-//		int n = d*5;
-//		double[] init = IntStream.range(0, d).mapToDouble(i->Math.random()).toArray();
-//		double[][] data = new double[n][];
-//		data[0] = averageNeighbors(averageNeighbors(init));
-//		for(int i=1; i<n; i++) {
-//			data[i] = shift(data[i-1]);
-//			if(i%(d/3)==0) {
-////				data[i] = averageNeighbors(data[i]);
-//				LinAlg.add(data[i], LinAlg.add(new double[d], init, (i/(d/3))%2 == 0 ? 1:-1, -.5), 0.01);
-//			}
-//		}
-//		return data;
 	}
 	
 	static double[] shift(double[] a) {
@@ -245,6 +230,14 @@ public class BezierDemo {
 	}
 	
 	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent()||true;
+	}
+	
 
 	public static void main(String[] args) {
 		double[][] data = loadDataset();
@@ -278,9 +271,8 @@ public class BezierDemo {
 		.forEach(l->l.setColor(0xffff0000));
 		
 		// UI
-		BlankCanvas timeCurveCanvas = new BlankCanvas();
-//		BlankCanvasFallback timeCurveCanvas = new BlankCanvasFallback();
-		timeCurveCanvas.setPreferredSize(new Dimension(400, 400));
+		JPlotterCanvas timeCurveCanvas = mkCanvas(useFallback(args));
+		timeCurveCanvas.asComponent().setPreferredSize(new Dimension(400, 400));
 		CoordSysRenderer timecurvesCoordsys = new CoordSysRenderer();
 		timeCurveCanvas.setRenderer(timecurvesCoordsys);
 		timecurvesCoordsys.setContent(
@@ -334,15 +326,9 @@ public class BezierDemo {
 		// boiler plate JFrame
 		JFrame frame = new JFrame();
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().add(timeCurveCanvas, BorderLayout.CENTER);
+		frame.getContentPane().add(timeCurveCanvas.asComponent(), BorderLayout.CENTER);
 		frame.getContentPane().add(slider, BorderLayout.NORTH);
-		frame.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				Object obj = timeCurveCanvas;
-				if(obj instanceof FBOCanvas)
-					((FBOCanvas)obj).runInContext(()->((FBOCanvas)obj).close());
-			}
-		});
+		timeCurveCanvas.addCleanupOnWindowClosingListener(frame);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// launch
 		SwingUtilities.invokeLater(()->{

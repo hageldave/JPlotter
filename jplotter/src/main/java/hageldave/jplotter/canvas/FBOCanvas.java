@@ -5,6 +5,9 @@ import java.awt.Graphics;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -669,6 +672,24 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 */
 	public void setDisposeOnRemove(boolean disposeOnRemove) {
 		this.disposeOnRemove = disposeOnRemove;
+	}
+
+	/**
+	 * Creates a WindowListener that will call this.close() within this FBOCanvas' GL context on
+	 * {@link WindowListener#windowClosing(WindowEvent)}.
+	 * This will take care of cleaning up GL resources associated with this FBOCanvas' when its
+	 * parent window (that is providing the GL context) is about to close.
+	 * The listener needs to be added to the Window that contains this {@link FBOCanvas}.
+	 * 
+	 * @return the cleanup listener
+	 */
+	public WindowListener createCleanupOnWindowClosingListener() {
+		return new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				FBOCanvas.this.runInContext(()->FBOCanvas.this.close());
+			}
+		};
 	}
 	
 }

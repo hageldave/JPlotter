@@ -2,7 +2,6 @@ package hageldave.jplotter;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -38,6 +37,7 @@ import org.w3c.dom.Document;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.font.FontProvider;
@@ -53,8 +53,20 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
 public class IrisViz {
+	
+	static JPlotterCanvas mkCanvas(boolean fallback, JPlotterCanvas contextShareParent) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas((FBOCanvas)contextShareParent);
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+	}
 
+	static boolean fallbackModeEnabled;
+	
 	public static void main(String[] args) throws IOException {
+		fallbackModeEnabled = useFallback(args);
+		
 		// setup content
 		ArrayList<double[]> dataset = new ArrayList<>();
 		//URL irissrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data");
@@ -95,23 +107,23 @@ public class IrisViz {
 		header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
 		frame.getContentPane().add(header, BorderLayout.NORTH);
 		
-		LinkedList<Component> canvasCollection = new LinkedList<>();
+		LinkedList<JPlotterCanvas> canvasCollection = new LinkedList<>();
 		String[] dimNames = new String[]{"sepal length","sepal width","petal length","petal width"};
 		String[] perClassNames = new String[]{"Setosa", "Versicolor", "Virginica"};
 		ColorMap perClassColors = DefaultColorMap.Q_8_SET2;
 		Glyph[] perClassGlyphs = new Glyph[]{DefaultGlyph.CIRCLE_F, DefaultGlyph.SQUARE_F, DefaultGlyph.TRIANGLE_F};
 		
 		// add legend on top
-		BlankCanvas legendCanvas = new BlankCanvas();
+		JPlotterCanvas legendCanvas = mkCanvas(fallbackModeEnabled, null);
 		canvasCollection.add(legendCanvas);
-		legendCanvas.setPreferredSize(new Dimension(400, 16));
+		legendCanvas.asComponent().setPreferredSize(new Dimension(400, 16));
 		Legend legend = new Legend();
 		for(int c=0; c<3; c++){
 			legend.addGlyphLabel(perClassGlyphs[c], perClassColors.getColor(c), perClassNames[c]);
 		}
 		legendCanvas.setRenderer(legend);
 		header.add(Box.createHorizontalStrut(30));
-		header.add(legendCanvas);
+		header.add(legendCanvas.asComponent());
 		JLabel pointInfo = new JLabel("");
 		pointInfo.setFont(FontProvider.getUbuntuMono(10,Font.PLAIN));
 		pointInfo.setPreferredSize(new Dimension(300, pointInfo.getPreferredSize().height));
@@ -124,13 +136,12 @@ public class IrisViz {
 		// make scatter plot matrix
 		for(int j = 0; j < 4; j++){
 			for(int i = 0; i < 4; i++){
-//				BlankCanvas canvas = new BlankCanvas(legendCanvas);
-				BlankCanvasFallback canvas = new BlankCanvasFallback();
+				JPlotterCanvas canvas = mkCanvas(fallbackModeEnabled, legendCanvas);
 				CoordSysRenderer coordsys = new CoordSysRenderer();
 				canvas.setRenderer(coordsys);
 				canvasCollection.add(canvas);
-				canvas.setPreferredSize(new Dimension(250, 250));
-				gridPane.add(canvas);
+				canvas.asComponent().setPreferredSize(new Dimension(250, 250));
+				gridPane.add(canvas.asComponent());
 				coordsys.setxAxisLabel(j==0 ? dimNames[i] : "");
 				coordsys.setyAxisLabel(i==3 ? dimNames[j] : "");
 				CompleteRenderer content = new CompleteRenderer();
@@ -195,13 +206,13 @@ public class IrisViz {
 					}
 					
 					// hovering over point
-					canvas.addMouseListener(new MouseAdapter() {
+					canvas.asComponent().addMouseListener(new MouseAdapter() {
 						@Override
 						public void mouseClicked(MouseEvent e) {
 							if(SwingUtilities.isRightMouseButton(e)){
 								return;
 							}
-							Point2D location = coordsys.transformAWT2CoordSys(e.getPoint(),canvas.getHeight());
+							Point2D location = coordsys.transformAWT2CoordSys(e.getPoint(),canvas.asComponent().getHeight());
 							if(!coordsys.getCoordinateView().contains(location)){
 								pointInfo.setText("");
 								recolorAll();
@@ -344,7 +355,7 @@ public class IrisViz {
 			}
 		}
 		
-		for(Component cnvs:canvasCollection){
+		for(JPlotterCanvas cnvs:canvasCollection){
 			// add a pop up menu (on right click) for exporting to SVG
 			PopupMenu menu = new PopupMenu();
 			MenuItem svgExport = new MenuItem("SVG export");
@@ -354,12 +365,12 @@ public class IrisViz {
 				SVGUtils.documentToXMLFile(svg, new File("iris_export.svg"));
 				System.out.println("exported iris_export.svg");
 			});
-			cnvs.add(menu);
-			cnvs.addMouseListener(new MouseAdapter() {
+			cnvs.asComponent().add(menu);
+			cnvs.asComponent().addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					if(SwingUtilities.isRightMouseButton(e))
-						menu.show(cnvs, e.getX(), e.getY());
+						menu.show(cnvs.asComponent(), e.getX(), e.getY());
 				}
 			});
 		}

@@ -7,10 +7,9 @@ import java.awt.Font;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
 
@@ -21,7 +20,7 @@ import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
-import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
@@ -38,14 +37,21 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 
 public class IsolinesViz {
+	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+	}
 
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("Iso Lines");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 450));
-		BlankCanvasFallback canvas = new BlankCanvasFallback();
-//		BlankCanvas canvas = new BlankCanvas();
+		JPlotterCanvas canvas = mkCanvas(useFallback(args));
 		CoordSysRenderer coordsys = new CoordSysRenderer();
 		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
@@ -53,7 +59,7 @@ public class IsolinesViz {
 		Legend legend = new Legend();
 		coordsys.setLegendRight(legend);
 		coordsys.setLegendRightWidth(50);
-		canvas.setBackground(Color.WHITE);
+		canvas.asComponent().setBackground(Color.WHITE);
 
 		// setup content
 		DoubleBinaryOperator f1 = (x,y)->Math.exp(-(x*x+y*y));
@@ -119,7 +125,7 @@ public class IsolinesViz {
 			};
 			
 			void calcContour(Point mp){
-				Point2D p = coordsys.transformAWT2CoordSys(mp, canvas.getHeight());
+				Point2D p = coordsys.transformAWT2CoordSys(mp, canvas.asComponent().getHeight());
 				double isoValue = f.applyAsDouble(p.getX(), p.getY());
 				userIsoLabel
 					.setTextString(String.format("%.3f", isoValue))
@@ -131,10 +137,10 @@ public class IsolinesViz {
 				canvas.repaint();
 			}
 		};
-		canvas.addMouseListener(contourPlacer);
-		canvas.addMouseMotionListener(contourPlacer);
+		canvas.asComponent().addMouseListener(contourPlacer);
+		canvas.asComponent().addMouseMotionListener(contourPlacer);
 		
-		canvas.addMouseListener(new MouseAdapter() {
+		canvas.asComponent().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(SwingUtilities.isRightMouseButton(e)){
@@ -145,15 +151,8 @@ public class IsolinesViz {
 			}
 		});
 
-		frame.getContentPane().add(canvas, BorderLayout.CENTER);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				Object obj = canvas;
-				if(obj instanceof FBOCanvas)
-					((FBOCanvas)obj).runInContext(()->((FBOCanvas)obj).close());
-			}
-		});
+		frame.getContentPane().add(canvas.asComponent(), BorderLayout.CENTER);
+		canvas.addCleanupOnWindowClosingListener(frame);
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

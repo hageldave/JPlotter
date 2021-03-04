@@ -38,7 +38,9 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -54,7 +56,18 @@ import hageldave.jplotter.svg.SVGUtils;
 
 public class StatLogSPLOMViz {
 
+	static JPlotterCanvas mkCanvas(boolean fallback, JPlotterCanvas contextShareParent) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas((FBOCanvas)contextShareParent);
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent()||true;
+	}
+
+	static boolean fallbackModeEnabled;
+	
 	public static void main(String[] args) throws IOException {
+		fallbackModeEnabled = useFallback(args);
 		// setup content
 		ArrayList<double[]> dataset = new ArrayList<>();
 		URL statlogsrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/shuttle/shuttle.tst");
@@ -95,7 +108,7 @@ public class StatLogSPLOMViz {
 		header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
 		frame.getContentPane().add(header, BorderLayout.NORTH);
 		
-		LinkedList<FBOCanvas> canvasCollection = new LinkedList<>();
+		LinkedList<JPlotterCanvas> canvasCollection = new LinkedList<>();
 		String[] dimNames = IntStream.of(1,2,3,4,5,6,7,8,9).mapToObj(i->"dim " + i).toArray(String[]::new);
 		String[] perClassNames = new String[]{
 				 "Rad Flow",
@@ -126,16 +139,16 @@ public class StatLogSPLOMViz {
 		};
 		
 		// add legend on top
-		BlankCanvas legendCanvas = new BlankCanvas();
+		JPlotterCanvas legendCanvas = mkCanvas(fallbackModeEnabled, null);
 		canvasCollection.add(legendCanvas);
-		legendCanvas.setPreferredSize(new Dimension(400, 16));
+		legendCanvas.asComponent().setPreferredSize(new Dimension(400, 16));
 		Legend legend = new Legend();
 		for(int c=0; c<7; c++){
 			legend.addGlyphLabel(perClassGlyphs[c], perClassColors[c], perClassNames[c]);
 		}
 		legendCanvas.setRenderer(legend);
 		header.add(Box.createHorizontalStrut(30));
-		header.add(legendCanvas);
+		header.add(legendCanvas.asComponent());
 		JLabel pointInfo = new JLabel("");
 		pointInfo.setFont(FontProvider.getUbuntuMono(10, Font.PLAIN));
 		pointInfo.setPreferredSize(new Dimension(300, pointInfo.getPreferredSize().height));
@@ -153,11 +166,11 @@ public class StatLogSPLOMViz {
 						paddingLeft=paddingRight=paddingTop=paddingBot=2;
 					}
 				};
-				BlankCanvas canvas = new BlankCanvas();
+				JPlotterCanvas canvas = mkCanvas(fallbackModeEnabled, legendCanvas);
 				canvas.setRenderer(coordsys);
 				canvasCollection.add(canvas);
-				canvas.setPreferredSize(new Dimension(250, 250));
-				gridPane.add(canvas);
+				canvas.asComponent().setPreferredSize(new Dimension(250, 250));
+				gridPane.add(canvas.asComponent());
 				coordsys.setxAxisLabel(j==0 ? dimNames[i] : "");
 				coordsys.setyAxisLabel(i==8 ? dimNames[j] : "");
 				CompleteRenderer content = new CompleteRenderer();
@@ -247,13 +260,13 @@ public class StatLogSPLOMViz {
 					}
 					
 					// hovering over point
-					canvas.addMouseListener(new MouseAdapter() {
+					canvas.asComponent().addMouseListener(new MouseAdapter() {
 						@Override
 						public void mouseClicked(MouseEvent e) {
 							if(SwingUtilities.isRightMouseButton(e)){
 								return;
 							}
-							Point2D location = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
+							Point2D location = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
 							if(!coordsys.getCoordinateView().contains(location)){
 								pointInfo.setText("");
 								recolorAll();
@@ -360,7 +373,7 @@ public class StatLogSPLOMViz {
 							Set<Integer> clazzes = pickIDs.stream()
 									.map(id->(id&0x00ffffff)-1)
 									.map(dataset::get)
-									.map(inst->(int)inst[4])
+									.map(inst->(int)inst[9])
 									.collect(Collectors.toSet());
 							for(Points[] points:allPoints){
 								for(int c=0; c<7; c++){
@@ -396,7 +409,7 @@ public class StatLogSPLOMViz {
 			}
 		}
 		
-		for(FBOCanvas cnvs:canvasCollection){
+		for(JPlotterCanvas cnvs:canvasCollection){
 			// add a pop up menu (on right click) for exporting to SVG
 			PopupMenu menu = new PopupMenu();
 			MenuItem svgExport = new MenuItem("SVG export");
@@ -406,12 +419,12 @@ public class StatLogSPLOMViz {
 				SVGUtils.documentToXMLFile(svg, new File("iris_export.svg"));
 				System.out.println("exported iris_export.svg");
 			});
-			cnvs.add(menu);
-			cnvs.addMouseListener(new MouseAdapter() {
+			cnvs.asComponent().add(menu);
+			cnvs.asComponent().addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					if(SwingUtilities.isRightMouseButton(e))
-						menu.show(cnvs, e.getX(), e.getY());
+						menu.show(cnvs.asComponent(), e.getX(), e.getY());
 				}
 			});
 		}
@@ -419,7 +432,11 @@ public class StatLogSPLOMViz {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				canvasCollection.forEach(c->c.runInContext(()->c.close()));
+				canvasCollection.forEach(c->{
+					if(c instanceof FBOCanvas) {
+						((FBOCanvas)c).runInContext(()->((FBOCanvas)c).close());
+					}
+				});
 			}
 		});
 		SwingUtilities.invokeLater(()->{

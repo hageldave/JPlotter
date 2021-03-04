@@ -4,8 +4,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +14,8 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
@@ -23,8 +23,15 @@ import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
 
 public class ParallelCoordinates {
+	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+	}
 
-	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// have some multidimensional data
 		int dim=5, numSamples=100;
@@ -85,11 +92,11 @@ public class ParallelCoordinates {
 			return Pair.of(ticks,labels);
 		});
 		
-		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(700, 400));
-		canvas.setBackground(Color.WHITE);
+		JPlotterCanvas canvas = mkCanvas(useFallback(args)).setRenderer(coordsys);
+		canvas.asComponent().setPreferredSize(new Dimension(700, 400));
+		canvas.asComponent().setBackground(Color.WHITE);
 		// interaction
-		canvas.addMouseListener(new MouseAdapter() {
+		canvas.asComponent().addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if(!SwingUtilities.isLeftMouseButton(e))
 					return;
@@ -121,16 +128,10 @@ public class ParallelCoordinates {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		frame.getContentPane().add(canvas);
+		frame.getContentPane().add(canvas.asComponent());
 		frame.setTitle("parallel coordinates");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// code to clean up opengl resources
-				canvas.runInContext(()->canvas.close());
-			}
-		});
+		canvas.addCleanupOnWindowClosingListener(frame);
 		// make visible on AWT event dispatch thread
 		SwingUtilities.invokeLater(()->{
 			frame.pack();

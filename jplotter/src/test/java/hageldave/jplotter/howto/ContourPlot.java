@@ -2,8 +2,7 @@ package hageldave.jplotter.howto;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
@@ -14,6 +13,8 @@ import javax.swing.SwingUtilities;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.Contours;
@@ -25,8 +26,15 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 
 public class ContourPlot {
+	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+	}
 
-	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// formulate bivariate function that defines the 2D surface
 		DoubleBinaryOperator bivariateFn = (x,y)->(x*y + x*x - y*y -.01);
@@ -80,19 +88,13 @@ public class ContourPlot {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(400, 400));
-		canvas.setBackground(Color.WHITE);
-		frame.getContentPane().add(canvas);
+		JPlotterCanvas canvas = mkCanvas(useFallback(args)).setRenderer(coordsys);
+		canvas.asComponent().setPreferredSize(new Dimension(400, 400));
+		canvas.asComponent().setBackground(Color.WHITE);
+		frame.getContentPane().add(canvas.asComponent());
 		frame.setTitle("contourplot");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// code to clean up opengl resources
-				canvas.runInContext(()->canvas.close());
-			}
-		});
+		canvas.addCleanupOnWindowClosingListener(frame);
 		// make visible on AWT event dispatch thread
 		SwingUtilities.invokeLater(()->{
 			frame.pack();

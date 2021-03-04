@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import javax.swing.SwingUtilities;
 
-import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Utils;
 
@@ -20,10 +20,10 @@ import hageldave.jplotter.util.Utils;
  * The CoordSysPanning class implements a {@link MouseListener}
  * and {@link MouseMotionListener} that realize panning functionality
  * for the coordinate view of the {@link CoordSysRenderer}.
- * When registering this with an FBOCanvas and CoordSysRenderer dragging with the left mouse
+ * When registering this with an {@link JPlotterCanvas} and CoordSysRenderer dragging with the left mouse
  * button over the Canvas while holding down CTRL will set the coordinate view accordingly.
  * <p>
- * Intended use: {@code CoordSysPanning pan = new CoordSysPanning(canvas).register(); }
+ * Intended use: {@code CoordSysPanning pan = new CoordSysPanning(canvas, coordsys).register(); }
  * <p>
  * Per default the extended modifier mask for a dragging mouse event to trigger
  * panning is {@link InputEvent#CTRL_DOWN_MASK}. 
@@ -46,8 +46,8 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	 * @param canvas displaying the coordsys
 	 * @param coordsys the coordinate system to apply the panning in
 	 */
-	public CoordSysPanning(Component canvas, CoordSysRenderer coordsys) {
-		this.canvas = canvas;
+	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
 	}
 

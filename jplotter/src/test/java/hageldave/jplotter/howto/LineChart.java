@@ -2,8 +2,6 @@ package hageldave.jplotter.howto;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +14,7 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
-import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Triangles;
@@ -33,6 +31,14 @@ public class LineChart {
 			d[i]=Math.random()*2-1;
 		}
 		return d;
+	}
+	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
 	}
 
 	@SuppressWarnings("resource")
@@ -68,22 +74,13 @@ public class LineChart {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-//		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
-		BlankCanvasFallback canvas = new BlankCanvasFallback().setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(700, 400));
-		canvas.setBackground(Color.WHITE);
-		frame.getContentPane().add(canvas);
+		JPlotterCanvas canvas = mkCanvas(useFallback(args)).setRenderer(coordsys);
+		canvas.asComponent().setPreferredSize(new Dimension(700, 400));
+		canvas.asComponent().setBackground(Color.WHITE);
+		frame.getContentPane().add(canvas.asComponent());
 		frame.setTitle("linechart");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// code to clean up opengl resources
-				Object obj = canvas;
-				if(obj instanceof FBOCanvas)
-					((FBOCanvas)obj).runInContext(()->((FBOCanvas)obj).close());
-			}
-		});
+		canvas.addCleanupOnWindowClosingListener(frame);
 		// make visible on AWT event dispatch thread
 		SwingUtilities.invokeLater(()->{
 			frame.pack();

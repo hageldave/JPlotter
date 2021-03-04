@@ -2,9 +2,8 @@ package hageldave.jplotter.howto;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
@@ -14,6 +13,8 @@ import javax.swing.SwingUtilities;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CoordSysRenderer;
@@ -21,8 +22,15 @@ import hageldave.jplotter.renderers.TrianglesRenderer;
 import hageldave.jplotter.util.Pair;
 
 public class BarChart {
+	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+	}
 
-	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// have some data
 		String[] cases = {"A","B","C","D1","D2*"};
@@ -69,19 +77,14 @@ public class BarChart {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
-		canvas.setPreferredSize(new Dimension(500, 300));
-		canvas.setBackground(Color.WHITE);
-		frame.getContentPane().add(canvas);
+		JPlotterCanvas canvas = mkCanvas(useFallback(args));
+		canvas.setRenderer(coordsys);
+		canvas.asComponent().setPreferredSize(new Dimension(500, 300));
+		canvas.asComponent().setBackground(Color.WHITE);
+		frame.getContentPane().add(canvas.asComponent());
 		frame.setTitle("barchart");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// code to clean up opengl resources
-				canvas.runInContext(()->canvas.close());
-			}
-		});
+		canvas.addCleanupOnWindowClosingListener(frame);
 		// make visible on AWT event dispatch thread
 		SwingUtilities.invokeLater(()->{
 			frame.pack();

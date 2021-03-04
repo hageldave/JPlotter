@@ -6,8 +6,6 @@ import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.function.DoubleUnaryOperator;
 
@@ -19,6 +17,8 @@ import org.w3c.dom.Document;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -106,7 +106,9 @@ public class Example {
 				.addGlyphLabel(DefaultGlyph.CROSS, c3Color, "> f(x)+0.5"));
 		
 		// display the coordinate system on a blank canvas
-		BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+		boolean useOpenGL = true;
+		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
+		canvas.setRenderer(coordsys);
 		// lets add some controls for exploring the data
 		new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
 		new CoordSysViewSelector(canvas,coordsys) {
@@ -120,17 +122,11 @@ public class Example {
 		// lets put a JFrame around it all and launch
 		JFrame frame = new JFrame("Example Viz");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().add(canvas);
-		canvas.setPreferredSize(new Dimension(480, 400));
-		canvas.setBackground(Color.white);
+		frame.getContentPane().add(canvas.asComponent());
+		canvas.asComponent().setPreferredSize(new Dimension(480, 400));
+		canvas.asComponent().setBackground(Color.white);
 		
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// need to close the canvas so that GL resources are freed
-				canvas.runInContext(()->canvas.close());
-			}
-		});
+		canvas.addCleanupOnWindowClosingListener(frame);
 		
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
@@ -139,12 +135,12 @@ public class Example {
 		
 		// add a pop up menu (on right click) for exporting to SVG or PNG
 		PopupMenu menu = new PopupMenu();
-		canvas.add(menu);
-		canvas.addMouseListener(new MouseAdapter() {
+		canvas.asComponent().add(menu);
+		canvas.asComponent().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(SwingUtilities.isRightMouseButton(e))
-					menu.show(canvas, e.getX(), e.getY());
+					menu.show(canvas.asComponent(), e.getX(), e.getY());
 			}
 		});
 		MenuItem svgExport = new MenuItem("SVG export");

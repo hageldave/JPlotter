@@ -1,6 +1,8 @@
 package hageldave.jplotter.canvas;
 
 import java.awt.Component;
+import java.awt.Window;
+import java.awt.event.WindowListener;
 import java.util.Arrays;
 
 import org.w3c.dom.Document;
@@ -166,6 +168,26 @@ public interface JPlotterCanvas {
 			}
 		}
 		return mostValue;
+	}
+	
+	/**
+	 * Adds a {@link WindowListener} to the specified window that takes care of
+	 * cleanup (GL resources) when the window is about to close. 
+	 * <p>
+	 * This method only has an effect when this {@link JPlotterCanvas} is an instance of {@link FBOCanvas}
+	 * which uses GL resources (see {@link FBOCanvas#createCleanupOnWindowClosingListener()}). 
+	 * Otherwise no WindowListener is created or added.
+	 * 
+	 * @param window the window to add the listener to (should be the window containing this canvas)
+	 * @return the added listener when this is an FBOCanvas, else null
+	 */
+	public default WindowListener addCleanupOnWindowClosingListener(Window window) {
+		if(this instanceof FBOCanvas) {
+			WindowListener l = ((FBOCanvas)this).createCleanupOnWindowClosingListener();
+			window.addWindowListener(l);
+			return l;
+		}
+		return null;
 	}
 	
 }

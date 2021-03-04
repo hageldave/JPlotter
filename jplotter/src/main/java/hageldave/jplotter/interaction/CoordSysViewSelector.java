@@ -15,6 +15,7 @@ import java.util.LinkedList;
 
 import javax.swing.SwingUtilities;
 
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
@@ -73,8 +74,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 	
 	
-	public CoordSysViewSelector(Component canvas, CoordSysRenderer coordsys) {
-		this.canvas = canvas;
+	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
 		Renderer presentRenderer;
 		if((presentRenderer = coordsys.getOverlay()) == null){

@@ -5,18 +5,18 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.Arrays;
 
-import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Utils;
 
 /**
  * The CoordSysScrollZoom class implements a {@link MouseWheelListener}
  * that realize zooming functionality for the coordinate view of the {@link CoordSysRenderer}.
- * When registering this with an {@link FBOCanvas} and corresponding {@link CoordSysRenderer} turning the scroll wheel zooms into or out of
+ * When registering this with an {@link JPlotterCanvas} and corresponding {@link CoordSysRenderer} turning the scroll wheel zooms into or out of
  * the current coordinate system view.
  * The zoom factor can be set and is by default 2.0.
  * <p>
- * Intended use: {@code CoordSysScrollZoom zoom = new CoordSysScrollZoom(canvas).register(); }
+ * Intended use: {@code CoordSysScrollZoom zoom = new CoordSysScrollZoom(canvas, coordsys).register(); }
  * 
  * @author hageldave
  */
@@ -27,10 +27,11 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 	protected double zoomFactor = 2;
 	protected int axes = X_AXIS | Y_AXIS;
 	
-	public CoordSysScrollZoom(Component canvas, CoordSysRenderer coordsys) {
-		this.canvas = canvas;
+	public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
 	}
+	
 	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {

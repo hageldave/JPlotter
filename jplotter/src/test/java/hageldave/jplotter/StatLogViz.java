@@ -2,11 +2,10 @@ package hageldave.jplotter;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Scanner;
 
 import javax.swing.Box;
@@ -18,6 +17,8 @@ import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.BlankCanvas;
+import hageldave.jplotter.canvas.BlankCanvasFallback;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
@@ -29,13 +30,21 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 
 public class StatLogViz {
+	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+	}
 
 	public static void main(String[] args) throws IOException {
 		JFrame frame = new JFrame("Statlog (Shuttle) data set");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 500));
-		BlankCanvas canvas = new BlankCanvas();
+		JPlotterCanvas canvas = mkCanvas(useFallback(args));
 		CoordSysRenderer coordsys = new CoordSysRenderer();
 		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
@@ -98,13 +107,8 @@ public class StatLogViz {
 		coordsys.setLegendBottom(legend);
 		coordsys.setLegendBottomHeight(35);
 
-		frame.getContentPane().add(canvas, BorderLayout.CENTER);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				canvas.runInContext(()->canvas.close());
-			}
-		});
+		frame.getContentPane().add(canvas.asComponent(), BorderLayout.CENTER);
+		canvas.addCleanupOnWindowClosingListener(frame);
 		JPanel footer = new JPanel();
 		footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
 		frame.getContentPane().add(footer, BorderLayout.SOUTH);

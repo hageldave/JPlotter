@@ -4,9 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
+import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -14,7 +13,7 @@ import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
-import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
@@ -28,6 +27,14 @@ import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
 
 public class Viz {
+	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+	}
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
@@ -38,8 +45,7 @@ public class Viz {
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(300, 300));
 		
-		BlankCanvasFallback canvas = new BlankCanvasFallback();
-//		BlankCanvas canvas = new BlankCanvas();
+		JPlotterCanvas canvas = mkCanvas(useFallback(args));
 		LinesRenderer render = new LinesRenderer();
 		Lines lines = new Lines().setGlobalThicknessMultiplier(2).setStrokePattern(0xf0f0);
 		lines.addLineStrip(-.5,-.1,.5,0,1,.1).forEach(seg->seg.setColor(0xff00ff00));
@@ -69,18 +75,9 @@ public class Viz {
 		
 		canvas.setRenderer(csr);
 		
-		frame.getContentPane().add(canvas);
+		frame.getContentPane().add(canvas.asComponent());
 		
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				Object subject = canvas;
-				if(subject instanceof FBOCanvas) {
-					FBOCanvas cnvs = (FBOCanvas)subject;
-					cnvs.runInContext(()->cnvs.close());
-				}
-			}
-		});
+		canvas.addCleanupOnWindowClosingListener(frame);
 		
 		SwingUtilities.invokeLater(()->{
 			frame.pack();

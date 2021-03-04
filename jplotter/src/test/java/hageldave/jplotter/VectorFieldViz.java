@@ -8,10 +8,9 @@ import java.awt.Point;
 import java.awt.PopupMenu;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.function.DoubleBinaryOperator;
 
@@ -25,7 +24,7 @@ import org.w3c.dom.Document;
 
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
-import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
@@ -36,14 +35,21 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Utils;
 
 public class VectorFieldViz {
+	
+	static JPlotterCanvas mkCanvas(boolean fallback) {
+		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
+	}
+	
+	static boolean useFallback(String[] args) {
+		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+	}
 
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("Vector Field");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 500));
-//		BlankCanvas canvas = new BlankCanvas();
-		BlankCanvasFallback canvas = new BlankCanvasFallback();
+		JPlotterCanvas canvas = mkCanvas(useFallback(args));
 		CoordSysRenderer coordsys = new CoordSysRenderer();
 		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
@@ -85,7 +91,7 @@ public class VectorFieldViz {
 			}
 			
 			void calcTrajectory(Point mousePoint){
-				Point2D point = coordsys.transformAWT2CoordSys(mousePoint, canvas.getHeight());
+				Point2D point = coordsys.transformAWT2CoordSys(mousePoint, canvas.asComponent().getHeight());
 				double h = 0.02;
 				LinkedList<Point2D> trajectory = new LinkedList<>();
 				trajectory.add(point);
@@ -117,8 +123,8 @@ public class VectorFieldViz {
 				});
 			}
 		};
-		canvas.addMouseListener(trajectoryInteraction);
-		canvas.addMouseMotionListener(trajectoryInteraction);
+		canvas.asComponent().addMouseListener(trajectoryInteraction);
+		canvas.asComponent().addMouseMotionListener(trajectoryInteraction);
 		
 		JSlider slider = new JSlider(0, 100, 20);
 		slider.addChangeListener((e)->{
@@ -130,19 +136,12 @@ public class VectorFieldViz {
 		bottomPanel.add(new JLabel("Arrow Size:"), BorderLayout.WEST);
 		bottomPanel.add(slider, BorderLayout.CENTER);
 		frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
-		frame.getContentPane().add(canvas, BorderLayout.CENTER);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				Object obj = canvas;
-				if(obj instanceof FBOCanvas)
-					((FBOCanvas)obj).runInContext(()->((FBOCanvas)obj).close());
-			}
-		});
+		frame.getContentPane().add(canvas.asComponent(), BorderLayout.CENTER);
+		canvas.addCleanupOnWindowClosingListener(frame);
 		
 		// add a pop up menu (on right click) for exporting to SVG
 		PopupMenu menu = new PopupMenu();
-		canvas.add(menu);
+		canvas.asComponent().add(menu);
 		MenuItem svgExport = new MenuItem("SVG export");
 		menu.add(svgExport);
 		svgExport.addActionListener(e->{
@@ -150,11 +149,11 @@ public class VectorFieldViz {
 			SVGUtils.documentToXMLFile(svg, new File("vectorfield_export.svg"));
 			System.out.println("exported vectorfield_export.svg");
 		});
-		canvas.addMouseListener(new MouseAdapter() {
+		canvas.asComponent().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(SwingUtilities.isRightMouseButton(e))
-					menu.show(canvas, e.getX(), e.getY());
+					menu.show(canvas.asComponent(), e.getX(), e.getY());
 			}
 		});
 		
