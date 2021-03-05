@@ -43,7 +43,7 @@ public class IsolinesViz {
 	}
 	
 	static boolean useFallback(String[] args) {
-		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
+		return Arrays.stream(args).filter("jplotter_fallback=true"::equals).findAny().isPresent();
 	}
 
 	public static void main(String[] args) {

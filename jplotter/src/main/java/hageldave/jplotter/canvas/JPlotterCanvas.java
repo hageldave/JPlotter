@@ -12,10 +12,41 @@ import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
 
+/**
+ * This interface defines the methods required by an implementation of a 
+ * canvas {@link Component} for use with JPlotter {@link Renderer}s such as 
+ * {@link BlankCanvas} or {@link BlankCanvasFallback}.
+ * 
+ * The most important required operations on such a component are:
+ * <ul>
+ * <li>setting a {@link Renderer} that takes care of generating the displayed content</li>
+ * <li>exporting what the component displays to an image</li>
+ * <li>querying a pixel color at a specific location of the component (especially important for picking)</li>
+ * <li>scheduling a repaint operation of the component</li>
+ * <li>getting this as an awt {@link Component} (implicit cast) since implementations have to be an instance of this class</li>
+ * </ul>
+ * 
+ * @author hageldave
+ */
 public interface JPlotterCanvas {
 
+	/**
+	 * On AWT event dispatch thread:<br>
+	 * Uses the set {@link Renderer} render to render display contents, then calls super.repaint() to display rendered content.
+	 * <p>
+	 * Schedules a repaint call call on the AWT event dispatch thread if not on it.
+	 * <p>
+	 * <b>This method is only deprecated for calling directly, call {@link #scheduleRepaint()} instead.</b><br>
+	 * Of course super.repaint() is implemented by the implementing {@link Component} already.
+	 */
+	@Deprecated
 	public void repaint();
 	
+	/**
+	 * Schedules a repaint call on the AWT event dispatch thread.
+	 * If a repaint is already pending, this method will not schedule an
+	 * additional call until the render method within repaint is about to be executed.
+	 */
 	public void scheduleRepaint();
 	
 	/**
