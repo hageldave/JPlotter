@@ -25,6 +25,12 @@ import hageldave.jplotter.svg.SVGUtils;
  * <li>scheduling a repaint operation of the component</li>
  * <li>getting this as an awt {@link Component} (implicit cast) since implementations have to be an instance of this class</li>
  * </ul>
+ * <p>
+ * This interface is intended to enable development without explicitly choosing between 
+ * {@link BlankCanvas} or {@link BlankCanvasFallback}.
+ * This way a fallback mode for an application can be easily realized, e.g. for macOS which is not supported by
+ * lwjgl3-awt and thus cannot use the OpenGL backed BlankCanvas.
+ * 
  * 
  * @author hageldave
  */
@@ -169,10 +175,22 @@ public interface JPlotterCanvas {
 	 */
 	public Renderer getRenderer();
 	
+	/**
+	 * Implicit cast of this canvas to a class extending {@link Component}.
+	 * This implies that the implementing class is a {@link Component}.
+	 * @return this, but cast to {@link Component}
+	 */
 	public default Component asComponent() {
 		return (Component)this;
 	}
 	
+	/**
+	 * Determines the most prominent value in a square shaped area.
+	 * This method should be used by {@link #getPixel(int, int, boolean, int)} implementations.
+	 * @param colors of the square shaped area
+	 * @param areaSize widht or height of the area
+	 * @return mode of colors, with +1 count for the center color
+	 */
 	public static int mostProminentColor(int[] colors, int areaSize) {
 		if(areaSize == 1){
 			return colors[0];

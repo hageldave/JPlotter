@@ -17,6 +17,14 @@ import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
 
+/**
+ * Fallback implementation for {@link BlankCanvas} for systems that do not support OpenGL 3
+ * through {@link org.lwjgl.opengl.awt.AWTGLCanvas} (e.g. macOS).
+ * <p>
+ * This {@link JComponent} uses a single {@link Renderer} to draw its contents.
+ * 
+ * @author hageldave
+ */
 public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	private static final long serialVersionUID = 1L;
 	private static final ImageObserver obs_allbits = Utils.imageObserver(ImageObserver.ALLBITS);
@@ -28,6 +36,9 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	protected Renderer renderer;
 	protected boolean isRenderSvgAsImage = false;
 	
+	/**
+	 * Creates a new {@link BlankCanvasFallback} instance.
+	 */
 	public BlankCanvasFallback() {
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
