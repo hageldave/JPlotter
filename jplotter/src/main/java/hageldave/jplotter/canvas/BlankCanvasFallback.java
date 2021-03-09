@@ -87,7 +87,7 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 			return;
 		// clear / fill with clear color
 		mainRenderBuffer.fill(getBackground().getRGB());
-		pickingRenderBuffer.fill(0xff000000);
+		pickingRenderBuffer.fill(0x00000000);
 		// setup render graphics
 		Graphics2D g=null,p=null;
 		try {

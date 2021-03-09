@@ -37,7 +37,7 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	public void glInit();
 	
 	/**
-	 * renders this {@link Renderer}'s 'scene'.
+	 * Renders this {@link Renderer}'s 'scene'.
 	 * @param vpx x coordinate of the viewport's origin
 	 * @param vpy y coordinate of the viewport's origin
 	 * @param w width of the current viewport in pixels
@@ -46,6 +46,15 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	@GLContextRequired
 	public void render(int vpx, int vpy, int w, int h);
 	
+	/**
+	 * Renders this {@link Renderer}'s 'scene'.
+	 * This is the fallback path in case OpenGL based rendering through {@link #render(int, int, int, int)}
+	 * is not available. 
+	 * @param g main graphics object for drawing onto the framebuffer
+	 * @param p graphics object for drawing onto the picking framebuffer (invisible but used for picking)
+	 * @param w width of the current viewport in pixels
+	 * @param h height of the current viewport in pixels
+	 */
 	public default void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {};
 
 	/**
