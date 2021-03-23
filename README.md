@@ -1,10 +1,11 @@
 # JPlotter
-OpenGL based 2D Plotting Library for Java using AWT and [LWJGL](https://github.com/LWJGL/lwjgl3) through [lwjgl3-awt](https://github.com/LWJGLX/lwjgl3-awt).
+OpenGL based 2D Plotting Library for Java using AWT and [LWJGL](https://github.com/LWJGL/lwjgl3) through [lwjgl3-awt](https://github.com/LWJGLX/lwjgl3-awt). 
+An awt Graphics2D fallback solution was introduced to support systems lacking OpenGL-3.3 as well as MacOS. 
 
 [![Build Status](https://travis-ci.org/hageldave/JPlotter.svg?branch=master)](https://travis-ci.org/hageldave/JPlotter)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.hageldave.jplotter/jplotter.svg)](https://search.maven.org/search?q=g:com.github.hageldave.jplotter)
 
-JPlotter's concept is pretty straight forward, you get a `BlankCanvas` that is backed by OpenGL.
+JPlotter's concept is pretty straight forward, you get a `JPlotterCanvas` that is backed by OpenGL (or not in case of fallback).
 What is displayed by this canvas depends on the set `Renderer`.
 Most likely you want to set a `CoordSysRenderer` that displays a coordinate system.
 Within that coordinate system you may want to display points or lines, which you can do by again using a `Renderer` (or multiple) as content.
@@ -20,7 +21,7 @@ JPlotter is available as Maven artifact at the Central Maven Repository.
 <dependency>
   <groupId>com.github.hageldave.jplotter</groupId>
   <artifactId>jplotter</artifactId>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
 </dependency>
 ```
 
@@ -108,7 +109,10 @@ coordsys.setLegendRight(legend
 We will use a blank canvas to display our coordinate system.
 For exploring the plot we can add some controls for zooming.
 ```java
-BlankCanvas canvas = new BlankCanvas().setRenderer(coordsys);
+boolean useOpenGL = true;
+JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
+canvas.setRenderer(coordsys);
+// lets add some controls for exploring the data
 new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
 new CoordSysViewSelector(canvas,coordsys) {
    {extModifierMask=0;/* no need for shift to be pressed */}
@@ -121,16 +125,12 @@ Nice, now we conclude with some typical AWT/Swing code to launch the viz in a JF
 ```java
 JFrame frame = new JFrame("Example Viz");
 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-frame.getContentPane().add(canvas);
-canvas.setPreferredSize(new Dimension(480, 400));
-canvas.setBackground(Color.white);
+frame.getContentPane().add(canvas.asComponent());
+canvas.asComponent().setPreferredSize(new Dimension(480, 400));
+canvas.asComponent().setBackground(Color.white);
 
-frame.addWindowListener(new WindowAdapter() {
-   public void windowClosing(WindowEvent e) {
-      // need to close the canvas so that GL resources are freed
-      canvas.runInContext(()->canvas.close());
-   }
-});
+// register a listener that will cleanup GL resources on window closing
+canvas.addCleanupOnWindowClosingListener(frame);
 
 SwingUtilities.invokeLater(()->{
    frame.pack();
@@ -140,11 +140,11 @@ SwingUtilities.invokeLater(()->{
 We can also add a pop up menu for exporting to SVG or PNG.
 ```java
 PopupMenu menu = new PopupMenu();
-canvas.add(menu);
-canvas.addMouseListener(new MouseAdapter() {
+canvas.asComponent().add(menu);
+canvas.asComponent().addMouseListener(new MouseAdapter() {
    public void mouseClicked(MouseEvent e) {
       if(SwingUtilities.isRightMouseButton(e))
-         menu.show(canvas, e.getX(), e.getY());
+         menu.show(canvas.asComponent(), e.getX(), e.getY());
    }
 });
 MenuItem svgExport = new MenuItem("SVG export");
