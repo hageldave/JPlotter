@@ -315,7 +315,7 @@ public class StatLogSPLOMViz {
 									lines[c].setDirty();
 								}
 							}
-							canvasCollection.forEach(cnvs->cnvs.repaint());
+							canvasCollection.forEach(cnvs->cnvs.scheduleRepaint());
 						}
 						
 						void desaturateExcept(int pick){
@@ -348,7 +348,7 @@ public class StatLogSPLOMViz {
 									lines[c].setDirty().getSegments().forEach(s->s.setColor(color));
 								}
 							}
-							canvasCollection.forEach(cnvs->cnvs.repaint());
+							canvasCollection.forEach(cnvs->cnvs.scheduleRepaint());
 						}
 					});
 					// selecting points (brush & link)
@@ -400,7 +400,7 @@ public class StatLogSPLOMViz {
 									lines[c].setDirty().getSegments().forEach(s->s.setColor(color));
 								}
 							}
-							canvasCollection.forEach(cnvs->cnvs.repaint());
+							canvasCollection.forEach(cnvs->cnvs.scheduleRepaint());
 						}
 					}.register();
 				}

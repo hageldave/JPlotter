@@ -119,7 +119,7 @@ public class VectorFieldViz {
 					trajectorySegments.removeAllSegments();
 					trajectorySegments.addLineStrip(trajectory.toArray(new Point2D[0]))
 						.forEach(seg->seg.setColor(DefaultColorMap.Q_9_SET1.getColor(0)));
-					canvas.repaint();
+					canvas.scheduleRepaint();
 				});
 			}
 		};
@@ -130,7 +130,7 @@ public class VectorFieldViz {
 		slider.addChangeListener((e)->{
 			int value = slider.getValue();
 			quiver.setGlobalScaling(value*5/100.0);
-			canvas.repaint();
+			canvas.scheduleRepaint();
 		});
 		JPanel bottomPanel = new JPanel(new BorderLayout());
 		bottomPanel.add(new JLabel("Arrow Size:"), BorderLayout.WEST);

@@ -134,7 +134,7 @@ public class IsolinesViz {
 					.setBackground(0xaaffffff);
 				List<SegmentDetails> contourSegments = Contours.computeContourLines(X, Y, Z, isoValue, 0xff8844bb);
 				userContour.removeAllSegments().getSegments().addAll(contourSegments);
-				canvas.repaint();
+				canvas.scheduleRepaint();
 			}
 		};
 		canvas.asComponent().addMouseListener(contourPlacer);

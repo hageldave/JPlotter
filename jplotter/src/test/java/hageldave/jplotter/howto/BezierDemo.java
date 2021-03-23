@@ -37,20 +37,6 @@ import hageldave.jplotter.renderers.PointsRenderer;
 public class BezierDemo {
 
 	private static class LinAlg {
-
-		static double[][] XTX(double[][] x){
-			int nrows = x.length; int ncols = x[0].length;
-			double[][] xtx = new double[ncols][ncols];
-			for(int r=0; r<ncols; r++){
-				for(int c=r; c<ncols; c++){
-					double sum = 0;
-					for(int k = 0; k<nrows; k++)
-						sum += x[k][c] * x[k][r]; 
-					xtx[r][c] = xtx[c][r] = sum;
-				}
-			}
-			return xtx;
-		}
 		
 		static double[][] XXT(double[][] x, BiFunction<double[], double[], Double> kernel){
 			int nrows = x.length;
@@ -114,13 +100,6 @@ public class BezierDemo {
 			}
 			return a;
 		}
-		
-		static double[] add(double[] a, double[] b, double m, double c){
-			for(int i=0; i<a.length; i++){
-				a[i] += b[i]*m + c;
-			}
-			return a;
-		}
 
 		static double[] eigenV1(double[][] x){
 			int nrows = x.length;
@@ -156,16 +135,6 @@ public class BezierDemo {
 				sum += a[i]*b[i];
 			}
 			return sum;
-		}
-		
-		static double[][] project2D(double[][] x, double[] v1, double[] v2){
-			int nrows = x.length;
-			double[][] p = new double[nrows][2];
-			for(int r=0; r<nrows; r++){
-				p[r][0] = dot(x[r], v1);
-				p[r][1] = dot(x[r], v2);
-			}
-			return p;
 		}
 		
 		static double[] project_2D_KPCA(double[][] x, double[] v1, double[] v2, BiFunction<double[], double[], Double> kernel, double[] toProject){
@@ -239,6 +208,7 @@ public class BezierDemo {
 	}
 	
 
+	@SuppressWarnings("resource"/* we're not leaking, chained method calls make compiler think so */)
 	public static void main(String[] args) {
 		double[][] data = loadDataset();
 		Point2D[] pointset = Arrays.stream(data).map(p->new Point2D.Double(p[0], p[1])).toArray(Point2D[]::new);

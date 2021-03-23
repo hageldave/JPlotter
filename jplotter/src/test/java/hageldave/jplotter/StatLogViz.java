@@ -119,7 +119,7 @@ public class StatLogViz {
 			for(Points p : pointclasses){
 				p.setGlobalAlphaMultiplier(value);
 			}
-			canvas.repaint();	
+			canvas.scheduleRepaint();	
 		});
 		footer.add(Box.createGlue());
 		footer.add(new JLabel("Opacity:"));
