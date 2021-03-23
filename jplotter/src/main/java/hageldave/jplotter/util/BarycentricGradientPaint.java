@@ -415,5 +415,4 @@ public class BarycentricGradientPaint implements Paint {
 
 	}
 
-
 }

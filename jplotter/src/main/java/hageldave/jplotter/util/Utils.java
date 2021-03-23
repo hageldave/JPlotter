@@ -306,6 +306,14 @@ public class Utils {
 		return bimg;
 	}
 	
+	/**
+	 * Creates a horizontal or vertical triangle strip that shows
+	 * the colors of the specified {@link ColorMap}.
+	 * The produced triangle strip fits inside a unit square [0,1]x[0,1].
+	 * @param cmap colormap
+	 * @param vertical when true, color gradients are vertical, else horizontal
+	 * @return triangle strip depicting the colors of the colormap
+	 */
 	public static Triangles colormap2Tris(ColorMap cmap, boolean vertical){
 		Triangles tris = new Triangles();
 		for(int i=0; i<cmap.numColors()-1;i++){
@@ -328,16 +336,21 @@ public class Utils {
 		return tris;
 	}
 	
-	public static Point2D plus(Point2D a, double m, Point2D b){
-		if(a == null){
-			return new Point2D.Double(m*b.getX(), m*b.getY());
-		}
-		return new Point2D.Double(a.getX()+m*b.getX(), a.getY()+m*b.getY());
-	}
-	
+	/**
+	 * Calculates the outcode of a specified point given a specified rectangle.
+	 * If the returned outcode is not zero, the point is out of the rectangles bounds
+	 * on at least 1 of the boundaries (left, right, top, bottom)
+	 * @param x x-coord of point
+	 * @param y y-coord of point
+	 * @param xmin left bound of rectangle
+	 * @param xmax right bound of rectangle
+	 * @param ymin top bound of rectangle
+	 * @param ymax bottom bound of rectangle
+	 * @return outcode nonzero bits indicate boundary |left|right|top|bottom|
+	 */
 	public static int outcode(double x, double y, double xmin, double xmax, double ymin, double ymax) {
 		int out = 0;
-		// bit pattern is |left|right|top|bottom
+		// bit pattern is |left|right|top|bottom|
 		out |= x<xmin ? 0b1000:0;
 		out |= x>xmax ? 0b0100:0;
 		out |= y<ymin ? 0b0010:0;
@@ -345,34 +358,28 @@ public class Utils {
 		return out;
 	}
 	
+	/**
+	 * Creates an {@link ImageObserver} that checks the for the specified infoflags.
+	 * See {@link ImageObserver#imageUpdate(java.awt.Image, int, int, int, int, int)}.
+	 * @param flags infoflags to check 
+	 * @return a new ImageObserver
+	 */
 	public static ImageObserver imageObserver(int flags) {
 		return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
 	}
 	
-	
+	/**
+	 * Scales the alpha value of a specified integer packed ARGB color by a
+	 * specified scaling factor {@code m}. 
+	 * New color will be {@code (a*m, r, g, b)}.
+	 * @param color of which alpha will be scaled
+	 * @param m scaling factor
+	 * @return integer packed ARGB color with scaled alpha
+	 */
 	public static int scaleColorAlpha(int color, double m) {
 		double af = Pixel.a_normalized(color)*m;
 		int a = Pixel.argb_fromNormalized(af, 0,0,0);
 		return (color&0x00ffffff)|a;
-	}
-	
-
-	public static int mixColor3(int c1, int c2, int c3, float m1, float m2, float m3) {
-		float normalize = 1f/(m1+m2+m3);
-		float a = (Pixel.a(c1)*m1 + Pixel.a(c2)*m2 + Pixel.a(c3)*m3)*normalize;
-		float r = (Pixel.r(c1)*m1 + Pixel.r(c2)*m2 + Pixel.r(c3)*m3)*normalize;
-		float g = (Pixel.g(c1)*m1 + Pixel.g(c2)*m2 + Pixel.g(c3)*m3)*normalize;
-		float b = (Pixel.b(c1)*m1 + Pixel.b(c2)*m2 + Pixel.b(c3)*m3)*normalize;
-		return Pixel.argb((int)a, (int)r, (int)g, (int)b);
-	}
-	
-	public static int mixColor4(int c1, int c2, int c3, int c4, float m1, float m2, float m3, float m4) {
-		float normalize = 1f/(m1+m2+m3+m4);
-		float a = (Pixel.a(c1)*m1 + Pixel.a(c2)*m2 + Pixel.a(c3)*m3 + Pixel.a(c4)*m4)*normalize;
-		float r = (Pixel.r(c1)*m1 + Pixel.r(c2)*m2 + Pixel.r(c3)*m3 + Pixel.r(c4)*m4)*normalize;
-		float g = (Pixel.g(c1)*m1 + Pixel.g(c2)*m2 + Pixel.g(c3)*m3 + Pixel.g(c4)*m4)*normalize;
-		float b = (Pixel.b(c1)*m1 + Pixel.b(c2)*m2 + Pixel.b(c3)*m3 + Pixel.b(c4)*m4)*normalize;
-		return Pixel.argb((int)a, (int)r, (int)g, (int)b);
 	}
 	
 	

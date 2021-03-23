@@ -74,6 +74,13 @@ public interface Glyph {
 	 */
 	public List<Element> createSVGElements(Document doc);
 	
+	/**
+	 * Fallback rendering path when OpenGL is not available.
+	 * Draws this glyph to the specified {@link Graphics2D} object
+	 * with the specified scaling.
+	 * @param g graphics to draw to
+	 * @param scaling factor by which to scale this glyph
+	 */
 	public void drawFallback(Graphics2D g, float scaling);
 	
 	/**

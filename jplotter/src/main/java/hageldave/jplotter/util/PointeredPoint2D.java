@@ -8,7 +8,7 @@ import java.util.Locale;
  * class that uses two double arrays of size 1 to store its x and y coordinate.
  * This allows for referencing the x or y coordinate elsewhere 
  * (kind of as a pointer to the value) e.g. in another PointeredPoint2D
- * so that 2 points can share a coordinate for example points on the same axis.
+ * so that 2 points can share a coordinate, for example points on the same axis.
  * 
  * @author hageldave
  */
