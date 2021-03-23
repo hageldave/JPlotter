@@ -4,7 +4,7 @@
 
 	<groupId>com.github.hageldave.jplotter</groupId>
 	<artifactId>jplotter</artifactId>
-	<version>0.4.1-SNAPSHOT</version>
+	<version>0.5.0</version>
 
 	<name>JPlotter</name>
 	<url>https://github.com/hageldave/JPlotter</url>
@@ -72,7 +72,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>2.4</version>
+						<version>3.2.1</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
@@ -87,7 +87,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>2.10.3</version>
+						<version>3.2.0</version>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>
@@ -102,7 +102,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.5</version>
+						<version>1.6</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -118,7 +118,7 @@
 					<plugin>
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.3</version>
+						<version>1.6.8</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>
