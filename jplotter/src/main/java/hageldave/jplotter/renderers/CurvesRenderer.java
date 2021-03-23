@@ -373,8 +373,10 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			LinkedList<ArrayList<CurveDetails>> allStrips = new LinkedList<>();
 			ArrayList<CurveDetails> allCurves = curves.streamIntersecting(Objects.isNull(view) ? viewportRect : view)
 					.collect(Collectors.toCollection(ArrayList::new));
-			currentStrip.add(allCurves.get(0));
-			allStrips.add(currentStrip);
+			if(!allCurves.isEmpty())
+				currentStrip.add(allCurves.get(0));
+			if(!currentStrip.isEmpty())
+				allStrips.add(currentStrip);
 			for(int i=1; i<allCurves.size(); i++){
 				CurveDetails curr = allCurves.get(i);
 				CurveDetails prev = currentStrip.get(currentStrip.size()-1);
