@@ -199,15 +199,6 @@ public class BezierDemo {
 	}
 	
 	
-	static JPlotterCanvas mkCanvas(boolean fallback) {
-		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
-	}
-	
-	static boolean useFallback(String[] args) {
-		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent()||true;
-	}
-	
-
 	@SuppressWarnings("resource"/* we're not leaking, chained method calls make compiler think so */)
 	public static void main(String[] args) {
 		double[][] data = loadDataset();
@@ -241,7 +232,8 @@ public class BezierDemo {
 		.forEach(l->l.setColor(0xffff0000));
 		
 		// UI
-		JPlotterCanvas timeCurveCanvas = mkCanvas(useFallback(args));
+		boolean useOpenGL = true;
+		JPlotterCanvas timeCurveCanvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		timeCurveCanvas.asComponent().setPreferredSize(new Dimension(400, 400));
 		CoordSysRenderer timecurvesCoordsys = new CoordSysRenderer();
 		timeCurveCanvas.setRenderer(timecurvesCoordsys);

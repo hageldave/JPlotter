@@ -32,14 +32,6 @@ public class LineChart {
 		}
 		return d;
 	}
-	
-	static JPlotterCanvas mkCanvas(boolean fallback) {
-		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
-	}
-	
-	static boolean useFallback(String[] args) {
-		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
-	}
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
@@ -74,7 +66,9 @@ public class LineChart {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		JPlotterCanvas canvas = mkCanvas(useFallback(args)).setRenderer(coordsys);
+		boolean useOpenGL = true;
+		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
+		canvas.setRenderer(coordsys);
 		canvas.asComponent().setPreferredSize(new Dimension(700, 400));
 		canvas.asComponent().setBackground(Color.WHITE);
 		frame.getContentPane().add(canvas.asComponent());

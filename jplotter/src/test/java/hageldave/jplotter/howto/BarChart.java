@@ -3,7 +3,6 @@ package hageldave.jplotter.howto;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
@@ -22,14 +21,6 @@ import hageldave.jplotter.renderers.TrianglesRenderer;
 import hageldave.jplotter.util.Pair;
 
 public class BarChart {
-	
-	static JPlotterCanvas mkCanvas(boolean fallback) {
-		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
-	}
-	
-	static boolean useFallback(String[] args) {
-		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
-	}
 
 	public static void main(String[] args) {
 		// have some data
@@ -77,7 +68,8 @@ public class BarChart {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		JPlotterCanvas canvas = mkCanvas(useFallback(args));
+		boolean useOpenGL = true;
+		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		canvas.setRenderer(coordsys);
 		canvas.asComponent().setPreferredSize(new Dimension(500, 300));
 		canvas.asComponent().setBackground(Color.WHITE);

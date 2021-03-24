@@ -2,7 +2,6 @@ package hageldave.jplotter.howto;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
@@ -26,14 +25,6 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 
 public class ContourPlot {
-	
-	static JPlotterCanvas mkCanvas(boolean fallback) {
-		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
-	}
-	
-	static boolean useFallback(String[] args) {
-		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
-	}
 
 	public static void main(String[] args) {
 		// formulate bivariate function that defines the 2D surface
@@ -88,7 +79,9 @@ public class ContourPlot {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		JPlotterCanvas canvas = mkCanvas(useFallback(args)).setRenderer(coordsys);
+		boolean useOpenGL = true;
+		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
+		canvas.setRenderer(coordsys);
 		canvas.asComponent().setPreferredSize(new Dimension(400, 400));
 		canvas.asComponent().setBackground(Color.WHITE);
 		frame.getContentPane().add(canvas.asComponent());

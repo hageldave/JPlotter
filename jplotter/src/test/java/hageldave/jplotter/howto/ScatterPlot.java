@@ -2,7 +2,6 @@ package hageldave.jplotter.howto;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -29,14 +28,6 @@ public class ScatterPlot {
 			d[i][2]=(d[i][1]+1)/2;
 		}
 		return d;
-	}
-	
-	static JPlotterCanvas mkCanvas(boolean fallback) {
-		return fallback ? new BlankCanvasFallback() : new BlankCanvas();
-	}
-	
-	static boolean useFallback(String[] args) {
-		return Arrays.stream(args).filter(arg->"jplotter_fallback=true".equals(arg)).findAny().isPresent();
 	}
 
 	public static void main(String[] args) {
@@ -68,7 +59,9 @@ public class ScatterPlot {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		JPlotterCanvas canvas = mkCanvas(useFallback(args)).setRenderer(coordsys);
+		boolean useOpenGL = true;
+		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
+		canvas.setRenderer(coordsys);
 		canvas.asComponent().setPreferredSize(new Dimension(400, 400));
 		canvas.asComponent().setBackground(Color.WHITE);
 		frame.getContentPane().add(canvas.asComponent());
