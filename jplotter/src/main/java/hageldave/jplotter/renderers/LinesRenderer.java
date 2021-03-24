@@ -20,6 +20,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
@@ -28,7 +29,6 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The LinesRenderer is an implementation of the {@link GenericRenderer}
@@ -397,8 +397,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			}
 			
 			Paint paint; int c1,c2;
-			c1 = Utils.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
-			c2 = Utils.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
+			c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
+			c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
 			if(c1!= c2){
 				paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
 			} else paint = new Color(c1,true);
@@ -478,8 +478,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 			
 			Paint paint; int c1,c2;
-			c1 = Utils.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
-			c2 = Utils.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
+			c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
+			c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
 			if(c1!= c2){
 				paint = new GradientPaint((float)x1, (float)y1, new Color(c1,true), (float)x2, (float)y2, new Color(c2, true));
 			} else paint = new Color(c1,true);

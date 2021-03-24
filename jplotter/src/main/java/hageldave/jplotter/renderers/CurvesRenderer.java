@@ -16,6 +16,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Curves.CurveDetails;
@@ -25,7 +26,6 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The CurvesRenderer is an implementation of the {@link GenericRenderer}
@@ -401,7 +401,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 				}
 				g.setStroke(stroke);
 				p.setStroke(stroke);
-				g.setColor(new Color(Utils.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
+				g.setColor(new Color(ColorOperations.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
 				
 				for(CurveDetails cd : curvestrip) {
 					float x1 = (float)(scaleX*(cd.p0.getX()-translateX));

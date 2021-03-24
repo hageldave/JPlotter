@@ -368,24 +368,6 @@ public class Utils {
 		return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
 	}
 	
-	/**
-	 * Scales the alpha value of a specified integer packed ARGB color by a
-	 * specified scaling factor {@code m}. 
-	 * New color will be {@code (a*m, r, g, b)}.
-	 * @param color of which alpha will be scaled
-	 * @param m scaling factor
-	 * @return integer packed ARGB color with scaled alpha
-	 */
-	public static int scaleColorAlpha(int color, double m) {
-		double af = Pixel.a_normalized(color)*m;
-		int a = Pixel.argb_fromNormalized(af, 0,0,0);
-		return (color&0x00ffffff)|a;
-	}
-	
 	
 }
-
-
-
-
 

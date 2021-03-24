@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Triangles;
@@ -188,9 +189,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				tricoords[1][0]=(float)y0; tricoords[1][1]=(float)y1; tricoords[1][2]=(float)y2;
 				
 				
-				Color c0 = new Color(Utils.scaleColorAlpha(tri.c0.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
-				Color c1 = new Color(Utils.scaleColorAlpha(tri.c1.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
-				Color c2 = new Color(Utils.scaleColorAlpha(tri.c2.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
+				Color c0 = new Color(ColorOperations.scaleColorAlpha(tri.c0.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
+				Color c1 = new Color(ColorOperations.scaleColorAlpha(tri.c1.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
+				Color c2 = new Color(ColorOperations.scaleColorAlpha(tri.c2.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
 				
 				g.setPaint(new BarycentricGradientPaint(tricoords[0], tricoords[1], c0, c1, c2));
 				

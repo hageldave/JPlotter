@@ -14,6 +14,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
@@ -21,7 +22,6 @@ import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -258,7 +258,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					xform.rotate(point.rot.getAsDouble());
 				}
 				g_.transform(xform);
-				int color = Utils.scaleColorAlpha(point.color.getAsInt(),points.getGlobalAlphaMultiplier());
+				int color = ColorOperations.scaleColorAlpha(point.color.getAsInt(),points.getGlobalAlphaMultiplier());
 				g_.setColor(new Color(color, true));
 				glyph.drawFallback(g_, (float)(points.getGlobalScaling()*point.scale.getAsDouble()));
 				
