@@ -1,14 +1,5 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.Objects;
-
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.font.CharacterAtlas;
@@ -16,6 +7,12 @@ import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.Objects;
 
 /**
  * Abstract class for {@link Renderable}s representing text that can be rendered using the
@@ -57,12 +54,21 @@ public class Text implements Renderable {
 	 * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
 	 * or bitwise union BOLD|ITALIC.
 	 */
+	public Text(String textstr, int fontsize, int style, Color textcolor) {
+		this.txtStr = textstr;
+		this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style).getBounds().getSize();
+		this.fontsize = fontsize;
+		this.style = style;
+		this.color = textcolor;
+		this.origin = new Point(0, 0);
+	}
+
 	public Text(String textstr, int fontsize, int style) {
 		this.txtStr = textstr;
 		this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style).getBounds().getSize();
 		this.fontsize = fontsize;
 		this.style = style;
-		this.color = new Color(96,96,96);
+		this.color = new Color(96, 96, 96);
 		this.origin = new Point(0, 0);
 	}
 
