@@ -1,4 +1,4 @@
-package hageldave.jplotter.renderers.colors.schemes;
+package hageldave.jplotter.ui.schemes;
 
 import java.awt.*;
 

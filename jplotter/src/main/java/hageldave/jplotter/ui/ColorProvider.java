@@ -1,10 +1,10 @@
-package hageldave.jplotter.renderers.colors;
+package hageldave.jplotter.ui;
 
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.colors.schemes.ColorScheme;
-import hageldave.jplotter.renderers.colors.schemes.CustomColorScheme;
-import hageldave.jplotter.renderers.colors.schemes.DarkColorScheme;
-import hageldave.jplotter.renderers.colors.schemes.LightColorScheme;
+import hageldave.jplotter.ui.schemes.ColorScheme;
+import hageldave.jplotter.ui.schemes.CustomColorScheme;
+import hageldave.jplotter.ui.schemes.DarkColorScheme;
+import hageldave.jplotter.ui.schemes.LightColorScheme;
 
 import java.awt.*;
 

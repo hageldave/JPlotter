@@ -8,7 +8,7 @@ import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
-import hageldave.jplotter.renderers.colors.ColorProvider;
+import hageldave.jplotter.ui.ColorProvider;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Utils;
 import org.w3c.dom.Document;
