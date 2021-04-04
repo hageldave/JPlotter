@@ -356,7 +356,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * Enables/disables the dark color scheme for the CoordSys components,
+	 * Enables or disables the dark color scheme for the CoordSys components,
 	 * which can be used if the background of the CoordSysRenderer is dark.
 	 *
 	 * @param value - if true enable darkmode, if false disable darkmode
@@ -368,34 +368,45 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
+	 * Enables the dark color scheme for the CoordSys components,
+	 * which can be used if the background of the CoordSysRenderer is dark.
+	 *
+	 * @return the new CoordSysRenderer
+	 */
+	public CoordSysRenderer enableDarkmode() {
+		this.colorProvider.enableDarkmode();
+		return updateColors();
+	}
+
+	/**
 	 * Set your own color scheme for the components of the CoordSysRenderer.
 	 * Axis, axis-labels, ticks and guides can be styled.
 	 *
-	 * @param primary - set the primary color
-	 * @param secondary - set the secondary color
-	 * @param tertiary - set the tertiary color
-	 * @param fourth - set the fourth color
+	 * @param primaryColor - set the primary color
+	 * @param secondaryColor - set the secondary color
+	 * @param tertiaryColor - set the tertiary color
+	 * @param fourthColor - set the fourth color
 	 * @return the updated CoordSysRenderer with updated colors
 	 */
-	public CoordSysRenderer setCustomColors(final Color primary, final Color secondary,
-								final Color tertiary, final Color fourth) {
-		this.colorProvider.setCustomColors(primary, secondary, tertiary, fourth);
+	public CoordSysRenderer setCustomColors(final Color primaryColor, final Color secondaryColor,
+											final Color tertiaryColor, final Color fourthColor) {
+		this.colorProvider.setCustomColors(primaryColor, secondaryColor, tertiaryColor, fourthColor);
 		return updateColors();
 	}
 
 	/**
 	 * Set your own color scheme for the components of the CoordSysRenderer.
 	 * Axis, axis-labels, ticks, guides and text color can be styled.
-	 * @param primary - set the primary color
-	 * @param secondary - set the secondary color
-	 * @param tertiary - set the tertiary color
-	 * @param fourth - set the fourth color
+	 * @param primaryColor - set the primary color
+	 * @param secondaryColor - set the secondary color
+	 * @param tertiaryColor - set the tertiary color
+	 * @param fourthColor - set the fourth color
 	 * @param textColor - set the axis text color
 	 * @return the updated CoordSysRenderer
 	 */
-	public CoordSysRenderer setCustomColors(final Color primary, final Color secondary,
-											final Color tertiary, final Color fourth, final Color textColor) {
-		this.colorProvider.setCustomColors(primary, secondary, tertiary, fourth, textColor);
+	public CoordSysRenderer setCustomColors(final Color primaryColor, final Color secondaryColor,
+											final Color tertiaryColor, final Color fourthColor, final Color textColor) {
+		this.colorProvider.setCustomColors(primaryColor, secondaryColor, tertiaryColor, fourthColor, textColor);
 		return updateColors();
 	}
 

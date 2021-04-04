@@ -68,6 +68,12 @@ public class Legend implements Renderable, Renderer {
 
 	public Legend() { }
 
+	/**
+	 * To synchronize the text colors with other components,
+	 * a {@link ColorProvider} can be hand over. The text color in the legend are defined by the ColorProvider.
+	 *
+	 * @param colorProvider defines the colors for the legend text
+	 */
 	public Legend(final ColorProvider colorProvider) {
 		this.colorProvider = colorProvider;
 	}
@@ -325,15 +331,18 @@ public class Legend implements Renderable, Renderer {
 
 	/**
 	 * creates the legend elements and computes the layout
+	 *
+	 * @param paramTextColor text color in the legend
+	 *
 	 */
-	protected void setup(final Color textColors) {
+	protected void setup(final Color paramTextColor) {
 		// do layout
 		final int leftPadding = 4;
 		final int elementVSpace = 4;
 		final int elementHSpace = 6;
 		final int fontStyle = Font.PLAIN;
 		final int fontSize = 11;
-		final Color textColor = textColors;
+		final Color textColor = paramTextColor;
 
 		final int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
 		final int itemWidth = 16;

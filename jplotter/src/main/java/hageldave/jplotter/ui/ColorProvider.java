@@ -37,13 +37,20 @@ public class ColorProvider implements ColorScheme {
 
     /**
      * Switches the color scheme currently in use.
+     */
+    public void enableDarkmode() {
+        this.currentColorScheme = new DarkColorScheme();
+    }
+
+    /**
+     * Switches the color scheme currently in use.
      *
      * @param value darkmode will be set if value is true
      */
     public void enableDarkmode(final boolean value) {
-        if (value) {
+        if (value)
             this.currentColorScheme = new DarkColorScheme();
-        } else {
+        else {
             this.currentColorScheme = new LightColorScheme();
         }
     }
@@ -52,28 +59,28 @@ public class ColorProvider implements ColorScheme {
      * Sets a {@link CustomColorScheme} with the given parameters.
      * This enables setting custom colors in the CoordSysRenderer.
      *
-     * @param primary - primary color
-     * @param secondary - secondary color
-     * @param tertiary - tertiary color
-     * @param fourth - fourth color
+     * @param primaryColor - primary color
+     * @param secondaryColor - secondary color
+     * @param tertiaryColor - tertiary color
+     * @param fourthColor - fourth color
      */
-    public void setCustomColors(final Color primary, final Color secondary,
-                                final Color tertiary, final Color fourth) {
-        this.currentColorScheme = new CustomColorScheme(primary, secondary, tertiary, fourth);
+    public void setCustomColors(final Color primaryColor, final Color secondaryColor,
+                                final Color tertiaryColor, final Color fourthColor) {
+        this.currentColorScheme = new CustomColorScheme(primaryColor, secondaryColor, tertiaryColor, fourthColor);
     }
 
     /**
      * Sets a {@link CustomColorScheme} with the given parameters and a custom text color.
      *
-     * @param primary - primary color
-     * @param secondary - secondary color
-     * @param tertiary - tertiary color
-     * @param fourth - fourth color
+     * @param primaryColor - primary color
+     * @param secondaryColor - secondary color
+     * @param tertiaryColor - tertiary color
+     * @param fourthColor - fourth color
      * @param textColor - custom text color
      */
-    public void setCustomColors(final Color primary, final Color secondary,
-                                final Color tertiary, final Color fourth, final Color textColor) {
-        this.currentColorScheme = new CustomColorScheme(primary, secondary, tertiary, fourth, textColor);
+    public void setCustomColors(final Color primaryColor, final Color secondaryColor,
+                                final Color tertiaryColor, final Color fourthColor, final Color textColor) {
+        this.currentColorScheme = new CustomColorScheme(primaryColor, secondaryColor, tertiaryColor, fourthColor, textColor);
     }
 
     public Color getPrimaryColor() {
