@@ -48,8 +48,9 @@ public class ColorProvider implements ColorScheme {
      * @param value darkmode will be set if value is true
      */
     public void enableDarkmode(final boolean value) {
-        if (value)
+        if (value) {
             this.currentColorScheme = new DarkColorScheme();
+        }
         else {
             this.currentColorScheme = new LightColorScheme();
         }
