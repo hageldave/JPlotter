@@ -8,6 +8,7 @@ import hageldave.jplotter.ui.schemes.LightColorScheme;
 
 import java.awt.*;
 
+// TODO vereinen mit ColorScheme
 /**
  * The ColorProvider is responsible for providing color information to the {@link CoordSysRenderer}.
  * The ColorProvider itself doesn't hold any color information,

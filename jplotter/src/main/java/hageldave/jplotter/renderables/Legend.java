@@ -322,27 +322,27 @@ public class Legend implements Renderable, Renderer {
 	@GLContextRequired
 	public void updateGL() {
 		clearGL();
-		if (this.colorProvider != null) {
+		/*if (this.colorProvider != null) {
 			setup(this.colorProvider.getTextColor());
 		} else {
 			setup(new Color(96, 96, 96));
-		}
+		}*/
+		setup();
 	}
 
 	/**
 	 * creates the legend elements and computes the layout
 	 *
-	 * @param paramTextColor text color in the legend
 	 *
 	 */
-	protected void setup(final Color paramTextColor) {
+	protected void setup(/*final Color paramTextColor*/) {
 		// do layout
 		final int leftPadding = 4;
 		final int elementVSpace = 4;
 		final int elementHSpace = 6;
 		final int fontStyle = Font.PLAIN;
 		final int fontSize = 11;
-		final Color textColor = paramTextColor;
+		final Color textColor = this.colorProvider.getTextColor();
 
 		final int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
 		final int itemWidth = 16;
