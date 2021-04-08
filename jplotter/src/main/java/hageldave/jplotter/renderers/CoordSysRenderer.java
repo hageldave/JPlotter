@@ -1,5 +1,7 @@
 package hageldave.jplotter.renderers;
 
+import hageldave.jplotter.color.ColorScheme;
+import hageldave.jplotter.color.SchemePresets;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
@@ -10,8 +12,6 @@ import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.ui.ColorProvider;
-import hageldave.jplotter.ui.schemes.ColorScheme;
 import hageldave.jplotter.util.Annotations.GLCoordinates;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
@@ -97,8 +97,8 @@ public class CoordSysRenderer implements Renderer {
 	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
 	protected Lines guides = new Lines().setVertexRoundingEnabled(true);
 	protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
-	protected Text xAxisLabelText = new Text("", 13, Font.PLAIN, this.textColor);
-	protected Text yAxisLabelText = new Text("", 13, Font.PLAIN, this.textColor);
+	protected Text xAxisLabelText = new Text("", 13, Font.PLAIN);
+	protected Text yAxisLabelText = new Text("", 13, Font.PLAIN);
 
 	protected double[] xticks;
 	protected double[] yticks;
@@ -131,19 +131,51 @@ public class CoordSysRenderer implements Renderer {
 	protected ActionListener coordviewListener;
 	protected boolean isEnabled=true;
 
-	protected ColorProvider colorProvider;
-	
+	protected ColorScheme colorScheme;
+
 	public CoordSysRenderer() {
-		this.colorProvider = new ColorProvider();
+		this.colorScheme = new ColorScheme(SchemePresets.LIGHT);
+		setupCoordSysRenderer();
+	}
+
+	public CoordSysRenderer(final ColorScheme colorScheme) {
+		this.colorScheme = colorScheme;
+		setupCoordSysRenderer();
+	}
+
+	/**
+	 * Helper method to setup the CoordSysRenderer
+	 */
+	private void setupCoordSysRenderer() {
 		this.axes.setGlobalThicknessMultiplier(2);
 		this.preContentLinesR
-		.addItemToRender(guides)
-		.addItemToRender(ticks);
+				.addItemToRender(guides)
+				.addItemToRender(ticks);
 		this.preContentTextR
-		.addItemToRender(xAxisLabelText)
-		.addItemToRender(yAxisLabelText);
+				.addItemToRender(xAxisLabelText)
+				.addItemToRender(yAxisLabelText);
 		this.postContentLinesR.addItemToRender(axes);
 		updateColors();
+	}
+
+	/**
+	 * helper function which updates the colors if the color scheme is changed.
+	 */
+	private CoordSysRenderer updateColors() {
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(
+				this.colorScheme.getPrimaryColor());
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(
+				this.colorScheme.getPrimaryColor());
+		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(
+				this.colorScheme.getSecondaryColor());
+		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT).setColor(
+				this.colorScheme.getSecondaryColor());
+		this.guideColor = this.colorScheme.getFourthColor();
+		this.tickColor = this.colorScheme.getTertiaryColor();
+		this.textColor = this.colorScheme.getTextColor();
+		this.xAxisLabelText.setColor(this.textColor);
+		this.yAxisLabelText.setColor(this.textColor);
+		return this;
 	}
 
 	/**
@@ -180,6 +212,13 @@ public class CoordSysRenderer implements Renderer {
 	public Renderer setLegendRight(Renderer legend) {
 		Renderer old = this.legendRight;
 		this.legendRight = legend;
+
+		// if the legend is of type Legend, a color scheme is automatically set
+		// TODO To discuss
+		/*
+		if (legend instanceof Legend) {
+			((Legend) legendRight).setColorScheme(this.colorScheme);
+		}*/
 		return old;
 	}
 
@@ -194,6 +233,12 @@ public class CoordSysRenderer implements Renderer {
 	public Renderer setLegendBottom(Renderer legend) {
 		Renderer old = this.legendBottom;
 		this.legendBottom = legend;
+
+		// if the legend is of type Legend, a color scheme is automatically set
+		// TODO To discuss
+		/*if (legend instanceof Legend) {
+			((Legend) this.legendBottom).setColorScheme(this.colorScheme);
+		}*/
 		return old;
 	}
 
@@ -211,10 +256,34 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * @return the colorprovider of the {@link CoordSysRenderer}. see {@link ColorProvider}
+	 * @return the {@link ColorScheme} of the CoordSysRenderer.
 	 */
-	public ColorProvider getColorProvider() {
-		return colorProvider;
+	public ColorScheme getColorScheme() {
+		return colorScheme;
+	}
+
+	/**
+	 * Sets a new color scheme on the CoordSysRenderer.
+	 *
+	 * @param colorScheme new {@link ColorScheme} used by the CoordSysRenderer.
+	 * @return new CoordSysRenderer
+	 */
+	public CoordSysRenderer setColorScheme(final ColorScheme colorScheme) {
+		this.colorScheme = colorScheme;
+		updateColors();
+		return this;
+	}
+
+	/**
+	 * Sets a new color scheme by using one of the predefined scheme presets.
+	 *
+	 * @param schemePresets new {@link SchemePresets} used by the CoordSysRenderer.
+	 * @return new CoordSysRenderer
+	 */
+	public CoordSysRenderer setColorScheme(final SchemePresets schemePresets) {
+		this.colorScheme = new ColorScheme(schemePresets);
+		updateColors();
+		return this;
 	}
 
 	/**
@@ -356,87 +425,6 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * Enables or disables the dark color scheme for the CoordSys components,
-	 * which can be used if the background of the CoordSysRenderer is dark.
-	 *
-	 * @param value - if true enable darkmode, if false disable darkmode
-	 * @return the new CoordSysRenderer
-	 */
-	public CoordSysRenderer enableDarkmode(final boolean value) {
-		this.colorProvider.enableDarkmode(value);
-		return updateColors();
-	}
-
-	/**
-	 * Enables the dark color scheme for the CoordSys components,
-	 * which can be used if the background of the CoordSysRenderer is dark.
-	 *
-	 * @return the new CoordSysRenderer
-	 */
-	public CoordSysRenderer enableDarkmode() {
-		this.colorProvider.enableDarkmode();
-		return updateColors();
-	}
-
-	/**
-	 * Set your own color scheme for the components of the CoordSysRenderer.
-	 * Axis, axis-labels, ticks and guides can be styled.
-	 *
-	 * @param primaryColor - set the primary color
-	 * @param secondaryColor - set the secondary color
-	 * @param tertiaryColor - set the tertiary color
-	 * @param fourthColor - set the fourth color
-	 * @return the updated CoordSysRenderer with updated colors
-	 */
-	public CoordSysRenderer setCustomColors(final Color primaryColor, final Color secondaryColor,
-											final Color tertiaryColor, final Color fourthColor) {
-		this.colorProvider.setCustomColors(primaryColor, secondaryColor, tertiaryColor, fourthColor);
-		return updateColors();
-	}
-
-	/**
-	 * Set your own color scheme for the components of the CoordSysRenderer.
-	 * Axis, axis-labels, ticks, guides and text color can be styled.
-	 * @param primaryColor - set the primary color
-	 * @param secondaryColor - set the secondary color
-	 * @param tertiaryColor - set the tertiary color
-	 * @param fourthColor - set the fourth color
-	 * @param textColor - set the axis text color
-	 * @return the updated CoordSysRenderer
-	 */
-	public CoordSysRenderer setCustomColors(final Color primaryColor, final Color secondaryColor,
-											final Color tertiaryColor, final Color fourthColor, final Color textColor) {
-		this.colorProvider.setCustomColors(primaryColor, secondaryColor, tertiaryColor, fourthColor, textColor);
-		return updateColors();
-	}
-
-	/**
-	 * helper function which updates the colors, if the color scheme is changed
-	 */
-	private CoordSysRenderer updateColors() {
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(
-				this.colorProvider.getPrimaryColor());
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(
-				this.colorProvider.getPrimaryColor());
-		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(
-				this.colorProvider.getSecondaryColor());
-		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT).setColor(
-				this.colorProvider.getSecondaryColor());
-		this.guideColor = this.colorProvider.getFourthColor();
-		this.tickColor = this.colorProvider.getTertiaryColor();
-		updateTextColor();
-		return this;
-	}
-
-	/**
-	 * helper function, which updates the textColor property,
-	 * if {@link ColorScheme} is changed
-	 */
-	private void updateTextColor() {
-		this.textColor = this.colorProvider.getTextColor();
-	}
-
-	/**
 	 * Sets up pretty much everything.
 	 * <ul>
 	 * <li>the bounds of the coordinate system frame ({@link #coordsysAreaLB}, {@link #coordsysAreaRT})</li>
@@ -522,6 +510,7 @@ public class CoordSysRenderer implements Renderer {
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
 			// label
 			Text label = new Text(yticklabels[i], tickfontSize, style, this.textColor);
+			System.out.println(label.getColor());
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -Math.round(textSize.getHeight()/2.0)+0.5));
 			tickMarkLabels.add(label);

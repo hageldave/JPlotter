@@ -33,7 +33,6 @@ import java.util.Objects;
  * @author hageldave
  */
 public class Text implements Renderable {
-
 	public final int fontsize; 
 	public final int style;
 	protected Dimension textSize;

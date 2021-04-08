@@ -2,13 +2,14 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.ColorScheme;
+import hageldave.jplotter.color.SchemePresets;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
-import hageldave.jplotter.ui.ColorProvider;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Utils;
 import org.w3c.dom.Document;
@@ -64,18 +65,30 @@ public class Legend implements Renderable, Renderer {
 
 	protected boolean isEnabled=true;
 
-	protected ColorProvider colorProvider;
+	protected ColorScheme colorScheme;
 
-	public Legend() { }
+	public Legend() {
+		this.colorScheme = new ColorScheme(SchemePresets.LIGHT);
+	}
 
 	/**
 	 * To synchronize the text colors with other components,
-	 * a {@link ColorProvider} can be hand over. The text color in the legend are defined by the ColorProvider.
+	 * a {@link ColorScheme} can be hand over. The text color in the legend are defined by the ColorProvider.
 	 *
-	 * @param colorProvider defines the colors for the legend text
+	 * @param colorScheme defines the colors for the legend text
 	 */
-	public Legend(final ColorProvider colorProvider) {
-		this.colorProvider = colorProvider;
+	public Legend(final ColorScheme colorScheme) {
+		this.colorScheme = colorScheme;
+	}
+
+	/**
+	 * To synchronize the text colors with other components,
+	 * a {@link ColorScheme} can be hand over. The text color in the legend are defined by the ColorProvider.
+	 *
+	 * @param schemePreset defines the colors for the legend text
+	 */
+	public Legend(final SchemePresets schemePreset) {
+		this.colorScheme = new ColorScheme(schemePreset);
 	}
 
 	protected static class GlyphLabel {
@@ -145,8 +158,8 @@ public class Legend implements Renderable, Renderer {
 		public Rectangle2D getSize();
 	}
 
-	public void setColorProvider (final ColorProvider colorProvider) {
-		this.colorProvider = colorProvider;
+	public void setColorScheme(final ColorScheme colorScheme) {
+		this.colorScheme = colorScheme;
 	}
 
 	/**
@@ -181,8 +194,8 @@ public class Legend implements Renderable, Renderer {
 	 * @return this for chaining
 	 */
 	public Legend addGlyphLabel(Glyph glyph, int color, String labeltxt){
-		if (this.colorProvider != null) {
-			return addGlyphLabel(glyph, color, labeltxt, (this.colorProvider.getTextColor()).getRGB());
+		if (this.colorScheme != null) {
+			return addGlyphLabel(glyph, color, labeltxt, (this.colorScheme.getTextColor()).getRGB());
 		}
 		return addGlyphLabel(glyph, color, labeltxt, 0);
 	}
@@ -322,11 +335,6 @@ public class Legend implements Renderable, Renderer {
 	@GLContextRequired
 	public void updateGL() {
 		clearGL();
-		/*if (this.colorProvider != null) {
-			setup(this.colorProvider.getTextColor());
-		} else {
-			setup(new Color(96, 96, 96));
-		}*/
 		setup();
 	}
 
@@ -335,14 +343,14 @@ public class Legend implements Renderable, Renderer {
 	 *
 	 *
 	 */
-	protected void setup(/*final Color paramTextColor*/) {
+	protected void setup() {
 		// do layout
 		final int leftPadding = 4;
 		final int elementVSpace = 4;
 		final int elementHSpace = 6;
 		final int fontStyle = Font.PLAIN;
 		final int fontSize = 11;
-		final Color textColor = this.colorProvider.getTextColor();
+		final Color textColor = this.colorScheme.getTextColor();
 
 		final int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
 		final int itemWidth = 16;

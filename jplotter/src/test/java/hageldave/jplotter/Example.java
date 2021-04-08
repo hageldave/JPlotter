@@ -1,24 +1,12 @@
 package hageldave.jplotter;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.MenuItem;
-import java.awt.PopupMenu;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.util.function.DoubleUnaryOperator;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.color.ColorScheme;
+import hageldave.jplotter.color.SchemePresets;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -28,6 +16,14 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import org.w3c.dom.Document;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.function.DoubleUnaryOperator;
 
 public class Example {
 
@@ -86,7 +82,9 @@ public class Example {
 		}
 		
 		// okay we're good to go, lets display the data in a coordinate system
-		CoordSysRenderer coordsys = new CoordSysRenderer();
+
+		ColorScheme colorScheme = new ColorScheme(SchemePresets.DARK);
+		CoordSysRenderer coordsys = new CoordSysRenderer(colorScheme);
 		CompleteRenderer content = new CompleteRenderer();
 		coordsys.setContent( content
 				.addItemToRender(sineLine)
@@ -97,7 +95,7 @@ public class Example {
 		coordsys.setCoordinateView(-.5, -3.3, 6.5, 3.3);
 		
 		// lets add a legend so the viewer can make sense of the data
-		Legend legend = new Legend();
+		Legend legend = new Legend(colorScheme);
 		coordsys.setLegendRightWidth(80);
 		coordsys.setLegendRight(legend
 				.addLineLabel(2, sineColor, "f(x)")
@@ -106,7 +104,7 @@ public class Example {
 				.addGlyphLabel(DefaultGlyph.CROSS, c3Color, "> f(x)+0.5"));
 		
 		// display the coordinate system on a blank canvas
-		boolean useOpenGL = true;
+		boolean useOpenGL = false;
 		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		canvas.setRenderer(coordsys);
 		// lets add some controls for exploring the data
