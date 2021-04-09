@@ -14,19 +14,38 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The ScatterPlot class provides an easy way to quickly create a ScatterPlot.
+ * It includes a JPlotterCanvas, CoordSysRenderer and a PointsRenderer,
+ * which are all set up automatically.
+ * To edit those, they can be returned with their respective getter methods.
+ * When data points are added to the ScatterPlot, they are stored in the pointMap in a {@link Dataset}.
+ *
+ * To add a Dataset to the pointMap, an ID has to be defined as a key.
+ * With this ID the Dataset can be removed later on.
+ *
+ * In each {@link Dataset} there are the coordinates of the points,
+ * the selected glyph & color and the {@link Points} stored.
+ *
+ * @author lucareichmann
+ */
 public class ScatterPlot {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
     protected PointsRenderer content;
     final protected HashMap<Integer, Dataset> pointMap;
 
+    /**
+     * A Dataset stores the point coordinates, the glyph & color selected by the user and
+     * the {@link Points} created with the point coordinates.
+     */
     private class Dataset {
         protected double[][] pointsCoordinates;
         protected DefaultGlyph glyph;
         protected Color color;
         protected Points points;
 
-        Dataset(final double[][] pointsCoordinates, final DefaultGlyph glyph, final Color color, final Points points) {
+        protected Dataset(final double[][] pointsCoordinates, final DefaultGlyph glyph, final Color color, final Points points) {
             this.pointsCoordinates = pointsCoordinates;
             this.glyph = glyph;
             this.color = color;
@@ -62,6 +81,9 @@ public class ScatterPlot {
         setupScatterPlot();
     }
 
+    /**
+     * Helper method to set the initial scatter plot.
+     */
     protected void setupScatterPlot() {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
@@ -72,6 +94,15 @@ public class ScatterPlot {
         this.canvas.setRenderer(coordsys);
     }
 
+    /**
+     * adds a set of points to the scatter plot.
+     *
+     * @param ID the ID is the key with which the Dataset will be stored in the pointMap
+     * @param points a double array containing the coordinates of the points
+     * @param glyph the data points will be visualized by that glyph
+     * @param color the color of the glyph
+     * @return the old Scatterplot for chaining
+     */
     public ScatterPlot addPoints(final int ID, final double[][] points, final DefaultGlyph glyph, final Color color) {
         ScatterPlot old = this;
         Points tempPoints = new Points(glyph);
@@ -86,16 +117,32 @@ public class ScatterPlot {
         return old;
     }
 
+    /**
+     * Removes a {@link Dataset} from the pointMap.
+     *
+     * @param ID the Dataset with this ID will be removed from the pointMap
+     * @return the old Scatterplot for chaining
+     */
     public ScatterPlot removePoints(final int ID) {
         ScatterPlot old = this;
         this.pointMap.remove(ID);
         return old;
     }
 
+    /**
+     * Adds a scroll zoom to the Scatterplot
+     *
+     * @return the CoordSysScrollZoom so that it can be further customized
+     */
     public CoordSysScrollZoom addScrollZoom() {
         return new CoordSysScrollZoom(this.canvas, this.coordsys).register();
     }
 
+    /**
+     * Adds panning functionality to the Scatterplot
+     *
+     * @return the CoordSysPanning so that it can be further customized
+     */
     public CoordSysPanning addPanning() {
         return new CoordSysPanning(this.canvas, this.coordsys).register();
     }
@@ -107,6 +154,10 @@ public class ScatterPlot {
         return this;
     }
 
+    /**
+     * Helper method which restores the data points from the pointMap
+     * when the canvas is 'reloaded'
+     */
     protected void restoreDatapoints() {
         for (Map.Entry<Integer, Dataset> dataset: this.pointMap.entrySet()) {
             Points tempPoints = new Points(dataset.getValue().getGlyph());
