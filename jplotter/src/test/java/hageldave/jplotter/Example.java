@@ -5,8 +5,6 @@ import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.color.ColorScheme;
-import hageldave.jplotter.color.SchemePresets;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -82,9 +80,7 @@ public class Example {
 		}
 		
 		// okay we're good to go, lets display the data in a coordinate system
-
-		ColorScheme colorScheme = new ColorScheme(SchemePresets.DARK);
-		CoordSysRenderer coordsys = new CoordSysRenderer(colorScheme);
+		CoordSysRenderer coordsys = new CoordSysRenderer();
 		CompleteRenderer content = new CompleteRenderer();
 		coordsys.setContent( content
 				.addItemToRender(sineLine)
@@ -95,7 +91,7 @@ public class Example {
 		coordsys.setCoordinateView(-.5, -3.3, 6.5, 3.3);
 		
 		// lets add a legend so the viewer can make sense of the data
-		Legend legend = new Legend(colorScheme);
+		Legend legend = new Legend();
 		coordsys.setLegendRightWidth(80);
 		coordsys.setLegendRight(legend
 				.addLineLabel(2, sineColor, "f(x)")
@@ -104,7 +100,7 @@ public class Example {
 				.addGlyphLabel(DefaultGlyph.CROSS, c3Color, "> f(x)+0.5"));
 		
 		// display the coordinate system on a blank canvas
-		boolean useOpenGL = false;
+		boolean useOpenGL = true;
 		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		canvas.setRenderer(coordsys);
 		// lets add some controls for exploring the data
