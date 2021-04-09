@@ -3,7 +3,7 @@ package hageldave.jplotter.renderables;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.ColorScheme;
-import hageldave.jplotter.color.SchemePresets;
+import hageldave.jplotter.color.ColorSchemePreset;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
@@ -68,7 +68,7 @@ public class Legend implements Renderable, Renderer {
 	protected ColorScheme colorScheme;
 
 	public Legend() {
-		this.colorScheme = new ColorScheme(SchemePresets.LIGHT);
+		this.colorScheme = new ColorScheme(ColorSchemePreset.LIGHT);
 	}
 
 	/**
@@ -79,16 +79,6 @@ public class Legend implements Renderable, Renderer {
 	 */
 	public Legend(final ColorScheme colorScheme) {
 		this.colorScheme = colorScheme;
-	}
-
-	/**
-	 * To synchronize the text colors with other components,
-	 * a {@link ColorScheme} can be hand over. The text color in the legend are defined by the ColorProvider.
-	 *
-	 * @param schemePreset defines the colors for the legend text
-	 */
-	public Legend(final SchemePresets schemePreset) {
-		this.colorScheme = new ColorScheme(schemePreset);
 	}
 
 	protected static class GlyphLabel {
@@ -160,10 +150,6 @@ public class Legend implements Renderable, Renderer {
 
 	public void setColorScheme(final ColorScheme colorScheme) {
 		this.colorScheme = colorScheme;
-	}
-
-	public void setColorScheme(final SchemePresets schemePreset) {
-		this.colorScheme = new ColorScheme(schemePreset);
 	}
 
 	/**
