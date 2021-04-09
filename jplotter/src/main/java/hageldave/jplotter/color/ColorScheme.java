@@ -6,7 +6,7 @@ import java.awt.*;
  * The ColorScheme is responsible for storing and providing color information,
  * which other components can use.
  * This enables an easy way to distribute color information to multiple components.
- * There is the option to use one of the predefined {@link SchemePresets} or to define custom colors.
+ * There is the option to use one of the predefined {@link ColorSchemePreset} or to define custom colors.
  * The color scheme contains five different color attributes,
  * which can be accessed by the respective components.
  *
@@ -16,17 +16,17 @@ public class ColorScheme {
     protected Color primaryColor;
     protected Color secondaryColor;
     protected Color tertiaryColor;
-    protected Color fourthColor;
+    protected Color quaternaryColor;
     protected Color textColor;
 
     /**
-     * Defines the color scheme by using one of the predefined {@link SchemePresets}.
+     * Defines the color scheme by using one of the predefined {@link ColorSchemePreset}.
      *
      * @param scheme - the used SchemePreset
      */
-    public ColorScheme (final SchemePresets scheme) {
+    public ColorScheme (final ColorSchemePreset scheme) {
         setColors(scheme.primaryColor, scheme.secondaryColor,
-                scheme.tertiaryColor, scheme.fourthColor, scheme.textColor);
+                scheme.tertiaryColor, scheme.quaternaryColor, scheme.textColor);
     }
 
     /**
@@ -35,12 +35,12 @@ public class ColorScheme {
      * @param primaryColor primary color of the color scheme
      * @param secondaryColor secondary color of the color scheme
      * @param tertiaryColor tertiary color of the color scheme
-     * @param fourthColor fourth color of the color scheme
+     * @param quaternaryColor quarternary color of the color scheme
      * @param textColor text color of the color scheme
      */
     public ColorScheme (final Color primaryColor, final Color secondaryColor,
-                        final Color tertiaryColor, final Color fourthColor, final Color textColor) {
-        setColors(primaryColor, secondaryColor, tertiaryColor, fourthColor, textColor);
+                        final Color tertiaryColor, final Color quaternaryColor, final Color textColor) {
+        setColors(primaryColor, secondaryColor, tertiaryColor, quaternaryColor, textColor);
     }
 
     /**
@@ -49,15 +49,15 @@ public class ColorScheme {
      * @param primaryColor primary color of the color scheme
      * @param secondaryColor secondary color of the color scheme
      * @param tertiaryColor tertiary color of the color scheme
-     * @param fourthColor fourth color of the color scheme
+     * @param quaternaryColor fourth color of the color scheme
      * @param textColor text color of the color scheme
      */
     protected void setColors (final Color primaryColor, final Color secondaryColor,
-                                     final Color tertiaryColor, final Color fourthColor, final Color textColor) {
+                                     final Color tertiaryColor, final Color quaternaryColor, final Color textColor) {
         this.primaryColor = primaryColor;
         this.secondaryColor = secondaryColor;
         this.tertiaryColor = tertiaryColor;
-        this.fourthColor = fourthColor;
+        this.quaternaryColor = quaternaryColor;
         this.textColor = textColor;
     }
 
@@ -85,8 +85,8 @@ public class ColorScheme {
     /**
      * @return fourth color of the color scheme
      */
-    public Color getFourthColor() {
-        return this.fourthColor;
+    public Color getQuaternary () {
+        return this.quaternaryColor;
     }
 
     /**

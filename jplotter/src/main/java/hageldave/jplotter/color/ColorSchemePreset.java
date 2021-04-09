@@ -8,7 +8,7 @@ import java.awt.*;
  *
  * @author lucareichmann
  */
-public enum SchemePresets {
+public enum ColorSchemePreset {
     LIGHT(
             Color.BLACK,
             Color.GRAY,
@@ -27,15 +27,15 @@ public enum SchemePresets {
     protected final Color primaryColor;
     protected final Color secondaryColor;
     protected final Color tertiaryColor;
-    protected final Color fourthColor;
+    protected final Color quaternaryColor;
     protected final Color textColor;
 
-    SchemePresets (final Color primaryColor, final Color secondaryColor,
-                   final Color tertiaryColor, final Color fourthColor, final Color textColor) {
+    ColorSchemePreset (final Color primaryColor, final Color secondaryColor,
+                       final Color tertiaryColor, final Color quaternaryColor, final Color textColor) {
         this.primaryColor = primaryColor;
         this.secondaryColor = secondaryColor;
         this.tertiaryColor = tertiaryColor;
-        this.fourthColor = fourthColor;
+        this.quaternaryColor = quaternaryColor;
         this.textColor = textColor;
     }
 }
