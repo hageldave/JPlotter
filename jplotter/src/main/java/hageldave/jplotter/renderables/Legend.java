@@ -162,6 +162,10 @@ public class Legend implements Renderable, Renderer {
 		this.colorScheme = colorScheme;
 	}
 
+	public void setColorScheme(final SchemePresets schemePreset) {
+		this.colorScheme = new ColorScheme(schemePreset);
+	}
+
 	/**
 	 * Sets the {@link #isDirty()} state of this legend to true.
 	 * This indicates that a call to {@link #updateGL()} is necessary
