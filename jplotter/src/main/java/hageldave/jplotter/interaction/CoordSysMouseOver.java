@@ -1,9 +1,7 @@
 package hageldave.jplotter.interaction;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.RenderableDetails;
-import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.GenericRenderer;
 import hageldave.jplotter.util.PickingRegistry;
@@ -24,14 +22,8 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
 
     // TODO points need to be passed in the constructor
     protected LinkedList<double[][]> points;
-
-    // TODO might be removed
-    protected CompleteRenderer overlay;
-    protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
-    protected Point start, end;
     protected int extModifierMask = InputEvent.SHIFT_DOWN_MASK;
     protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
-
 
     public CoordSysMouseOver (JPlotterCanvas canvas, CoordSysRenderer coordsys, LinkedList<double[][]> allDataPoints) {
         this.canvas = canvas;
