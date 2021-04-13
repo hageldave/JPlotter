@@ -1,6 +1,11 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -8,11 +13,6 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The Curves class is a collection of cubic Bezier curves.
@@ -475,7 +475,12 @@ public class Curves implements Renderable {
 	public ArrayList<CurveDetails> getCurveDetails() {
 		return curves;
 	}
-	
+
+	// TODO Discuss changes
+	public ArrayList getRenderableDetails() {
+		return curves;
+	}
+
 	/**
 	 * Adds a curve to the collection
 	 * @param cd curve to add
@@ -687,7 +692,7 @@ public class Curves implements Renderable {
 	 * control point positions, as well as, line color, picking color and thickness.
 	 * @author hageldave
 	 */
-	public static class CurveDetails implements Cloneable {
+	public static class CurveDetails implements Cloneable, RenderableDetails {
 		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
 				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
 		
@@ -743,7 +748,13 @@ public class Curves implements Renderable {
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
+		// TODO Discuss what location should be returned
+		@Override
+		public Point2D retrieveLocation () {
+			return p0;
+		}
+
 		/**
 		 * Sets the color of the curve
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
