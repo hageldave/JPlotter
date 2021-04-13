@@ -3,6 +3,7 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.interaction.CoordSysMouseOver;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -12,6 +13,8 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -166,6 +169,18 @@ public class ScatterPlot {
             @Override
             public void areaSelected (double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);
+            }
+        }.register();
+    }
+
+    public CoordSysMouseOver addMouseOver () {
+        return new CoordSysMouseOver(this.canvas, this.coordsys, this.allPoints) {
+            @Override
+            public void mouseOverPoint (Point mouselocation, Point2D pointlocation, double[][] data, int dataIndex) {
+                System.out.println("Mouse location: " + mouselocation);
+                System.out.println("Point location: " + pointlocation);
+                System.out.println("Data array: " + Arrays.deepToString(data));
+                System.out.println("Data index: " + dataIndex);
             }
         }.register();
     }
