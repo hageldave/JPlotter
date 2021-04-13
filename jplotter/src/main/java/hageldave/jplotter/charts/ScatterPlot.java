@@ -13,6 +13,7 @@ import hageldave.jplotter.renderers.PointsRenderer;
 
 import java.awt.*;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -35,6 +36,9 @@ public class ScatterPlot {
     protected CoordSysRenderer coordsys;
     protected PointsRenderer content;
     final protected HashMap<Integer, Dataset> pointMap;
+
+    // TODO might be merged with hashmap
+    final protected LinkedList<double[][]> allPoints;
 
     /**
      * A Dataset stores the point coordinates, the glyph & color selected by the user and
@@ -71,12 +75,14 @@ public class ScatterPlot {
     }
 
     public ScatterPlot (final boolean useOpenGL) {
+        this.allPoints = new LinkedList<double[][]>();
         this.pointMap = new HashMap<Integer, Dataset>();
         this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
         setupScatterPlot();
     }
 
     public ScatterPlot (final JPlotterCanvas canvas) {
+        this.allPoints = new LinkedList<double[][]>();
         this.pointMap = new HashMap<Integer, Dataset>();
         this.canvas = canvas;
         setupScatterPlot();
@@ -114,6 +120,7 @@ public class ScatterPlot {
         }
         Dataset newSet = new Dataset(points, glyph, color, tempPoints);
         this.pointMap.put(ID, newSet);
+        this.allPoints.add(points);
         this.content.addItemToRender(tempPoints);
         return old;
     }
@@ -198,7 +205,12 @@ public class ScatterPlot {
         return content;
     }
 
-    public HashMap<Integer, Dataset> getPointMap () {
+    // TODO Might be unuseful
+    /*public HashMap<Integer, Dataset> getPointMap () {
         return pointMap;
+    }*/
+
+    public LinkedList<double[][]> getAllPoints () {
+        return allPoints;
     }
 }
