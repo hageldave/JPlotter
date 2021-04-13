@@ -53,16 +53,19 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
      * TODO might find points later in datasets
      */
     @SuppressWarnings("rawtypes")
-    protected void findPoints (final MouseEvent e) {
+    protected boolean findPoints (final MouseEvent e) {
         PickingRegistry registry = GenericRenderer.getPickingRegistry();
         RenderableDetails details = (RenderableDetails) registry.lookup(this.canvas.getPixel(e.getX(), e.getY(), true, 8));
-        Point2D location = details.retrieveLocation();
-
-        double[][] correctList = findAppropriateList(location);
-        int index = findIndex(correctList, location);
-
-        mouseOverPoint(e.getPoint(), location, correctList, index);
-
+        if (details != null) {
+            Point2D location = details.retrieveLocation();
+            double[][] correctList = findAppropriateList(location);
+            if (correctList != null) {
+                int index = findIndex(correctList, location);
+                mouseOverPoint(e.getPoint(), location, correctList, index);
+                return true;
+            }
+        }
+        return false;
     }
 
     protected double[][] findAppropriateList (final Point2D location) {
@@ -79,7 +82,6 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
             }
         }
         return null;
-
     }
 
     protected int findIndex (final double[][] list, final Point2D location) {
