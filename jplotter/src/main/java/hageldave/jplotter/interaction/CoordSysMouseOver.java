@@ -65,7 +65,7 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
 
             // TODO remove later
             // System.out.println(details.getClass());
-            this.dataSet = findAppropriateList(location);
+            this.dataSet = getListAndSetIndex(location);
             if (this.dataSet != null) {
                 mouseOverPoint(e.getPoint(), location, this.dataSet, this.index);
                 return true;
@@ -80,7 +80,7 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
      * @param location clicked in the coordinate system
      * @return list where the data point was found
      */
-    protected double[][] findAppropriateList(final Point2D location) {
+    protected double[][] getListAndSetIndex(final Point2D location) {
         double[][] tempList;
         if (points != null) {
             for (final double[][] pointList : points) {
