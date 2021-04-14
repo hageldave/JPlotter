@@ -62,8 +62,8 @@ public interface Renderable extends AutoCloseable {
 	public default boolean isHidden() {return false;}
 
 	/**
-	 *
-	 * @return
+	 * Returns the details of the each Renderable
+	 * @return all RenderableDetails, if they exist (e.g. Text has no RenderableDetails)
 	 */
 	public default ArrayList<RenderableDetails> getRenderableDetails() {
 		return null;
