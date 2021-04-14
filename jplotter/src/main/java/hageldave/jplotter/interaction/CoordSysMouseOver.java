@@ -7,60 +7,80 @@ import hageldave.jplotter.renderers.GenericRenderer;
 import hageldave.jplotter.util.PickingRegistry;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
- * The CoordSysMouseOver class
+ * The CoordSysMouseOver class realizes a functionality that enables
+ * recognizing the clicked point in the given datasets.
+ *
+ * It contains an abstract method mouseOverPoint
+ * which is called when a point in the dataSet is clicked on.
+ * It's behavior has to be implemented by the developer.
+ *
  */
 public abstract class CoordSysMouseOver extends MouseAdapter {
-
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
-
-    // TODO points need to be passed in the constructor
     protected LinkedList<double[][]> points;
-    protected int extModifierMask = InputEvent.SHIFT_DOWN_MASK;
-    protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
+    protected int index;
+    protected double[][] dataSet;
 
-    public CoordSysMouseOver (JPlotterCanvas canvas, CoordSysRenderer coordsys, LinkedList<double[][]> allDataPoints) {
+    // TODO might be removed
+    // protected int extModifierMask = InputEvent.SHIFT_DOWN_MASK;
+    // protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
+
+    public CoordSysMouseOver(JPlotterCanvas canvas, CoordSysRenderer coordsys,
+                             LinkedList<double[][]> allDataPoints) {
         this.canvas = canvas;
         this.coordsys = coordsys;
         this.points = allDataPoints;
+        this.index = 0;
     }
 
     @Override
-    public void mousePressed (MouseEvent e) {
-        findPoints(e);
-    }
-
-    @Override
-    public void mouseDragged (MouseEvent e) {
-
+    public void mousePressed(MouseEvent e) {
+        if (!findPoints(e)) {
+            System.out.println("No data point found in your dataset");
+        }
+        this.index = 0;
     }
 
     /**
-     * TODO might find points later in datasets
+     * Searches for a data point similar to the location the developer clicked on.
+     *
+     * @param e MouseEvent when clicking
+     * @return true if a point was found, false if no point was found in the dataSet
      */
-    @SuppressWarnings("rawtypes")
-    protected boolean findPoints (final MouseEvent e) {
-        PickingRegistry registry = GenericRenderer.getPickingRegistry();
-        RenderableDetails details = (RenderableDetails) registry.lookup(this.canvas.getPixel(e.getX(), e.getY(), true, 8));
+    protected boolean findPoints(final MouseEvent e) {
+        PickingRegistry<RenderableDetails> registry = GenericRenderer.getPickingRegistry();
+        RenderableDetails details = registry.lookup(this.canvas.getPixel(e.getX(), e.getY(), true, 5));
         if (details != null) {
             Point2D location = details.retrieveLocation();
-            double[][] correctList = findAppropriateList(location);
-            if (correctList != null) {
-                int index = findIndex(correctList, location);
-                mouseOverPoint(e.getPoint(), location, correctList, index);
+
+            // TODO remove later
+            // System.out.println(details.getClass());
+            this.dataSet = findAppropriateList(location);
+            if (this.dataSet != null) {
+                mouseOverPoint(e.getPoint(), location, this.dataSet, this.index);
                 return true;
             }
         }
         return false;
     }
 
-    protected double[][] findAppropriateList (final Point2D location) {
+    /**
+     * Finds the data array which contains the clicked-on data point.
+     *
+     * @param location clicked in the coordinate system
+     * @return list where the data point was found
+     */
+    protected double[][] findAppropriateList(final Point2D location) {
         double[][] tempList;
         if (points != null) {
             for (final double[][] pointList : points) {
@@ -70,31 +90,12 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
                     if (x == location.getX() && y == location.getY()) {
                         return tempList;
                     }
+                    this.index++;
                 }
+                this.index = 0;
             }
         }
         return null;
-    }
-
-    protected int findIndex (final double[][] list, final Point2D location) {
-        int index = 0;
-        for (double[] entry : list) {
-            double x = entry[0], y = entry[1];
-            if (x == location.getX() && y == location.getY()) {
-                return index;
-            }
-            index++;
-        }
-        return -1;
-    }
-
-    @Override
-    public void mouseReleased (MouseEvent e) {
-
-    }
-
-    protected boolean isTriggerMouseEvent (MouseEvent e, int method) {
-        return false;
     }
 
     /**
@@ -103,7 +104,7 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
      *
      * @return this for chaining
      */
-    public CoordSysMouseOver register () {
+    public CoordSysMouseOver register() {
         if (!Arrays.asList(canvas.asComponent().getMouseListeners()).contains(this))
             canvas.asComponent().addMouseListener(this);
         if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
@@ -117,12 +118,20 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
      *
      * @return this for chaining
      */
-    public CoordSysMouseOver deRegister () {
+    public CoordSysMouseOver deRegister() {
         canvas.asComponent().removeMouseListener(this);
         canvas.asComponent().removeMouseMotionListener(this);
         return this;
     }
 
-    public abstract void mouseOverPoint (Point mouselocation, Point2D pointlocation, double[][] data, int dataIndex);
-
+    /**
+     * Will be called, when a data point is clicked on.
+     *
+     * @param mouseLocation location that was clicked
+     * @param pointLocation location of the clicked point in the coordinate system
+     * @param data          the data array where the data point was found
+     * @param dataIndex     the index of the data point in the returned array
+     */
+    public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation,
+                                        final double[][] data, final int dataIndex);
 }
