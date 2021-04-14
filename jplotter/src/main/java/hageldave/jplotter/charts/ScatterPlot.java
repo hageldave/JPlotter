@@ -176,9 +176,9 @@ public class ScatterPlot {
     public CoordSysMouseOver addMouseOver () {
         return new CoordSysMouseOver(this.canvas, this.coordsys, this.allPoints) {
             @Override
-            public void mouseOverPoint (Point mouselocation, Point2D pointlocation, double[][] data, int dataIndex) {
-                System.out.println("Mouse location: " + mouselocation);
-                System.out.println("Point location: " + pointlocation);
+            public void mouseOverPoint (Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
+                System.out.println("Mouse location: " + mouseLocation);
+                System.out.println("Point location: " + pointLocation);
                 System.out.println("Data array: " + Arrays.deepToString(data));
                 System.out.println("Data index: " + dataIndex);
             }
