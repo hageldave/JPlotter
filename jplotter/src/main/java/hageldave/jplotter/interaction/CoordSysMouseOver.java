@@ -18,11 +18,10 @@ import java.util.LinkedList;
 /**
  * The CoordSysMouseOver class realizes a functionality that enables
  * recognizing the clicked point in the given datasets.
- *
+ * <p>
  * It contains an abstract method mouseOverPoint
  * which is called when a point in the dataSet is clicked on.
  * It's behavior has to be implemented by the developer.
- *
  */
 public abstract class CoordSysMouseOver extends MouseAdapter {
     protected JPlotterCanvas canvas;
@@ -35,6 +34,11 @@ public abstract class CoordSysMouseOver extends MouseAdapter {
     // protected int extModifierMask = InputEvent.SHIFT_DOWN_MASK;
     // protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 
+    /**
+     * @param canvas        the canvas the CoordSysMouseOver will used with
+     * @param coordsys      the coordinate system the CoordSysMouseOver will used with
+     * @param allDataPoints will be searched for a data point similar to the clicked location
+     */
     public CoordSysMouseOver(JPlotterCanvas canvas, CoordSysRenderer coordsys,
                              LinkedList<double[][]> allDataPoints) {
         this.canvas = canvas;
