@@ -24,6 +24,7 @@ public enum ColorSchemePreset {
             new Color(196, 196, 196)
     );
 
+    // TODO statt attribute, ColorScheme
     protected final Color primaryColor;
     protected final Color secondaryColor;
     protected final Color tertiaryColor;
