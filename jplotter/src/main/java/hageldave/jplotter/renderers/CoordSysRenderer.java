@@ -176,18 +176,18 @@ public class CoordSysRenderer implements Renderer {
 	protected CoordSysRenderer updateColors() {
 		// changing axes colors (4 segments framing the coordinate area)
 		this.axes.getSegments().get(0).setColor(
-				this.colorScheme.getPrimaryColor());
+				this.colorScheme.getColor1());
 		this.axes.getSegments().get(1).setColor(
-				this.colorScheme.getPrimaryColor());
+				this.colorScheme.getColor1());
 		this.axes.getSegments().get(2).setColor(
-				this.colorScheme.getSecondaryColor());
+				this.colorScheme.getColor2());
 		this.axes.getSegments().get(3).setColor(
-				this.colorScheme.getSecondaryColor());
+				this.colorScheme.getColor2());
 		this.axes.setDirty();
 		
-		this.guideColor = this.colorScheme.getQuaternary();
-		this.tickColor = this.colorScheme.getTertiaryColor();
-		this.textColor = this.colorScheme.getTextColor();
+		this.guideColor = this.colorScheme.getColor4();
+		this.tickColor = this.colorScheme.getColor3();
+		this.textColor = this.colorScheme.getColorText();
 		this.xAxisLabelText.setColor(this.textColor);
 		this.yAxisLabelText.setColor(this.textColor);
 		setDirty();
