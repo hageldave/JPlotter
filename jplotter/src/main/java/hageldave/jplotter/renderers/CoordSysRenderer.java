@@ -137,7 +137,7 @@ public class CoordSysRenderer implements Renderer {
 	 * Sets up a CoordSysRenderer with the default color scheme
 	 */
 	public CoordSysRenderer() {
-		this.colorScheme = new ColorScheme(ColorSchemePreset.LIGHT);
+		this.colorScheme = ColorSchemePreset.LIGHT.get();
 		setupCoordSysRenderer();
 	}
 

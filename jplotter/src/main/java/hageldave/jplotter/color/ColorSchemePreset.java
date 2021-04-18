@@ -3,39 +3,43 @@ package hageldave.jplotter.color;
 import java.awt.*;
 
 /**
- * The SchemePresets contains different color constants (Light, Dark),
- * which can be accessed by the Color Scheme.
+ * The SchemePresets contains predefined {@link ColorScheme}s (Light, Dark),
+ * which can be accessed through {@link #get()}.
  *
  * @author lucareichmann
  */
 public enum ColorSchemePreset {
-    LIGHT(
-            Color.BLACK,
-            Color.GRAY,
-            Color.DARK_GRAY,
-            new Color(0xdddddd),
-            new Color(96, 96, 96)
-    ),
-    DARK(
-            Color.WHITE,
-            Color.LIGHT_GRAY,
-            Color.LIGHT_GRAY,
-            Color.DARK_GRAY,
-            new Color(196, 196, 196)
-    );
+	LIGHT(
+		new ColorScheme(
+			Color.BLACK,
+			Color.GRAY,
+			Color.DARK_GRAY,
+			new Color(0xdddddd),
+			new Color(96, 96, 96)
+		)
+	),
+	DARK(
+		new ColorScheme(
+			Color.WHITE,
+			Color.LIGHT_GRAY,
+			Color.LIGHT_GRAY,
+			Color.DARK_GRAY,
+			new Color(196, 196, 196)
+		)
+	),
+	;
 
-    protected final Color primaryColor;
-    protected final Color secondaryColor;
-    protected final Color tertiaryColor;
-    protected final Color quaternaryColor;
-    protected final Color textColor;
+	private final ColorScheme scheme;
 
-    ColorSchemePreset (final Color primaryColor, final Color secondaryColor,
-                       final Color tertiaryColor, final Color quaternaryColor, final Color textColor) {
-        this.primaryColor = primaryColor;
-        this.secondaryColor = secondaryColor;
-        this.tertiaryColor = tertiaryColor;
-        this.quaternaryColor = quaternaryColor;
-        this.textColor = textColor;
-    }
+	private ColorSchemePreset (ColorScheme scheme) {
+		this.scheme = scheme;
+	}
+
+	/**
+	 * Returns the preset's {@link ColorScheme} object
+	 * @return color scheme
+	 */
+	public ColorScheme get() {
+		return this.scheme;
+	}
 }

@@ -68,7 +68,7 @@ public class Legend implements Renderable, Renderer {
 	protected ColorScheme colorScheme;
 
 	public Legend() {
-		this.colorScheme = new ColorScheme(ColorSchemePreset.LIGHT);
+		this.colorScheme = ColorSchemePreset.LIGHT.get();
 	}
 
 	/**
