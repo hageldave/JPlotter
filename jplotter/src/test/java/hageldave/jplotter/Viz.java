@@ -14,6 +14,8 @@ import javax.swing.SwingUtilities;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.color.ColorScheme;
+import hageldave.jplotter.color.ColorSchemePreset;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
@@ -68,6 +70,7 @@ public class Viz {
 		
 		
 		CoordSysRenderer csr = new CoordSysRenderer();
+		csr.setColorScheme(new ColorScheme(ColorSchemePreset.DARK));
 		csr.setContent(render.withAppended(prender).withAppended(trirender));
 		Legend legend = new Legend();
 		csr.setLegendBottom(legend);

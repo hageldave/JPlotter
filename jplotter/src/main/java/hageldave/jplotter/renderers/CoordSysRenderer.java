@@ -155,13 +155,17 @@ public class CoordSysRenderer implements Renderer {
 	 * Helper method to setup the CoordSysRenderer
 	 */
 	protected void setupCoordSysRenderer() {
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB);
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT);
+		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT);
+		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT);
 		this.axes.setGlobalThicknessMultiplier(2);
 		this.preContentLinesR
-				.addItemToRender(guides)
-				.addItemToRender(ticks);
+		.addItemToRender(guides)
+		.addItemToRender(ticks);
 		this.preContentTextR
-				.addItemToRender(xAxisLabelText)
-				.addItemToRender(yAxisLabelText);
+		.addItemToRender(xAxisLabelText)
+		.addItemToRender(yAxisLabelText);
 		this.postContentLinesR.addItemToRender(axes);
 		updateColors();
 	}
@@ -170,14 +174,17 @@ public class CoordSysRenderer implements Renderer {
 	 * Helper method to update the colors if the color scheme is changed.
 	 */
 	protected CoordSysRenderer updateColors() {
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(
+		// changing axes colors (4 segments framing the coordinate area)
+		this.axes.getSegments().get(0).setColor(
 				this.colorScheme.getPrimaryColor());
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(
+		this.axes.getSegments().get(1).setColor(
 				this.colorScheme.getPrimaryColor());
-		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(
+		this.axes.getSegments().get(2).setColor(
 				this.colorScheme.getSecondaryColor());
-		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT).setColor(
+		this.axes.getSegments().get(3).setColor(
 				this.colorScheme.getSecondaryColor());
+		this.axes.setDirty();
+		
 		this.guideColor = this.colorScheme.getQuaternary();
 		this.tickColor = this.colorScheme.getTertiaryColor();
 		this.textColor = this.colorScheme.getTextColor();
