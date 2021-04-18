@@ -521,7 +521,7 @@ public class CoordSysRenderer implements Renderer {
 			label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -Math.round(textSize.getHeight()/2.0)+0.5));
 			tickMarkLabels.add(label);
 			// guide
-			guides.addSegment(onaxis, new TranslatedPoint2D(coordsysAreaRB, 0, m*yAxisHeight)).setColor(guideColor);
+			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, xAxisWidth, 0)).setColor(guideColor);
 		}
 		for(Text txt: tickMarkLabels){
 			preContentTextR.addItemToRender(txt);
