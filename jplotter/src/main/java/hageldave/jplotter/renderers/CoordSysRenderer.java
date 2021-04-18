@@ -190,6 +190,10 @@ public class CoordSysRenderer implements Renderer {
 		this.textColor = this.colorScheme.getColorText();
 		this.xAxisLabelText.setColor(this.textColor);
 		this.yAxisLabelText.setColor(this.textColor);
+		
+		updateLegendColorScheme(legendBottom);
+		updateLegendColorScheme(legendRight);
+		
 		setDirty();
 		return this;
 	}
