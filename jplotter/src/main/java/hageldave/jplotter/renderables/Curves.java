@@ -476,11 +476,6 @@ public class Curves implements Renderable {
 		return curves;
 	}
 
-	// TODO Discuss changes
-	public ArrayList getRenderableDetails() {
-		return curves;
-	}
-
 	/**
 	 * Adds a curve to the collection
 	 * @param cd curve to add
@@ -692,7 +687,7 @@ public class Curves implements Renderable {
 	 * control point positions, as well as, line color, picking color and thickness.
 	 * @author hageldave
 	 */
-	public static class CurveDetails implements Cloneable, RenderableDetails {
+	public static class CurveDetails implements Cloneable {
 		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
 				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
 		
@@ -747,12 +742,6 @@ public class Curves implements Renderable {
 				pickID = pickID | 0xff000000;
 			this.pickColor = pickID;
 			return this;
-		}
-
-		// TODO Discuss what location should be returned
-		@Override
-		public Point2D retrieveLocation () {
-			return p0;
 		}
 
 		/**

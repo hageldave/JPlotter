@@ -229,11 +229,6 @@ public class Lines implements Renderable {
 	public ArrayList<SegmentDetails> getSegments() {
 		return segments;
 	}
-
-	// TODO Discuss changes
-	public ArrayList getRenderableDetails() {
-		return segments;
-	}
 	
 	/**
 	 * Sets the line thickness multiplier for this {@link Lines} object in pixels.
@@ -425,7 +420,7 @@ public class Lines implements Renderable {
 	 * Specification of a line segment which comprises vertex locations, colors, picking color, and thicknesses.
 	 * @author hageldave
 	 */
-	public static class SegmentDetails implements Cloneable, RenderableDetails {
+	public static class SegmentDetails implements Cloneable {
 		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
 				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
 		
@@ -476,12 +471,6 @@ public class Lines implements Renderable {
 				pickID = pickID | 0xff000000;
 			this.pickColor = pickID;
 			return this;
-		}
-
-		// TODO Discuss what location should be returned
-		@Override
-		public Point2D retrieveLocation () {
-			return p0;
 		}
 
 		/**

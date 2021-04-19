@@ -287,7 +287,7 @@ public class Points implements Renderable {
 	 * This comprises location, color, scaling, glyph rotation and picking color.
 	 * @author hageldave
 	 */
-	public static class PointDetails implements Cloneable, RenderableDetails {
+	public static class PointDetails implements Cloneable {
 		public Point2D location;
 		public DoubleSupplier rot;
 		public DoubleSupplier scale;
@@ -406,10 +406,6 @@ public class Points implements Renderable {
 			return this;
 		}
 
-		@Override
-		public Point2D retrieveLocation () {
-			return location;
-		}
 	}
 	
 	/**
@@ -417,11 +413,6 @@ public class Points implements Renderable {
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
 	public ArrayList<PointDetails> getPointDetails() {
-		return points;
-	}
-
-	// TODO Discuss changes
-	public ArrayList getRenderableDetails() {
 		return points;
 	}
 

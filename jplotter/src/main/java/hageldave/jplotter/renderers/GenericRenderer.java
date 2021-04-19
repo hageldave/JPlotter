@@ -2,10 +2,8 @@ package hageldave.jplotter.renderers;
 
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
-import hageldave.jplotter.renderables.RenderableDetails;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
-import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
 
 import java.awt.geom.Rectangle2D;
@@ -28,7 +26,6 @@ import java.util.Objects;
 public abstract class GenericRenderer<T extends Renderable> implements Renderer, AdaptableView {
 	
 	protected LinkedList<T> itemsToRender = new LinkedList<>();
-	protected final static PickingRegistry<RenderableDetails> pickingRegistry = new PickingRegistry<RenderableDetails>();
 	protected Shader shader;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	protected Rectangle2D view = null;
@@ -128,33 +125,15 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	 * The renderer will take care of calling {@link Renderable#initGL()} during
 	 * its {@link #render(int, int, int, int)} method and will as well call
 	 * {@link Renderable#updateGL()} if {@link Renderable#isDirty()}.
-	 *
-	 * TODO Improve documentation so that picking registry is also mentioned
 	 * 
 	 * @param item to add
 	 * @return this for chaining
 	 */
 	public GenericRenderer<T> addItemToRender(T item){
 		if(!itemsToRender.contains(item))
-			// add item to picking registry
-			addItemToRegistry(item);
 			// add item to render chain
 			itemsToRender.add(item);
 		return this;
-	}
-
-	/**
-	 * TODO
-	 * @param item
-	 */
-	protected void addItemToRegistry(T item) {
-		if (item.getRenderableDetails() != null) {
-			for (RenderableDetails detail: item.getRenderableDetails()) {
-				int tempID = GenericRenderer.pickingRegistry.getNewID();
-				detail.setPickColor(tempID);
-				GenericRenderer.pickingRegistry.register(detail, tempID);
-			}
-		}
 	}
 
 	/**
@@ -192,13 +171,6 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 		return itemsToRender;
 	}
 
-	/**
-	 * @return the picking registry where all items are stored
-	 */
-	public static PickingRegistry<RenderableDetails> getPickingRegistry () {
-		return pickingRegistry;
-	}
-	
 	@Override
 	public void setView(Rectangle2D view){
 		this.view = Objects.isNull(view) ? null:Utils.copy(view);
