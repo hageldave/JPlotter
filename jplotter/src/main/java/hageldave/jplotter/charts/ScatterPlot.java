@@ -20,7 +20,6 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 
 /**
  * The ScatterPlot class provides an easy way to quickly create a ScatterPlot.
@@ -42,11 +41,7 @@ public class ScatterPlot {
     protected CoordSysRenderer coordsys;
     protected PointsRenderer content;
     final protected HashMap<Integer, Dataset> pointMap;
-
-    // TODO might be merged with hashmap
-    final protected LinkedList<double[][]> allPoints;
     final protected PickingRegistry<Points.PointDetails> registry = new PickingRegistry<Points.PointDetails>();
-
 
     /**
      * A Dataset stores the point coordinates, the glyph & color selected by the user and
@@ -58,39 +53,37 @@ public class ScatterPlot {
         protected Color color;
         protected Points points;
 
-        protected Dataset (final double[][] pointsCoordinates, final DefaultGlyph glyph, final Color color, final Points points) {
+        protected Dataset(final double[][] pointsCoordinates, final DefaultGlyph glyph, final Color color, final Points points) {
             this.pointsCoordinates = pointsCoordinates;
             this.glyph = glyph;
             this.color = color;
             this.points = points;
         }
 
-        public double[][] getPointsCoordinates () {
+        public double[][] getPointsCoordinates() {
             return pointsCoordinates;
         }
 
-        public DefaultGlyph getGlyph () {
+        public DefaultGlyph getGlyph() {
             return glyph;
         }
 
-        public Color getColor () {
+        public Color getColor() {
             return color;
         }
 
-        public Points getPoints () {
+        public Points getPoints() {
             return points;
         }
     }
 
-    public ScatterPlot (final boolean useOpenGL) {
-        this.allPoints = new LinkedList<double[][]>();
+    public ScatterPlot(final boolean useOpenGL) {
         this.pointMap = new HashMap<Integer, Dataset>();
         this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
         setupScatterPlot();
     }
 
-    public ScatterPlot (final boolean useOpenGL, final JPlotterCanvas canvas) {
-        this.allPoints = new LinkedList<double[][]>();
+    public ScatterPlot(final boolean useOpenGL, final JPlotterCanvas canvas) {
         this.pointMap = new HashMap<Integer, Dataset>();
         this.canvas = canvas;
         setupScatterPlot();
@@ -99,7 +92,7 @@ public class ScatterPlot {
     /**
      * Helper method to set the initial scatter plot.
      */
-    protected void setupScatterPlot () {
+    protected void setupScatterPlot() {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.coordsys = new CoordSysRenderer();
@@ -118,7 +111,7 @@ public class ScatterPlot {
      * @param color  the color of the glyph
      * @return the old Scatterplot for chaining
      */
-    public ScatterPlot addPoints (final int ID, final double[][] points, final DefaultGlyph glyph, final Color color) {
+    public Dataset addPoints(final int ID, final double[][] points, final DefaultGlyph glyph, final Color color) {
         ScatterPlot old = this;
         Points tempPoints = new Points(glyph);
         for (double[] entry : points) {
@@ -127,12 +120,10 @@ public class ScatterPlot {
             point.setColor(color);
             addItemToRegistry(point);
         }
-        // TODO dataset zurückgeben, statt ScatterPlot -> dann kann da Farbe manipuliert werden
         Dataset newSet = new Dataset(points, glyph, color, tempPoints);
         this.pointMap.put(ID, newSet);
-        this.allPoints.add(points);
         this.content.addItemToRender(tempPoints);
-        return old;
+        return newSet;
     }
 
     /**
@@ -141,7 +132,7 @@ public class ScatterPlot {
      * @param ID the Dataset with this ID will be removed from the pointMap
      * @return the old Scatterplot for chaining
      */
-    public ScatterPlot removePoints (final int ID) {
+    public ScatterPlot removePoints(final int ID) {
         ScatterPlot old = this;
         this.pointMap.remove(ID);
         return old;
@@ -152,7 +143,7 @@ public class ScatterPlot {
      *
      * @return the {@link CoordSysScrollZoom} so that it can be further customized
      */
-    public CoordSysScrollZoom addScrollZoom () {
+    public CoordSysScrollZoom addScrollZoom() {
         return new CoordSysScrollZoom(this.canvas, this.coordsys).register();
     }
 
@@ -161,7 +152,7 @@ public class ScatterPlot {
      *
      * @return the {@link CoordSysPanning} so that it can be further customized
      */
-    public CoordSysPanning addPanning () {
+    public CoordSysPanning addPanning() {
         return new CoordSysPanning(this.canvas, this.coordsys).register();
     }
 
@@ -170,18 +161,21 @@ public class ScatterPlot {
      *
      * @return the {@link CoordSysViewSelector} so that it can be further customized
      */
-    public CoordSysViewSelector addZoomViewSelector () {
+    public CoordSysViewSelector addZoomViewSelector() {
         return new CoordSysViewSelector(this.canvas, this.coordsys) {
             // TODO überlegen ob/was sinnvoll -> Konflikte mit anderen Interaktionen?!
-            { extModifierMask = 0;/* no need for shift to be pressed */ }
+            {
+                extModifierMask = 0;/* no need for shift to be pressed */
+            }
+
             @Override
-            public void areaSelected (double minX, double minY, double maxX, double maxY) {
+            public void areaSelected(double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);
             }
         }.register();
     }
 
-    public CoordSysMouseOver addMouseOver () {
+    public CoordSysMouseOver addMouseOverInterface() {
         return (CoordSysMouseOver) new CoordSysMouseOver() {
             @Override
             public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
@@ -205,36 +199,30 @@ public class ScatterPlot {
         }.register();
     }
 
-    public JPlotterCanvas getCanvas () {
+    public JPlotterCanvas getCanvas() {
         return canvas;
     }
 
-    public CoordSysRenderer getCoordsys () {
+    public CoordSysRenderer getCoordsys() {
         return coordsys;
     }
 
-    public PointsRenderer getContent () {
+    public PointsRenderer getContent() {
         return content;
     }
 
-    public HashMap<Integer, Dataset> getPointMap () {
+    public HashMap<Integer, Dataset> getPointMap() {
         return pointMap;
     }
 
     /**
-     * TODO
      * @param
      */
     protected void addItemToRegistry(Points.PointDetails item) {
-                int tempID = this.registry.getNewID();
-                item.setPickColor(tempID);
-                this.registry.register(item, tempID);
+        int tempID = this.registry.getNewID();
+        item.setPickColor(tempID);
+        this.registry.register(item, tempID);
     }
-
-    public LinkedList<double[][]> getAllPoints () {
-        return allPoints;
-    }
-
 
     private abstract class ScatterPlotInterfaces extends MouseAdapter {
         protected int index = 0;
@@ -267,18 +255,16 @@ public class ScatterPlot {
          */
         protected double[][] getListAndSetIndex(final Point2D location) {
             double[][] tempList;
-            if (allPoints != null) {
-                for (final double[][] pointList : allPoints) {
-                    tempList = pointList;
-                    for (double[] entry : pointList) {
-                        double x = entry[0], y = entry[1];
-                        if (x == location.getX() && y == location.getY()) {
-                            return tempList;
-                        }
-                        this.index++;
+            for (final Dataset pointList : pointMap.values()) {
+                tempList = pointList.getPointsCoordinates();
+                for (double[] entry : pointList.getPointsCoordinates()) {
+                    double x = entry[0], y = entry[1];
+                    if (x == location.getX() && y == location.getY()) {
+                        return tempList;
                     }
-                    this.index = 0;
+                    this.index++;
                 }
+                this.index = 0;
             }
             return null;
         }
@@ -367,7 +353,7 @@ public class ScatterPlot {
          * @param dataIndex     the index of the data point in the returned array
          */
         public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation,
-                                          final double[][] data, final int dataIndex);
+                                            final double[][] data, final int dataIndex);
     }
 
 }
