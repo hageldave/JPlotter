@@ -1,32 +1,17 @@
 package hageldave.jplotter;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.geom.Point2D;
-import java.util.Arrays;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.ColorSchemePreset;
 import hageldave.jplotter.misc.DefaultGlyph;
-import hageldave.jplotter.renderables.Legend;
-import hageldave.jplotter.renderables.Lines;
-import hageldave.jplotter.renderables.Points;
-import hageldave.jplotter.renderables.Text;
-import hageldave.jplotter.renderables.Triangles;
-import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.LinesRenderer;
-import hageldave.jplotter.renderers.PointsRenderer;
-import hageldave.jplotter.renderers.TextRenderer;
-import hageldave.jplotter.renderers.TrianglesRenderer;
+import hageldave.jplotter.renderables.*;
+import hageldave.jplotter.renderers.*;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.util.Arrays;
 
 public class Viz {
 	
@@ -70,7 +55,7 @@ public class Viz {
 		
 		
 		CoordSysRenderer csr = new CoordSysRenderer();
-		csr.setColorScheme(new ColorScheme(ColorSchemePreset.DARK));
+		csr.setColorScheme(ColorSchemePreset.LIGHT.get());
 		csr.setContent(render.withAppended(prender).withAppended(trirender));
 		Legend legend = new Legend();
 		csr.setLegendBottom(legend);
