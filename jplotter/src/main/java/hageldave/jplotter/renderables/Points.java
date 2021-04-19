@@ -1,6 +1,14 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.misc.Glyph;
+import hageldave.jplotter.renderers.PointsRenderer;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+import org.lwjgl.opengl.GL33;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -9,15 +17,6 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
-
-import org.lwjgl.opengl.GL33;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.misc.Glyph;
-import hageldave.jplotter.renderers.PointsRenderer;
-import hageldave.jplotter.util.Utils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The Points class is a collection of 2D points that are to be represented
@@ -268,7 +267,9 @@ public class Points implements Renderable {
 	public boolean isHidden() {
 		return hidden;
 	}
-	
+
+
+
 	/**
 	 * Hides or unhides this Points object, i.e. sets the {@link #isHidden()} field
 	 * value. When hidden, renderers will not draw it.
@@ -286,7 +287,7 @@ public class Points implements Renderable {
 	 * This comprises location, color, scaling, glyph rotation and picking color.
 	 * @author hageldave
 	 */
-	public static class PointDetails implements Cloneable {
+	public static class PointDetails implements Cloneable, RenderableDetails {
 		public Point2D location;
 		public DoubleSupplier rot;
 		public DoubleSupplier scale;
@@ -404,6 +405,11 @@ public class Points implements Renderable {
 			this.pickColor = pickID;
 			return this;
 		}
+
+		@Override
+		public Point2D retrieveLocation () {
+			return location;
+		}
 	}
 	
 	/**
@@ -411,6 +417,11 @@ public class Points implements Renderable {
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
 	public ArrayList<PointDetails> getPointDetails() {
+		return points;
+	}
+
+	// TODO Discuss changes
+	public ArrayList getRenderableDetails() {
 		return points;
 	}
 

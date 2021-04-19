@@ -1,6 +1,12 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.renderers.LinesRenderer;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -10,12 +16,6 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.renderers.LinesRenderer;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The Lines class is a collection of linear line segments.
@@ -229,6 +229,11 @@ public class Lines implements Renderable {
 	public ArrayList<SegmentDetails> getSegments() {
 		return segments;
 	}
+
+	// TODO Discuss changes
+	public ArrayList getRenderableDetails() {
+		return segments;
+	}
 	
 	/**
 	 * Sets the line thickness multiplier for this {@link Lines} object in pixels.
@@ -402,7 +407,9 @@ public class Lines implements Renderable {
 	public boolean isHidden() {
 		return hidden;
 	}
-	
+
+
+
 	/**
 	 * Hides or unhides this Lines object, i.e. sets the {@link #isHidden()} field
 	 * value. When hidden, renderers will not draw it.
@@ -418,7 +425,7 @@ public class Lines implements Renderable {
 	 * Specification of a line segment which comprises vertex locations, colors, picking color, and thicknesses.
 	 * @author hageldave
 	 */
-	public static class SegmentDetails implements Cloneable {
+	public static class SegmentDetails implements Cloneable, RenderableDetails {
 		protected static final DoubleSupplier[] PREDEFINED_THICKNESSES = new DoubleSupplier[]
 				{()->0f, ()->1f, ()->2f, ()->3f, ()->4f};
 		
@@ -464,13 +471,19 @@ public class Lines implements Renderable {
 		 * @param pickID picking color of the segment (see {@link Lines} for details)
 		 * @return this for chaining
 		 */
-		public SegmentDetails setPickColor(int pickID){
+		public SegmentDetails setPickColor (int pickID) {
 			if(pickID != 0)
 				pickID = pickID | 0xff000000;
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
+		// TODO Discuss what location should be returned
+		@Override
+		public Point2D retrieveLocation () {
+			return p0;
+		}
+
 		/**
 		 * Sets the color at the starting point of the segment
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)

@@ -1,6 +1,11 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -9,11 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The Triangles class is a collection of 2D triangles.
@@ -373,7 +373,7 @@ public class Triangles implements Renderable {
 	 * Specification of a triangle which comprises vertex locations, colors and picking color.
 	 * @author hageldave
 	 */
-	public static class TriangleDetails implements Cloneable {
+	public static class TriangleDetails implements Cloneable, RenderableDetails {
 		public Point2D p0,p1,p2;
 		public IntSupplier c0,c1,c2;
 		public int pickColor;
@@ -426,7 +426,13 @@ public class Triangles implements Renderable {
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
+		// TODO Discuss what location should be returned
+		@Override
+		public Point2D retrieveLocation () {
+			return p0;
+		}
+
 		/**
 		 * Sets the color for vertex 0
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
@@ -548,6 +554,10 @@ public class Triangles implements Renderable {
 		return triangles;
 	}
 
+	// TODO Discuss changes
+	public ArrayList getRenderableDetails() {
+		return triangles;
+	}
 	/**
 	 * Returns this object's {@link VertexArray}.
 	 * The first attribute (index=0) of the VA contains the 2D vertices of the triangles of this collection.

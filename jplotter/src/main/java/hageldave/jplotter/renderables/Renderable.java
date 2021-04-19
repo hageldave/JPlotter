@@ -1,11 +1,12 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.geom.Rectangle2D;
-
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.GenericRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 
 /**
  * Interface for an object that can be rendered by a {@link Renderer} e.g. the {@link GenericRenderer}.
@@ -59,5 +60,12 @@ public interface Renderable extends AutoCloseable {
 	 * @return true when hidden
 	 */
 	public default boolean isHidden() {return false;}
-	
+
+	/**
+	 * Returns the details of the each Renderable
+	 * @return all RenderableDetails, if they exist (e.g. Text has no RenderableDetails)
+	 */
+	public default ArrayList<RenderableDetails> getRenderableDetails() {
+		return null;
+	};
 }
