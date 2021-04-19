@@ -3,7 +3,6 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.interaction.CoordSysMouseOver;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
@@ -14,6 +13,10 @@ import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.PickingRegistry;
 
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -179,9 +182,21 @@ public class ScatterPlot {
     }
 
     public CoordSysMouseOver addMouseOver () {
-        return new CoordSysMouseOver(this.canvas, this.coordsys, this.allPoints, this.registry) {
+        return (CoordSysMouseOver) new CoordSysMouseOver() {
             @Override
-            public void mouseOverPoint (Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
+            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
+                System.out.println("Mouse location: " + mouseLocation);
+                System.out.println("Point location: " + pointLocation);
+                System.out.println("Data array: " + Arrays.deepToString(data));
+                System.out.println("Data index: " + dataIndex);
+            }
+        }.register();
+    }
+
+    public CoordSysPointClicked addPointClickedInterface() {
+        return (CoordSysPointClicked) new CoordSysPointClicked() {
+            @Override
+            public void pointClicked(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
                 System.out.println("Mouse location: " + mouseLocation);
                 System.out.println("Point location: " + pointLocation);
                 System.out.println("Data array: " + Arrays.deepToString(data));
@@ -219,5 +234,141 @@ public class ScatterPlot {
     public LinkedList<double[][]> getAllPoints () {
         return allPoints;
     }
+
+
+    private abstract class ScatterPlotInterfaces extends MouseAdapter {
+        protected int index = 0;
+        protected double[][] dataSet;
+
+        /**
+         * Searches for a data point similar to the location the developer clicked on.
+         *
+         * @param e MouseEvent when clicking
+         * @return true if a point was found, false if no point was found in the dataSet
+         */
+        protected boolean findPoints(final MouseEvent e) {
+            Points.PointDetails details = registry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            if (details != null) {
+                Point2D location = details.location;
+                this.dataSet = getListAndSetIndex(location);
+                if (this.dataSet != null) {
+                    triggerInterfaceMethod(e.getPoint(), location, this.dataSet, this.index);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Finds the data array which contains the clicked-on data point.
+         *
+         * @param location clicked in the coordinate system
+         * @return list where the data point was found
+         */
+        protected double[][] getListAndSetIndex(final Point2D location) {
+            double[][] tempList;
+            if (allPoints != null) {
+                for (final double[][] pointList : allPoints) {
+                    tempList = pointList;
+                    for (double[] entry : pointList) {
+                        double x = entry[0], y = entry[1];
+                        if (x == location.getX() && y == location.getY()) {
+                            return tempList;
+                        }
+                        this.index++;
+                    }
+                    this.index = 0;
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
+         * {@link MouseMotionListener} to the associated canvas.
+         *
+         * @return this for chaining
+         */
+        public ScatterPlotInterfaces register() {
+            if (!Arrays.asList(canvas.asComponent().getMouseListeners()).contains(this))
+                canvas.asComponent().addMouseListener(this);
+            if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
+                canvas.asComponent().addMouseMotionListener(this);
+            return this;
+        }
+
+        /**
+         * Removes this {@link CoordSysViewSelector} from the associated canvas'
+         * mouse and mouse motion listeners.
+         *
+         * @return this for chaining
+         */
+        public ScatterPlotInterfaces deRegister() {
+            canvas.asComponent().removeMouseListener(this);
+            canvas.asComponent().removeMouseMotionListener(this);
+            return this;
+        }
+
+        protected abstract void triggerInterfaceMethod(final Point mouseLocation, final Point2D pointLocation,
+                                                       final double[][] data, final int dataIndex);
+    }
+
+
+    /**
+     *
+     */
+    protected abstract class CoordSysPointClicked extends ScatterPlotInterfaces {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (!findPoints(e)) {
+                System.out.println("No data point found in your dataset");
+            }
+            this.index = 0;
+        }
+
+        @Override
+        protected void triggerInterfaceMethod(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
+            pointClicked(mouseLocation, pointLocation, data, dataIndex);
+        }
+
+        /**
+         * Will be called, when a data point is clicked on.
+         *
+         * @param mouseLocation location that was clicked
+         * @param pointLocation location of the clicked point in the coordinate system
+         * @param data          the data array where the data point was found
+         * @param dataIndex     the index of the data point in the returned array
+         */
+        public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation,
+                                          final double[][] data, final int dataIndex);
+    }
+
+    /**
+     *
+     */
+    protected abstract class CoordSysMouseOver extends ScatterPlotInterfaces {
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            findPoints(e);
+            this.index = 0;
+        }
+
+        @Override
+        protected void triggerInterfaceMethod(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
+            mouseOverPoint(mouseLocation, pointLocation, data, dataIndex);
+        }
+
+        /**
+         * Will be called, when a data point is clicked on.
+         *
+         * @param mouseLocation location that was clicked
+         * @param pointLocation location of the clicked point in the coordinate system
+         * @param data          the data array where the data point was found
+         * @param dataIndex     the index of the data point in the returned array
+         */
+        public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation,
+                                          final double[][] data, final int dataIndex);
+    }
+
 }
 
