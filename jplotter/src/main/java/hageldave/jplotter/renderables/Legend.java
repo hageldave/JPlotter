@@ -68,7 +68,7 @@ public class Legend implements Renderable, Renderer {
 	protected ColorScheme colorScheme;
 
 	public Legend() {
-		this.colorScheme = new ColorScheme(ColorSchemePreset.LIGHT);
+		this.colorScheme = ColorSchemePreset.LIGHT.get();
 	}
 
 	/**
@@ -185,7 +185,7 @@ public class Legend implements Renderable, Renderer {
 	 */
 	public Legend addGlyphLabel(Glyph glyph, int color, String labeltxt){
 		if (this.colorScheme != null) {
-			return addGlyphLabel(glyph, color, labeltxt, (this.colorScheme.getTextColor()).getRGB());
+			return addGlyphLabel(glyph, color, labeltxt, (this.colorScheme.getColorText()).getRGB());
 		}
 		return addGlyphLabel(glyph, color, labeltxt, 0);
 	}
@@ -340,7 +340,7 @@ public class Legend implements Renderable, Renderer {
 		final int elementHSpace = 6;
 		final int fontStyle = Font.PLAIN;
 		final int fontSize = 11;
-		final Color textColor = this.colorScheme.getTextColor();
+		final Color textColor = this.colorScheme.getColorText();
 
 		final int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
 		final int itemWidth = 16;

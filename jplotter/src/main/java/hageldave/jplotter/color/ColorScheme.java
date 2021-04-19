@@ -13,86 +13,62 @@ import java.awt.*;
  * @author lucareichmann
  */
 public class ColorScheme {
-    protected Color primaryColor;
-    protected Color secondaryColor;
-    protected Color tertiaryColor;
-    protected Color quaternaryColor;
-    protected Color textColor;
+	protected final Color color1;
+	protected final Color color2;
+	protected final Color color3;
+	protected final Color color4;
+	protected final Color colorText;
 
-    /**
-     * Defines the color scheme by using one of the predefined {@link ColorSchemePreset}.
-     *
-     * @param scheme - the used SchemePreset
-     */
-    public ColorScheme (final ColorSchemePreset scheme) {
-        setColors(scheme.primaryColor, scheme.secondaryColor,
-                scheme.tertiaryColor, scheme.quaternaryColor, scheme.textColor);
-    }
+	/**
+	 * This constructor is used for defining custom colors in the color scheme.
+	 *
+	 * @param primaryColor primary color of the color scheme
+	 * @param secondaryColor secondary color of the color scheme
+	 * @param tertiaryColor tertiary color of the color scheme
+	 * @param quaternaryColor quarternary color of the color scheme
+	 * @param textColor text color of the color scheme
+	 */
+	public ColorScheme (final Color primaryColor, final Color secondaryColor,
+			final Color tertiaryColor, final Color quaternaryColor, final Color textColor) {
+		this.color1 = primaryColor;
+		this.color2 = secondaryColor;
+		this.color3 = tertiaryColor;
+		this.color4 = quaternaryColor;
+		this.colorText = textColor;
+	}
 
-    /**
-     * This constructor is used for defining custom colors in the color scheme.
-     *
-     * @param primaryColor primary color of the color scheme
-     * @param secondaryColor secondary color of the color scheme
-     * @param tertiaryColor tertiary color of the color scheme
-     * @param quaternaryColor quarternary color of the color scheme
-     * @param textColor text color of the color scheme
-     */
-    public ColorScheme (final Color primaryColor, final Color secondaryColor,
-                        final Color tertiaryColor, final Color quaternaryColor, final Color textColor) {
-        setColors(primaryColor, secondaryColor, tertiaryColor, quaternaryColor, textColor);
-    }
+	/**
+	 * @return primary color of the color scheme
+	 */
+	public Color getColor1() {
+		return this.color1;
+	}
 
-    /**
-     * Helper method which sets colors of the scheme
-     *
-     * @param primaryColor primary color of the color scheme
-     * @param secondaryColor secondary color of the color scheme
-     * @param tertiaryColor tertiary color of the color scheme
-     * @param quaternaryColor fourth color of the color scheme
-     * @param textColor text color of the color scheme
-     */
-    protected void setColors (final Color primaryColor, final Color secondaryColor,
-                                     final Color tertiaryColor, final Color quaternaryColor, final Color textColor) {
-        this.primaryColor = primaryColor;
-        this.secondaryColor = secondaryColor;
-        this.tertiaryColor = tertiaryColor;
-        this.quaternaryColor = quaternaryColor;
-        this.textColor = textColor;
-    }
+	/**
+	 * @return secondary color of the color scheme
+	 */
+	public Color getColor2() {
+		return this.color2;
+	}
 
-    /**
-     * @return primary color of the color scheme
-     */
-    public Color getPrimaryColor() {
-        return this.primaryColor;
-    }
+	/**
+	 * @return tertiary color of the color scheme
+	 */
+	public Color getColor3() {
+		return this.color3;
+	}
 
-    /**
-     * @return secondary color of the color scheme
-     */
-    public Color getSecondaryColor() {
-        return this.secondaryColor;
-    }
+	/**
+	 * @return fourth color of the color scheme
+	 */
+	public Color getColor4 () {
+		return this.color4;
+	}
 
-    /**
-     * @return tertiary color of the color scheme
-     */
-    public Color getTertiaryColor() {
-        return this.tertiaryColor;
-    }
-
-    /**
-     * @return fourth color of the color scheme
-     */
-    public Color getQuaternary () {
-        return this.quaternaryColor;
-    }
-
-    /**
-     * @return text color of the color scheme
-     */
-    public Color getTextColor() {
-        return this.textColor;
-    }
+	/**
+	 * @return text color of the color scheme
+	 */
+	public Color getColorText() {
+		return this.colorText;
+	}
 }
