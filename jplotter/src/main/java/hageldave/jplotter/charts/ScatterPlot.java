@@ -236,7 +236,7 @@ public class ScatterPlot {
         this.registry.register(point, tempID);
     }
 
-    protected abstract class ScatterPlotInterfaces extends MouseAdapter {
+    protected abstract class InteractionInterface extends MouseAdapter {
         protected int index = 0;
         protected double[][] dataSet;
 
@@ -287,7 +287,7 @@ public class ScatterPlot {
          *
          * @return this for chaining
          */
-        public ScatterPlotInterfaces register() {
+        public InteractionInterface register() {
             if (!Arrays.asList(canvas.asComponent().getMouseListeners()).contains(this))
                 canvas.asComponent().addMouseListener(this);
             if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
@@ -301,7 +301,7 @@ public class ScatterPlot {
          *
          * @return this for chaining
          */
-        public ScatterPlotInterfaces deRegister() {
+        public InteractionInterface deRegister() {
             canvas.asComponent().removeMouseListener(this);
             canvas.asComponent().removeMouseMotionListener(this);
             return this;
@@ -325,7 +325,7 @@ public class ScatterPlot {
      * when clicking on a point in the coordsys.
      *
      */
-    public abstract class CoordSysPointClicked extends ScatterPlotInterfaces {
+    public abstract class CoordSysPointClicked extends InteractionInterface {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (!findPoints(e)) {
@@ -356,7 +356,7 @@ public class ScatterPlot {
      * when hovering over a point in the coordsys.
      *
      */
-    public abstract class CoordSysMouseOver extends ScatterPlotInterfaces {
+    public abstract class CoordSysMouseOver extends InteractionInterface {
         @Override
         public void mouseMoved(MouseEvent e) {
             findPoints(e);
