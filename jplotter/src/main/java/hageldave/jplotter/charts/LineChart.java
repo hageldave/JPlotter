@@ -6,9 +6,11 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
+import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.LinesRenderer;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -17,7 +19,7 @@ import java.util.Comparator;
 public class LineChart {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
-    protected LinesRenderer content;
+    protected CompleteRenderer content;
 
     public LineChart(final boolean useOpenGL) {
         this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
@@ -36,7 +38,7 @@ public class LineChart {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.coordsys = new CoordSysRenderer();
-        this.content = new LinesRenderer();
+        this.content = new CompleteRenderer();
         this.coordsys.setCoordinateView(-1, -1, 1, 1);
         this.coordsys.setContent(content);
         this.canvas.setRenderer(coordsys);
@@ -49,7 +51,6 @@ public class LineChart {
     public Lines addLineSegment(final double[][] data, final Color color) {
         Arrays.sort(data, Comparator.comparingDouble(o -> o[0]));
         Lines tempLine = new Lines();
-        System.out.println(data[5].length);
         for (int i = 0; i < data.length-1; i++) {
             double x1 = data[i][0], x2 = data[i+1][0];
             double y1 = data[i][1], y2 = data[i+1][1];
@@ -58,6 +59,17 @@ public class LineChart {
         }
         this.content.addItemToRender(tempLine);
         return tempLine;
+    }
+
+    public Points addPoints(final double[][] data, final DefaultGlyph glyph, final Color color) {
+        Points tempPoints = new Points(glyph);
+        for (double[] entry : data) {
+            double x = entry[0], y = entry[1];
+            Points.PointDetails point = tempPoints.addPoint(x, y);
+            point.setColor(color);
+        }
+        this.content.addItemToRender(tempPoints);
+        return tempPoints;
     }
 
     /**
@@ -104,7 +116,7 @@ public class LineChart {
         return coordsys;
     }
 
-    public LinesRenderer getContent() {
+    public CompleteRenderer getContent() {
         return content;
     }
 
