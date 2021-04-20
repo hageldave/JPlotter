@@ -18,6 +18,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -179,8 +181,8 @@ public class ScatterPlot {
      *
      * @return listener class
      */
-    public CoordSysMouseOver printPointMouseOver() {
-        return (CoordSysMouseOver) new CoordSysMouseOver() {
+    public MouseOverInterface printPointMouseOver() {
+        return (MouseOverInterface) new MouseOverInterface() {
             @Override
             public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
                 System.out.println("Mouse location: " + mouseLocation);
@@ -197,8 +199,8 @@ public class ScatterPlot {
      *
      * @return listener class
      */
-    public CoordSysPointClicked printPointClicked() {
-        return (CoordSysPointClicked) new CoordSysPointClicked() {
+    public PointClickedInterface printPointClicked() {
+        return (PointClickedInterface) new PointClickedInterface() {
             @Override
             public void pointClicked(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
                 System.out.println("Mouse location: " + mouseLocation);
@@ -317,6 +319,7 @@ public class ScatterPlot {
          */
         protected abstract void triggerInterfaceMethod(final Point mouseLocation, final Point2D pointLocation,
                                                        final double[][] data, final int dataIndex);
+
     }
 
 
@@ -325,7 +328,7 @@ public class ScatterPlot {
      * when clicking on a point in the coordsys.
      *
      */
-    public abstract class CoordSysPointClicked extends InteractionInterface {
+    public abstract class PointClickedInterface extends InteractionInterface {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (!findPoints(e)) {
@@ -356,7 +359,7 @@ public class ScatterPlot {
      * when hovering over a point in the coordsys.
      *
      */
-    public abstract class CoordSysMouseOver extends InteractionInterface {
+    public abstract class MouseOverInterface extends InteractionInterface {
         @Override
         public void mouseMoved(MouseEvent e) {
             findPoints(e);
@@ -380,5 +383,37 @@ public class ScatterPlot {
                                             final double[][] data, final int dataIndex);
     }
 
+    public abstract class PointsSelectedInterface {
+        protected ArrayList<double[][]> data = new ArrayList<double[][]>();
+        protected ArrayList<Integer> dataIndices = new ArrayList<Integer>();
+
+        public PointsSelectedInterface() {
+            new CoordSysViewSelector(canvas, coordsys) {
+                @Override
+                public void areaSelected(double minX, double minY, double maxX, double maxY) {
+                    calcPoints(minX, minY, maxX, maxY);
+                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices);
+                    data.clear(); dataIndices.clear();
+                }
+            }.register();
+        }
+
+        protected void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
+            int index = 0;
+            for (final Dataset pointList : pointMap.values()) {
+                for (double[] entry : pointList.getPointsCoordinates()) {
+                    double x = entry[0], y = entry[1];
+                    if (x > minX && x < maxX && y > minY && y < maxY) {
+                        this.dataIndices.add(index);
+                        this.data.add(pointList.getPointsCoordinates());
+                    }
+                    index++;
+                }
+                index = 0;
+            }
+        }
+
+        public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
+    }
 }
 
