@@ -164,9 +164,7 @@ public class ScatterPlot {
     public CoordSysViewSelector addZoomViewSelector() {
         return new CoordSysViewSelector(this.canvas, this.coordsys) {
             // TODO überlegen ob/was sinnvoll -> Konflikte mit anderen Interaktionen?!
-            {
-                extModifierMask = 0;/* no need for shift to be pressed */
-            }
+            { extModifierMask = 0;/* no need for shift to be pressed */ }
 
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
@@ -175,7 +173,13 @@ public class ScatterPlot {
         }.register();
     }
 
-    public CoordSysMouseOver addMouseOverInterface() {
+    /**
+     * Adds a (already implemented) mouse movement listener,
+     * which is notified, when the mouse moves over a point.
+     *
+     * @return listener class
+     */
+    public CoordSysMouseOver printPointMouseOver() {
         return (CoordSysMouseOver) new CoordSysMouseOver() {
             @Override
             public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
@@ -187,7 +191,13 @@ public class ScatterPlot {
         }.register();
     }
 
-    public CoordSysPointClicked addPointClickedInterface() {
+    /**
+     * Adds a (already implemented) click listener,
+     * which is notified, when a point is clicked.
+     *
+     * @return listener class
+     */
+    public CoordSysPointClicked printPointClicked() {
         return (CoordSysPointClicked) new CoordSysPointClicked() {
             @Override
             public void pointClicked(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
@@ -216,15 +226,17 @@ public class ScatterPlot {
     }
 
     /**
-     * @param
+     * Adds point to picking registry
+     *
+     * @param point to be added
      */
-    protected void addItemToRegistry(Points.PointDetails item) {
+    protected void addItemToRegistry(Points.PointDetails point) {
         int tempID = this.registry.getNewID();
-        item.setPickColor(tempID);
-        this.registry.register(item, tempID);
+        point.setPickColor(tempID);
+        this.registry.register(point, tempID);
     }
 
-    private abstract class ScatterPlotInterfaces extends MouseAdapter {
+    protected abstract class ScatterPlotInterfaces extends MouseAdapter {
         protected int index = 0;
         protected double[][] dataSet;
 
@@ -295,15 +307,25 @@ public class ScatterPlot {
             return this;
         }
 
+        /**
+         * Triggers the specific interface method in each interface, when implemented.
+         *
+         * @param mouseLocation location that was clicked
+         * @param pointLocation location of the clicked point in the coordinate system
+         * @param data          the data array where the data point was found
+         * @param dataIndex     the index of the data point in the returned array
+         */
         protected abstract void triggerInterfaceMethod(final Point mouseLocation, final Point2D pointLocation,
                                                        final double[][] data, final int dataIndex);
     }
 
 
     /**
+     * Mouse over interface, which triggers its pointClicked method,
+     * when clicking on a point in the coordsys.
      *
      */
-    protected abstract class CoordSysPointClicked extends ScatterPlotInterfaces {
+    public abstract class CoordSysPointClicked extends ScatterPlotInterfaces {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (!findPoints(e)) {
@@ -330,9 +352,11 @@ public class ScatterPlot {
     }
 
     /**
+     * Mouse over interface, which triggers its mouseOverPoint method,
+     * when hovering over a point in the coordsys.
      *
      */
-    protected abstract class CoordSysMouseOver extends ScatterPlotInterfaces {
+    public abstract class CoordSysMouseOver extends ScatterPlotInterfaces {
         @Override
         public void mouseMoved(MouseEvent e) {
             findPoints(e);
