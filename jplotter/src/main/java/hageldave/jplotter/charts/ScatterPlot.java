@@ -42,51 +42,21 @@ public class ScatterPlot {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
     protected PointsRenderer content;
-    final protected HashMap<Integer, Dataset> pointMap;
+    final protected ArrayList<double[][]> dataAdded;
+    final protected HashMap<Integer, Points> pointsInRenderer;
     final protected PickingRegistry<Points.PointDetails> registry = new PickingRegistry<Points.PointDetails>();
 
-    /**
-     * A Dataset stores the point coordinates, the glyph & color selected by the user and
-     * the {@link Points} created with the point coordinates.
-     */
-    private class Dataset {
-        protected double[][] pointsCoordinates;
-        protected DefaultGlyph glyph;
-        protected Color color;
-        protected Points points;
-
-        protected Dataset(final double[][] pointsCoordinates, final DefaultGlyph glyph, final Color color, final Points points) {
-            this.pointsCoordinates = pointsCoordinates;
-            this.glyph = glyph;
-            this.color = color;
-            this.points = points;
-        }
-
-        public double[][] getPointsCoordinates() {
-            return pointsCoordinates;
-        }
-
-        public DefaultGlyph getGlyph() {
-            return glyph;
-        }
-
-        public Color getColor() {
-            return color;
-        }
-
-        public Points getPoints() {
-            return points;
-        }
-    }
 
     public ScatterPlot(final boolean useOpenGL) {
-        this.pointMap = new HashMap<Integer, Dataset>();
+        this.pointsInRenderer = new HashMap<Integer, Points>();
+        this.dataAdded = new ArrayList<double[][]>();
         this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
         setupScatterPlot();
     }
 
     public ScatterPlot(final boolean useOpenGL, final JPlotterCanvas canvas) {
-        this.pointMap = new HashMap<Integer, Dataset>();
+        this.pointsInRenderer = new HashMap<Integer, Points>();
+        this.dataAdded = new ArrayList<double[][]>();
         this.canvas = canvas;
         setupScatterPlot();
     }
@@ -113,8 +83,7 @@ public class ScatterPlot {
      * @param color  the color of the glyph
      * @return the old Scatterplot for chaining
      */
-    public Dataset addPoints(final int ID, final double[][] points, final DefaultGlyph glyph, final Color color) {
-        ScatterPlot old = this;
+    public Points addPoints(final int ID, final double[][] points, final DefaultGlyph glyph, final Color color) {
         Points tempPoints = new Points(glyph);
         for (double[] entry : points) {
             double x = entry[0], y = entry[1];
@@ -122,22 +91,10 @@ public class ScatterPlot {
             point.setColor(color);
             addItemToRegistry(point);
         }
-        Dataset newSet = new Dataset(points, glyph, color, tempPoints);
-        this.pointMap.put(ID, newSet);
+        this.pointsInRenderer.put(ID, tempPoints);
+        this.dataAdded.add(points);
         this.content.addItemToRender(tempPoints);
-        return newSet;
-    }
-
-    /**
-     * Removes a {@link Dataset} from the pointMap.
-     *
-     * @param ID the Dataset with this ID will be removed from the pointMap
-     * @return the old Scatterplot for chaining
-     */
-    public ScatterPlot removePoints(final int ID) {
-        ScatterPlot old = this;
-        this.pointMap.remove(ID);
-        return old;
+        return tempPoints;
     }
 
     /**
@@ -223,8 +180,8 @@ public class ScatterPlot {
         return content;
     }
 
-    public HashMap<Integer, Dataset> getPointMap() {
-        return pointMap;
+    public HashMap<Integer, Points> getPointsInRenderer() {
+        return pointsInRenderer;
     }
 
     /**
@@ -269,9 +226,9 @@ public class ScatterPlot {
          */
         protected double[][] getListAndSetIndex(final Point2D location) {
             double[][] tempList;
-            for (final Dataset pointList : pointMap.values()) {
-                tempList = pointList.getPointsCoordinates();
-                for (double[] entry : pointList.getPointsCoordinates()) {
+            for (final double[][] pointList : dataAdded) {
+                tempList = pointList;
+                for (double[] entry : pointList) {
                     double x = entry[0], y = entry[1];
                     if (x == location.getX() && y == location.getY()) {
                         return tempList;
@@ -400,12 +357,12 @@ public class ScatterPlot {
 
         protected void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
             int index = 0;
-            for (final Dataset pointList : pointMap.values()) {
-                for (double[] entry : pointList.getPointsCoordinates()) {
+            for (final double[][] pointList : dataAdded) {
+                for (double[] entry : pointList) {
                     double x = entry[0], y = entry[1];
                     if (x > minX && x < maxX && y > minY && y < maxY) {
                         this.dataIndices.add(index);
-                        this.data.add(pointList.getPointsCoordinates());
+                        this.data.add(pointList);
                     }
                     index++;
                 }
