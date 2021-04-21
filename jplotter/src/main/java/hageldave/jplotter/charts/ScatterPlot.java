@@ -13,10 +13,7 @@ import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.PickingRegistry;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -28,13 +25,11 @@ import java.util.HashMap;
  * It includes a JPlotterCanvas, CoordSysRenderer and a PointsRenderer,
  * which are all set up automatically.
  * To edit those, they can be returned with their respective getter methods.
- * When data points are added to the ScatterPlot, they are stored in the pointMap in a {@link Dataset}.
+ * When data points are added to the ScatterPlot, they are stored in the pointMap.
  * <p>
  * To add a Dataset to the pointMap, an ID has to be defined as a key.
  * With this ID the Dataset can be removed later on.
  * <p>
- * In each {@link Dataset} there are the coordinates of the points,
- * the selected glyph & color and the {@link Points} stored.
  *
  * @author lucareichmann
  */
@@ -45,7 +40,6 @@ public class ScatterPlot {
     final protected ArrayList<double[][]> dataAdded;
     final protected HashMap<Integer, Points> pointsInRenderer;
     final protected PickingRegistry<Points.PointDetails> registry = new PickingRegistry<Points.PointDetails>();
-
 
     public ScatterPlot(final boolean useOpenGL) {
         this.pointsInRenderer = new HashMap<Integer, Points>();
@@ -122,8 +116,6 @@ public class ScatterPlot {
      */
     public CoordSysViewSelector addZoomViewSelector() {
         return new CoordSysViewSelector(this.canvas, this.coordsys) {
-            // TODO überlegen ob/was sinnvoll -> Konflikte mit anderen Interaktionen?!
-            { extModifierMask = 0;/* no need for shift to be pressed */ }
 
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
@@ -346,6 +338,7 @@ public class ScatterPlot {
 
         public PointsSelectedInterface() {
             new CoordSysViewSelector(canvas, coordsys) {
+                {extModifierMask=InputEvent.ALT_DOWN_MASK;}
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
@@ -354,6 +347,7 @@ public class ScatterPlot {
                 }
             }.register();
         }
+
 
         protected void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
             int index = 0;
