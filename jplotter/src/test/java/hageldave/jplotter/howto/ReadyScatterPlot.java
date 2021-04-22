@@ -8,6 +8,8 @@ import hageldave.jplotter.misc.DefaultGlyph;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 
 public class ReadyScatterPlot {
 
@@ -23,6 +25,7 @@ public class ReadyScatterPlot {
 
     public static void main(String[] args) {
         // generate or get data
+        // TODO echter Datensatz -> bspw. IrisViz Datensatz + sinnvolle Interaktionen
         double[][] dataA = randomData(50);
         double[][] dataB = randomData(100);
 
@@ -35,6 +38,13 @@ public class ReadyScatterPlot {
                 System.out.println("a point was clicked");
             }
         }.register();
+
+        plot.new PointsSelectedInterface() {
+            @Override
+            public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices) {
+                System.out.println(dataIndices);
+            }
+        };
 
         // display within a JFrame
         JFrame frame = new JFrame();

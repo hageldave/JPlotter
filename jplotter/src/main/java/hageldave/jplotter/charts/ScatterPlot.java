@@ -39,7 +39,7 @@ public class ScatterPlot {
     protected PointsRenderer content;
     final protected ArrayList<double[][]> dataAdded;
     final protected HashMap<Integer, Points> pointsInRenderer;
-    final protected PickingRegistry<Points.PointDetails> registry = new PickingRegistry<Points.PointDetails>();
+    final protected PickingRegistry<Points.PointDetails> registry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
         this.pointsInRenderer = new HashMap<Integer, Points>();
@@ -191,6 +191,7 @@ public class ScatterPlot {
         protected int index = 0;
         protected double[][] dataSet;
 
+        // TODO Optimieren bei Hinzufügen zu Registry Index + Liste speichern
         /**
          * Searches for a data point similar to the location the developer clicked on.
          *
