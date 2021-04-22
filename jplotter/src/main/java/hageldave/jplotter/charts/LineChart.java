@@ -56,9 +56,10 @@ public class LineChart {
 
     /**
      * adds a set of points to the scatter plot.
-     *
+     *TODO set correct coordinate view soze after adding data
      */
     public Lines addLineSegment(final double[][] data, final Color color) {
+        int biggestX = 0; int smallestX = Integer.MAX_VALUE; int biggestY = 0; int smallestY = Integer.MAX_VALUE;
         Arrays.sort(data, Comparator.comparingDouble(o -> o[0]));
         Lines tempLine = new Lines();
         for (int i = 0; i < data.length-1; i++) {
@@ -67,12 +68,42 @@ public class LineChart {
             Lines.SegmentDetails segment = tempLine.addSegment(x1, y1, x2, y2);
             segment.setColor(color);
             addSegmentToRegistry(segment);
+
+            if (x1 > biggestX) {
+                biggestX = (int) x1;
+            }
+            if (x1 < smallestX) {
+                smallestX = (int) x1;
+            }
+
+            if (y1 > biggestY) {
+                biggestY = (int) y1;
+            }
+            if (smallestY > y1) {
+                smallestY = (int) y1;
+            }
+
+            if (x2 > biggestX) {
+                biggestX = (int) x2;
+            }
+            if (x2 < smallestX) {
+                smallestX = (int) x2;
+            }
+
+            if (y2 > biggestY) {
+                biggestY = (int) y2;
+            }
+            if (smallestY > y2) {
+                smallestY = (int) y2;
+            }
         }
+        this.getCoordsys().setCoordinateView(smallestX, smallestY, biggestX, biggestY);
         this.dataAdded.add(data);
         this.content.addItemToRender(tempLine);
         return tempLine;
     }
 
+    // TODO is this needed? maybe just set points from already added data for lines
     public Points addPoints(final double[][] data, final DefaultGlyph glyph, final Color color) {
         Points tempPoints = new Points(glyph);
         for (double[] entry : data) {
