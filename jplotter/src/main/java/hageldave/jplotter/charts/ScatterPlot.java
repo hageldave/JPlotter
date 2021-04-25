@@ -354,6 +354,14 @@ public class ScatterPlot {
                                             final double[][] data, final int dataIndex);
     }
 
+    /**
+     * This interface realizes a functionality, which returns all data points that were selected before.
+     * The selection of the data points is realized by the @link{CoordSysViewSelector}, with the alt-key as the modifierMask.
+     *
+     * If the selections is done, the abstract pointsSelected interface is called with the parameters
+     * 'Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices'.
+     *
+     */
     public abstract class PointsSelectedInterface {
         protected ArrayList<double[][]> data = new ArrayList<double[][]>();
         protected ArrayList<Integer> dataIndices = new ArrayList<Integer>();
@@ -386,6 +394,13 @@ public class ScatterPlot {
             }
         }
 
+        /**
+         * This method will be called, when a rectangle was selected and the mouse was released.
+         *
+         * @param bounds the selected rectangle
+         * @param data the data sets where points where found
+         * @param dataIndices the indices of the data inside the data arrays
+         */
         public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
     }
 }
