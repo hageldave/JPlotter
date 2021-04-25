@@ -39,7 +39,7 @@ public class ScatterPlot {
     protected PointsRenderer content;
     final protected ArrayList<double[][]> dataAdded;
     final protected HashMap<Integer, Points> pointsInRenderer;
-    final protected PickingRegistry<Points.PointDetails> registry = new PickingRegistry<>();
+    final protected PickingRegistry<Dataset> registry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
         this.pointsInRenderer = new HashMap<Integer, Points>();
@@ -68,6 +68,18 @@ public class ScatterPlot {
         this.canvas.setRenderer(coordsys);
     }
 
+    private class Dataset {
+        protected Points.PointDetails point;
+        protected double[][] array;
+        protected double index;
+
+        Dataset(final Points.PointDetails point, final double[][] array, final double index) {
+            this.point = point;
+            this.array = array;
+            this.index = index;
+        }
+    }
+
     /**
      * adds a set of points to the scatter plot.
      *
@@ -79,11 +91,13 @@ public class ScatterPlot {
      */
     public Points addPoints(final int ID, final double[][] points, final DefaultGlyph glyph, final Color color) {
         Points tempPoints = new Points(glyph);
+        int index = 0;
         for (double[] entry : points) {
             double x = entry[0], y = entry[1];
             Points.PointDetails point = tempPoints.addPoint(x, y);
             point.setColor(color);
-            addItemToRegistry(point);
+            addItemToRegistry(new Dataset(point, points, index));
+            index++;
         }
         this.pointsInRenderer.put(ID, tempPoints);
         this.dataAdded.add(points);
@@ -202,9 +216,9 @@ public class ScatterPlot {
      *
      * @param point to be added
      */
-    protected void addItemToRegistry(Points.PointDetails point) {
+    protected void addItemToRegistry(Dataset point) {
         int tempID = this.registry.getNewID();
-        point.setPickColor(tempID);
+        point.point.setPickColor(tempID);
         this.registry.register(point, tempID);
     }
 
@@ -212,7 +226,6 @@ public class ScatterPlot {
         protected int index = 0;
         protected double[][] dataSet;
 
-        // TODO Optimieren bei Hinzufügen zu Registry Index + Liste speichern
         /**
          * Searches for a data point similar to the location the developer clicked on.
          *
@@ -220,14 +233,9 @@ public class ScatterPlot {
          * @return true if a point was found, false if no point was found in the dataSet
          */
         protected boolean findPoints(final MouseEvent e) {
-            Points.PointDetails details = registry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            Dataset details = registry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
             if (details != null) {
-                Point2D location = details.location;
-                this.dataSet = getListAndSetIndex(location);
-                if (this.dataSet != null) {
-                    triggerInterfaceMethod(e.getPoint(), location, this.dataSet, this.index);
-                    return true;
-                }
+                triggerInterfaceMethod(e.getPoint(), details.point.location, details.array, (int) details.index);
             }
             return false;
         }
