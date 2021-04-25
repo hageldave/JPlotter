@@ -16,8 +16,8 @@ public class ReadyScatterPlot {
     private static double[][] randomData(int n){
         double[][] d = new double[n][3];
         for(int i=0; i<n; i++){
-            d[i][0]=Math.random()*2-1;
-            d[i][1]=Math.random()*2-1;
+            d[i][0]=Math.random()*200-1;
+            d[i][1]=Math.random()*200-1;
             d[i][2]=(d[i][1]+1)/2;
         }
         return d;
@@ -45,6 +45,8 @@ public class ReadyScatterPlot {
                 System.out.println(dataIndices);
             }
         };
+
+        plot.alignCoordsys();
 
         // display within a JFrame
         JFrame frame = new JFrame();
