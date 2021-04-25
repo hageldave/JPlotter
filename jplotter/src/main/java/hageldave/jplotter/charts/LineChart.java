@@ -14,20 +14,19 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.PickingRegistry;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashMap;
 
 public class LineChart {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
     protected CompleteRenderer content;
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
+    final protected HashMap<Integer, Lines> linesAdded = new HashMap<>();
     final protected PickingRegistry<Lines.SegmentDetails> lineRegistry = new PickingRegistry<>();
     final protected PickingRegistry<Points.PointDetails> pointRegistry = new PickingRegistry<>();
 
@@ -56,11 +55,10 @@ public class LineChart {
 
     /**
      * adds a set of points to the scatter plot.
-     *TODO set correct coordinate view soze after adding data
+     *
      */
-    public Lines addLineSegment(final double[][] data, final Color color) {
+    public Lines addLineSegment(final Integer ID, final double[][] data, final Color color) {
         int biggestX = 0; int smallestX = Integer.MAX_VALUE; int biggestY = 0; int smallestY = Integer.MAX_VALUE;
-        Arrays.sort(data, Comparator.comparingDouble(o -> o[0]));
         Lines tempLine = new Lines();
         for (int i = 0; i < data.length-1; i++) {
             double x1 = data[i][0], x2 = data[i+1][0];
@@ -68,42 +66,14 @@ public class LineChart {
             Lines.SegmentDetails segment = tempLine.addSegment(x1, y1, x2, y2);
             segment.setColor(color);
             addSegmentToRegistry(segment);
-
-            if (x1 > biggestX) {
-                biggestX = (int) x1;
-            }
-            if (x1 < smallestX) {
-                smallestX = (int) x1;
-            }
-
-            if (y1 > biggestY) {
-                biggestY = (int) y1;
-            }
-            if (smallestY > y1) {
-                smallestY = (int) y1;
-            }
-
-            if (x2 > biggestX) {
-                biggestX = (int) x2;
-            }
-            if (x2 < smallestX) {
-                smallestX = (int) x2;
-            }
-
-            if (y2 > biggestY) {
-                biggestY = (int) y2;
-            }
-            if (smallestY > y2) {
-                smallestY = (int) y2;
-            }
         }
         this.getCoordsys().setCoordinateView(smallestX, smallestY, biggestX, biggestY);
         this.dataAdded.add(data);
         this.content.addItemToRender(tempLine);
+        this.linesAdded.put(ID, tempLine);
         return tempLine;
     }
 
-    // TODO is this needed? maybe just set points from already added data for lines
     public Points addPoints(final double[][] data, final DefaultGlyph glyph, final Color color) {
         Points tempPoints = new Points(glyph);
         for (double[] entry : data) {
@@ -114,6 +84,41 @@ public class LineChart {
         }
         this.content.addItemToRender(tempPoints);
         return tempPoints;
+    }
+
+    public Points highlightDatapoints(final DefaultGlyph glyph, final Color color) {
+        Points tempPoints = new Points(glyph);
+        for (double[][] data : dataAdded) {
+            for (double[] entry: data) {
+                double x = entry[0], y = entry[1];
+                Points.PointDetails point = tempPoints.addPoint(x, y);
+                point.setColor(color);
+                addPointToRegistry(point);
+            }
+        }
+        this.content.addItemToRender(tempPoints);
+        return tempPoints;
+    }
+
+    public LineChart alignCoordsys() {
+        LineChart old = this;
+        double minX = Integer.MAX_VALUE; double maxX = 0; double minY = Integer.MAX_VALUE; double maxY = 0;
+        for (Lines line: linesAdded.values()) {
+            if (minX > line.getBounds().getMinX()) {
+                minX = line.getBounds().getMinX();
+            }
+            if (maxX < line.getBounds().getMaxX()) {
+                maxX = line.getBounds().getMaxX();
+            }
+            if (minY > line.getBounds().getMinY()) {
+                minY = line.getBounds().getMinY();
+            }
+            if (maxY < line.getBounds().getMaxY()) {
+                maxY = line.getBounds().getMaxY();
+            }
+        }
+        this.coordsys.setCoordinateView(minX, minY, maxX, maxY);
+        return old;
     }
 
     /**
@@ -270,5 +275,57 @@ public class LineChart {
 
         public abstract void segmentClicked(final Point mouseLocation, final Lines.SegmentDetails line,
                                             final double[][] data, final int startIndex, final int endIndex);
+    }
+
+    public abstract class LineHoveredInterface extends InteractionInterface {
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            super.mouseMoved(e);
+            findSegment(e);
+            this.startIndex = 0;
+            this.endIndex = 0;
+        }
+
+        @Override
+        protected void triggerInterfaceMethod(Point mouseLocation, Lines.SegmentDetails line, double[][] data, int startIndex, int endIndex) {
+            segmentHovered(mouseLocation, line, data, startIndex, endIndex);
+        }
+
+        public abstract void segmentHovered(final Point mouseLocation, final Lines.SegmentDetails line,
+                                            final double[][] data, final int startIndex, final int endIndex);
+    }
+
+    public abstract class PointsSelectedInterface {
+        protected ArrayList<double[][]> data = new ArrayList<>();
+        protected ArrayList<Integer> dataIndices = new ArrayList<>();
+
+        public PointsSelectedInterface() {
+            new CoordSysViewSelector(canvas, coordsys) {
+                {extModifierMask= InputEvent.ALT_DOWN_MASK;}
+                @Override
+                public void areaSelected(double minX, double minY, double maxX, double maxY) {
+                    calcSegments(minX, minY, maxX, maxY);
+                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices);
+                    data.clear(); dataIndices.clear();
+                }
+            }.register();
+        }
+
+        protected void calcSegments(final double minX, final double minY, final double maxX, final double maxY) {
+            int index = 0;
+            for (final double[][] pointList : dataAdded) {
+                for (double[] entry : pointList) {
+                    double x = entry[0], y = entry[1];
+                    if (x > minX && x < maxX && y > minY && y < maxY) {
+                        this.dataIndices.add(index);
+                        this.data.add(pointList);
+                    }
+                    index++;
+                }
+                index = 0;
+            }
+        }
+
+        public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
     }
 }
