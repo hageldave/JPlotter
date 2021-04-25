@@ -91,6 +91,27 @@ public class ScatterPlot {
         return tempPoints;
     }
 
+    public ScatterPlot alignCoordsys() {
+        ScatterPlot old = this;
+        double minX = Integer.MAX_VALUE; double maxX = 0; double minY = Integer.MAX_VALUE; double maxY = 0;
+        for (Points points: pointsInRenderer.values()) {
+            if (minX > points.getBounds().getMinX()) {
+                minX = points.getBounds().getMinX();
+            }
+            if (maxX < points.getBounds().getMaxX()) {
+                maxX = points.getBounds().getMaxX();
+            }
+            if (minY > points.getBounds().getMinY()) {
+                minY = points.getBounds().getMinY();
+            }
+            if (maxY < points.getBounds().getMaxY()) {
+                maxY = points.getBounds().getMaxY();
+            }
+        }
+        this.coordsys.setCoordinateView(minX, minY, maxX, maxY);
+        return old;
+    }
+
     /**
      * Adds a scroll zoom to the Scatterplot
      *
