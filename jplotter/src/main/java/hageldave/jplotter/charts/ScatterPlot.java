@@ -37,20 +37,16 @@ public class ScatterPlot {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
     protected PointsRenderer content;
-    final protected ArrayList<double[][]> dataAdded;
-    final protected HashMap<Integer, Points> pointsInRenderer;
-    final protected PickingRegistry<Dataset> registry = new PickingRegistry<>();
+    final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
+    final protected HashMap<Integer, Points> pointsInRenderer = new HashMap<>();
+    final protected PickingRegistry<Dataset> pickingRegistry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
-        this.pointsInRenderer = new HashMap<Integer, Points>();
-        this.dataAdded = new ArrayList<double[][]>();
         this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
         setupScatterPlot();
     }
 
     public ScatterPlot(final boolean useOpenGL, final JPlotterCanvas canvas) {
-        this.pointsInRenderer = new HashMap<Integer, Points>();
-        this.dataAdded = new ArrayList<double[][]>();
         this.canvas = canvas;
         setupScatterPlot();
     }
@@ -217,9 +213,9 @@ public class ScatterPlot {
      * @param point to be added
      */
     protected void addItemToRegistry(Dataset point) {
-        int tempID = this.registry.getNewID();
+        int tempID = this.pickingRegistry.getNewID();
         point.point.setPickColor(tempID);
-        this.registry.register(point, tempID);
+        this.pickingRegistry.register(point, tempID);
     }
 
     protected abstract class InteractionInterface extends MouseAdapter {
@@ -233,7 +229,7 @@ public class ScatterPlot {
          * @return true if a point was found, false if no point was found in the dataSet
          */
         protected boolean findPoints(final MouseEvent e) {
-            Dataset details = registry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            Dataset details = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
             if (details != null) {
                 triggerInterfaceMethod(e.getPoint(), details.point.location, details.array, (int) details.index);
             }
