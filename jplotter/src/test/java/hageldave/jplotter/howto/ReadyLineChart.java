@@ -2,17 +2,22 @@ package hageldave.jplotter.howto;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
+import hageldave.jplotter.misc.DefaultGlyph;
+import hageldave.jplotter.renderables.Lines;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 
+// TODO echter Datensatz
 public class ReadyLineChart {
 
     private static double[][] randomData(int n) {
         double[][] d = new double[n][2];
         for (int i = 0; i < n; i++) {
-            d[i][0] = Math.random() * 2 - 1;
-            d[i][1] = Math.random() * 2 - 1;
+            d[i][0] = Math.random() * 200 - 1;
+            d[i][1] = Math.random() * 200 - 1;
         }
         return d;
     }
@@ -27,8 +32,27 @@ public class ReadyLineChart {
         JFrame frame = new JFrame();
 
         hageldave.jplotter.charts.LineChart chart = new hageldave.jplotter.charts.LineChart(false);
-        chart.addLineSegment(seriesA, Color.RED);
-        chart.addLineSegment(seriesB, Color.BLUE).setStrokePattern(0xf0f0);
+        chart.addLineSegment(1, seriesA, Color.RED);
+        chart.addLineSegment(2, seriesB, Color.BLUE).setStrokePattern(0xf0f0);
+
+        chart.highlightDatapoints(DefaultGlyph.CIRCLE, Color.green);
+        chart.alignCoordsys();
+
+        chart.new LineClickedInterface() {
+            @Override
+            public void segmentClicked(Point mouseLocation, Lines.SegmentDetails line, double[][] data, int startIndex, int endIndex) {
+                System.out.println(line);
+                System.out.println(startIndex);
+                System.out.println(endIndex);
+            }
+        }.register();
+
+        chart.new PointsSelectedInterface() {
+            @Override
+            public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices) {
+
+            }
+        };
 
         frame.getContentPane().add(chart.getCanvas().asComponent());
         frame.setTitle("linechart");
