@@ -7,6 +7,7 @@ import hageldave.jplotter.renderables.Lines;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
@@ -39,6 +40,7 @@ public class ReadyLineChart {
         chart.alignCoordsys();
 
         chart.new LineClickedInterface() {
+            { extModifierMask = KeyEvent.VK_K; }
             @Override
             public void segmentClicked(Point mouseLocation, Lines.SegmentDetails line, double[][] data, int startIndex, int endIndex) {
                 System.out.println(line);

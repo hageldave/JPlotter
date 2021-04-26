@@ -51,6 +51,21 @@ public class LineChart {
         this.coordsys.setCoordinateView(-1, -1, 1, 1);
         this.coordsys.setContent(content);
         this.canvas.setRenderer(coordsys);
+
+    }
+
+    private class Dataset {
+        protected Points.PointDetails point;
+        protected double[][] array;
+        protected double startIndex;
+        protected double endIndex;
+
+        Dataset(final Points.PointDetails point, final double[][] array, final double startIndex, final double endIndex) {
+            this.point = point;
+            this.array = array;
+            this.startIndex = startIndex;
+            this.endIndex = endIndex;
+        }
     }
 
     /**
@@ -190,10 +205,12 @@ public class LineChart {
     }
 
 
-    protected abstract class InteractionInterface extends MouseAdapter {
+    protected abstract class InteractionInterface extends MouseAdapter implements KeyListener {
         protected int startIndex = 0;
         protected int endIndex = 0;
         protected double[][] dataSet;
+        protected int extModifierMask = 0;
+        protected boolean keyTyped = false;
 
         protected boolean findSegment(final MouseEvent e) {
             Lines.SegmentDetails details = lineRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
@@ -226,6 +243,23 @@ public class LineChart {
             return null;
         }
 
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getKeyCode() == extModifierMask && !keyTyped) {
+                keyTyped = true;
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            keyTyped = false;
+        }
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+
+        }
+
         /**
          * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
          * {@link MouseMotionListener} to the associated canvas.
@@ -237,6 +271,8 @@ public class LineChart {
                 canvas.asComponent().addMouseListener(this);
             if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
                 canvas.asComponent().addMouseMotionListener(this);
+            if (!Arrays.asList(canvas.asComponent().getKeyListeners()).contains(this))
+                canvas.asComponent().addKeyListener(this);
             return this;
         }
 
@@ -249,6 +285,7 @@ public class LineChart {
         public InteractionInterface deRegister() {
             canvas.asComponent().removeMouseListener(this);
             canvas.asComponent().removeMouseMotionListener(this);
+            canvas.asComponent().removeKeyListener(this);
             return this;
         }
 
@@ -261,11 +298,13 @@ public class LineChart {
     public abstract class LineClickedInterface extends InteractionInterface {
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (!findSegment(e)) {
-                System.out.println("No data point found in your dataset");
+            if (keyTyped || extModifierMask == 0) {
+                if (!findSegment(e)) {
+                    System.out.println("No data point found in your dataset");
+                }
+                this.startIndex = 0;
+                this.endIndex = 0;
             }
-            this.startIndex = 0;
-            this.endIndex = 0;
         }
 
         @Override
