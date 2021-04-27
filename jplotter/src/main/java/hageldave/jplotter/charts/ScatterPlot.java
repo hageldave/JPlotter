@@ -227,9 +227,9 @@ public class ScatterPlot {
         this.pickingRegistry.register(point, tempID);
     }
 
-    protected abstract class InteractionInterface extends MouseAdapter {
-        protected int index = 0;
-        protected double[][] dataSet;
+    protected abstract class InteractionInterface extends MouseAdapter implements KeyListener {
+        protected boolean keyTyped = false;
+        protected int extModifierMask = 0;
 
         /**
          * Searches for a data point similar to the location the developer clicked on.
@@ -245,27 +245,20 @@ public class ScatterPlot {
             return false;
         }
 
-        /**
-         * Finds the data array which contains the clicked-on data point.
-         *
-         * @param location clicked in the coordinate system
-         * @return list where the data point was found
-         */
-        protected double[][] getListAndSetIndex(final Point2D location) {
-            double[][] tempList;
-            for (final double[][] pointList : dataAdded) {
-                tempList = pointList;
-                for (double[] entry : pointList) {
-                    double x = entry[0], y = entry[1];
-                    if (x == location.getX() && y == location.getY()) {
-                        return tempList;
-                    }
-                    this.index++;
-                }
-                this.index = 0;
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getKeyCode() == extModifierMask && !keyTyped) {
+                keyTyped = true;
             }
-            return null;
         }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            keyTyped = false;
+        }
+
+        @Override
+        public void keyTyped(KeyEvent e) { }
 
         /**
          * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
@@ -278,6 +271,8 @@ public class ScatterPlot {
                 canvas.asComponent().addMouseListener(this);
             if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
                 canvas.asComponent().addMouseMotionListener(this);
+            if (!Arrays.asList(canvas.asComponent().getKeyListeners()).contains(this))
+                canvas.asComponent().addKeyListener(this);
             return this;
         }
 
@@ -290,6 +285,7 @@ public class ScatterPlot {
         public InteractionInterface deRegister() {
             canvas.asComponent().removeMouseListener(this);
             canvas.asComponent().removeMouseMotionListener(this);
+            canvas.asComponent().removeKeyListener(this);
             return this;
         }
 
@@ -315,10 +311,11 @@ public class ScatterPlot {
     public abstract class PointClickedInterface extends InteractionInterface {
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (!findPoints(e)) {
-                System.out.println("No data point found in your dataset");
+            if (keyTyped || extModifierMask == 0) {
+                if (!findPoints(e)) {
+                    System.out.println("No data point found in your dataset");
+                }
             }
-            this.index = 0;
         }
 
         @Override
@@ -346,8 +343,9 @@ public class ScatterPlot {
     public abstract class MouseOverInterface extends InteractionInterface {
         @Override
         public void mouseMoved(MouseEvent e) {
-            findPoints(e);
-            this.index = 0;
+            if (keyTyped || extModifierMask == 0) {
+                findPoints(e);
+            }
         }
 
         @Override
@@ -379,9 +377,9 @@ public class ScatterPlot {
         protected ArrayList<double[][]> data = new ArrayList<double[][]>();
         protected ArrayList<Integer> dataIndices = new ArrayList<Integer>();
 
-        public PointsSelectedInterface() {
+        public PointsSelectedInterface(final int pointsModifierMask) {
             new CoordSysViewSelector(canvas, coordsys) {
-                {extModifierMask=InputEvent.ALT_DOWN_MASK;}
+                { extModifierMask = pointsModifierMask; }
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
