@@ -7,9 +7,10 @@ import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.PickingRegistry;
 
 import java.awt.*;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 /**
+ *
  * The ScatterPlot class provides an easy way to quickly create a ScatterPlot.
  * It includes a JPlotterCanvas, CoordSysRenderer and a PointsRenderer,
  * which are all set up automatically.
@@ -36,7 +38,7 @@ import java.util.HashMap;
 public class ScatterPlot {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
-    protected PointsRenderer content;
+    protected CompleteRenderer content;
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
     final protected HashMap<Integer, Points> pointsInRenderer = new HashMap<>();
     final protected PickingRegistry<Dataset> pickingRegistry = new PickingRegistry<>();
@@ -58,7 +60,7 @@ public class ScatterPlot {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.coordsys = new CoordSysRenderer();
-        this.content = new PointsRenderer();
+        this.content = new CompleteRenderer();
         this.coordsys.setCoordinateView(-1, -1, 1, 1);
         this.coordsys.setContent(content);
         this.canvas.setRenderer(coordsys);
@@ -120,6 +122,13 @@ public class ScatterPlot {
         }
         this.coordsys.setCoordinateView(minX, minY, maxX, maxY);
         return old;
+    }
+
+    public Legend addLegend(final int width) {
+        Legend legend = new Legend();
+        coordsys.setLegendRightWidth(width);
+        coordsys.setLegendRight(legend);
+        return legend;
     }
 
     /**
@@ -199,7 +208,7 @@ public class ScatterPlot {
         return coordsys;
     }
 
-    public PointsRenderer getContent() {
+    public CompleteRenderer getContent() {
         return content;
     }
 
