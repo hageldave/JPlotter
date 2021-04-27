@@ -7,6 +7,7 @@ import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
+import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
@@ -40,8 +41,8 @@ public class ScatterPlot {
     protected CoordSysRenderer coordsys;
     protected CompleteRenderer content;
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
-    final protected HashMap<Integer, Points> pointsInRenderer = new HashMap<>();
-    final protected PickingRegistry<Dataset> pickingRegistry = new PickingRegistry<>();
+    final protected HashMap<Integer, PointsInformation> pointsInRenderer = new HashMap<>();
+    final protected PickingRegistry<PointDetails> pickingRegistry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
         this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
@@ -66,15 +67,36 @@ public class ScatterPlot {
         this.canvas.setRenderer(coordsys);
     }
 
-    private class Dataset {
+    /**
+     *
+     */
+    private class PointDetails extends Points.PointDetails {
         protected Points.PointDetails point;
         protected double[][] array;
         protected double index;
 
-        Dataset(final Points.PointDetails point, final double[][] array, final double index) {
+        PointDetails(final Points.PointDetails point, final double[][] array, final double index) {
+            super(point.location);
             this.point = point;
             this.array = array;
             this.index = index;
+        }
+    }
+
+    /**
+     *
+     */
+    private class PointsInformation {
+        public Points points;
+        public Glyph glyph;
+        public Color color;
+        public String descr;
+
+        PointsInformation(final Points points, final Glyph glyph, final Color color, final String descr) {
+            this.points = points;
+            this.glyph = glyph;
+            this.color = color;
+            this.descr = descr;
         }
     }
 
@@ -87,49 +109,72 @@ public class ScatterPlot {
      * @param color  the color of the glyph
      * @return the old Scatterplot for chaining
      */
-    public Points addPoints(final int ID, final double[][] points, final DefaultGlyph glyph, final Color color) {
+    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
+                          final Color color, final String descr) {
         Points tempPoints = new Points(glyph);
         int index = 0;
         for (double[] entry : points) {
             double x = entry[0], y = entry[1];
             Points.PointDetails point = tempPoints.addPoint(x, y);
             point.setColor(color);
-            addItemToRegistry(new Dataset(point, points, index));
+            addItemToRegistry(new PointDetails(point, points, index));
             index++;
         }
-        this.pointsInRenderer.put(ID, tempPoints);
+        this.pointsInRenderer.put(ID, new PointsInformation(tempPoints, glyph, color, descr));
         this.dataAdded.add(points);
         this.content.addItemToRender(tempPoints);
         return tempPoints;
     }
 
+    // TODO to discuss
+    public Points addPoints(final int ID, final double[][] rawData, final Points points, final Color color, final String descr) {
+        this.pointsInRenderer.put(ID, new PointsInformation(points, points.glyph, color, descr));
+        this.dataAdded.add(rawData);
+        this.content.addItemToRender(points);
+        return points;
+    }
+
     public ScatterPlot alignCoordsys() {
         ScatterPlot old = this;
-        double minX = Integer.MAX_VALUE; double maxX = 0; double minY = Integer.MAX_VALUE; double maxY = 0;
-        for (Points points: pointsInRenderer.values()) {
-            if (minX > points.getBounds().getMinX()) {
-                minX = points.getBounds().getMinX();
-            }
-            if (maxX < points.getBounds().getMaxX()) {
-                maxX = points.getBounds().getMaxX();
-            }
-            if (minY > points.getBounds().getMinY()) {
-                minY = points.getBounds().getMinY();
-            }
-            if (maxY < points.getBounds().getMaxY()) {
-                maxY = points.getBounds().getMaxY();
-            }
+        double minX = Integer.MAX_VALUE; double maxX = Integer.MIN_VALUE; double minY = Integer.MAX_VALUE; double maxY = Integer.MIN_VALUE;
+        for (PointsInformation points: pointsInRenderer.values()) {
+            minX = Math.min(minX, points.points.getBounds().getMinX());
+            maxX = Math.max(maxX, points.points.getBounds().getMaxX());
+            minY = Math.min(minY, points.points.getBounds().getMinY());
+            maxY = Math.max(maxY, points.points.getBounds().getMaxY());
         }
-        this.coordsys.setCoordinateView(minX, minY, maxX, maxY);
+        this.coordsys.setCoordinateView(minX - Math.abs((minX / 5)), minY - Math.abs((minY / 5)),
+                maxX + Math.abs((maxX / 5)), maxY + Math.abs((maxY / 5)));
         return old;
     }
 
-    public Legend addLegend(final int width) {
+    public Legend addLegendRight(final int width, final boolean autoAddItems) {
         Legend legend = new Legend();
         coordsys.setLegendRightWidth(width);
         coordsys.setLegendRight(legend);
+        if (autoAddItems) {
+            for (PointsInformation point: pointsInRenderer.values()) {
+                legend.addGlyphLabel(point.glyph, point.color.getRGB(), point.descr);
+            }
+        }
         return legend;
     }
+
+    public Legend addLegendBottom(final int height, final boolean autoAddItems) {
+        Legend legend = new Legend();
+        coordsys.setLegendBottomHeight(height);
+        coordsys.setLegendBottom(legend);
+        if (autoAddItems) {
+            for (PointsInformation point: pointsInRenderer.values()) {
+                legend.addGlyphLabel(point.glyph, point.color.getRGB(), point.descr);
+            }
+        }
+        return legend;
+    }
+
+    // TODO add ability to add lines?
+    // TODO add "trend line" (regression line?)
+
 
     /**
      * Adds a scroll zoom to the Scatterplot
@@ -212,7 +257,7 @@ public class ScatterPlot {
         return content;
     }
 
-    public HashMap<Integer, Points> getPointsInRenderer() {
+    public HashMap<Integer, PointsInformation> getPointsInRenderer() {
         return pointsInRenderer;
     }
 
@@ -221,7 +266,7 @@ public class ScatterPlot {
      *
      * @param point to be added
      */
-    protected void addItemToRegistry(Dataset point) {
+    protected void addItemToRegistry(PointDetails point) {
         int tempID = this.pickingRegistry.getNewID();
         point.point.setPickColor(tempID);
         this.pickingRegistry.register(point, tempID);
@@ -238,7 +283,7 @@ public class ScatterPlot {
          * @return true if a point was found, false if no point was found in the dataSet
          */
         protected boolean findPoints(final MouseEvent e) {
-            Dataset details = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            PointDetails details = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
             if (details != null) {
                 triggerInterfaceMethod(e.getPoint(), details.point.location, details.array, (int) details.index);
             }
