@@ -41,8 +41,8 @@ public class ScatterPlot {
     protected CoordSysRenderer coordsys;
     protected CompleteRenderer content;
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
-    final protected HashMap<Integer, PointsInformation> pointsInRenderer = new HashMap<>();
-    final protected PickingRegistry<PointDetails> pickingRegistry = new PickingRegistry<>();
+    final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
+    final protected PickingRegistry<ExtendedPointDetails> pickingRegistry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
         this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
@@ -68,33 +68,35 @@ public class ScatterPlot {
     }
 
     /**
-     *
+     * used for encapsulating all data interesting for the developer
      */
-    private class PointDetails extends Points.PointDetails {
-        protected Points.PointDetails point;
-        protected double[][] array;
-        protected double index;
+    public static class ExtendedPointDetails extends Points.PointDetails {
+        public final Points.PointDetails point;
+        public final double[][] array;
+        public final double arrayIndex;
+        public final Glyph glyph;
 
-        PointDetails(final Points.PointDetails point, final double[][] array, final double index) {
+        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final double[][] array, final double arrayIndex) {
             super(point.location);
+            this.glyph = glyph;
             this.point = point;
             this.array = array;
-            this.index = index;
+            this.arrayIndex = arrayIndex;
         }
     }
 
     /**
+     * Internal data structure to store information regarding color, glyph and description of data points.
+     * This is used for displaying points (and their information) in the legend.
      *
      */
-    private class PointsInformation {
+    public static class RenderedPoints {
         public Points points;
-        public Glyph glyph;
         public Color color;
         public String descr;
 
-        PointsInformation(final Points points, final Glyph glyph, final Color color, final String descr) {
+        RenderedPoints(final Points points, final Color color, final String descr) {
             this.points = points;
-            this.glyph = glyph;
             this.color = color;
             this.descr = descr;
         }
@@ -115,37 +117,40 @@ public class ScatterPlot {
         int index = 0;
         for (double[] entry : points) {
             double x = entry[0], y = entry[1];
-            Points.PointDetails point = tempPoints.addPoint(x, y);
-            point.setColor(color);
-            addItemToRegistry(new PointDetails(point, points, index));
+            Points.PointDetails pointDetail = tempPoints.addPoint(x, y);
+            pointDetail.setColor(color);
+            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, points, index));
             index++;
         }
-        this.pointsInRenderer.put(ID, new PointsInformation(tempPoints, glyph, color, descr));
+        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color,
+                (descr == null) ? "undefined" : descr));
         this.dataAdded.add(points);
         this.content.addItemToRender(tempPoints);
         return tempPoints;
     }
 
-    // TODO to discuss
-    public Points addPoints(final int ID, final double[][] rawData, final Points points, final Color color, final String descr) {
-        this.pointsInRenderer.put(ID, new PointsInformation(points, points.glyph, color, descr));
-        this.dataAdded.add(rawData);
-        this.content.addItemToRender(points);
-        return points;
+    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
+                          final Color color) {
+        return addData(ID, points, glyph, color, null);
     }
 
-    public ScatterPlot alignCoordsys() {
+    // TODO control padding here
+    public ScatterPlot alignCoordsys(final int padding) {
         ScatterPlot old = this;
         double minX = Integer.MAX_VALUE; double maxX = Integer.MIN_VALUE; double minY = Integer.MAX_VALUE; double maxY = Integer.MIN_VALUE;
-        for (PointsInformation points: pointsInRenderer.values()) {
+        for (RenderedPoints points: pointsInRenderer.values()) {
             minX = Math.min(minX, points.points.getBounds().getMinX());
             maxX = Math.max(maxX, points.points.getBounds().getMaxX());
             minY = Math.min(minY, points.points.getBounds().getMinY());
             maxY = Math.max(maxY, points.points.getBounds().getMaxY());
         }
-        this.coordsys.setCoordinateView(minX - Math.abs((minX / 5)), minY - Math.abs((minY / 5)),
-                maxX + Math.abs((maxX / 5)), maxY + Math.abs((maxY / 5)));
+        this.coordsys.setCoordinateView(minX - padding, minY - padding,
+                maxX + padding, maxY + padding);
         return old;
+    }
+
+    public ScatterPlot alignCoordsys() {
+        return alignCoordsys(1);
     }
 
     public Legend addLegendRight(final int width, final boolean autoAddItems) {
@@ -153,8 +158,8 @@ public class ScatterPlot {
         coordsys.setLegendRightWidth(width);
         coordsys.setLegendRight(legend);
         if (autoAddItems) {
-            for (PointsInformation point: pointsInRenderer.values()) {
-                legend.addGlyphLabel(point.glyph, point.color.getRGB(), point.descr);
+            for (RenderedPoints point: pointsInRenderer.values()) {
+                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr);
             }
         }
         return legend;
@@ -165,8 +170,8 @@ public class ScatterPlot {
         coordsys.setLegendBottomHeight(height);
         coordsys.setLegendBottom(legend);
         if (autoAddItems) {
-            for (PointsInformation point: pointsInRenderer.values()) {
-                legend.addGlyphLabel(point.glyph, point.color.getRGB(), point.descr);
+            for (RenderedPoints point: pointsInRenderer.values()) {
+                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr);
             }
         }
         return legend;
@@ -174,7 +179,6 @@ public class ScatterPlot {
 
     // TODO add ability to add lines?
     // TODO add "trend line" (regression line?)
-
 
     /**
      * Adds a scroll zoom to the Scatterplot
@@ -218,11 +222,16 @@ public class ScatterPlot {
     public MouseOverInterface printPointMouseOver() {
         return (MouseOverInterface) new MouseOverInterface() {
             @Override
-            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
+            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails/*Points.PointDetails pointDetails, double[][] data, int dataIndex*/) {
                 System.out.println("Mouse location: " + mouseLocation);
                 System.out.println("Point location: " + pointLocation);
-                System.out.println("Data array: " + Arrays.deepToString(data));
-                System.out.println("Data index: " + dataIndex);
+                System.out.println("Data array: " + Arrays.deepToString(pointDetails.array));
+                System.out.println("Data index: " + pointDetails.arrayIndex);
+            }
+
+            @Override
+            public void mouseLeftPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+                System.out.println("Mouse left point");
             }
         }.register();
     }
@@ -236,11 +245,16 @@ public class ScatterPlot {
     public PointClickedInterface printPointClicked() {
         return (PointClickedInterface) new PointClickedInterface() {
             @Override
-            public void pointClicked(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
+            public void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails/*Points.PointDetails pointDetails, double[][] data, int dataIndex*/) {
                 System.out.println("Mouse location: " + mouseLocation);
                 System.out.println("Point location: " + pointLocation);
-                System.out.println("Data array: " + Arrays.deepToString(data));
-                System.out.println("Data index: " + dataIndex);
+                System.out.println("Data array: " + Arrays.deepToString(pointDetails.array));
+                System.out.println("Data index: " + pointDetails.arrayIndex);
+            }
+
+            @Override
+            public void pointReleased(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+                System.out.println("Mouse left point");
             }
         }.register();
     }
@@ -257,8 +271,12 @@ public class ScatterPlot {
         return content;
     }
 
-    public HashMap<Integer, PointsInformation> getPointsInRenderer() {
+    public HashMap<Integer, RenderedPoints> getPointsInRenderer() {
         return pointsInRenderer;
+    }
+
+    public RenderedPoints getPointInRenderer(final int index) {
+        return pointsInRenderer.get(index);
     }
 
     /**
@@ -266,7 +284,7 @@ public class ScatterPlot {
      *
      * @param point to be added
      */
-    protected void addItemToRegistry(PointDetails point) {
+    protected void addItemToRegistry(ExtendedPointDetails point) {
         int tempID = this.pickingRegistry.getNewID();
         point.point.setPickColor(tempID);
         this.pickingRegistry.register(point, tempID);
@@ -275,6 +293,11 @@ public class ScatterPlot {
     protected abstract class InteractionInterface extends MouseAdapter implements KeyListener {
         protected boolean keyTyped = false;
         protected int extModifierMask = 0;
+        private boolean isOnPoint = false;
+
+        private Point mouseLocation;
+        private Point2D pointLocation;
+        private ExtendedPointDetails pointDetails;
 
         /**
          * Searches for a data point similar to the location the developer clicked on.
@@ -283,11 +306,23 @@ public class ScatterPlot {
          * @return true if a point was found, false if no point was found in the dataSet
          */
         protected boolean findPoints(final MouseEvent e) {
-            PointDetails details = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            ExtendedPointDetails details = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
             if (details != null) {
-                triggerInterfaceMethod(e.getPoint(), details.point.location, details.array, (int) details.index);
+                enterInterfaceMethod(e.getPoint(), details.point.location, details/*details.point, details.array, (int) details.arrayIndex*/);
+                storeEnteredPoint(e.getPoint(), details.point.location, details);
+                isOnPoint = true;
+                return true;
+            } else if (isOnPoint) {
+                leaveInterfaceMethod(this.mouseLocation, this.pointLocation, this.pointDetails);
+                isOnPoint = false;
             }
             return false;
+        }
+
+        protected void storeEnteredPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+            this.mouseLocation = mouseLocation;
+            this.pointLocation = pointLocation;
+            this.pointDetails = pointDetails;
         }
 
         @Override
@@ -342,8 +377,10 @@ public class ScatterPlot {
          * @param data          the data array where the data point was found
          * @param dataIndex     the index of the data point in the returned array
          */
-        protected abstract void triggerInterfaceMethod(final Point mouseLocation, final Point2D pointLocation,
-                                                       final double[][] data, final int dataIndex);
+        protected abstract void enterInterfaceMethod(final Point mouseLocation, final Point2D pointLocation, /*final Points.PointDetails pointDetails,
+                                                       final double[][] data, final int dataIndex*/ final ExtendedPointDetails pointDetails);
+
+        protected abstract void leaveInterfaceMethod(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
 
     }
 
@@ -364,8 +401,12 @@ public class ScatterPlot {
         }
 
         @Override
-        protected void triggerInterfaceMethod(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
-            pointClicked(mouseLocation, pointLocation, data, dataIndex);
+        protected void enterInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails /*Points.PointDetails pointDetails, double[][] data, int dataIndex*/) {
+            pointClicked(mouseLocation, pointLocation, pointDetails/*, data, dataIndex*/);
+        }
+
+        protected void leaveInterfaceMethod(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails) {
+            pointReleased(mouseLocation, pointLocation, pointDetails);
         }
 
         /**
@@ -376,8 +417,10 @@ public class ScatterPlot {
          * @param data          the data array where the data point was found
          * @param dataIndex     the index of the data point in the returned array
          */
-        public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation,
-                                          final double[][] data, final int dataIndex);
+        public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation, /*final Points.PointDetails pointDetails,
+                                                       final double[][] data, final int dataIndex*/ final ExtendedPointDetails pointDetails);
+
+        public abstract void pointReleased(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
     }
 
     /**
@@ -386,6 +429,7 @@ public class ScatterPlot {
      *
      */
     public abstract class MouseOverInterface extends InteractionInterface {
+
         @Override
         public void mouseMoved(MouseEvent e) {
             if (keyTyped || extModifierMask == 0) {
@@ -394,8 +438,13 @@ public class ScatterPlot {
         }
 
         @Override
-        protected void triggerInterfaceMethod(Point mouseLocation, Point2D pointLocation, double[][] data, int dataIndex) {
-            mouseOverPoint(mouseLocation, pointLocation, data, dataIndex);
+        protected void enterInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails /*Points.PointDetails pointDetails, double[][] data, int dataIndex*/) {
+            mouseOverPoint(mouseLocation, pointLocation, pointDetails/*, data, dataIndex*/);
+        }
+
+        @Override
+        protected void leaveInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+            mouseLeftPoint(mouseLocation, pointLocation, pointDetails);
         }
 
         /**
@@ -406,8 +455,9 @@ public class ScatterPlot {
          * @param data          the data array where the data point was found
          * @param dataIndex     the index of the data point in the returned array
          */
-        public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation,
-                                            final double[][] data, final int dataIndex);
+        public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
+
+        public abstract void mouseLeftPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
     }
 
     /**
@@ -460,4 +510,3 @@ public class ScatterPlot {
         public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
     }
 }
-
