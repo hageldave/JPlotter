@@ -6,6 +6,7 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
+import hageldave.jplotter.interaction.KeyListenerMask;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -15,7 +16,10 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.PickingRegistry;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -312,14 +316,18 @@ public class ScatterPlot {
         this.pickingRegistry.register(point, tempID);
     }
 
-    protected abstract class InteractionInterface extends MouseAdapter implements KeyListener {
-        protected boolean keyTyped = false;
-        protected int extModifierMask = 0;
-        private boolean isOnPoint = false;
+    protected abstract class InteractionInterface extends MouseAdapter {
+        protected boolean isOnPoint = false;
+        protected Point mouseLocation;
+        protected Point2D pointLocation;
+        protected ExtendedPointDetails pointDetails;
+        protected KeyListenerMask keyListenerMask = new KeyListenerMask(0);
 
-        private Point mouseLocation;
-        private Point2D pointLocation;
-        private ExtendedPointDetails pointDetails;
+        public InteractionInterface(final KeyListenerMask keyListenerMask) {
+            this.keyListenerMask = keyListenerMask;
+        }
+
+        public InteractionInterface() { }
 
         /**
          * Searches for a data point similar to the location the developer clicked on.
@@ -347,23 +355,6 @@ public class ScatterPlot {
             this.pointDetails = pointDetails;
         }
 
-        // TODO gehen funktionstasten? oder mehrere tasten?! array mit tasten
-        // TODO andere Klasse
-        @Override
-        public void keyPressed(KeyEvent e) {
-            if (e.getKeyCode() == extModifierMask && !keyTyped) {
-                keyTyped = true;
-            }
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-            keyTyped = false;
-        }
-
-        @Override
-        public void keyTyped(KeyEvent e) { }
-
         /**
          * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
          * {@link MouseMotionListener} to the associated canvas.
@@ -376,7 +367,7 @@ public class ScatterPlot {
             if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
                 canvas.asComponent().addMouseMotionListener(this);
             if (!Arrays.asList(canvas.asComponent().getKeyListeners()).contains(this))
-                canvas.asComponent().addKeyListener(this);
+                canvas.asComponent().addKeyListener(keyListenerMask);
             return this;
         }
 
@@ -389,7 +380,7 @@ public class ScatterPlot {
         public InteractionInterface deRegister() {
             canvas.asComponent().removeMouseListener(this);
             canvas.asComponent().removeMouseMotionListener(this);
-            canvas.asComponent().removeKeyListener(this);
+            canvas.asComponent().removeKeyListener(keyListenerMask);
             return this;
         }
 
@@ -407,16 +398,23 @@ public class ScatterPlot {
 
     }
 
-
     /**
      * Mouse over interface, which triggers its pointClicked method,
      * when clicking on a point in the coordsys.
      *
      */
     public abstract class PointClickedInterface extends InteractionInterface {
+        public PointClickedInterface(KeyListenerMask keyListenerMask) {
+            super(keyListenerMask);
+        }
+
+        public PointClickedInterface() {
+            super();
+        }
+
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (keyTyped || extModifierMask == 0) {
+            if (keyListenerMask != null && keyListenerMask.isKeyTyped()) {
                 if (!findPoints(e)) {
                     System.out.println("No data point found in your dataset");
                 }
@@ -451,10 +449,17 @@ public class ScatterPlot {
      *
      */
     public abstract class MouseOverInterface extends InteractionInterface {
+        public MouseOverInterface(KeyListenerMask keyListenerMask) {
+            super(keyListenerMask);
+        }
+
+        public MouseOverInterface() {
+            super();
+        }
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            if (keyTyped || extModifierMask == 0) {
+            if (keyListenerMask.isKeyTyped()) {
                 findPoints(e);
             }
         }
@@ -491,8 +496,8 @@ public class ScatterPlot {
      *
      */
     public abstract class PointsSelectedInterface {
-        protected ArrayList<double[][]> data = new ArrayList<double[][]>();
-        protected ArrayList<Integer> dataIndices = new ArrayList<Integer>();
+        protected ArrayList<double[][]> data = new ArrayList<>();
+        protected ArrayList<Integer> dataIndices = new ArrayList<>();
 
         public PointsSelectedInterface(final int pointsModifierMask) {
             new CoordSysViewSelector(canvas, coordsys) {
@@ -530,4 +535,6 @@ public class ScatterPlot {
          */
         public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
     }
+
+
 }
