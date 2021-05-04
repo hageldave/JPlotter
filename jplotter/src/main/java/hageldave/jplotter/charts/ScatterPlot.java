@@ -70,6 +70,7 @@ public class ScatterPlot {
     /**
      * used for encapsulating all data interesting for the developer
      */
+    // TODO eventuell alle Punkte "Points" zurückgeben
     public static class ExtendedPointDetails extends Points.PointDetails {
         public final Points.PointDetails point;
         public final double[][] array;
@@ -111,6 +112,7 @@ public class ScatterPlot {
      * @param color  the color of the glyph
      * @return the old Scatterplot for chaining
      */
+    // TODO aktualisiere die legend automatisch
     public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
                           final Color color, final String descr) {
         Points tempPoints = new Points(glyph);
@@ -134,7 +136,7 @@ public class ScatterPlot {
         return addData(ID, points, glyph, color, null);
     }
 
-    // TODO control padding here
+
     public ScatterPlot alignCoordsys(final int padding) {
         ScatterPlot old = this;
         double minX = Integer.MAX_VALUE; double maxX = Integer.MIN_VALUE; double minY = Integer.MAX_VALUE; double maxY = Integer.MIN_VALUE;
@@ -222,7 +224,7 @@ public class ScatterPlot {
     public MouseOverInterface printPointMouseOver() {
         return (MouseOverInterface) new MouseOverInterface() {
             @Override
-            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails/*Points.PointDetails pointDetails, double[][] data, int dataIndex*/) {
+            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
                 System.out.println("Mouse location: " + mouseLocation);
                 System.out.println("Point location: " + pointLocation);
                 System.out.println("Data array: " + Arrays.deepToString(pointDetails.array));
@@ -245,7 +247,7 @@ public class ScatterPlot {
     public PointClickedInterface printPointClicked() {
         return (PointClickedInterface) new PointClickedInterface() {
             @Override
-            public void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails/*Points.PointDetails pointDetails, double[][] data, int dataIndex*/) {
+            public void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
                 System.out.println("Mouse location: " + mouseLocation);
                 System.out.println("Point location: " + pointLocation);
                 System.out.println("Data array: " + Arrays.deepToString(pointDetails.array));
@@ -308,7 +310,7 @@ public class ScatterPlot {
         protected boolean findPoints(final MouseEvent e) {
             ExtendedPointDetails details = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
             if (details != null) {
-                enterInterfaceMethod(e.getPoint(), details.point.location, details/*details.point, details.array, (int) details.arrayIndex*/);
+                enterInterfaceMethod(e.getPoint(), details.point.location, details);
                 storeEnteredPoint(e.getPoint(), details.point.location, details);
                 isOnPoint = true;
                 return true;
@@ -325,6 +327,8 @@ public class ScatterPlot {
             this.pointDetails = pointDetails;
         }
 
+        // TODO gehen funktionstasten? oder mehrere tasten?! array mit tasten
+        // TODO andere Klasse
         @Override
         public void keyPressed(KeyEvent e) {
             if (e.getKeyCode() == extModifierMask && !keyTyped) {
@@ -377,8 +381,7 @@ public class ScatterPlot {
          * @param data          the data array where the data point was found
          * @param dataIndex     the index of the data point in the returned array
          */
-        protected abstract void enterInterfaceMethod(final Point mouseLocation, final Point2D pointLocation, /*final Points.PointDetails pointDetails,
-                                                       final double[][] data, final int dataIndex*/ final ExtendedPointDetails pointDetails);
+        protected abstract void enterInterfaceMethod(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
 
         protected abstract void leaveInterfaceMethod(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
 
@@ -401,8 +404,8 @@ public class ScatterPlot {
         }
 
         @Override
-        protected void enterInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails /*Points.PointDetails pointDetails, double[][] data, int dataIndex*/) {
-            pointClicked(mouseLocation, pointLocation, pointDetails/*, data, dataIndex*/);
+        protected void enterInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+            pointClicked(mouseLocation, pointLocation, pointDetails);
         }
 
         protected void leaveInterfaceMethod(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails) {
@@ -417,8 +420,7 @@ public class ScatterPlot {
          * @param data          the data array where the data point was found
          * @param dataIndex     the index of the data point in the returned array
          */
-        public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation, /*final Points.PointDetails pointDetails,
-                                                       final double[][] data, final int dataIndex*/ final ExtendedPointDetails pointDetails);
+        public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
 
         public abstract void pointReleased(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
     }
@@ -438,8 +440,8 @@ public class ScatterPlot {
         }
 
         @Override
-        protected void enterInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails /*Points.PointDetails pointDetails, double[][] data, int dataIndex*/) {
-            mouseOverPoint(mouseLocation, pointLocation, pointDetails/*, data, dataIndex*/);
+        protected void enterInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+            mouseOverPoint(mouseLocation, pointLocation, pointDetails);
         }
 
         @Override
@@ -483,7 +485,6 @@ public class ScatterPlot {
                 }
             }.register();
         }
-
 
         protected void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
             int index = 0;
