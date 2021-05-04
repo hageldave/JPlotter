@@ -70,16 +70,17 @@ public class ScatterPlot {
     /**
      * used for encapsulating all data interesting for the developer
      */
-    // TODO eventuell alle Punkte "Points" zurückgeben
     public static class ExtendedPointDetails extends Points.PointDetails {
         public final Points.PointDetails point;
         public final double[][] array;
         public final double arrayIndex;
         public final Glyph glyph;
+        public final Points pointSet;
 
-        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final double[][] array, final double arrayIndex) {
+        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final Points pointSet, final double[][] array, final double arrayIndex) {
             super(point.location);
             this.glyph = glyph;
+            this.pointSet = pointSet;
             this.point = point;
             this.array = array;
             this.arrayIndex = arrayIndex;
@@ -95,6 +96,8 @@ public class ScatterPlot {
         public Points points;
         public Color color;
         public String descr;
+        // TODO think about - then not each point is added, but the list of rendered points is traversed each time and all non added will be added to legend
+        public boolean addedToLegend;
 
         RenderedPoints(final Points points, final Color color, final String descr) {
             this.points = points;
@@ -112,7 +115,6 @@ public class ScatterPlot {
      * @param color  the color of the glyph
      * @return the old Scatterplot for chaining
      */
-    // TODO aktualisiere die legend automatisch
     public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
                           final Color color, final String descr) {
         Points tempPoints = new Points(glyph);
@@ -121,19 +123,19 @@ public class ScatterPlot {
             double x = entry[0], y = entry[1];
             Points.PointDetails pointDetail = tempPoints.addPoint(x, y);
             pointDetail.setColor(color);
-            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, points, index));
+            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, points, index));
             index++;
         }
-        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color,
-                (descr == null) ? "undefined" : descr));
+        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr));
         this.dataAdded.add(points);
         this.content.addItemToRender(tempPoints);
+        updateLegends(glyph, color, descr);
         return tempPoints;
     }
 
     public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
                           final Color color) {
-        return addData(ID, points, glyph, color, null);
+        return addData(ID, points, glyph, color, "undefined");
     }
 
 
@@ -167,6 +169,10 @@ public class ScatterPlot {
         return legend;
     }
 
+    public Legend addLegendRight(final int width) {
+        return addLegendRight(width, true);
+    }
+
     public Legend addLegendBottom(final int height, final boolean autoAddItems) {
         Legend legend = new Legend();
         coordsys.setLegendBottomHeight(height);
@@ -177,6 +183,20 @@ public class ScatterPlot {
             }
         }
         return legend;
+    }
+
+    public Legend addLegendBottom(final int height) {
+        return addLegendBottom(height, true);
+    }
+
+    protected ScatterPlot updateLegends(final DefaultGlyph glyph, final Color color, final String descr) {
+        Legend legendBottom = (Legend) this.getCoordsys().getLegendBottom();
+        Legend legendRight = (Legend) this.getCoordsys().getLegendRight();
+        if (legendBottom != null)
+            legendBottom.addGlyphLabel(glyph, color.getRGB(), descr);
+        if (legendRight != null)
+            legendRight.addGlyphLabel(glyph, color.getRGB(), descr);
+        return this;
     }
 
     // TODO add ability to add lines?
