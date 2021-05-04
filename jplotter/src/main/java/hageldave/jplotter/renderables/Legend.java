@@ -1,23 +1,5 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.font.CharacterAtlas;
@@ -28,6 +10,15 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Utils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.List;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 /**
  * The Legend class is {@link Renderable} and its own {@link Renderer} at once.
@@ -72,7 +63,7 @@ public class Legend implements Renderable, Renderer {
 
 	protected boolean isEnabled=true;
 
-	protected static class GlyphLabel {
+	public static class GlyphLabel {
 		public String labelText;
 		public Glyph glyph;
 		public int color;
@@ -828,5 +819,7 @@ public class Legend implements Renderable, Renderer {
 		}
 		
 	}
+
+
 	
 }

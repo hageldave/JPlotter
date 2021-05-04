@@ -46,7 +46,8 @@ public class ScatterPlot {
     protected CompleteRenderer content;
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
     final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
-    final protected PickingRegistry<ExtendedPointDetails> pickingRegistry = new PickingRegistry<>();
+    final protected PickingRegistry<ExtendedPointDetails> pointPickingRegistry = new PickingRegistry<>();
+    final protected PickingRegistry<Legend.GlyphLabel> legendPickingRegistry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
         this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
@@ -167,7 +168,10 @@ public class ScatterPlot {
         coordsys.setLegendRight(legend);
         if (autoAddItems) {
             for (RenderedPoints point: pointsInRenderer.values()) {
-                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr);
+                int registryID = this.legendPickingRegistry.getNewID();
+                Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.descr, point.points.glyph, point.color.getRGB(), registryID);
+                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr, registryID);
+                this.legendPickingRegistry.register(glyphLabel, registryID);
             }
         }
         return legend;
@@ -179,13 +183,18 @@ public class ScatterPlot {
 
     public Legend addLegendBottom(final int height, final boolean autoAddItems) {
         Legend legend = new Legend();
+        System.out.println(legendPickingRegistry.getCurrentID());
         coordsys.setLegendBottomHeight(height);
         coordsys.setLegendBottom(legend);
         if (autoAddItems) {
             for (RenderedPoints point: pointsInRenderer.values()) {
-                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr);
+                int registryID = this.legendPickingRegistry.getNewID();
+                Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.descr, point.points.glyph, point.color.getRGB(), registryID);
+                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr, registryID);
+                this.legendPickingRegistry.register(glyphLabel, registryID);
             }
         }
+        System.out.println(legendPickingRegistry.getCurrentID());
         return legend;
     }
 
@@ -196,10 +205,13 @@ public class ScatterPlot {
     protected ScatterPlot updateLegends(final DefaultGlyph glyph, final Color color, final String descr) {
         Legend legendBottom = (Legend) this.getCoordsys().getLegendBottom();
         Legend legendRight = (Legend) this.getCoordsys().getLegendRight();
+        int registryID = this.legendPickingRegistry.getNewID();
         if (legendBottom != null)
-            legendBottom.addGlyphLabel(glyph, color.getRGB(), descr);
+            legendBottom.addGlyphLabel(glyph, color.getRGB(), descr, registryID);
         if (legendRight != null)
-            legendRight.addGlyphLabel(glyph, color.getRGB(), descr);
+            legendRight.addGlyphLabel(glyph, color.getRGB(), descr, registryID);
+        this.legendPickingRegistry.register(new Legend.GlyphLabel(descr, glyph, color.getRGB(), registryID),
+                registryID);
         return this;
     }
 
@@ -310,11 +322,12 @@ public class ScatterPlot {
      *
      * @param point to be added
      */
-    protected void addItemToRegistry(ExtendedPointDetails point) {
-        int tempID = this.pickingRegistry.getNewID();
-        point.point.setPickColor(tempID);
-        this.pickingRegistry.register(point, tempID);
+    protected void addItemToRegistry(ExtendedPointDetails item) {
+        int tempID = this.pointPickingRegistry.getNewID();
+        item.point.setPickColor(tempID);
+        this.pointPickingRegistry.register(item, tempID);
     }
+
 
     protected abstract class InteractionInterface extends MouseAdapter {
         protected boolean isOnPoint = false;
@@ -336,7 +349,7 @@ public class ScatterPlot {
          * @return true if a point was found, false if no point was found in the dataSet
          */
         protected boolean findPoints(final MouseEvent e) {
-            ExtendedPointDetails details = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            ExtendedPointDetails details = pointPickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
             if (details != null) {
                 enterInterfaceMethod(e.getPoint(), details.point.location, details);
                 storeEnteredPoint(e.getPoint(), details.point.location, details);
@@ -536,5 +549,58 @@ public class ScatterPlot {
         public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
     }
 
+    public abstract class LegendSelectedInterface extends InteractionInterface {
+        protected Legend.GlyphLabel glyphLabelDetails;
+        protected Point mouseLocation;
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (keyListenerMask != null && keyListenerMask.isKeyTyped()) {
+                if (!findPoints(e)) {
+                    System.out.println("No data point found in your dataset");
+                }
+            }
+        }
+
+        @Override
+        protected boolean findPoints(MouseEvent e) {
+            Legend.GlyphLabel details = legendPickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            if (details != null) {
+                legendItemSelected(e.getPoint(), details);
+                storeEnteredPoint(e.getPoint(), details);
+                isOnPoint = true;
+                return true;
+            } else if (isOnPoint) {
+                legendItemReleased(e.getPoint(), details);
+                isOnPoint = false;
+            }
+            return false;
+        }
+
+        protected void storeEnteredPoint(final Point mouseLocation, final Legend.GlyphLabel glyphLabel) {
+            this.mouseLocation = mouseLocation;
+            this.glyphLabelDetails = glyphLabel;
+        }
+
+
+        public abstract void legendItemSelected(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
+
+        public abstract void legendItemReleased(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
+
+        @Override
+        protected void storeEnteredPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+            super.storeEnteredPoint(mouseLocation, pointLocation, pointDetails);
+        }
+
+        @Override
+        protected void enterInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+
+        }
+
+        @Override
+        protected void leaveInterfaceMethod(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+
+        }
+    }
 
 }
