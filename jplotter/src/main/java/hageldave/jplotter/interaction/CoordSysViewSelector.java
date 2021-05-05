@@ -12,7 +12,6 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
-import java.util.LinkedList;
 
 /**
  * The CoordSysViewSelector class realizes a rectangular 
@@ -52,7 +51,6 @@ import java.util.LinkedList;
  *    }
  * }.register();
  * </pre>
- * TODO add default masking to shift key
  * @author hageldave
  */
 public abstract class CoordSysViewSelector extends MouseAdapter {
@@ -63,7 +61,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
 	final protected KeyListenerMask keyListenerMask;
-	protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
+	// TODO think about implementing this in keylistenermask
+	//protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 
 	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
 		this.canvas = canvas.asComponent();
@@ -82,7 +81,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	}
 
 	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
-		this(canvas, coordsys, new KeyListenerMask(0));
+		this(canvas, coordsys, new KeyListenerMask(KeyEvent.VK_SHIFT));
 	}
 	
 	@Override
