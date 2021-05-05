@@ -176,7 +176,6 @@ public class ScatterPlot {
 
     public Legend addLegendBottom(final int height, final boolean autoAddItems) {
         Legend legend = new Legend();
-        System.out.println(legendPickingRegistry.getCurrentID());
         coordsys.setLegendBottomHeight(height);
         coordsys.setLegendBottom(legend);
         if (autoAddItems) {
@@ -187,7 +186,6 @@ public class ScatterPlot {
                 this.legendPickingRegistry.register(glyphLabel, registryID);
             }
         }
-        System.out.println(legendPickingRegistry.getCurrentID());
         return legend;
     }
 
@@ -508,9 +506,8 @@ public class ScatterPlot {
         protected ArrayList<double[][]> data = new ArrayList<>();
         protected ArrayList<Integer> dataIndices = new ArrayList<>();
 
-        public PointsSelectedInterface(final int pointsModifierMask) {
-            new CoordSysViewSelector(canvas, coordsys) {
-                //{ extModifierMask = pointsModifierMask; }
+        public PointsSelectedInterface(final KeyListenerMask keyListenerMask) {
+            new CoordSysViewSelector(canvas, coordsys, keyListenerMask) {
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
