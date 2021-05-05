@@ -1,20 +1,12 @@
 package hageldave.jplotter.interaction;
 
-import java.awt.Component;
-import java.awt.Point;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
-
-import javax.swing.SwingUtilities;
-
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 
 /**
  * The CoordSysPanning class implements a {@link MouseListener}
@@ -38,28 +30,33 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	protected Point startPoint;
 	protected Component canvas;
 	protected CoordSysRenderer coordsys;
-	protected int extModifierMask = InputEvent.CTRL_DOWN_MASK;
+	final protected KeyListenerMask keyListenerMask;
 	protected int axes = X_AXIS | Y_AXIS;
-	
+
 	/**
 	 * Creates a new {@link CoordSysPanning} for the specified canvas and corresponding coordinate system.
 	 * @param canvas displaying the coordsys
 	 * @param coordsys the coordinate system to apply the panning in
 	 */
-	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
+		this.keyListenerMask = keyListenerMask;
+	}
+
+	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this(canvas, coordsys, new KeyListenerMask(0));
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if(isTriggerMouseEvent(e, MouseEvent.MOUSE_PRESSED))
+		if (keyListenerMask.isKeyTyped())
 			this.startPoint = e.getPoint();
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(startPoint!= null && isTriggerMouseEvent(e, MouseEvent.MOUSE_DRAGGED)){
+		if(startPoint!= null && keyListenerMask.isKeyTyped()){
 			Point dragPoint = e.getPoint();
 			double mouseTx = 0;
 			double mouseTy = 0;
@@ -89,15 +86,15 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 		startPoint = null;
 	}
 	
-	
-	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
+	// TODO will be removed
+	/*protected boolean isTriggerMouseEvent(MouseEvent e, int method){
 		return SwingUtilities.isLeftMouseButton(e) 
 				&& 
 				(e.getModifiersEx()&extModifierMask) == extModifierMask
 				&&
 				(method!=MouseEvent.MOUSE_PRESSED || coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
 				;
-	}
+	}*/
 	
 	/**
 	 * Sets the axes to which this panning is applied. 
@@ -128,6 +125,8 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 			canvas.addMouseListener(this);
 		if( ! Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
 			canvas.addMouseMotionListener(this);
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
+			canvas.addKeyListener(this.keyListenerMask);
 		return this;
 	}
 	
@@ -139,6 +138,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	public CoordSysPanning deRegister(){
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
+		canvas.removeKeyListener(this.keyListenerMask);
 		return this;
 	}
 	

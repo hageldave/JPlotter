@@ -1,26 +1,18 @@
 package hageldave.jplotter.interaction;
 
-import java.awt.Component;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
-import java.util.LinkedList;
-
-import javax.swing.SwingUtilities;
-
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 /**
  * The CoordSysViewSelector class realizes a rectangular 
@@ -60,7 +52,7 @@ import hageldave.jplotter.util.Utils;
  *    }
  * }.register();
  * </pre>
- * 
+ * TODO add default masking to shift key
  * @author hageldave
  */
 public abstract class CoordSysViewSelector extends MouseAdapter {
@@ -70,13 +62,13 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
-	protected int extModifierMask = InputEvent.SHIFT_DOWN_MASK;
+	final protected KeyListenerMask keyListenerMask;
 	protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
-	
-	
-	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+
+	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
+		this.keyListenerMask = keyListenerMask;
 		Renderer presentRenderer;
 		if((presentRenderer = coordsys.getOverlay()) == null){
 			coordsys.setOverlay(this.overlay = new CompleteRenderer());
@@ -85,13 +77,17 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		} else {
 			throw new IllegalStateException(
 					"The canvas' current overlay renderer is not an instance of CompleteRenderer but "
-					+ presentRenderer.getClass().getName() + " which cannot be used with CoordSysAreaSelector.");
+							+ presentRenderer.getClass().getName() + " which cannot be used with CoordSysAreaSelector.");
 		}
+	}
+
+	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this(canvas, coordsys, new KeyListenerMask(0));
 	}
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if(isTriggerMouseEvent(e, MouseEvent.MOUSE_PRESSED)){
+		if (this.keyListenerMask.isKeyTyped()) {
 			start = e.getPoint();
 			overlay.addItemToRender(areaBorder);
 		}
@@ -99,7 +95,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(start == null || !isTriggerMouseEvent(e, MouseEvent.MOUSE_DRAGGED)){	
+		if(start == null || !this.keyListenerMask.isKeyTyped()){
 			return;
 		}
 		{
@@ -154,26 +150,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		start = null;
 		end = null;
 	}
-	
-	protected boolean isTriggerMouseEvent(MouseEvent e, int method){
-		if(!SwingUtilities.isLeftMouseButton(e)) {
-			return false;
-		}
-		int modifiers = e.getModifiersEx();
-		if(
-			(modifiers&extModifierMask) != extModifierMask
-			|| 
-			extModifierMaskExcludes.stream().anyMatch(mask->(modifiers&mask) == mask))
-		{
-			return false;
-		}
-		if(method == MouseEvent.MOUSE_PRESSED){
-			Rectangle2D coordSysArea = Utils.swapYAxis(coordsys.getCoordSysArea(),canvas.getHeight());
-			return coordSysArea.contains(e.getPoint() );
-		}
-		return true;
-	}
-	
+
 	/**
 	 * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
 	 * {@link MouseMotionListener} to the associated canvas.
@@ -184,6 +161,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			canvas.addMouseListener(this);
 		if( ! Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
 			canvas.addMouseMotionListener(this);
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
+			canvas.addKeyListener(this.keyListenerMask);
 		return this;
 	}
 	
@@ -195,6 +174,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	public CoordSysViewSelector deRegister(){
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
+		canvas.removeKeyListener(this.keyListenerMask);
 		return this;
 	}
 	

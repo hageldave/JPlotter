@@ -1,13 +1,13 @@
 package hageldave.jplotter.interaction;
 
-import java.awt.Component;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.util.Arrays;
-
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.util.Arrays;
 
 /**
  * The CoordSysScrollZoom class implements a {@link MouseWheelListener}
@@ -26,35 +26,42 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 	protected CoordSysRenderer coordsys;
 	protected double zoomFactor = 2;
 	protected int axes = X_AXIS | Y_AXIS;
-	
-	public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+	final protected KeyListenerMask keyListenerMask;
+
+	public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
+		this.keyListenerMask = keyListenerMask;
 	}
-	
-	
+
+	public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this(canvas, coordsys, new KeyListenerMask(0));
+	}
+
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		if(!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
-			return;
-		
-		int wheelRotation = e.getWheelRotation();
-		double zoom = Math.pow(zoomFactor, wheelRotation);
-		double centerX = coordsys.getCoordinateView().getCenterX();
-		double centerY = coordsys.getCoordinateView().getCenterY();
-		double width = coordsys.getCoordinateView().getWidth();
-		double height = coordsys.getCoordinateView().getHeight();
-		if((axes & X_AXIS) != 0) 
-			width *= zoom;
-		if((axes & Y_AXIS) != 0)
-			height *= zoom;
-		coordsys.setCoordinateView(
-				centerX-width/2,
-				centerY-height/2,
-				centerX+width/2,
-				centerY+height/2
-		);
-		canvas.repaint();
+		if (keyListenerMask.isKeyTyped()) {
+			if (!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
+				return;
+
+			int wheelRotation = e.getWheelRotation();
+			double zoom = Math.pow(zoomFactor, wheelRotation);
+			double centerX = coordsys.getCoordinateView().getCenterX();
+			double centerY = coordsys.getCoordinateView().getCenterY();
+			double width = coordsys.getCoordinateView().getWidth();
+			double height = coordsys.getCoordinateView().getHeight();
+			if (( axes & X_AXIS ) != 0)
+				width *= zoom;
+			if (( axes & Y_AXIS ) != 0)
+				height *= zoom;
+			coordsys.setCoordinateView(
+					centerX - width / 2,
+					centerY - height / 2,
+					centerX + width / 2,
+					centerY + height / 2
+			);
+			canvas.repaint();
+		}
 	}
 	
 	/**
