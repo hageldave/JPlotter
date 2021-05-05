@@ -74,14 +74,17 @@ public class ScatterPlot {
         public final double arrayIndex;
         public final Glyph glyph;
         public final Points pointSet;
+        public final String descr;
 
-        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final Points pointSet, final double[][] array, final double arrayIndex) {
+        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final Points pointSet, final double[][] array,
+                             final double arrayIndex, final String descr) {
             super(point.location);
             this.glyph = glyph;
             this.pointSet = pointSet;
             this.point = point;
             this.array = array;
             this.arrayIndex = arrayIndex;
+            this.descr = descr;
         }
     }
 
@@ -121,7 +124,7 @@ public class ScatterPlot {
             double x = entry[0], y = entry[1];
             Points.PointDetails pointDetail = tempPoints.addPoint(x, y);
             pointDetail.setColor(color);
-            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, points, index));
+            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, points, index, descr));
             index++;
         }
         this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr));
