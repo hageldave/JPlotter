@@ -328,13 +328,15 @@ public class ScatterPlot {
         protected Point mouseLocation;
         protected Point2D pointLocation;
         protected ExtendedPointDetails pointDetails;
-        protected KeyListenerMask keyListenerMask = new KeyListenerMask(0);
+        protected KeyListenerMask keyListenerMask;
 
         public InteractionInterface(final KeyListenerMask keyListenerMask) {
             this.keyListenerMask = keyListenerMask;
         }
 
-        public InteractionInterface() { }
+        public InteractionInterface() {
+            this(new KeyListenerMask(0));
+        }
 
         /**
          * Searches for a data point similar to the location the developer clicked on.
