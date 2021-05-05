@@ -50,19 +50,11 @@ public class ScatterPlot {
     final protected PickingRegistry<Legend.GlyphLabel> legendPickingRegistry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
-        this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
-        setupScatterPlot();
+        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback());
     }
 
-    public ScatterPlot(final boolean useOpenGL, final JPlotterCanvas canvas) {
+    public ScatterPlot(final JPlotterCanvas canvas) {
         this.canvas = canvas;
-        setupScatterPlot();
-    }
-
-    /**
-     * Helper method to set the initial scatter plot.
-     */
-    protected void setupScatterPlot() {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.coordsys = new CoordSysRenderer();
@@ -71,6 +63,7 @@ public class ScatterPlot {
         this.coordsys.setContent(content);
         this.canvas.setRenderer(coordsys);
     }
+
 
     /**
      * used for encapsulating all data interesting for the developer
@@ -228,6 +221,7 @@ public class ScatterPlot {
     }
 
     /**
+     * TODO think about overloading to add Keylistener mask
      * Adds panning functionality to the Scatterplot
      *
      * @return the {@link CoordSysPanning} so that it can be further customized
@@ -514,7 +508,7 @@ public class ScatterPlot {
 
         public PointsSelectedInterface(final int pointsModifierMask) {
             new CoordSysViewSelector(canvas, coordsys) {
-                { extModifierMask = pointsModifierMask; }
+                //{ extModifierMask = pointsModifierMask; }
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
