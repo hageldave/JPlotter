@@ -77,7 +77,7 @@ public class Legend implements Renderable, Renderer {
 		}
 	}
 
-	protected static class LineLabel {
+	public static class LineLabel {
 		public String labelText;
 		public double thickness;
 		public int color;
@@ -98,7 +98,7 @@ public class Legend implements Renderable, Renderer {
 		}
 	}
 
-	protected static class ColormapLabel {
+	public static class ColormapLabel {
 		public String labelText;
 		public ColorMap cmap;
 		public boolean vertical;
