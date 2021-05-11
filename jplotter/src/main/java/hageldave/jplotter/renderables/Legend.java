@@ -63,6 +63,7 @@ public class Legend implements Renderable, Renderer {
 
 	protected boolean isEnabled=true;
 
+	// TODO add documentation
 	public static class GlyphLabel {
 		public String labelText;
 		public Glyph glyph;
@@ -77,6 +78,7 @@ public class Legend implements Renderable, Renderer {
 		}
 	}
 
+	// TODO add documentation
 	public static class LineLabel {
 		public String labelText;
 		public double thickness;
@@ -98,6 +100,7 @@ public class Legend implements Renderable, Renderer {
 		}
 	}
 
+	// TODO add documentation
 	public static class ColormapLabel {
 		public String labelText;
 		public ColorMap cmap;
