@@ -12,17 +12,17 @@ import hageldave.jplotter.renderables.Points;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 import java.util.function.IntSupplier;
 
-import static java.awt.event.KeyEvent.VK_ALT;
+import static java.awt.event.KeyEvent.*;
 
 public class ReadyScatterPlot {
 
@@ -110,12 +110,10 @@ public class ReadyScatterPlot {
                 plot.addData(index, addData, glyphclasses[index], new Color(classcolors.getColor(index)), classLabels[index]);
                 index++;
             }
-            // TODO discuss this - two options to get description - pointsinrenderer & extendedPointdetails
-            //plot.getPointInRenderer(1).descr = "hi";
 
 
         plot.alignCoordsys(140);
-        plot.addPanning();
+        plot.addPanning().setKeyListenerMask(new KeyListenerMask(VK_W));
         plot.addZoomViewSelector();
         plot.addScrollZoom();
         plot.addLegendBottom(50);
@@ -129,12 +127,15 @@ public class ReadyScatterPlot {
                 //text.setColor(pointDetails.point.color.getAsInt());
                 //text.setOrigin(new Point2D.Double(pointLocation.getX(), pointLocation.getY()));
 
+                System.out.println(Arrays.deepToString(pointDetails.array));
+
                 selectedPoint.setText(pointLocation.getX() + " " + pointLocation.getY());
                 selectedSelectedPointInfo.setxPos(pointLocation.getX());
                 selectedSelectedPointInfo.setyPos(pointLocation.getY());
                 selectedSelectedPointInfo.setArrayIndex((int) pointDetails.arrayIndex);
                 selectedSelectedPointInfo.setArray(pointDetails.array);
                 selectedSelectedPointInfo.setCategory(String.valueOf(pointDetails.descr));
+                selectedSelectedPointInfo.setButtonVisible(true);
             }
 
             @Override
@@ -171,13 +172,7 @@ public class ReadyScatterPlot {
             public void legendItemSelected(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
                 for (ScatterPlot.RenderedPoints renderedPoints: plot.getPointsInRenderer().values()) {
                     if (renderedPoints.points.glyph != glyphLabel.glyph) {
-                        desaturatedPoints.add(renderedPoints);
-                        ArrayList<Points.PointDetails> tempPointDetails = renderedPoints.points.getPointDetails();
-                        for (Points.PointDetails pointDetails: tempPointDetails) {
-                            IntSupplier detailColor = pointDetails.color;
-                            Color tempColor = new Color(detailColor.getAsInt());
-                            pointDetails.setColor(new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), 5));
-                        }
+                        toggleLegendItems(desaturatedPoints, renderedPoints, 5);
                     }
                 }
                 plot.getCoordsys().setDirty();
@@ -186,22 +181,21 @@ public class ReadyScatterPlot {
             @Override
             public void legendItemReleased(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
                 for (ScatterPlot.RenderedPoints renderedPoints: plot.getPointsInRenderer().values()) {
-                        desaturatedPoints.add(renderedPoints);
-                        ArrayList<Points.PointDetails> tempPointDetails = renderedPoints.points.getPointDetails();
-                        for (Points.PointDetails pointDetails: tempPointDetails) {
-                            IntSupplier detailColor = pointDetails.color;
-                            Color tempColor = new Color(detailColor.getAsInt());
-                            pointDetails.setColor(new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), 255));
-                        }
+                    toggleLegendItems(desaturatedPoints, renderedPoints, 255);
                 }
                 plot.getCoordsys().setDirty();
             }
         }.register();
 
-
+        plot.new PointsSelectedInterface(new KeyListenerMask(VK_SHIFT)) {
+            @Override
+            public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices) {
+                System.out.println(data);
+                System.out.println(dataIndices);
+            }
+        };
 
         // display within a JFrame
-
         Component canvas = plot.getCanvas().asComponent();
         frame.setSize(new Dimension(400, 400));
         Container contentPane = frame.getContentPane();
@@ -212,15 +206,12 @@ public class ReadyScatterPlot {
         // display currently selected point
         rightPanel.add(setupCurrentPoint());
         rightPanel.add(selectedSelectedPointInfo);
-
-
         contentPane.add(canvas, BorderLayout.CENTER);
         contentPane.add(rightPanel, BorderLayout.EAST);
 
         frame.setVisible(true);
-        frame.setTitle("scatterplot");
+        frame.setTitle("Scatterplot");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         plot.getCanvas().addCleanupOnWindowClosingListener(frame);
         // make visible on AWT event dispatch thread
         SwingUtilities.invokeLater(()->{
@@ -236,6 +227,16 @@ public class ReadyScatterPlot {
                 img.paint(g2d->frame.paintAll(g2d));
                 ImageSaver.saveImage(img.getRemoteBufferedImage(), "scatterplot.png");
             });
+    }
+
+    public static void toggleLegendItems(final HashSet<ScatterPlot.RenderedPoints> desaturatedPoints, final ScatterPlot.RenderedPoints renderedPoints, final int saturation) {
+        desaturatedPoints.add(renderedPoints);
+        ArrayList<Points.PointDetails> tempPointDetails = renderedPoints.points.getPointDetails();
+        for (Points.PointDetails pointDetails: tempPointDetails) {
+            IntSupplier detailColor = pointDetails.color;
+            Color tempColor = new Color(detailColor.getAsInt());
+            pointDetails.setColor(new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), saturation));
+        }
     }
 
     protected static Container setupCurrentPoint() {
@@ -257,7 +258,6 @@ public class ReadyScatterPlot {
         Container boxWrapper = new Container();
         boxWrapper.setLayout(new BoxLayout(boxWrapper, BoxLayout.Y_AXIS));
         JLabel label = new JLabel("Scatterplot Demo App");
-
         Box box = Box.createHorizontalBox();
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         box.add(label);
@@ -273,6 +273,9 @@ public class ReadyScatterPlot {
         protected JLabel yPos;
         protected JLabel array;
         protected JLabel arrayIndex;
+        protected JButton jbutton;
+        protected double[][] data;
+        protected int index;
 
         public SelectedPointInfo() {
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -281,6 +284,7 @@ public class ReadyScatterPlot {
             this.yPos = new JLabel("");
             this.array = new JLabel("");
             this.arrayIndex = new JLabel("");
+            this.jbutton = new JButton("Explore");
 
             JLabel pointFrom = new JLabel("Point from: ");
             JLabel positionX = new JLabel("Position: x: ");
@@ -288,27 +292,22 @@ public class ReadyScatterPlot {
             JLabel foundInArr = new JLabel("Found in array: ");
             JLabel foundWithIndex = new JLabel("Found with index: ");
 
-
             this.add(combineElements(pointFrom, category));
-            this.add(combineElements(new JLabel[]{positionX, xPos, positionY, yPos}));
+            this.add(combineElements(positionX, xPos, positionY, yPos));
             this.add(combineElements(foundInArr, array));
+            this.add(combineElements(addOpenButton()));
             this.add(combineElements(foundWithIndex, arrayIndex));
         }
 
-        protected Box combineElements(JLabel first, JLabel second) {
-            return combineElements(new JLabel[]{first, second});
-        }
-
-        protected Box combineElements(JLabel[] allLabels) {
-                Box box = Box.createHorizontalBox();
-                for (int i = 0; i < allLabels.length; i++) {
-                    allLabels[i].setAlignmentX(Component.LEFT_ALIGNMENT);
-                    box.add(allLabels[i]);
-                }
-
-                box.add(Box.createHorizontalGlue());
-                box.setBorder(new EmptyBorder(5, 15, 5, 15));
-                return box;
+        protected Box combineElements(JComponent... allLabels) {
+            Box box = Box.createHorizontalBox();
+            for (int i = 0; i < allLabels.length; i++) {
+                allLabels[i].setAlignmentX(Component.LEFT_ALIGNMENT);
+                box.add(allLabels[i]);
+            }
+            box.add(Box.createHorizontalGlue());
+            box.setBorder(new EmptyBorder(5, 15, 5, 15));
+            return box;
     }
 
         public void setCategory(String category) {
@@ -327,11 +326,13 @@ public class ReadyScatterPlot {
         }
 
         public void setArray(double[][] array) {
+            this.data = array;
             this.array.setText(String.valueOf(array));
             this.repaint();
         }
 
         public void setArrayIndex(int arrayIndex) {
+            this.index = arrayIndex;
             this.arrayIndex.setText(String.valueOf(arrayIndex));
             this.repaint();
         }
@@ -342,6 +343,59 @@ public class ReadyScatterPlot {
             this.yPos.setText("");
             this.array.setText("");
             this.arrayIndex.setText("");
+            this.jbutton.setVisible(false);
+        }
+
+        public void setButtonVisible(boolean value) {
+            this.jbutton.setVisible(value);
+            this.repaint();
+        }
+
+        protected JButton addOpenButton() {
+            this.jbutton.setVisible(false);
+            jbutton.addActionListener(e -> new ArrayExplorer(data, index));
+            return jbutton;
+        }
+    }
+
+    public static class ArrayExplorer extends JFrame {
+        Container contentPane;
+
+        public ArrayExplorer(final double[][] data, final int index) {
+            this.setVisible(true);
+            JPanel container = new JPanel();
+            container.setLayout(new BorderLayout());
+            JTable table = addTable(data);
+            JScrollPane scrPane = new JScrollPane(table);
+            table.scrollRectToVisible(table.getCellRect(index,0, true));
+            table.setRowSelectionInterval(index, index);
+
+            this.contentPane = this.getContentPane();
+            this.contentPane.setLayout(new BorderLayout());
+            this.contentPane.add(scrPane, BorderLayout.CENTER);
+            this.setTitle("Array explorer");
+            this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            // make visible on AWT event dispatch thread
+            SwingUtilities.invokeLater(()->{
+                this.pack();
+                this.setVisible(true);
+            });
+        }
+
+        public JTable addTable(final double[][] data) {
+            String[][] tableData = new String[data.length][3];
+            String[] headers = new String[3];
+            headers[0] = "Index";
+            headers[1] = "X";
+            headers[2] = "Y";
+            for (int i = 0; i < tableData.length; i++) {
+                tableData[i][0] = String.valueOf(i);
+                tableData[i][1] = String.valueOf(data[i][0]);
+                tableData[i][2] = String.valueOf(data[i][1]);
+            }
+            TableModel table_model = new DefaultTableModel(tableData, headers);
+            JTable table = new JTable(table_model);
+            return table;
         }
     }
 
