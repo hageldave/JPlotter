@@ -5,6 +5,7 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Utils;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.Arrays;
@@ -35,7 +36,7 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 	}
 
 	public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
-		this(canvas, coordsys, new KeyListenerMask(0));
+		this(canvas, coordsys, new KeyListenerMask(KeyEvent.VK_ALT));
 	}
 
 	@Override
@@ -87,6 +88,8 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 	public CoordSysScrollZoom register(){
 		if( ! Arrays.asList(canvas.getMouseWheelListeners()).contains(this))
 			canvas.addMouseWheelListener(this);
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
+			canvas.addKeyListener(this.keyListenerMask);
 		return this;
 	}
 	
@@ -116,6 +119,7 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 	 */
 	public CoordSysScrollZoom deRegister(){
 		canvas.removeMouseWheelListener(this);
+		canvas.removeKeyListener(this.keyListenerMask);
 		return this;
 	}
 

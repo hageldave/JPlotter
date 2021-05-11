@@ -5,7 +5,7 @@ import java.awt.event.KeyEvent;
 import java.util.HashMap;
 
 /**
- *
+ * TODO add documentation
  */
 public class KeyListenerMask extends KeyAdapter {
     protected boolean keyTyped = false;

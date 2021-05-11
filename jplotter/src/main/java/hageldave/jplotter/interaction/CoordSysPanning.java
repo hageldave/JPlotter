@@ -45,7 +45,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	}
 
 	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
-		this(canvas, coordsys, new KeyListenerMask(0));
+		this(canvas, coordsys, new KeyListenerMask(KeyEvent.VK_CONTROL));
 	}
 
 	@Override
