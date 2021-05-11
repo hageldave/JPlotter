@@ -60,21 +60,8 @@ public class CustomCoordSysScrollZoom implements MouseWheelListener, Interaction
 
             // TODO this one does it
             double posInCoordSysX = coordsys.getCoordinateView().getMinX() + ((e.getX() - coordsys.getCoordSysArea().getMinX())*factorX);
+            // TODO 50 removes height of title bar, needs to be improved as this will surely lead to errors
             double posInCoordSysY = coordsys.getCoordinateView().getMaxY() - ((e.getY() - (coordsys.getCoordSysArea().getMinY() - 50))*factorY);
-
-            // also vielleicht doch mauspos bei screen capturen?!
-            /*System.out.println(canvas.getLocationOnScreen());
-            System.out.println("-------------------------");
-            System.out.println(canvas.getBounds());
-            System.out.println(coordsys.getCurrentViewPort());
-            //System.out.println(coordsys());
-            System.out.println("offsetUpper: " + coordsys.getCoordSysArea().getBounds());
-            System.out.println("offsetUpper: " + coordsys.getCoordSysArea().getMinY());
-            System.out.println("mousePosRaw: " + e.getY());
-            System.out.println("test: " + (e.getY() - coordsys.getCoordSysArea().getMinY())*factorY);
-            System.out.println("posY: " + posInCoordSysY);
-
-            // wenn zu nah rangezoomt gehts nicht mehr*/
 
             int wheelRotation = e.getWheelRotation();
             double zoom = Math.pow(zoomFactor, wheelRotation);
