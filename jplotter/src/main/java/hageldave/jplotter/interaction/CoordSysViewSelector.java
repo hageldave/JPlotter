@@ -60,7 +60,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
-	final protected KeyListenerMask keyListenerMask;
+	protected KeyListenerMask keyListenerMask;
 
 	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
 		this.canvas = canvas.asComponent();
@@ -146,6 +146,13 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		canvas.repaint();
 		start = null;
 		end = null;
+	}
+
+	public void setKeyListenerMask(KeyListenerMask keyListenerMask) {
+		canvas.removeKeyListener(this.keyListenerMask);
+		this.keyListenerMask = keyListenerMask;
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
+			canvas.addKeyListener(this.keyListenerMask);
 	}
 
 	/**

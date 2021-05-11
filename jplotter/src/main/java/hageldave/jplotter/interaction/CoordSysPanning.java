@@ -30,7 +30,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	protected Point startPoint;
 	protected Component canvas;
 	protected CoordSysRenderer coordsys;
-	final protected KeyListenerMask keyListenerMask;
+	protected KeyListenerMask keyListenerMask;
 	protected int axes = X_AXIS | Y_AXIS;
 
 	/**
@@ -103,6 +103,13 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	 */
 	public int getPannedAxes() {
 		return axes;
+	}
+
+	public void setKeyListenerMask(KeyListenerMask keyListenerMask) {
+		canvas.removeKeyListener(this.keyListenerMask);
+		this.keyListenerMask = keyListenerMask;
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
+			canvas.addKeyListener(this.keyListenerMask);
 	}
 
 	/**

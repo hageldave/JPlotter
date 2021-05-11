@@ -27,7 +27,7 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 	protected CoordSysRenderer coordsys;
 	protected double zoomFactor = 2;
 	protected int axes = X_AXIS | Y_AXIS;
-	final protected KeyListenerMask keyListenerMask;
+	protected KeyListenerMask keyListenerMask;
 
 	public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
 		this.canvas = canvas.asComponent();
@@ -110,6 +110,13 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 	 */
 	public int getZoomedAxes() {
 		return axes;
+	}
+
+	public void setKeyListenerMask(KeyListenerMask keyListenerMask) {
+		canvas.removeKeyListener(this.keyListenerMask);
+		this.keyListenerMask = keyListenerMask;
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
+			canvas.addKeyListener(this.keyListenerMask);
 	}
 	
 	/**
