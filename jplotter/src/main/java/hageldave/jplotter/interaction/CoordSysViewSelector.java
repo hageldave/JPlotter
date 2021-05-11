@@ -61,8 +61,6 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
 	final protected KeyListenerMask keyListenerMask;
-	// TODO think about implementing this in keylistenermask
-	//protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 
 	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
 		this.canvas = canvas.asComponent();

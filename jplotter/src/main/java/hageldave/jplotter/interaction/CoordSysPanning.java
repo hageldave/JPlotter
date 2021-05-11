@@ -85,17 +85,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	public void mouseReleased(MouseEvent e) {
 		startPoint = null;
 	}
-	
-	// TODO will be removed
-	/*protected boolean isTriggerMouseEvent(MouseEvent e, int method){
-		return SwingUtilities.isLeftMouseButton(e) 
-				&& 
-				(e.getModifiersEx()&extModifierMask) == extModifierMask
-				&&
-				(method!=MouseEvent.MOUSE_PRESSED || coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
-				;
-	}*/
-	
+
 	/**
 	 * Sets the axes to which this panning is applied. 
 	 * Default are both x and y axis.
