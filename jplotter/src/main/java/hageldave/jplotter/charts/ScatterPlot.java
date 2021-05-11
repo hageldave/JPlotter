@@ -38,6 +38,14 @@ import java.util.HashMap;
  * With this ID the Dataset can be removed later on.
  * <p>
  *
+ * CHANGELOG
+ * - legend now also has a interaction interface (+ its elements are added to registry, etc. pp)
+ * - KeylistenerMask has now its own class and is implemented in all interaction interfaces
+ * - KeylistenerMask now can store > 1 keys
+ * - ExtendedPointDetails stores now its label and Points
+ * - update legend automatically if data is added
+ * - Continued working on Scatterplot demo class
+ *
  * @author lucareichmann
  */
 public class ScatterPlot {
@@ -63,7 +71,6 @@ public class ScatterPlot {
         this.coordsys.setContent(content);
         this.canvas.setRenderer(coordsys);
     }
-
 
     /**
      * used for encapsulating all data interesting for the developer
@@ -209,9 +216,6 @@ public class ScatterPlot {
         return this;
     }
 
-    // TODO add ability to add lines?
-    // TODO add "trend line" (regression line?)
-
     /**
      * Adds a scroll zoom to the Scatterplot
      *
@@ -221,14 +225,22 @@ public class ScatterPlot {
         return new CoordSysScrollZoom(this.canvas, this.coordsys).register();
     }
 
+    public CoordSysScrollZoom addScrollZoom(final KeyListenerMask keyListenerMask) {
+        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
+    }
+
     /**
-     * TODO think about overloading to add Keylistener mask
+     *
      * Adds panning functionality to the Scatterplot
      *
      * @return the {@link CoordSysPanning} so that it can be further customized
      */
     public CoordSysPanning addPanning() {
         return new CoordSysPanning(this.canvas, this.coordsys).register();
+    }
+
+    public CoordSysPanning addPanning(final KeyListenerMask keyListenerMask) {
+        return new CoordSysPanning(this.canvas, this.coordsys, keyListenerMask).register();
     }
 
     /**
@@ -238,7 +250,15 @@ public class ScatterPlot {
      */
     public CoordSysViewSelector addZoomViewSelector() {
         return new CoordSysViewSelector(this.canvas, this.coordsys) {
+            @Override
+            public void areaSelected(double minX, double minY, double maxX, double maxY) {
+                coordsys.setCoordinateView(minX, minY, maxX, maxY);
+            }
+        }.register();
+    }
 
+    public CoordSysViewSelector addZoomViewSelector(final KeyListenerMask keyListenerMask) {
+        return new CoordSysViewSelector(this.canvas, this.coordsys, keyListenerMask) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);
@@ -376,7 +396,7 @@ public class ScatterPlot {
                 canvas.asComponent().addMouseListener(this);
             if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
                 canvas.asComponent().addMouseMotionListener(this);
-            if (!Arrays.asList(canvas.asComponent().getKeyListeners()).contains(this))
+            if (!Arrays.asList(canvas.asComponent().getKeyListeners()).contains(keyListenerMask))
                 canvas.asComponent().addKeyListener(keyListenerMask);
             return this;
         }
@@ -424,7 +444,7 @@ public class ScatterPlot {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (keyListenerMask != null && keyListenerMask.isKeyTyped()) {
+            if (keyListenerMask.isKeyTyped()) {
                 if (!findPoints(e)) {
                     System.out.println("No data point found in your dataset");
                 }
@@ -520,6 +540,17 @@ public class ScatterPlot {
             }.register();
         }
 
+        public PointsSelectedInterface() {
+            new CoordSysViewSelector(canvas, coordsys) {
+                @Override
+                public void areaSelected(double minX, double minY, double maxX, double maxY) {
+                    calcPoints(minX, minY, maxX, maxY);
+                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices);
+                    data.clear(); dataIndices.clear();
+                }
+            }.register();
+        }
+
         protected void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
             int index = 0;
             for (final double[][] pointList : dataAdded) {
@@ -551,9 +582,9 @@ public class ScatterPlot {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (keyListenerMask != null && keyListenerMask.isKeyTyped()) {
+            if (keyListenerMask.isKeyTyped()) {
                 if (!findPoints(e)) {
-                    System.out.println("No data point found in your dataset");
+                    System.out.println("Not clicked on legend");
                 }
             }
         }
