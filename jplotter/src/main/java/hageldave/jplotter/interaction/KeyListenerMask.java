@@ -12,9 +12,9 @@ public class KeyListenerMask extends KeyAdapter {
     protected boolean noMasking = false;
     final protected HashMap<Integer, Boolean> keyTypedInMask = new HashMap<>();
 
-    public KeyListenerMask(final int[] extModifierMask) {
-        for (int i = 0; i < extModifierMask.length; i++) {
-            this.keyTypedInMask.put(extModifierMask[i], false);
+    public KeyListenerMask(final int... extModifierMask) {
+        for (int j : extModifierMask) {
+            this.keyTypedInMask.put(j, false);
         }
     }
 
@@ -32,13 +32,14 @@ public class KeyListenerMask extends KeyAdapter {
             if (keyTypedInMask.containsKey(e.getKeyCode())) {
                 keyTypedInMask.put(e.getKeyCode(), true);
             }
-            boolean temp = true;
+            boolean areKeysPressed = true;
             for (Boolean values : keyTypedInMask.values()) {
                 if (!values) {
-                    temp = false;
+                    areKeysPressed = false;
+                    break;
                 }
             }
-            if (temp)
+            if (areKeysPressed)
                 keyTyped = true;
         }
     }
@@ -46,8 +47,8 @@ public class KeyListenerMask extends KeyAdapter {
     @Override
     public void keyReleased(KeyEvent e) {
         if (!noMasking) {
-            keyTyped = false;
             if (keyTypedInMask.containsKey(e.getKeyCode())) {
+                keyTyped = false;
                 keyTypedInMask.put(e.getKeyCode(), false);
             }
         }
