@@ -21,7 +21,6 @@ import java.util.Arrays;
  *
  * @author hageldave
  *
- * TODO seems better, needs discussion
  */
 public class CustomCoordSysScrollZoom implements MouseWheelListener, InteractionConstants {
 
@@ -47,40 +46,19 @@ public class CustomCoordSysScrollZoom implements MouseWheelListener, Interaction
             if (!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
                return;
 
-            System.out.println(Utils.swapYAxis(e.getPoint(), canvas.getHeight()));
-
-            // Warning: this is not pretty
-            double coordSysAreaLength = coordsys.getCoordSysArea().getWidth();
-            double coordViewLength = coordsys.getCoordinateView().getWidth();
-
-            double coordSysAreaHeight = coordsys.getCoordSysArea().getHeight();
-            double coordViewHeight = coordsys.getCoordinateView().getHeight();
-
-            double factorX = coordViewLength/coordSysAreaLength;
-            double factorY = coordViewHeight/coordSysAreaHeight;
-
-            canvas.getLocationOnScreen();
-            System.out.println( coordsys.getCurrentViewPort());
-            System.out.println(canvas.getParent().getSize());
-            // TODO this one does it
-            double posInCoordSysX = coordsys.getCoordinateView().getMinX() + ((e.getX() - coordsys.getCoordSysArea().getMinX())*factorX);
-            // TODO 50 removes height of title bar, needs to be improved as this will surely lead to errors
-            double posInCoordSysY = coordsys.getCoordinateView().getMaxY() - (e.getY() - (coordsys.getCoordSysArea().getMinY() - 55))*factorY;
-            
-            System.out.println("-----------------");
-            System.out.println(posInCoordSysY);
-            //System.out.println(posInCoordSysX);
-            System.out.println(coordsys.getCoordSysArea());
-            System.out.println(canvas.getBounds());
-            System.out.println("Y:  " + e.getY());
-            System.out.println("X:  " + e.getX());
-
+            double posInCoordSysX = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()).getX();
+            double posInCoordSysY = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()).getY();
 
             int wheelRotation = e.getWheelRotation();
             double zoom = Math.pow(zoomFactor, wheelRotation);
-            double centerX = ((coordsys.getCoordinateView().getCenterX() * 0.45) + (posInCoordSysX * 0.55));
-            double centerY = ((coordsys.getCoordinateView().getCenterY() * 0.45) + (posInCoordSysY * 0.55));
 
+            double centerX = ((coordsys.getCoordinateView().getCenterX() * 0.8) + (posInCoordSysX * 0.2));
+            double centerY = ((coordsys.getCoordinateView().getCenterY() * 0.8) + (posInCoordSysY * 0.2));
+
+            if (wheelRotation < 0) {
+                centerX = ((coordsys.getCoordinateView().getCenterX() * 0.5) + (posInCoordSysX * 0.5));
+                centerY = ((coordsys.getCoordinateView().getCenterY() * 0.5) + (posInCoordSysY * 0.5));
+            }
 
             double width = coordsys.getCoordinateView().getWidth();
             double height = coordsys.getCoordinateView().getHeight();
