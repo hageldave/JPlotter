@@ -143,7 +143,7 @@ public class ReadyScatterPlot {
             }
         }.register();
 
-        plot.new MouseOverInterface() {
+        plot.new PointHoveredInterface() {
             Points points;
             @Override
             public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {

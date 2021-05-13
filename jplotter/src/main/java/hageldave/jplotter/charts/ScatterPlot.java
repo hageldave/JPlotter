@@ -269,8 +269,8 @@ public class ScatterPlot {
      *
      * @return listener class
      */
-    public MouseOverInterface printPointMouseOver() {
-        return (MouseOverInterface) new MouseOverInterface() {
+    public PointHoveredInterface printPointMouseOver() {
+        return (PointHoveredInterface) new PointHoveredInterface() {
             @Override
             public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
                 System.out.println("Mouse location: " + mouseLocation);
@@ -412,7 +412,7 @@ public class ScatterPlot {
     /**
      * Mouse over interface, which triggers its pointClicked method,
      * when clicking on a point in the coordsys.
-     *
+     * TODO idea: combine click&hover interface and select mode via enum : click,select,all
      */
     public abstract class PointClickedInterface extends InteractionInterface {
         public PointClickedInterface(KeyListenerMask keyListenerMask) {
@@ -453,12 +453,12 @@ public class ScatterPlot {
      * when hovering over a point in the coordsys.
      *
      */
-    public abstract class MouseOverInterface extends InteractionInterface {
-        public MouseOverInterface(KeyListenerMask keyListenerMask) {
+    public abstract class PointHoveredInterface extends InteractionInterface {
+        public PointHoveredInterface(KeyListenerMask keyListenerMask) {
             super(keyListenerMask);
         }
 
-        public MouseOverInterface() {
+        public PointHoveredInterface() {
             super();
         }
 
@@ -577,6 +577,39 @@ public class ScatterPlot {
         public abstract void legendItemSelected(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
 
         public abstract void legendItemReleased(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
+    }
+
+    public abstract class LegendHoveredInterface extends InteractionInterface {
+        protected Legend.GlyphLabel glyphLabelDetails;
+        protected Point mouseLocation;
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            if (keyListenerMask.isKeyTyped()) {
+                if (!findPoints(e) && itemSelected) {
+                    legendItemHovered(this.mouseLocation, this.glyphLabelDetails);
+                    deselectPoint();
+                } else if (findPoints(e)) {
+                    legendItemLeft(this.mouseLocation, this.glyphLabelDetails);
+                }
+            }
+        }
+
+        @Override
+        protected boolean findPoints(MouseEvent e) {
+            Legend.GlyphLabel details = legendPickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            if (details != null) {
+                this.mouseLocation = e.getPoint();
+                this.glyphLabelDetails = details;
+                itemSelected = true;
+                return true;
+            }
+            return false;
+        }
+
+        public abstract void legendItemHovered(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
+
+        public abstract void legendItemLeft(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
     }
 
 }
