@@ -101,8 +101,6 @@ public class ScatterPlot {
         public Points points;
         public Color color;
         public String descr;
-        // TODO think about - then not each point is added, but the list of rendered points is traversed each time and all non added will be added to legend
-        public boolean addedToLegend;
 
         RenderedPoints(final Points points, final Color color, final String descr) {
             this.points = points;
@@ -340,7 +338,6 @@ public class ScatterPlot {
         this.pointPickingRegistry.register(item, tempID);
     }
 
-
     protected abstract class InteractionInterface extends MouseAdapter {
         protected boolean itemSelected = false;
         protected Point mouseLocation;
@@ -550,6 +547,14 @@ public class ScatterPlot {
         protected Legend.GlyphLabel glyphLabelDetails;
         protected Point mouseLocation;
 
+        public LegendSelectedInterface(KeyListenerMask keyListenerMask) {
+            super(keyListenerMask);
+        }
+
+        public LegendSelectedInterface() {
+            super();
+        }
+
         @Override
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
@@ -583,6 +588,14 @@ public class ScatterPlot {
         protected Legend.GlyphLabel glyphLabelDetails;
         protected Point mouseLocation;
 
+        public LegendHoveredInterface(KeyListenerMask keyListenerMask) {
+            super(keyListenerMask);
+        }
+
+        public LegendHoveredInterface() {
+            super();
+        }
+
         @Override
         public void mouseMoved(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
@@ -611,5 +624,4 @@ public class ScatterPlot {
 
         public abstract void legendItemLeft(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
     }
-
 }
