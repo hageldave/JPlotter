@@ -176,6 +176,7 @@ public class ReadyScatterPlot {
                     }
                 }
                 plot.getCoordsys().setDirty();
+                plot.getCanvas().scheduleRepaint();
             }
 
             @Override
@@ -184,6 +185,7 @@ public class ReadyScatterPlot {
                     toggleLegendItems(desaturatedPoints, renderedPoints, 255);
                 }
                 plot.getCoordsys().setDirty();
+                plot.getCanvas().scheduleRepaint();
             }
         }.register();
 
