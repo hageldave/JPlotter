@@ -1,19 +1,5 @@
 package hageldave.jplotter;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.MenuItem;
-import java.awt.PopupMenu;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.util.function.DoubleUnaryOperator;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
@@ -21,6 +7,7 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
+import hageldave.jplotter.interaction.KeyListenerMask;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
@@ -28,6 +15,14 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import org.w3c.dom.Document;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.function.DoubleUnaryOperator;
 
 public class Example {
 
@@ -111,8 +106,8 @@ public class Example {
 		canvas.setRenderer(coordsys);
 		// lets add some controls for exploring the data
 		new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
-		new CoordSysViewSelector(canvas,coordsys) {
-			{extModifierMask=0;/* no need for shift to be pressed */}
+		new CoordSysViewSelector(canvas,coordsys, new KeyListenerMask(0)) {
+			// deprecated {extModifierMask=0;/* no need for shift to be pressed */}
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
 				coordsys.setCoordinateView(minX, minY, maxX, maxY);
