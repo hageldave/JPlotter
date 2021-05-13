@@ -3,10 +3,7 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.interaction.CoordSysPanning;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
-import hageldave.jplotter.interaction.CoordSysViewSelector;
-import hageldave.jplotter.interaction.KeyListenerMask;
+import hageldave.jplotter.interaction.*;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -221,8 +218,8 @@ public class ScatterPlot {
      *
      * @return the {@link CoordSysScrollZoom} so that it can be further customized
      */
-    public CoordSysScrollZoom addScrollZoom() {
-        return new CoordSysScrollZoom(this.canvas, this.coordsys).register();
+    public CustomCoordSysScrollZoom addScrollZoom() {
+        return new CustomCoordSysScrollZoom(this.canvas, this.coordsys).register();
     }
 
     public CoordSysScrollZoom addScrollZoom(final KeyListenerMask keyListenerMask) {

@@ -61,7 +61,15 @@ public class CustomCoordSysScrollZoom implements MouseWheelListener, Interaction
             // TODO this one does it
             double posInCoordSysX = coordsys.getCoordinateView().getMinX() + ((e.getX() - coordsys.getCoordSysArea().getMinX())*factorX);
             // TODO 50 removes height of title bar, needs to be improved as this will surely lead to errors
-            double posInCoordSysY = coordsys.getCoordinateView().getMaxY() - ((e.getY() - (coordsys.getCoordSysArea().getMinY() - 50))*factorY);
+            double posInCoordSysY = coordsys.getCoordinateView().getMaxY() - (e.getY() - (coordsys.getCoordSysArea().getMinY() - 55))*factorY;
+            
+            System.out.println("-----------------");
+            System.out.println(posInCoordSysY);
+            System.out.println(posInCoordSysX);
+            System.out.println(coordsys.getCoordSysArea());
+            System.out.println(canvas.getBounds());
+            System.out.println(e.getY());
+
 
             int wheelRotation = e.getWheelRotation();
             double zoom = Math.pow(zoomFactor, wheelRotation);
