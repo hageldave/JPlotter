@@ -55,10 +55,14 @@ public class ScatterPlot {
     final protected PickingRegistry<Legend.GlyphLabel> legendPickingRegistry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
-        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback());
+        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
     }
 
-    public ScatterPlot(final JPlotterCanvas canvas) {
+    public ScatterPlot(final boolean useOpenGL, final String xLabel, final String yLabel) {
+        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), xLabel, yLabel);
+    }
+
+    public ScatterPlot(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
@@ -67,6 +71,8 @@ public class ScatterPlot {
         this.coordsys.setCoordinateView(-1, -1, 1, 1);
         this.coordsys.setContent(content);
         this.canvas.setRenderer(coordsys);
+        this.coordsys.setxAxisLabel(xLabel);
+        this.coordsys.setyAxisLabel(yLabel);
     }
 
     /**
