@@ -429,7 +429,7 @@ public class ScatterPlot {
                 if (!findPoints(e) && itemSelected) {
                     pointReleased(this.mouseLocation, this.pointLocation, this.pointDetails);
                     deselectPoint();
-                } else {
+                } else if (findPoints(e)) {
                     pointClicked(this.mouseLocation, this.pointLocation, this.pointDetails);
                 }
             }

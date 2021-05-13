@@ -19,7 +19,10 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Scanner;
 import java.util.function.IntSupplier;
 
 import static java.awt.event.KeyEvent.*;
@@ -120,26 +123,22 @@ public class ReadyScatterPlot {
 
 
         plot.new PointClickedInterface(new KeyListenerMask(VK_ALT)) {
-
             @Override
             public void pointClicked(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
-                //Text text = new Text((pointLocation.getX() + " " + pointLocation.getY()), 17, Font.PLAIN);
-                //text.setColor(pointDetails.point.color.getAsInt());
-                //text.setOrigin(new Point2D.Double(pointLocation.getX(), pointLocation.getY()));
-
-                System.out.println(Arrays.deepToString(pointDetails.array));
-
+                selectedSelectedPointInfo.setVisible(true);
                 selectedPoint.setText(pointLocation.getX() + " " + pointLocation.getY());
                 selectedSelectedPointInfo.setxPos(pointLocation.getX());
                 selectedSelectedPointInfo.setyPos(pointLocation.getY());
                 selectedSelectedPointInfo.setArrayIndex((int) pointDetails.arrayIndex);
                 selectedSelectedPointInfo.setArray(pointDetails.array);
-                selectedSelectedPointInfo.setCategory(String.valueOf(pointDetails.descr));
+                selectedSelectedPointInfo.setArrayText(pointDetails.descr);
+                selectedSelectedPointInfo.setCategory(String.valueOf(pointDetails.glyph));
                 selectedSelectedPointInfo.setButtonVisible(true);
             }
 
             @Override
             public void pointReleased(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
+                selectedSelectedPointInfo.setVisible(false);
                 selectedSelectedPointInfo.clearAll();
             }
         }.register();
@@ -175,7 +174,6 @@ public class ReadyScatterPlot {
                         toggleLegendItems(desaturatedPoints, renderedPoints, 5);
                     }
                 }
-                plot.getCoordsys().setDirty();
                 plot.getCanvas().scheduleRepaint();
             }
 
@@ -184,7 +182,6 @@ public class ReadyScatterPlot {
                 for (ScatterPlot.RenderedPoints renderedPoints: plot.getPointsInRenderer().values()) {
                     toggleLegendItems(desaturatedPoints, renderedPoints, 255);
                 }
-                plot.getCoordsys().setDirty();
                 plot.getCanvas().scheduleRepaint();
             }
         }.register();
@@ -329,6 +326,9 @@ public class ReadyScatterPlot {
 
         public void setArray(double[][] array) {
             this.data = array;
+        }
+
+        public void setArrayText(String array) {
             this.array.setText(String.valueOf(array));
             this.repaint();
         }
