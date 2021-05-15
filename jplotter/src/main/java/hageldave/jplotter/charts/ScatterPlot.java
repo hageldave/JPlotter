@@ -51,8 +51,7 @@ public class ScatterPlot {
     protected CompleteRenderer content;
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
     final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
-    final protected PickingRegistry<ExtendedPointDetails> pointPickingRegistry = new PickingRegistry<>();
-    final protected PickingRegistry<Legend.GlyphLabel> legendPickingRegistry = new PickingRegistry<>();
+    final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 
     public ScatterPlot(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
@@ -147,7 +146,6 @@ public class ScatterPlot {
         return addData(ID, points, glyph, color, "undefined");
     }
 
-
     public ScatterPlot alignCoordsys(final int padding) {
         ScatterPlot old = this;
         double minX = Integer.MAX_VALUE; double maxX = Integer.MIN_VALUE; double minY = Integer.MAX_VALUE; double maxY = Integer.MIN_VALUE;
@@ -172,10 +170,10 @@ public class ScatterPlot {
         coordsys.setLegendRight(legend);
         if (autoAddItems) {
             for (RenderedPoints point: pointsInRenderer.values()) {
-                int registryID = this.legendPickingRegistry.getNewID();
+                int registryID = this.pickingRegistry.getNewID();
                 Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.descr, point.points.glyph, point.color.getRGB(), registryID);
                 legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr, registryID);
-                this.legendPickingRegistry.register(glyphLabel, registryID);
+                this.pickingRegistry.register(glyphLabel, registryID);
             }
         }
         return legend;
@@ -191,10 +189,10 @@ public class ScatterPlot {
         coordsys.setLegendBottom(legend);
         if (autoAddItems) {
             for (RenderedPoints point: pointsInRenderer.values()) {
-                int registryID = this.legendPickingRegistry.getNewID();
+                int registryID = this.pickingRegistry.getNewID();
                 Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.descr, point.points.glyph, point.color.getRGB(), registryID);
                 legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr, registryID);
-                this.legendPickingRegistry.register(glyphLabel, registryID);
+                this.pickingRegistry.register(glyphLabel, registryID);
             }
         }
         return legend;
@@ -207,12 +205,12 @@ public class ScatterPlot {
     protected ScatterPlot updateLegends(final DefaultGlyph glyph, final Color color, final String descr) {
         Legend legendBottom = (Legend) this.getCoordsys().getLegendBottom();
         Legend legendRight = (Legend) this.getCoordsys().getLegendRight();
-        int registryID = this.legendPickingRegistry.getNewID();
+        int registryID = this.pickingRegistry.getNewID();
         if (legendBottom != null)
             legendBottom.addGlyphLabel(glyph, color.getRGB(), descr, registryID);
         if (legendRight != null)
             legendRight.addGlyphLabel(glyph, color.getRGB(), descr, registryID);
-        this.legendPickingRegistry.register(new Legend.GlyphLabel(descr, glyph, color.getRGB(), registryID),
+        this.pickingRegistry.register(new Legend.GlyphLabel(descr, glyph, color.getRGB(), registryID),
                 registryID);
         return this;
     }
@@ -339,11 +337,12 @@ public class ScatterPlot {
      * @param point to be added
      */
     protected void addItemToRegistry(ExtendedPointDetails item) {
-        int tempID = this.pointPickingRegistry.getNewID();
+        int tempID = this.pickingRegistry.getNewID();
         item.point.setPickColor(tempID);
-        this.pointPickingRegistry.register(item, tempID);
+        this.pickingRegistry.register(item, tempID);
     }
 
+    // TODO daten abstrahieren
     protected abstract class InteractionInterface extends MouseAdapter {
         protected boolean itemSelected = false;
         protected Point mouseLocation;
@@ -366,8 +365,9 @@ public class ScatterPlot {
          * @return true if a point was found, false if no point was found in the dataSet
          */
         protected boolean findPoints(final MouseEvent e) {
-            ExtendedPointDetails details = pointPickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (details != null) {
+            Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            if (untypedDetails instanceof ExtendedPointDetails) {
+                ExtendedPointDetails details = (ExtendedPointDetails) untypedDetails;
                 this.mouseLocation = e.getPoint();
                 this.pointLocation = details.point.location;
                 this.pointDetails = details;
@@ -415,7 +415,8 @@ public class ScatterPlot {
     /**
      * Mouse over interface, which triggers its pointClicked method,
      * when clicking on a point in the coordsys.
-     * TODO idea: combine click&hover interface and select mode via enum : click,select,all
+     * TODO idea: combine click&hover interface and select mode via enum : click,select,all - machen aber ohne konstruktor
+     * // TODO potentiell weniger daten direkt speichern
      */
     public abstract class PointClickedInterface extends InteractionInterface {
         public PointClickedInterface(KeyListenerMask keyListenerMask) {
@@ -433,6 +434,7 @@ public class ScatterPlot {
                     pointReleased(this.mouseLocation, this.pointLocation, this.pointDetails);
                     deselectPoint();
                 } else if (findPoints(e)) {
+                    System.out.println(this.pointDetails);
                     pointClicked(this.mouseLocation, this.pointLocation, this.pointDetails);
                 }
             }
@@ -564,19 +566,21 @@ public class ScatterPlot {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
-                if (!findPoints(e) && itemSelected) {
+                if (!findLegendItem(e) && itemSelected) {
                     legendItemReleased(this.mouseLocation, this.glyphLabelDetails);
                     deselectPoint();
-                } else if (findPoints(e)) {
+                } else if (findLegendItem(e)) {
                     legendItemSelected(this.mouseLocation, this.glyphLabelDetails);
                 }
             }
         }
 
-        @Override
-        protected boolean findPoints(MouseEvent e) {
-            Legend.GlyphLabel details = legendPickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (details != null) {
+        // @Override
+        protected boolean findLegendItem(MouseEvent e) {
+            Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            System.out.println(untypedDetails);
+            if (untypedDetails instanceof Legend.GlyphLabel) {
+                Legend.GlyphLabel details = (Legend.GlyphLabel) untypedDetails;
                 this.mouseLocation = e.getPoint();
                 this.glyphLabelDetails = details;
                 itemSelected = true;
@@ -605,19 +609,20 @@ public class ScatterPlot {
         @Override
         public void mouseMoved(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
-                if (!findPoints(e) && itemSelected) {
+                if (!findLegendItem(e) && itemSelected) {
                     legendItemHovered(this.mouseLocation, this.glyphLabelDetails);
                     deselectPoint();
-                } else if (findPoints(e)) {
+                } else if (findLegendItem(e)) {
                     legendItemLeft(this.mouseLocation, this.glyphLabelDetails);
                 }
             }
         }
 
-        @Override
-        protected boolean findPoints(MouseEvent e) {
-            Legend.GlyphLabel details = legendPickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (details != null) {
+        //@Override
+        protected boolean findLegendItem(MouseEvent e) {
+            Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
+            if (untypedDetails instanceof Legend.GlyphLabel) {
+                Legend.GlyphLabel details = (Legend.GlyphLabel) untypedDetails;
                 this.mouseLocation = e.getPoint();
                 this.glyphLabelDetails = details;
                 itemSelected = true;
