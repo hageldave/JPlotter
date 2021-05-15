@@ -15,6 +15,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
@@ -44,7 +46,8 @@ public class ReadyScatterPlot {
         JFrame frame = new JFrame();
         JLabel selectedPoint = new JLabel();
         ScatterPlot plot = new ScatterPlot(false);
-        SelectedPointInfo selectedSelectedPointInfo = new SelectedPointInfo();
+        Component canvas = plot.getCanvas().asComponent();
+        SelectedPointInfo selectedSelectedPointInfo = new SelectedPointInfo(canvas);
 
         double[][] dataA = randomData(50);
         DefaultGlyph[] glyphclasses = new DefaultGlyph[]{
@@ -194,8 +197,11 @@ public class ReadyScatterPlot {
             }
         };
 
+
+
         // display within a JFrame
-        Component canvas = plot.getCanvas().asComponent();
+
+
         frame.setSize(new Dimension(400, 400));
         Container contentPane = frame.getContentPane();
         contentPane.setLayout(new BorderLayout());
@@ -275,8 +281,9 @@ public class ReadyScatterPlot {
         protected JButton jbutton;
         protected double[][] data;
         protected int index;
+        protected Component canvas;
 
-        public SelectedPointInfo() {
+        public SelectedPointInfo(final Component canvas) {
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             this.category = new JLabel("");
             this.xPos = new JLabel("");
@@ -284,6 +291,7 @@ public class ReadyScatterPlot {
             this.array = new JLabel("");
             this.arrayIndex = new JLabel("");
             this.jbutton = new JButton("Explore");
+            this.canvas = canvas;
 
             JLabel pointFrom = new JLabel("Point from: ");
             JLabel positionX = new JLabel("Position: x: ");
@@ -355,15 +363,18 @@ public class ReadyScatterPlot {
 
         protected JButton addOpenButton() {
             this.jbutton.setVisible(false);
-            jbutton.addActionListener(e -> new ArrayExplorer(data, index));
+            jbutton.addActionListener(e -> new ArrayExplorer(data, index, canvas));
+
             return jbutton;
         }
     }
 
+    // TODO nach öffnen von Arrayexpl. geht input nicht mehr - geht wieder
     public static class ArrayExplorer extends JFrame {
         Container contentPane;
+        Component parentCanvas;
 
-        public ArrayExplorer(final double[][] data, final int index) {
+        public ArrayExplorer(final double[][] data, final int index, final Component canvas) {
             this.setVisible(true);
             JPanel container = new JPanel();
             container.setLayout(new BorderLayout());
@@ -372,6 +383,7 @@ public class ReadyScatterPlot {
             table.scrollRectToVisible(table.getCellRect(index,0, true));
             table.setRowSelectionInterval(index, index);
 
+            this.parentCanvas = canvas;
             this.contentPane = this.getContentPane();
             this.contentPane.setLayout(new BorderLayout());
             this.contentPane.add(scrPane, BorderLayout.CENTER);
@@ -381,6 +393,11 @@ public class ReadyScatterPlot {
             SwingUtilities.invokeLater(()->{
                 this.pack();
                 this.setVisible(true);
+            });
+            this.addWindowListener(new WindowAdapter(){
+                public void windowClosing(WindowEvent e){
+                    parentCanvas.requestFocus();
+                }
             });
         }
 
