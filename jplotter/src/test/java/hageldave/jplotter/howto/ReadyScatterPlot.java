@@ -126,6 +126,7 @@ public class ReadyScatterPlot {
 
 
         plot.new PointClickedInterface(new KeyListenerMask(VK_ALT)) {
+            Points points = null;
             @Override
             public void pointClicked(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
                 selectedSelectedPointInfo.setVisible(true);
@@ -141,13 +142,11 @@ public class ReadyScatterPlot {
 
             @Override
             public void pointReleased(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
+                System.out.println("called");
                 selectedSelectedPointInfo.setVisible(false);
                 selectedSelectedPointInfo.clearAll();
             }
-        }.register();
 
-        plot.new PointHoveredInterface() {
-            Points points;
             @Override
             public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
                 if (points == null) {
@@ -168,6 +167,7 @@ public class ReadyScatterPlot {
             }
         }.register();
 
+
         plot.new LegendSelectedInterface() {
             final HashSet<ScatterPlot.RenderedPoints> desaturatedPoints = new HashSet<>();
             @Override
@@ -186,6 +186,16 @@ public class ReadyScatterPlot {
                     toggleLegendItems(desaturatedPoints, renderedPoints, 255);
                 }
                 plot.getCanvas().scheduleRepaint();
+            }
+
+            @Override
+            public void legendItemHovered(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
+
+            }
+
+            @Override
+            public void legendItemLeft(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
+
             }
         }.register();
 

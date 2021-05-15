@@ -271,8 +271,18 @@ public class ScatterPlot {
      *
      * @return listener class
      */
-    public PointHoveredInterface printPointMouseOver() {
-        return (PointHoveredInterface) new PointHoveredInterface() {
+    public PointClickedInterface printPointMouseOver() {
+        return (PointClickedInterface) new PointClickedInterface() {
+            @Override
+            public void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+
+            }
+
+            @Override
+            public void pointReleased(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+
+            }
+
             @Override
             public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
                 System.out.println("Mouse location: " + mouseLocation);
@@ -307,6 +317,16 @@ public class ScatterPlot {
             @Override
             public void pointReleased(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
                 System.out.println("Mouse left point");
+            }
+
+            @Override
+            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+
+            }
+
+            @Override
+            public void mouseLeftPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
+
             }
         }.register();
     }
@@ -344,7 +364,8 @@ public class ScatterPlot {
 
     // TODO daten abstrahieren
     protected abstract class InteractionInterface extends MouseAdapter {
-        protected boolean itemSelected = false;
+        protected boolean itemClicked = false;
+        protected boolean itemHovered = false;
         protected Point mouseLocation;
         protected Point2D pointLocation;
         protected ExtendedPointDetails pointDetails;
@@ -364,21 +385,26 @@ public class ScatterPlot {
          * @param e MouseEvent when clicking
          * @return true if a point was found, false if no point was found in the dataSet
          */
-        protected boolean findPoints(final MouseEvent e) {
+        protected boolean findItem(final MouseEvent e) {
             Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
             if (untypedDetails instanceof ExtendedPointDetails) {
                 ExtendedPointDetails details = (ExtendedPointDetails) untypedDetails;
                 this.mouseLocation = e.getPoint();
                 this.pointLocation = details.point.location;
                 this.pointDetails = details;
-                itemSelected = true;
+                itemClicked = true;
+                itemHovered = true;
                 return true;
             }
             return false;
         }
 
-        protected void deselectPoint() {
-            itemSelected = false;
+        protected void declickItem() {
+            itemClicked = false;
+        }
+
+        protected void dehoverItem() {
+            itemHovered = false;
         }
 
         /**
@@ -430,50 +456,22 @@ public class ScatterPlot {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
-                if (!findPoints(e) && itemSelected) {
+                if (!findItem(e) && itemClicked) {
                     pointReleased(this.mouseLocation, this.pointLocation, this.pointDetails);
-                    deselectPoint();
-                } else if (findPoints(e)) {
-                    System.out.println(this.pointDetails);
+                    declickItem();
+                } else if (findItem(e)) {
                     pointClicked(this.mouseLocation, this.pointLocation, this.pointDetails);
                 }
             }
         }
 
-        /**
-         * Will be called, when a data point is clicked on.
-         *
-         * @param mouseLocation location that was clicked
-         * @param pointLocation location of the clicked point in the coordinate system
-         * @param data          the data array where the data point was found
-         * @param dataIndex     the index of the data point in the returned array
-         */
-        public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
-
-        public abstract void pointReleased(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
-    }
-
-    /**
-     * Mouse over interface, which triggers its mouseOverPoint method,
-     * when hovering over a point in the coordsys.
-     *
-     */
-    public abstract class PointHoveredInterface extends InteractionInterface {
-        public PointHoveredInterface(KeyListenerMask keyListenerMask) {
-            super(keyListenerMask);
-        }
-
-        public PointHoveredInterface() {
-            super();
-        }
-
         @Override
         public void mouseMoved(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
-                if (!findPoints(e) && itemSelected) {
+                if (!findItem(e) && itemHovered) {
                     mouseLeftPoint(this.mouseLocation, this.pointLocation, this.pointDetails);
-                    deselectPoint();
-                } else if (findPoints(e)) {
+                    dehoverItem();
+                } else if (findItem(e)) {
                     mouseOverPoint(this.mouseLocation, this.pointLocation, this.pointDetails);
                 }
             }
@@ -487,10 +485,12 @@ public class ScatterPlot {
          * @param data          the data array where the data point was found
          * @param dataIndex     the index of the data point in the returned array
          */
+        public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
+        public abstract void pointReleased(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
         public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
-
         public abstract void mouseLeftPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
     }
+
 
     /**
      * This interface realizes a functionality, which returns all data points that were selected before.
@@ -566,73 +566,44 @@ public class ScatterPlot {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
-                if (!findLegendItem(e) && itemSelected) {
+                if (!findItem(e) && itemClicked) {
                     legendItemReleased(this.mouseLocation, this.glyphLabelDetails);
-                    deselectPoint();
-                } else if (findLegendItem(e)) {
+                    declickItem();
+                } else if (findItem(e)) {
                     legendItemSelected(this.mouseLocation, this.glyphLabelDetails);
                 }
             }
         }
 
-        // @Override
-        protected boolean findLegendItem(MouseEvent e) {
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            if (keyListenerMask.isKeyTyped()) {
+                if (!findItem(e) && itemHovered) {
+                    legendItemHovered(this.mouseLocation, this.glyphLabelDetails);
+                    dehoverItem();
+                } else if (findItem(e)) {
+                    legendItemLeft(this.mouseLocation, this.glyphLabelDetails);
+                }
+            }
+        }
+
+        @Override
+        protected boolean findItem(MouseEvent e) {
             Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            System.out.println(untypedDetails);
             if (untypedDetails instanceof Legend.GlyphLabel) {
                 Legend.GlyphLabel details = (Legend.GlyphLabel) untypedDetails;
                 this.mouseLocation = e.getPoint();
                 this.glyphLabelDetails = details;
-                itemSelected = true;
+                itemClicked = true;
+                itemHovered = true;
                 return true;
             }
             return false;
         }
 
         public abstract void legendItemSelected(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-
         public abstract void legendItemReleased(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-    }
-
-    public abstract class LegendHoveredInterface extends InteractionInterface {
-        protected Legend.GlyphLabel glyphLabelDetails;
-        protected Point mouseLocation;
-
-        public LegendHoveredInterface(KeyListenerMask keyListenerMask) {
-            super(keyListenerMask);
-        }
-
-        public LegendHoveredInterface() {
-            super();
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            if (keyListenerMask.isKeyTyped()) {
-                if (!findLegendItem(e) && itemSelected) {
-                    legendItemHovered(this.mouseLocation, this.glyphLabelDetails);
-                    deselectPoint();
-                } else if (findLegendItem(e)) {
-                    legendItemLeft(this.mouseLocation, this.glyphLabelDetails);
-                }
-            }
-        }
-
-        //@Override
-        protected boolean findLegendItem(MouseEvent e) {
-            Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (untypedDetails instanceof Legend.GlyphLabel) {
-                Legend.GlyphLabel details = (Legend.GlyphLabel) untypedDetails;
-                this.mouseLocation = e.getPoint();
-                this.glyphLabelDetails = details;
-                itemSelected = true;
-                return true;
-            }
-            return false;
-        }
-
         public abstract void legendItemHovered(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-
         public abstract void legendItemLeft(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
     }
 }
