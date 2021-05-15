@@ -1,20 +1,5 @@
 package hageldave.jplotter.howto;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.function.BiFunction;
-import java.util.stream.IntStream;
-
-import javax.swing.JFrame;
-import javax.swing.JSlider;
-import javax.swing.SwingUtilities;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageLoader;
 import hageldave.jplotter.canvas.BlankCanvas;
@@ -33,6 +18,17 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.CurvesRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 
 public class BezierDemo {
 

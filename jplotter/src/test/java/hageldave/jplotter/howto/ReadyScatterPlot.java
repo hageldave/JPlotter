@@ -189,14 +189,10 @@ public class ReadyScatterPlot {
             }
 
             @Override
-            public void legendItemHovered(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
-
-            }
+            public void legendItemHovered(Point mouseLocation, Legend.GlyphLabel glyphLabel) { }
 
             @Override
-            public void legendItemLeft(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
-
-            }
+            public void legendItemLeft(Point mouseLocation, Legend.GlyphLabel glyphLabel) { }
         }.register();
 
         plot.new PointsSelectedInterface(new KeyListenerMask(VK_SHIFT)) {
@@ -210,8 +206,6 @@ public class ReadyScatterPlot {
 
 
         // display within a JFrame
-
-
         frame.setSize(new Dimension(400, 400));
         Container contentPane = frame.getContentPane();
         contentPane.setLayout(new BorderLayout());

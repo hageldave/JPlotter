@@ -220,8 +220,8 @@ public class ScatterPlot {
      *
      * @return the {@link CoordSysScrollZoom} so that it can be further customized
      */
-    public CustomCoordSysScrollZoom addScrollZoom() {
-        return new CustomCoordSysScrollZoom(this.canvas, this.coordsys).register();
+    public DynamicCoordsysScrollZoom addScrollZoom() {
+        return new DynamicCoordsysScrollZoom(this.canvas, this.coordsys).register();
     }
 
     public CoordSysScrollZoom addScrollZoom(final KeyListenerMask keyListenerMask) {
