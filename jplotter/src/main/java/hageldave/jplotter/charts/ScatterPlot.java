@@ -123,12 +123,12 @@ public class ScatterPlot {
      * @param color  the color of the glyph
      * @return the old Scatterplot for chaining
      */
-    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
+    public Points addData(final int ID, final double[][] points, final int xLoc, final int yLoc,final DefaultGlyph glyph,
                           final Color color, final String descr) {
         Points tempPoints = new Points(glyph);
         int index = 0;
         for (double[] entry : points) {
-            double x = entry[0], y = entry[1];
+            double x = entry[xLoc], y = entry[yLoc];
             Points.PointDetails pointDetail = tempPoints.addPoint(x, y);
             pointDetail.setColor(color);
             addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, points, index, descr));
@@ -139,6 +139,11 @@ public class ScatterPlot {
         this.content.addItemToRender(tempPoints);
         updateLegends(glyph, color, descr);
         return tempPoints;
+    }
+
+    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
+                          final Color color, final String descr) {
+        return addData(ID, points, 0, 1, glyph, color, descr);
     }
 
     public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
@@ -441,7 +446,6 @@ public class ScatterPlot {
     /**
      * Mouse over interface, which triggers its pointClicked method,
      * when clicking on a point in the coordsys.
-     * TODO idea: combine click&hover interface and select mode via enum : click,select,all - machen aber ohne konstruktor
      * // TODO potentiell weniger daten direkt speichern
      */
     public abstract class PointClickedInterface extends InteractionInterface {
