@@ -367,13 +367,23 @@ public class ScatterPlot {
         this.pickingRegistry.register(item, tempID);
     }
 
+    protected static class ClickInformation {
+        protected Point mouseLocation;
+        protected Object pointDetails;
+
+        protected ClickInformation(final Point mouseLocation, final Object pointDetails) {
+            this.mouseLocation = mouseLocation;
+            this.pointDetails = pointDetails;
+        }
+    }
+
     // TODO daten abstrahieren
     protected abstract class InteractionInterface extends MouseAdapter {
         protected boolean itemClicked = false;
         protected boolean itemHovered = false;
-        protected Point mouseLocation;
-        protected Point2D pointLocation;
-        protected ExtendedPointDetails pointDetails;
+        /*protected Point mouseLocation;
+        protected Object pointDetails;*/
+        protected ClickInformation clickInformation;
         protected KeyListenerMask keyListenerMask;
 
         public InteractionInterface(final KeyListenerMask keyListenerMask) {
@@ -392,11 +402,10 @@ public class ScatterPlot {
          */
         protected boolean findItem(final MouseEvent e) {
             Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (untypedDetails instanceof ExtendedPointDetails) {
-                ExtendedPointDetails details = (ExtendedPointDetails) untypedDetails;
-                this.mouseLocation = e.getPoint();
-                this.pointLocation = details.point.location;
-                this.pointDetails = details;
+            if (untypedDetails != null) {
+                /*this.mouseLocation = e.getPoint();
+                this.pointDetails = untypedDetails;*/
+                this.clickInformation = new ClickInformation(e.getPoint(), untypedDetails);
                 itemClicked = true;
                 itemHovered = true;
                 return true;
@@ -404,11 +413,11 @@ public class ScatterPlot {
             return false;
         }
 
-        protected void declickItem() {
+        protected void unclickItem() {
             itemClicked = false;
         }
 
-        protected void dehoverItem() {
+        protected void unhoverItem() {
             itemHovered = false;
         }
 
@@ -440,7 +449,6 @@ public class ScatterPlot {
             canvas.asComponent().removeKeyListener(keyListenerMask);
             return this;
         }
-
     }
 
     /**
@@ -449,6 +457,8 @@ public class ScatterPlot {
      * // TODO potentiell weniger daten direkt speichern
      */
     public abstract class PointClickedInterface extends InteractionInterface {
+        protected ExtendedPointDetails extendedPointDetails;
+
         public PointClickedInterface(KeyListenerMask keyListenerMask) {
             super(keyListenerMask);
         }
@@ -461,10 +471,12 @@ public class ScatterPlot {
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
                 if (!findItem(e) && itemClicked) {
-                    pointReleased(this.mouseLocation, this.pointLocation, this.pointDetails);
-                    declickItem();
-                } else if (findItem(e)) {
-                    pointClicked(this.mouseLocation, this.pointLocation, this.pointDetails);
+                    pointReleased(this.clickInformation.mouseLocation, extendedPointDetails.location, extendedPointDetails);
+                    unclickItem();
+                } else if (findItem(e) && this.clickInformation.pointDetails instanceof ExtendedPointDetails) {
+                    pointClicked(this.clickInformation.mouseLocation, ((ExtendedPointDetails) this.clickInformation.pointDetails).location,
+                            (ExtendedPointDetails) this.clickInformation.pointDetails);
+                    extendedPointDetails = (ExtendedPointDetails) this.clickInformation.pointDetails;
                 }
             }
         }
@@ -473,10 +485,12 @@ public class ScatterPlot {
         public void mouseMoved(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
                 if (!findItem(e) && itemHovered) {
-                    mouseLeftPoint(this.mouseLocation, this.pointLocation, this.pointDetails);
-                    dehoverItem();
-                } else if (findItem(e)) {
-                    mouseOverPoint(this.mouseLocation, this.pointLocation, this.pointDetails);
+                    mouseLeftPoint(this.clickInformation.mouseLocation, extendedPointDetails.location, extendedPointDetails);
+                    unhoverItem();
+                } else if (findItem(e) && this.clickInformation.pointDetails instanceof ExtendedPointDetails) {
+                    mouseOverPoint(this.clickInformation.mouseLocation, ((ExtendedPointDetails) this.clickInformation.pointDetails).location,
+                            (ExtendedPointDetails) this.clickInformation.pointDetails);
+                    extendedPointDetails = (ExtendedPointDetails) this.clickInformation.pointDetails;
                 }
             }
         }
@@ -493,6 +507,49 @@ public class ScatterPlot {
         public abstract void pointReleased(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
         public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
         public abstract void mouseLeftPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
+    }
+
+    public abstract class LegendSelectedInterface extends InteractionInterface {
+        protected Legend.GlyphLabel glyphLabel;
+
+        public LegendSelectedInterface(KeyListenerMask keyListenerMask) {
+            super(keyListenerMask);
+        }
+
+        public LegendSelectedInterface() {
+            super();
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (keyListenerMask.isKeyTyped()) {
+                if (!findItem(e) && itemClicked) {
+                    legendItemReleased(this.clickInformation.mouseLocation, this.glyphLabel);
+                    unclickItem();
+                } else if (findItem(e) && this.clickInformation.pointDetails instanceof Legend.GlyphLabel) {
+                    legendItemSelected(this.clickInformation.mouseLocation, (Legend.GlyphLabel) this.clickInformation.pointDetails);
+                    this.glyphLabel = (Legend.GlyphLabel) this.clickInformation.pointDetails;
+                }
+            }
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            if (keyListenerMask.isKeyTyped()) {
+                if (!findItem(e) && itemHovered) {
+                    legendItemHovered(this.clickInformation.mouseLocation, glyphLabel);
+                    unhoverItem();
+                } else if (findItem(e) && this.clickInformation.pointDetails instanceof Legend.GlyphLabel) {
+                    legendItemLeft(this.clickInformation.mouseLocation, (Legend.GlyphLabel) this.clickInformation.pointDetails);
+                    this.glyphLabel = (Legend.GlyphLabel) this.clickInformation.pointDetails;
+                }
+            }
+        }
+
+        public abstract void legendItemSelected(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
+        public abstract void legendItemReleased(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
+        public abstract void legendItemHovered(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
+        public abstract void legendItemLeft(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
     }
 
 
@@ -553,61 +610,5 @@ public class ScatterPlot {
          * @param dataIndices the indices of the data inside the data arrays
          */
         public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
-    }
-
-    public abstract class LegendSelectedInterface extends InteractionInterface {
-        protected Legend.GlyphLabel glyphLabelDetails;
-        protected Point mouseLocation;
-
-        public LegendSelectedInterface(KeyListenerMask keyListenerMask) {
-            super(keyListenerMask);
-        }
-
-        public LegendSelectedInterface() {
-            super();
-        }
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (keyListenerMask.isKeyTyped()) {
-                if (!findItem(e) && itemClicked) {
-                    legendItemReleased(this.mouseLocation, this.glyphLabelDetails);
-                    declickItem();
-                } else if (findItem(e)) {
-                    legendItemSelected(this.mouseLocation, this.glyphLabelDetails);
-                }
-            }
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            if (keyListenerMask.isKeyTyped()) {
-                if (!findItem(e) && itemHovered) {
-                    legendItemHovered(this.mouseLocation, this.glyphLabelDetails);
-                    dehoverItem();
-                } else if (findItem(e)) {
-                    legendItemLeft(this.mouseLocation, this.glyphLabelDetails);
-                }
-            }
-        }
-
-        @Override
-        protected boolean findItem(MouseEvent e) {
-            Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (untypedDetails instanceof Legend.GlyphLabel) {
-                Legend.GlyphLabel details = (Legend.GlyphLabel) untypedDetails;
-                this.mouseLocation = e.getPoint();
-                this.glyphLabelDetails = details;
-                itemClicked = true;
-                itemHovered = true;
-                return true;
-            }
-            return false;
-        }
-
-        public abstract void legendItemSelected(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-        public abstract void legendItemReleased(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-        public abstract void legendItemHovered(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-        public abstract void legendItemLeft(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
     }
 }
