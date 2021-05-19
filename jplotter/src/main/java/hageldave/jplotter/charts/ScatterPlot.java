@@ -43,6 +43,12 @@ import java.util.HashMap;
  * - update legend automatically if data is added
  * - Continued working on Scatterplot demo class
  *
+ * Changelog
+ *  - Barchart Implemenation
+ *  - Bug mit Legenden items und focus gefixt - Registry reduziert
+ *  - neue DataAdd Methode
+ *  - Verbesserungen bei InteractionInterface
+ *
  * @author lucareichmann
  */
 public class ScatterPlot {
@@ -371,7 +377,7 @@ public class ScatterPlot {
         protected boolean itemClicked = false;
         protected boolean itemHovered = false;
         protected Point mouseLocation;
-        protected Object pointDetails;
+        protected Object itemDetails;
         protected KeyListenerMask keyListenerMask;
 
         public InteractionInterface(final KeyListenerMask keyListenerMask) {
@@ -392,7 +398,7 @@ public class ScatterPlot {
             Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
             if (untypedDetails != null) {
                 this.mouseLocation = e.getPoint();
-                this.pointDetails = untypedDetails;
+                this.itemDetails = untypedDetails;
                 itemClicked = true;
                 itemHovered = true;
                 return true;
@@ -460,10 +466,10 @@ public class ScatterPlot {
                 if (!findItem(e) && itemClicked) {
                     pointReleased(this.mouseLocation, extendedPointDetails.location, extendedPointDetails);
                     deClickItem();
-                } else if (findItem(e) && this.pointDetails instanceof ExtendedPointDetails) {
-                    pointClicked(this.mouseLocation, ((ExtendedPointDetails) this.pointDetails).location,
-                            (ExtendedPointDetails) this.pointDetails);
-                    extendedPointDetails = (ExtendedPointDetails) this.pointDetails;
+                } else if (findItem(e) && this.itemDetails instanceof ExtendedPointDetails) {
+                    pointClicked(this.mouseLocation, ((ExtendedPointDetails) this.itemDetails ).location,
+                            (ExtendedPointDetails) this.itemDetails);
+                    extendedPointDetails = (ExtendedPointDetails) this.itemDetails;
                 }
             }
         }
@@ -474,10 +480,10 @@ public class ScatterPlot {
                 if (!findItem(e) && itemHovered) {
                     mouseLeftPoint(this.mouseLocation, extendedPointDetails.location, extendedPointDetails);
                     deHoverItem();
-                } else if (findItem(e) && this.pointDetails instanceof ExtendedPointDetails) {
-                    mouseOverPoint(this.mouseLocation, ((ExtendedPointDetails) this.pointDetails).location,
-                            (ExtendedPointDetails) this.pointDetails);
-                    extendedPointDetails = (ExtendedPointDetails) this.pointDetails;
+                } else if (findItem(e) && this.itemDetails instanceof ExtendedPointDetails) {
+                    mouseOverPoint(this.mouseLocation, ((ExtendedPointDetails) this.itemDetails ).location,
+                            (ExtendedPointDetails) this.itemDetails);
+                    extendedPointDetails = (ExtendedPointDetails) this.itemDetails;
                 }
             }
         }
@@ -513,9 +519,9 @@ public class ScatterPlot {
                 if (!findItem(e) && itemClicked) {
                     legendItemReleased(this.mouseLocation, this.glyphLabel);
                     deClickItem();
-                } else if (findItem(e) && this.pointDetails instanceof Legend.GlyphLabel) {
-                    legendItemSelected(this.mouseLocation, (Legend.GlyphLabel) this.pointDetails);
-                    this.glyphLabel = (Legend.GlyphLabel) this.pointDetails;
+                } else if (findItem(e) && this.itemDetails instanceof Legend.GlyphLabel) {
+                    legendItemSelected(this.mouseLocation, (Legend.GlyphLabel) this.itemDetails);
+                    this.glyphLabel = (Legend.GlyphLabel) this.itemDetails;
                 }
             }
         }
@@ -526,9 +532,9 @@ public class ScatterPlot {
                 if (!findItem(e) && itemHovered) {
                     legendItemHovered(this.mouseLocation, glyphLabel);
                     deHoverItem();
-                } else if (findItem(e) && this.pointDetails instanceof Legend.GlyphLabel) {
-                    legendItemLeft(this.mouseLocation, (Legend.GlyphLabel) this.pointDetails);
-                    this.glyphLabel = (Legend.GlyphLabel) this.pointDetails;
+                } else if (findItem(e) && this.itemDetails instanceof Legend.GlyphLabel) {
+                    legendItemLeft(this.mouseLocation, (Legend.GlyphLabel) this.itemDetails);
+                    this.glyphLabel = (Legend.GlyphLabel) this.itemDetails;
                 }
             }
         }
