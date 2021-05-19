@@ -146,11 +146,10 @@ public class BarChart {
         Triangles bar = new Triangles();
         if (this.chartAlignment == Alignment.HORIZONTAL) {
             bar.addQuad(new Rectangle2D.Double(0, row-(barSize/2), val, barSize));
-            bar.getTriangleDetails().forEach(tri -> tri.setColor(color));
         } else {
             bar.addQuad(new Rectangle2D.Double(row-(barSize/2), 0, barSize, val));
-            bar.getTriangleDetails().forEach(tri -> tri.setColor(color));
         }
+        bar.getTriangleDetails().forEach(tri -> tri.setColor(color));
         barCount++;
         return bar;
     }
@@ -165,7 +164,6 @@ public class BarChart {
                     minVal = (int) Math.ceil(value.tri.getBounds().getMinX());
             }
             if (minVal < 0) {
-                System.out.println(minVal);
                 this.coordsys.setCoordinateView(minVal - 0.5, -0.8, maxVal + 0.5, barCount);
             } else {
                 this.coordsys.setCoordinateView(0, -0.8, maxVal + 0.5, barCount);
@@ -218,13 +216,17 @@ public class BarChart {
         }
     }
 
-    // TODO discuss interaction methods
+    // TODO discuss interaction methods - when ScatterPlot is finished
     /*    - panning
-          - scrolling
+          - scrolling - e.g. https://observablehq.com/@d3/zoomable-bar-chart, 0 is always 0 - panning only via x/y dir
           - clicking on bar
           - "focus" on bar
           -
     */
+
+    // TODO bars stacking on top of each other
+
+    // TODO text wraparound, when too long
 
 
     // TODO necessary?
