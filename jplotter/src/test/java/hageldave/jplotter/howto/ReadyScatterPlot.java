@@ -21,6 +21,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -84,9 +85,9 @@ public class ReadyScatterPlot {
                 "Bpv Open",
         };
 
-        //URL statlogsrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/shuttle/shuttle.tst");
-        InputStream statlogsrc = Thread.currentThread().getContextClassLoader().getResourceAsStream("shuttle.tst");
-            Scanner sc = new Scanner(statlogsrc);
+        URL statlogsrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/shuttle/shuttle.tst");
+        try (InputStream stream = statlogsrc.openStream();
+             Scanner sc = new Scanner(stream)) {
             int i = 1;
             while (sc.hasNextLine()) {
                 String nextLine = sc.nextLine();
@@ -114,14 +115,13 @@ public class ReadyScatterPlot {
                         new Color(classcolors.getColor(index)), classLabels[index]);
                 index++;
             }
-
+        }
 
         plot.alignCoordsys(140);
         plot.addPanning().setKeyListenerMask(new KeyListenerMask(VK_W));
         plot.addZoomViewSelector();
         plot.addScrollZoom();
         plot.addLegendBottom(50);
-
 
         plot.new PointClickedInterface(new KeyListenerMask(VK_ALT)) {
             Points points = null;
@@ -140,7 +140,6 @@ public class ReadyScatterPlot {
 
             @Override
             public void pointReleased(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
-                System.out.println("called");
                 selectedSelectedPointInfo.setVisible(false);
                 selectedSelectedPointInfo.clearAll();
             }
@@ -310,9 +309,9 @@ public class ReadyScatterPlot {
 
         protected Box combineElements(JComponent... allLabels) {
             Box box = Box.createHorizontalBox();
-            for (int i = 0; i < allLabels.length; i++) {
-                allLabels[i].setAlignmentX(Component.LEFT_ALIGNMENT);
-                box.add(allLabels[i]);
+            for (JComponent allLabel : allLabels) {
+                allLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                box.add(allLabel);
             }
             box.add(Box.createHorizontalGlue());
             box.setBorder(new EmptyBorder(5, 15, 5, 15));
@@ -371,7 +370,6 @@ public class ReadyScatterPlot {
         }
     }
 
-    // TODO nach öffnen von Arrayexpl. geht input nicht mehr - geht wieder
     public static class ArrayExplorer extends JFrame {
         Container contentPane;
         Component parentCanvas;
@@ -396,7 +394,7 @@ public class ReadyScatterPlot {
                 this.pack();
                 this.setVisible(true);
             });
-            this.addWindowListener(new WindowAdapter(){
+            this.addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent e){
                     parentCanvas.requestFocus();
                 }
@@ -415,8 +413,7 @@ public class ReadyScatterPlot {
                 tableData[i][2] = String.valueOf(data[i][1]);
             }
             TableModel table_model = new DefaultTableModel(tableData, headers);
-            JTable table = new JTable(table_model);
-            return table;
+            return new JTable(table_model);
         }
     }
 
