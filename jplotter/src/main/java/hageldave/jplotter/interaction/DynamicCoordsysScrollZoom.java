@@ -52,8 +52,8 @@ public class DynamicCoordsysScrollZoom implements MouseWheelListener, Interactio
             int wheelRotation = e.getWheelRotation();
             double zoom = Math.pow(zoomFactor, wheelRotation);
 
-            double centerX = ((coordsys.getCoordinateView().getCenterX() * 0.8) + (posInCoordSysX * 0.2));
-            double centerY = ((coordsys.getCoordinateView().getCenterY() * 0.8) + (posInCoordSysY * 0.2));
+            double centerX = ((coordsys.getCoordinateView().getCenterX() * 0.7) + (posInCoordSysX * 0.3));
+            double centerY = ((coordsys.getCoordinateView().getCenterY() * 0.7) + (posInCoordSysY * 0.3));
 
             if (wheelRotation < 0) {
                 centerX = ((coordsys.getCoordinateView().getCenterX() * 0.5) + (posInCoordSysX * 0.5));
