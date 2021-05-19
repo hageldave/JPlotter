@@ -140,7 +140,6 @@ public class ReadyScatterPlot {
 
             @Override
             public void pointReleased(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
-                selectedSelectedPointInfo.setVisible(false);
                 selectedSelectedPointInfo.clearAll();
             }
 
