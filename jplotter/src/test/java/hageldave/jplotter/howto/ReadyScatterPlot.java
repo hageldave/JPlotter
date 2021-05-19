@@ -93,14 +93,11 @@ public class ReadyScatterPlot {
                 String[] fields = nextLine.split(" ");
                 int pclass = Integer.parseInt(fields[9]) - 1;
 
-                // get corresponding array and fill with data
                 LinkedList<double[]> list = data.get(pclass);
-                double[] tempArray = new double[2];
-                // fills array with x pos
-                tempArray[0] = Integer.parseInt(fields[6]);
-                // fills array with y pos
-                tempArray[1] = Integer.parseInt(fields[7]);
-                // add 1D array to list
+                double[] tempArray = new double[fields.length];
+                for (int j = 0; j < fields.length; j++) {
+                    tempArray[j] = Integer.parseInt(fields[j]);
+                }
                 list.add(tempArray);
             }
 
@@ -108,12 +105,13 @@ public class ReadyScatterPlot {
             // parse list to array so that scatterplot class can read data
             for (LinkedList<double[]> list : data) {
                 Object[] array = list.toArray();
-                double[][] addData = new double[list.size()][2];
+                double[][] addData = new double[list.size()][list.getFirst().length];
                 for (int j = 0; j < array.length; j++) {
                     addData[j] = (double[]) array[j];
                 }
                 // adds data to scatter plot
-                plot.addData(index, addData, glyphclasses[index], new Color(classcolors.getColor(index)), classLabels[index]);
+                plot.addData(index, addData, 6, 7, glyphclasses[index],
+                        new Color(classcolors.getColor(index)), classLabels[index]);
                 index++;
             }
 
