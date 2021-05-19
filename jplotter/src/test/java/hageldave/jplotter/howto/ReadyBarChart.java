@@ -21,7 +21,7 @@ public class ReadyBarChart {
 
         Color[] color = new Color[]{Color.RED, Color.RED, Color.RED, Color.RED, Color.RED};
 
-        BarChart barChart = new BarChart(false, Alignment.VERTICAL);
+        BarChart barChart = new BarChart(false, Alignment.HORIZONTAL);
 
         barChart.addData(ids, scores, color, cases);
         barChart.addBar(9, 8, Color.DARK_GRAY, "test");

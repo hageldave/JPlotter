@@ -27,7 +27,6 @@ public class BarChart {
     protected Alignment chartAlignment;
     final protected double barSize = 0.8;
     protected int barCount;
-    // is now public for easier access, maybe in ScatterPlot too?
     final public HashMap<Integer, BarStruct> trianglesInRenderer = new HashMap<>();
     final protected ArrayList<double[]> dataAdded = new ArrayList<>();
 
@@ -90,18 +89,31 @@ public class BarChart {
         return this;
     }
 
-    // needs further thoughts
-    /*public BarChart addData(final int[] IDs, final double[][] data, final Color[] color, final String[] descr) {
+    // [i][0: val; 1: index] - oder umgekehrt, needs testing
+    public BarChart addData(final int[] IDs, final double[][] data, final Color[] color, final String[] descr) {
+        // recalc data
+        HashMap<Double, Double> vals = new HashMap();
         for (int i = 0; i < data.length; i++) {
-            Triangles triangleRend = makeBar(i, data[i], color[i]);
-            this.trianglesInRenderer.put(IDs[i], new BarStruct(triangleRend, descr[i]));
-            this.content.addItemToRender(triangleRend);
+            if (!vals.containsKey(data[i][1])) {
+                vals.put(data[i][1], data[i][0]);
+            } else {
+                Double currentHeight = vals.get(data[i][1]) + data[i][0];
+                vals.put(data[i][1], currentHeight);
+            }
         }
-        dataAdded.add(data);
+
+        int j = 0;
+        for (Double val: vals.values()) {
+            Triangles triangleRend = makeBar(j, val, color[j]);
+            this.trianglesInRenderer.put(IDs[j], new BarStruct(triangleRend, descr[j]));
+            this.content.addItemToRender(triangleRend);
+            j++;
+        }
+        // dataAdded.add(data);
         setTickmarks();
         setBarContentBoundaries();
         return this;
-    }*/
+    }
 
 
     // if new gets added, all the old stuff gets overwritten - fixed
@@ -181,7 +193,7 @@ public class BarChart {
         AtomicInteger index = new AtomicInteger();
         if (this.chartAlignment == Alignment.HORIZONTAL) {
             trianglesInRenderer.values().stream()
-                    .sorted(Comparator.comparingDouble(e -> -e.tri.getBounds().getMinX()))
+                    .sorted(Comparator.comparingDouble(e -> e.tri.getBounds().getMinX()))
                     .sorted(Comparator.comparingDouble(e -> e.tri.getBounds().getMaxX()))
                     .forEach(e -> {
                         Triangles tri;
@@ -193,7 +205,7 @@ public class BarChart {
                     });
         } else {
             trianglesInRenderer.values().stream()
-                    .sorted(Comparator.comparingDouble(e -> -e.tri.getBounds().getMinY()))
+                    .sorted(Comparator.comparingDouble(e -> e.tri.getBounds().getMinY()))
                     .sorted(Comparator.comparingDouble(e -> e.tri.getBounds().getMaxY()))
                     .forEach(e -> {
                         Triangles tri;
@@ -205,6 +217,15 @@ public class BarChart {
             });
         }
     }
+
+    // TODO discuss interaction methods
+    /*    - panning
+          - scrolling
+          - clicking on bar
+          - "focus" on bar
+          -
+    */
+
 
     // TODO necessary?
     public BarChart changeRotation(final Alignment chartAlignment) {
