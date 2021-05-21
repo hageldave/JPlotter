@@ -15,6 +15,7 @@ import java.util.Objects;
 import org.apache.batik.ext.awt.geom.Polygon2D;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL40;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -45,6 +46,42 @@ import hageldave.jplotter.util.ShaderRegistry;
 public class LinesRenderer extends GenericRenderer<Lines> {
 
 	protected static final char NL = '\n';
+	
+	/*************************************** DOUBLE PRECISION ***********************************/
+	
+	protected static final String vertexShaderSrcD = ""  // SFM
+			+ "" + "#version 410"
+			+ NL + "layout(location = 0) in dvec2 in_position;"  /////
+			+ NL + "layout(location = 1) in uint in_color;"
+			+ NL + "layout(location = 2) in uint in_pick;"
+			+ NL + "layout(location = 3) in float in_thickness;"
+			+ NL + "layout(location = 4) in float in_pathlen;"
+			+ NL + "uniform dvec4 viewTransform;"	/////
+			+ NL + "out vec4 vcolor;"
+			+ NL + "out vec4 vpick;"
+			+ NL + "out float vthickness;"
+			+ NL + "out float vpathlen;"
+
+			+ NL + "vec4 unpackARGB(uint c) {"
+			+ NL + "   uint mask = uint(255);"
+			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
+			+ NL + "}"
+
+			+ NL + "void main() {"
+			+ NL + "   dvec3 pos = dvec3(in_position,1);"   //////
+			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"   /////
+			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"  /////
+			+ NL + "   gl_Position = vec4(pos,1);"
+			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vpick =  unpackARGB(in_pick);"
+			+ NL + "   vthickness = in_thickness;"
+			+ NL + "   vpathlen = in_pathlen;"
+			+ NL + "}"
+			+ NL
+			;
+
+	/*************************************** SINGLE PRECISION ***********************************/
+	
 	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
@@ -161,7 +198,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "}"
 			+ NL
 			;
-
+	
 	protected boolean viewHasChanged = true;
 	protected int preVpW = 0;
 	protected int preVpH = 0;
@@ -178,7 +215,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shader)){
-			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
+			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(GLUtils.USE_GL_DOUBLE_PRECISION ? vertexShaderSrcD: vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
 		}
 	}
@@ -240,7 +277,16 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
-		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+
+		if (GLUtils.USE_GL_DOUBLE_PRECISION) // SFM
+		{
+			GL40.glUniform4d(loc, translateX, translateY, scaleX, scaleY);
+		}
+		else
+		{
+			GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		}
+
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}

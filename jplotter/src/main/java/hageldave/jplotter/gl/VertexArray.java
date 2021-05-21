@@ -19,6 +19,8 @@ import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import static org.lwjgl.opengl.GL30.glVertexAttribIPointer;
 
+import org.lwjgl.opengl.GL41;
+
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -103,7 +105,9 @@ public class VertexArray implements AutoCloseable {
 				// put vertices into vbo
 				glBufferData(GL_ARRAY_BUFFER, buffercontent, GL_STATIC_DRAW);
 				// put vbo into va
-				glVertexAttribPointer(i, dim, GL_DOUBLE, false, 0, 0);
+				
+				// Special call needed for doubles SFM
+				GL41.glVertexAttribLPointer(i, dim, GL_DOUBLE, 0, 0);
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}

@@ -16,6 +16,7 @@ import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderers.PointsRenderer;
+import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
@@ -82,8 +83,22 @@ public class Points implements Renderable {
 		if(Objects.isNull(va)){
 			va = new VertexArray(4);
 			glyph.fillVertexArray(va);
-			updateGL();
+			updateGL();		
 		}
+	}
+
+	@Override
+	@Deprecated(/* use updateGLDouble() or updateGLFloat() instead */)
+	public void updateGL()
+	{
+		if (GLUtils.USE_GL_DOUBLE_PRECISION) // SFM
+		{
+			updateGLDouble();	
+		}
+		else
+		{
+			updateGLFloat();
+		}   
 	}
 
 	/**
@@ -91,9 +106,8 @@ public class Points implements Renderable {
 	 * the state of this points object.
 	 * This will set the {@link #isDirty()} state to false.
 	 */
-	@Override
 	@GLContextRequired
-	public void updateGL() {
+	public void updateGLFloat() {
 		if(Objects.nonNull(va)){
 			final int numPoints = points.size();
 			float[] position = new float[numPoints*2];
@@ -115,6 +129,34 @@ public class Points implements Renderable {
 		}
 	}
 
+	/**
+	 * Updates GL resources, i.e. fills the vertex array (if non null) according to
+	 * the state of this points object.
+	 * This will set the {@link #isDirty()} state to false.
+	 */
+	@GLContextRequired
+	public void updateGLDouble() {
+		if(Objects.nonNull(va)){
+			final int numPoints = points.size();
+			double[] position = new double[numPoints*2];
+			float[] rotAndScale = new float[numPoints*2];
+			int[] colors = new int[numPoints*2];
+			for(int i=0; i<numPoints; i++){
+				PointDetails pd = points.get(i);
+				position[i*2+0] = pd.location.getX();
+				position[i*2+1] = pd.location.getY();
+				rotAndScale[i*2+0] = (float) pd.rot.getAsDouble();
+				rotAndScale[i*2+1] = (float) pd.scale.getAsDouble();
+				colors[i*2+0] = pd.color.getAsInt();
+				colors[i*2+1] = pd.pickColor;
+			}
+			va.setBuffer(1, 2, position);
+			va.setBuffer(2, 2, rotAndScale);
+			va.setBuffer(3, 2, false, colors);
+			isDirty = false;
+		}
+	}
+	
 	@Override
 	public boolean isDirty() {
 		return isDirty;
@@ -307,23 +349,23 @@ public class Points implements Renderable {
 		 */
 		public PointDetails copy() {
 			try {
-	            PointDetails clone = (PointDetails) super.clone();
-	            clone.location = Utils.copy(clone.location);
-	            return clone;
-	        } catch (CloneNotSupportedException e) {
-	            // this shouldn't happen, since we are Cloneable
-	            throw new InternalError(e);
-	        }
+				PointDetails clone = (PointDetails) super.clone();
+				clone.location = Utils.copy(clone.location);
+				return clone;
+			} catch (CloneNotSupportedException e) {
+				// this shouldn't happen, since we are Cloneable
+				throw new InternalError(e);
+			}
 		}
 		
 		public PointDetails clone() {
 			try {
-	            PointDetails clone = (PointDetails) super.clone();
-	            return clone;
-	        } catch (CloneNotSupportedException e) {
-	            // this shouldn't happen, since we are Cloneable
-	            throw new InternalError(e);
-	        }
+				PointDetails clone = (PointDetails) super.clone();
+				return clone;
+			} catch (CloneNotSupportedException e) {
+				// this shouldn't happen, since we are Cloneable
+				throw new InternalError(e);
+			}
 		}
 		
 		/**

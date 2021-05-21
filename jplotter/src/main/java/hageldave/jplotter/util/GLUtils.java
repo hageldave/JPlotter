@@ -17,6 +17,9 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  */
 public class GLUtils {
 
+	// FIXME: this is just for testing purposes, a cleverer mechanism has to be implemented to choose precision
+	public static final boolean USE_GL_DOUBLE_PRECISION = false;
+	
 	/**
 	 * Creates an empty 2D texture. The texture has mipmap level 0.
 	 * @param width of texture

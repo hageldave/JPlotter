@@ -15,6 +15,7 @@ import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
 
 /**
@@ -620,9 +621,23 @@ public class Lines implements Renderable {
 	@GLContextRequired
 	@Deprecated(/* use updateGL(scaleX,scaleY) instead */)
 	public void updateGL(){
-		updateGL(1, 1);
+		updateGL(1, 1);	
 	}
 	
+
+	@GLContextRequired
+	@Deprecated(/* use updateGLDouble(scaleX,scaleY) or updateGLFloat(scaleX,scaleY) instead */)
+	public void updateGL(double scaleX, double scaleY){
+		if (GLUtils.USE_GL_DOUBLE_PRECISION) // SFM
+		{
+			updateGLDouble(scaleX, scaleY);	
+		}
+		else
+		{
+			updateGLFloat(scaleX, scaleY);
+		}
+	}
+
 	/**
 	 * Updates the vertex array to be in sync with this lines object.
 	 * This sets the {@link #isDirty()} state to false.
@@ -636,9 +651,57 @@ public class Lines implements Renderable {
 	 * @param scaleY scaling of the y coordinate of the current view transform
 	 */
 	@GLContextRequired
-	public void updateGL(double scaleX, double scaleY){
+	public void updateGLFloat(double scaleX, double scaleY){
 		if(Objects.nonNull(va)){
 			float[] segmentCoordBuffer = new float[segments.size()*2*2];
+			int[] colorBuffer = new int[segments.size()*2];
+			int[] pickBuffer = new int[segments.size()*2];
+			float[] thicknessBuffer = new float[segments.size()*2];
+			float[] pathLengthBuffer = new float[segments.size()*2];
+	
+			double xprev = 0, yprev=0, pathLen = 0;
+			for(int i=0; i<segments.size(); i++){
+				SegmentDetails seg = segments.get(i);
+				double x0 = seg.p0.getX();
+				double y0 = seg.p0.getY();
+				double x1 = seg.p1.getX();
+				double y1 = seg.p1.getY();
+	
+				segmentCoordBuffer[i*4+0] = (float) x0;
+				segmentCoordBuffer[i*4+1] = (float) y0;
+				segmentCoordBuffer[i*4+2] = (float) x1;
+				segmentCoordBuffer[i*4+3] = (float) y1;
+	
+				colorBuffer[i*2+0] = seg.color0.getAsInt();
+				colorBuffer[i*2+1] = seg.color1.getAsInt();
+	
+				pickBuffer[i*2+0] = pickBuffer[i*2+1] = seg.pickColor;
+	
+				thicknessBuffer[i*2+0] = (float)seg.thickness0.getAsDouble();
+				thicknessBuffer[i*2+1] = (float)seg.thickness1.getAsDouble();
+	
+				if(xprev != x0 || yprev != y0){
+					pathLen = 0;
+				}
+				double segLen = Utils.hypot((x1-x0)*scaleX, (y1-y0)*scaleY);
+				pathLengthBuffer[i*2+0] = (float)pathLen;
+				pathLengthBuffer[i*2+1] = (float)(pathLen += segLen);
+				pathLen = pathLen % strokeLength;
+				xprev = x1; yprev = y1;
+			}
+			va.setBuffer(0, 2, segmentCoordBuffer);
+			va.setBuffer(1, 1, false, colorBuffer);
+			va.setBuffer(2, 1, false, pickBuffer);
+			va.setBuffer(3, 1, thicknessBuffer);
+			va.setBuffer(4, 1, pathLengthBuffer);
+			isDirty = false;
+		}
+	}
+
+	@GLContextRequired
+	public void updateGLDouble(double scaleX, double scaleY){
+		if(Objects.nonNull(va)){
+			double[] segmentCoordBuffer = new double[segments.size()*2*2];  // SFM key line
 			int[] colorBuffer = new int[segments.size()*2];
 			int[] pickBuffer = new int[segments.size()*2];
 			float[] thicknessBuffer = new float[segments.size()*2];
@@ -652,10 +715,10 @@ public class Lines implements Renderable {
 				double x1 = seg.p1.getX();
 				double y1 = seg.p1.getY();
 				
-				segmentCoordBuffer[i*4+0] = (float) x0;
-				segmentCoordBuffer[i*4+1] = (float) y0;
-				segmentCoordBuffer[i*4+2] = (float) x1;
-				segmentCoordBuffer[i*4+3] = (float) y1;
+				segmentCoordBuffer[i*4+0] = x0;
+				segmentCoordBuffer[i*4+1] = y0;
+				segmentCoordBuffer[i*4+2] = x1;
+				segmentCoordBuffer[i*4+3] = y1;
 
 				colorBuffer[i*2+0] = seg.color0.getAsInt();
 				colorBuffer[i*2+1] = seg.color1.getAsInt();
