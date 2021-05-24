@@ -413,10 +413,9 @@ public class ScatterPlot {
         @SuppressWarnings("unchecked")
         protected boolean findItem(final MouseEvent e) {
             Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (untypedDetails != null) {
-                if (untypedDetails.getClass() == this.type) {
-                    this.setSelectedItem((T) untypedDetails);
-                }
+            if (untypedDetails != null &&
+                    untypedDetails.getClass() == this.type) {
+                this.setSelectedItem((T) untypedDetails);
                 return true;
             }
             this.setSelectedItem(null);
@@ -424,7 +423,6 @@ public class ScatterPlot {
         }
     }
 
-    // TODO Zwischenschicht für Daten - siehe Jcombobox - MVC
     protected abstract class InteractionInterface<T> extends MouseAdapter {
         protected KeyListenerMask keyListenerMask;
 
@@ -485,32 +483,29 @@ public class ScatterPlot {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            selectedPoint.findItem(e);
-            selectedPoint.addValueListener(f -> {
-                if (keyListenerMask.isKeyTyped()) {
-                    if (f != null) {
-                        if (selectedPoint.prevVal != null)
-                            pointReleased(e.getPoint(), selectedPoint.prevVal.location, selectedPoint.prevVal);
-                        pointClicked(e.getPoint(), f.location, f);
-                    } else if (selectedPoint.prevVal != null)
+            if (keyListenerMask.isKeyTyped()) {
+                selectedPoint.findItem(e);
+                selectedPoint.addValueListener(f -> {
+                    if (selectedPoint.prevVal != null)
                         pointReleased(e.getPoint(), selectedPoint.prevVal.location, selectedPoint.prevVal);
-                }
-            });
+                    if (f != null)
+                        pointClicked(e.getPoint(), f.location, f);
+                });
+            }
         }
 
-        @Override
+       @Override
         public void mouseMoved(MouseEvent e) {
-            hoveredPoint.findItem(e);
-            hoveredPoint.addValueListener(f -> {
-                if (keyListenerMask.isKeyTyped()) {
-                    if (f != null) {
-                        if (hoveredPoint.prevVal != null)
-                            mouseLeftPoint(e.getPoint(), hoveredPoint.prevVal.location, hoveredPoint.prevVal);
-                        mouseOverPoint(e.getPoint(), f.location, f);
-                    } else if (hoveredPoint.prevVal != null)
+           if (keyListenerMask.isKeyTyped()) {
+                hoveredPoint.findItem(e);
+                hoveredPoint.addValueListener(f -> {
+                    if (hoveredPoint.prevVal != null)
                         mouseLeftPoint(e.getPoint(), hoveredPoint.prevVal.location, hoveredPoint.prevVal);
-                }
-            });
+                    if (f != null) {
+                        mouseOverPoint(e.getPoint(), f.location, f);
+                    }
+                });
+           }
         }
 
         /**
@@ -541,32 +536,28 @@ public class ScatterPlot {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            selectedLegend.findItem(e);
-            selectedLegend.addValueListener(f -> {
-                if (keyListenerMask.isKeyTyped()) {
-                    if (f != null) {
-                        if (selectedLegend.prevVal != null)
-                            legendItemReleased(e.getPoint(), selectedLegend.prevVal);
-                        legendItemSelected(e.getPoint(), f);
-                    } else if (selectedLegend.prevVal != null)
+            if (keyListenerMask.isKeyTyped()) {
+                selectedLegend.findItem(e);
+                selectedLegend.addValueListener(f -> {
+                    if (selectedLegend.prevVal != null)
                         legendItemReleased(e.getPoint(), selectedLegend.prevVal);
-                }
-            });
+                    if (f != null)
+                        legendItemSelected(e.getPoint(), f);
+                });
+            }
         }
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            hoveredLegend.findItem(e);
-            hoveredLegend.addValueListener(f -> {
-                if (keyListenerMask.isKeyTyped()) {
-                    if (f != null) {
-                        if (selectedLegend.prevVal != null)
-                            legendItemLeft(e.getPoint(), hoveredLegend.prevVal);
-                        legendItemHovered(e.getPoint(), f);
-                    } else if (hoveredLegend.prevVal != null)
+            if (keyListenerMask.isKeyTyped()) {
+                hoveredLegend.findItem(e);
+                hoveredLegend.addValueListener(f -> {
+                    if (selectedLegend.prevVal != null)
                         legendItemLeft(e.getPoint(), hoveredLegend.prevVal);
-                }
-            });
+                    if (f != null)
+                        legendItemHovered(e.getPoint(), f);
+                });
+            }
         }
 
         public abstract void legendItemSelected(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);

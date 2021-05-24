@@ -5,26 +5,20 @@ import java.util.List;
 
 
 public class DataModel<T> {
-    // TODO maybe change to optional
     protected T value;
     protected List<ValueListener<T>> listeners = new LinkedList<>();
 
-    public DataModel() {
-    }
+    public DataModel() { }
 
     public DataModel(T val) {
         this.value = val;
     }
 
     public void setSelectedItem(T val) {
-        if (val == null) {
+        if(val == null || !val.equals(value)) {
             value = val;
-            notifyListeners(null);
-        } else if(!val.equals(value)) {
-            T old = value;
-            value = val;
-            notifyListeners(old);
         }
+        notifyListeners(value);
     }
 
     /**
