@@ -68,7 +68,7 @@ public class IrisViz {
 	
 	public static void main(String[] args) throws IOException {
 		fallbackModeEnabled = useFallback(args);
-		ColorScheme colorScheme = DefaultColorScheme.DARK.get();
+		ColorScheme colorScheme = DefaultColorScheme.LIGHT.get();
 		
 		// setup content
 		ArrayList<double[]> dataset = new ArrayList<>();
