@@ -61,14 +61,13 @@ public class Text implements Renderable {
 		this.color = textcolor;
 		this.origin = new Point(0, 0);
 	}
+	
+	public Text(String textstr, int fontsize, int style, int textcolor) {
+		this(textstr,fontsize,style, new Color(textcolor, true));
+	}
 
 	public Text(String textstr, int fontsize, int style) {
-		this.txtStr = textstr;
-		this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style).getBounds().getSize();
-		this.fontsize = fontsize;
-		this.style = style;
-		this.color = new Color(96, 96, 96);
-		this.origin = new Point(0, 0);
+		this(textstr,fontsize,style, new Color(96, 96, 96));
 	}
 
 	/**

@@ -3,7 +3,7 @@ package hageldave.jplotter.renderables;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.ColorScheme;
-import hageldave.jplotter.color.ColorSchemePreset;
+import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
@@ -68,7 +68,7 @@ public class Legend implements Renderable, Renderer {
 	protected ColorScheme colorScheme;
 
 	public Legend() {
-		this.colorScheme = ColorSchemePreset.LIGHT.get();
+		this.colorScheme = DefaultColorScheme.LIGHT.get();
 	}
 
 	/**
@@ -150,6 +150,7 @@ public class Legend implements Renderable, Renderer {
 
 	public void setColorScheme(final ColorScheme colorScheme) {
 		this.colorScheme = colorScheme;
+		setDirty();
 	}
 
 	/**
@@ -185,7 +186,7 @@ public class Legend implements Renderable, Renderer {
 	 */
 	public Legend addGlyphLabel(Glyph glyph, int color, String labeltxt){
 		if (this.colorScheme != null) {
-			return addGlyphLabel(glyph, color, labeltxt, (this.colorScheme.getColorText()).getRGB());
+			return addGlyphLabel(glyph, color, labeltxt, this.colorScheme.getColorText());
 		}
 		return addGlyphLabel(glyph, color, labeltxt, 0);
 	}
@@ -340,7 +341,7 @@ public class Legend implements Renderable, Renderer {
 		final int elementHSpace = 6;
 		final int fontStyle = Font.PLAIN;
 		final int fontSize = 11;
-		final Color textColor = this.colorScheme.getColorText();
+		final int textColor = this.colorScheme.getColorText();
 
 		final int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
 		final int itemWidth = 16;

@@ -3,35 +3,37 @@ package hageldave.jplotter.color;
 import java.awt.*;
 
 /**
- * The SchemePresets contains predefined {@link ColorScheme}s (Light, Dark),
+ * Enum containing predefined {@link ColorScheme}s,
  * which can be accessed through {@link #get()}.
  *
  * @author lucareichmann
  */
-public enum ColorSchemePreset {
+public enum DefaultColorScheme {
 	LIGHT(
 		new ColorScheme(
 			Color.BLACK,
 			Color.GRAY,
 			Color.DARK_GRAY,
 			new Color(0xdddddd),
-			new Color(96, 96, 96)
+			new Color(96, 96, 96),
+			Color.WHITE
 		)
 	),
 	DARK(
 		new ColorScheme(
-			Color.WHITE,
-			Color.LIGHT_GRAY,
-			Color.LIGHT_GRAY,
-			Color.DARK_GRAY,
-			new Color(196, 196, 196)
+			0xffdddddd,
+			0xffaaaaaa,
+			0xff666666,
+			0xff444444,
+			0xffbbbbbb,
+			0xff21232b
 		)
 	),
 	;
 
 	private final ColorScheme scheme;
 
-	private ColorSchemePreset (ColorScheme scheme) {
+	private DefaultColorScheme (ColorScheme scheme) {
 		this.scheme = scheme;
 	}
 

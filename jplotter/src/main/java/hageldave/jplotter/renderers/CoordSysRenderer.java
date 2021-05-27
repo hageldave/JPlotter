@@ -1,7 +1,7 @@
 package hageldave.jplotter.renderers;
 
 import hageldave.jplotter.color.ColorScheme;
-import hageldave.jplotter.color.ColorSchemePreset;
+import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
@@ -29,6 +29,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 import java.util.Objects;
+import java.util.function.IntSupplier;
 
 /**
  * The CoordSysRenderer is a {@link Renderer} that displays a coordinate system.
@@ -107,9 +108,9 @@ public class CoordSysRenderer implements Renderer {
 	protected int viewportheight=0;
 	protected boolean isDirty = true;
 
-	protected Color tickColor;
-	protected Color guideColor;
-	protected Color textColor;
+	protected IntSupplier tickColor;
+	protected IntSupplier guideColor;
+	protected IntSupplier textColor;
 
 	protected int paddingLeft = 10;
 	protected int paddingRight = 10;
@@ -137,7 +138,7 @@ public class CoordSysRenderer implements Renderer {
 	 * Sets up a CoordSysRenderer with the default color scheme
 	 */
 	public CoordSysRenderer() {
-		this.colorScheme = ColorSchemePreset.LIGHT.get();
+		this.colorScheme = DefaultColorScheme.LIGHT.get();
 		setupCoordSysRenderer();
 	}
 
@@ -155,11 +156,12 @@ public class CoordSysRenderer implements Renderer {
 	 * Helper method to setup the CoordSysRenderer
 	 */
 	protected void setupCoordSysRenderer() {
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB);
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT);
-		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT);
-		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT);
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(()->getColorScheme().getColor1());
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(()->getColorScheme().getColor1());
+		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(()->getColorScheme().getColor2());
+		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT).setColor(()->getColorScheme().getColor2());
 		this.axes.setGlobalThicknessMultiplier(2);
+		
 		this.preContentLinesR
 		.addItemToRender(guides)
 		.addItemToRender(ticks);
@@ -167,6 +169,11 @@ public class CoordSysRenderer implements Renderer {
 		.addItemToRender(xAxisLabelText)
 		.addItemToRender(yAxisLabelText);
 		this.postContentLinesR.addItemToRender(axes);
+		
+		this.guideColor = ()->getColorScheme().getColor4();
+		this.tickColor = ()->getColorScheme().getColor3();
+		this.textColor = ()->getColorScheme().getColorText();
+		
 		updateColors();
 	}
 
@@ -174,22 +181,11 @@ public class CoordSysRenderer implements Renderer {
 	 * Helper method to update the colors if the color scheme is changed.
 	 */
 	protected CoordSysRenderer updateColors() {
-		// changing axes colors (4 segments framing the coordinate area)
-		this.axes.getSegments().get(0).setColor(
-				this.colorScheme.getColor1());
-		this.axes.getSegments().get(1).setColor(
-				this.colorScheme.getColor1());
-		this.axes.getSegments().get(2).setColor(
-				this.colorScheme.getColor2());
-		this.axes.getSegments().get(3).setColor(
-				this.colorScheme.getColor2());
+		// axes already use a pointer to color scheme and need only to be set dirty
 		this.axes.setDirty();
 		
-		this.guideColor = this.colorScheme.getColor4();
-		this.tickColor = this.colorScheme.getColor3();
-		this.textColor = this.colorScheme.getColorText();
-		this.xAxisLabelText.setColor(this.textColor);
-		this.yAxisLabelText.setColor(this.textColor);
+		this.xAxisLabelText.setColor(this.textColor.getAsInt());
+		this.yAxisLabelText.setColor(this.textColor.getAsInt());
 		
 		updateLegendColorScheme(legendBottom);
 		updateLegendColorScheme(legendRight);
@@ -260,7 +256,7 @@ public class CoordSysRenderer implements Renderer {
 	 */
 	protected void updateLegendColorScheme(final Renderer legend) {
 		if (legend instanceof Legend) {
-			((Legend) legend).setColorScheme(this.colorScheme);
+			((Legend) legend).setColorScheme(getColorScheme());
 		}
 	}
 
@@ -502,7 +498,7 @@ public class CoordSysRenderer implements Renderer {
 			Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
 			// label
-			Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor);
+			Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor.getAsInt());
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(new Point2D.Double(
 					(int)(onaxis.getX()-textSize.getWidth()/2.0), 
@@ -519,8 +515,7 @@ public class CoordSysRenderer implements Renderer {
 			Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, Math.round(y));
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
 			// label
-			Text label = new Text(yticklabels[i], tickfontSize, style, this.textColor);
-			System.out.println(label.getColor());
+			Text label = new Text(yticklabels[i], tickfontSize, style, this.textColor.getAsInt());
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -Math.round(textSize.getHeight()/2.0)+0.5));
 			tickMarkLabels.add(label);

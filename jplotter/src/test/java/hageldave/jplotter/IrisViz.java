@@ -39,7 +39,9 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -66,6 +68,7 @@ public class IrisViz {
 	
 	public static void main(String[] args) throws IOException {
 		fallbackModeEnabled = useFallback(args);
+		ColorScheme colorScheme = DefaultColorScheme.DARK.get();
 		
 		// setup content
 		ArrayList<double[]> dataset = new ArrayList<>();
@@ -100,10 +103,10 @@ public class IrisViz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		JPanel gridPane = new JPanel(new GridLayout(4, 4));
-		gridPane.setBackground(Color.WHITE);
+		gridPane.setBackground(new Color(colorScheme.getColorBackground()));
 		frame.getContentPane().add(gridPane, BorderLayout.CENTER);
 		JPanel header = new JPanel();
-		header.setBackground(Color.WHITE);
+		header.setBackground(new Color(colorScheme.getColorBackground()));
 		header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
 		frame.getContentPane().add(header, BorderLayout.NORTH);
 		
@@ -118,6 +121,7 @@ public class IrisViz {
 		canvasCollection.add(legendCanvas);
 		legendCanvas.asComponent().setPreferredSize(new Dimension(400, 16));
 		Legend legend = new Legend();
+		legend.setColorScheme(colorScheme);
 		for(int c=0; c<3; c++){
 			legend.addGlyphLabel(perClassGlyphs[c], perClassColors.getColor(c), perClassNames[c]);
 		}
@@ -138,6 +142,7 @@ public class IrisViz {
 			for(int i = 0; i < 4; i++){
 				JPlotterCanvas canvas = mkCanvas(fallbackModeEnabled, legendCanvas);
 				CoordSysRenderer coordsys = new CoordSysRenderer();
+				coordsys.setColorScheme(colorScheme);
 				canvas.setRenderer(coordsys);
 				canvasCollection.add(canvas);
 				canvas.asComponent().setPreferredSize(new Dimension(250, 250));
