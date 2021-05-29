@@ -3,7 +3,11 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.interaction.*;
+import hageldave.jplotter.interaction.KeyListenerMask;
+import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysPanning;
+import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysScrollZoom;
+import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysViewSelector;
+import hageldave.jplotter.interaction.keylistenermasked.KLMDynamicCoordsysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -238,37 +242,37 @@ public class ScatterPlot {
     /**
      * Adds a scroll zoom to the Scatterplot
      *
-     * @return the {@link CoordSysScrollZoom} so that it can be further customized
+     * @return the {@link KLMCoordSysScrollZoom} so that it can be further customized
      */
-    public DynamicCoordsysScrollZoom addScrollZoom() {
-        return new DynamicCoordsysScrollZoom(this.canvas, this.coordsys).register();
+    public KLMDynamicCoordsysScrollZoom addScrollZoom() {
+        return new KLMDynamicCoordsysScrollZoom(this.canvas, this.coordsys).register();
     }
 
-    public CoordSysScrollZoom addScrollZoom(final KeyListenerMask keyListenerMask) {
-        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
+    public KLMCoordSysScrollZoom addScrollZoom(final KeyListenerMask keyListenerMask) {
+        return new KLMCoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
     }
 
     /**
      *
      * Adds panning functionality to the Scatterplot
      *
-     * @return the {@link CoordSysPanning} so that it can be further customized
+     * @return the {@link KLMCoordSysPanning} so that it can be further customized
      */
-    public CoordSysPanning addPanning() {
-        return new CoordSysPanning(this.canvas, this.coordsys).register();
+    public KLMCoordSysPanning addPanning() {
+        return new KLMCoordSysPanning(this.canvas, this.coordsys).register();
     }
 
-    public CoordSysPanning addPanning(final KeyListenerMask keyListenerMask) {
-        return new CoordSysPanning(this.canvas, this.coordsys, keyListenerMask).register();
+    public KLMCoordSysPanning addPanning(final KeyListenerMask keyListenerMask) {
+        return new KLMCoordSysPanning(this.canvas, this.coordsys, keyListenerMask).register();
     }
 
     /**
      * Adds a zoom functionality by selecting a rectangle.
      *
-     * @return the {@link CoordSysViewSelector} so that it can be further customized
+     * @return the {@link KLMCoordSysViewSelector} so that it can be further customized
      */
-    public CoordSysViewSelector addZoomViewSelector() {
-        return new CoordSysViewSelector(this.canvas, this.coordsys) {
+    public KLMCoordSysViewSelector addZoomViewSelector() {
+        return new KLMCoordSysViewSelector(this.canvas, this.coordsys) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);
@@ -276,8 +280,8 @@ public class ScatterPlot {
         }.register();
     }
 
-    public CoordSysViewSelector addZoomViewSelector(final KeyListenerMask keyListenerMask) {
-        return new CoordSysViewSelector(this.canvas, this.coordsys, keyListenerMask) {
+    public KLMCoordSysViewSelector addZoomViewSelector(final KeyListenerMask keyListenerMask) {
+        return new KLMCoordSysViewSelector(this.canvas, this.coordsys, keyListenerMask) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);
@@ -384,12 +388,15 @@ public class ScatterPlot {
 
     protected static class ScatterPlotModel<T> extends DataModel<T> {
         protected T previousValue;
+        protected T notNull;
 
         public ScatterPlotModel() {
             super();
             this.addValueListener(e -> {
                 if (e != null) {
-                    this.previousValue = e;
+                    if (notNull != null)
+                        this.previousValue = this.notNull;
+                    this.notNull = e;
                 }
             });
         }
@@ -407,7 +414,7 @@ public class ScatterPlot {
         }
 
         /**
-         * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
+         * Adds this {@link KLMCoordSysViewSelector} as {@link MouseListener} and
          * {@link MouseMotionListener} to the associated canvas.
          *
          * @return this for chaining
@@ -423,7 +430,7 @@ public class ScatterPlot {
         }
 
         /**
-         * Removes this {@link CoordSysViewSelector} from the associated canvas'
+         * Removes this {@link KLMCoordSysViewSelector} from the associated canvas'
          * mouse and mouse motion listeners.
          *
          * @return this for chaining
@@ -549,7 +556,7 @@ public class ScatterPlot {
         protected ArrayList<ExtendedPointDetails> points = new ArrayList<>();
 
         public PointsSelectedInterface(final KeyListenerMask keyListenerMask) {
-            new CoordSysViewSelector(canvas, coordsys, keyListenerMask) {
+            new KLMCoordSysViewSelector(canvas, coordsys, keyListenerMask) {
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
@@ -560,7 +567,7 @@ public class ScatterPlot {
         }
 
         public PointsSelectedInterface() {
-            new CoordSysViewSelector(canvas, coordsys) {
+            new KLMCoordSysViewSelector(canvas, coordsys) {
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
@@ -575,12 +582,12 @@ public class ScatterPlot {
                 for (final double[] pointList : points.array) {
                     double x = pointList[points.xLoc], y = pointList[points.yLoc];
                     if (x > minX && x < maxX && y > minY && y < maxY) {
-                        Object element = pickingRegistry.lookup(canvas.getPixel((int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getX(),
+                        ExtendedPointDetails element = (ExtendedPointDetails) pickingRegistry.lookup(canvas.getPixel((int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getX(),
                                 (int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getY(), true, 5));
-                        if (element instanceof ExtendedPointDetails) {
-                            this.points.add((ExtendedPointDetails) element);
-                            this.dataIndices.add(((ExtendedPointDetails) element).arrayIndex);
-                            this.data.add(((ExtendedPointDetails) element).array);
+                        if (element != null) {
+                            this.points.add(element);
+                            this.dataIndices.add(element.arrayIndex);
+                            this.data.add(element.array);
                         }
                     }
                 }
