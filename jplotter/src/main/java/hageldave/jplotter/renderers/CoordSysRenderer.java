@@ -1,29 +1,11 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.AWTEventMulticaster;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.LinkedList;
-import java.util.Objects;
-
-import org.lwjgl.opengl.GL11;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
-import hageldave.jplotter.interaction.CoordSysPanning;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordinateViewListener;
+import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysPanning;
+import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysScrollZoom;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Text;
@@ -33,6 +15,18 @@ import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
 import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
+import org.lwjgl.opengl.GL11;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.LinkedList;
+import java.util.Objects;
 
 /**
  * The CoordSysRenderer is a {@link Renderer} that displays a coordinate system.
@@ -68,7 +62,7 @@ import hageldave.jplotter.util.Utils;
  * of the renderer viewport.
  * <p>
  * For interacting with this {@link CoordSysRenderer} there already exist implementations of MouseListeners
- * for panning and zooming (see {@link CoordSysPanning} and {@link CoordSysScrollZoom}).
+ * for panning and zooming (see {@link KLMCoordSysPanning} and {@link KLMCoordSysScrollZoom}).
  * 
  * @author hageldave
  */

@@ -5,9 +5,9 @@ import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
-import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.interaction.KeyListenerMask;
+import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysScrollZoom;
+import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
@@ -105,8 +105,8 @@ public class Example {
 		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		canvas.setRenderer(coordsys);
 		// lets add some controls for exploring the data
-		new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
-		new CoordSysViewSelector(canvas,coordsys, new KeyListenerMask(0)) {
+		new KLMCoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
+		new KLMCoordSysViewSelector(canvas,coordsys, new KeyListenerMask(0)) {
 			// deprecated {extModifierMask=0;/* no need for shift to be pressed */}
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {

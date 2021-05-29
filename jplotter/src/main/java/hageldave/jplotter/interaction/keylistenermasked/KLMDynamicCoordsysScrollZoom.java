@@ -1,6 +1,8 @@
-package hageldave.jplotter.interaction;
+package hageldave.jplotter.interaction.keylistenermasked;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.interaction.InteractionConstants;
+import hageldave.jplotter.interaction.KeyListenerMask;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Utils;
 
@@ -22,7 +24,7 @@ import java.util.Arrays;
  * @author hageldave
  *
  */
-public class DynamicCoordsysScrollZoom implements MouseWheelListener, InteractionConstants {
+public class KLMDynamicCoordsysScrollZoom implements MouseWheelListener, InteractionConstants {
 
     protected Component canvas;
     protected CoordSysRenderer coordsys;
@@ -30,13 +32,13 @@ public class DynamicCoordsysScrollZoom implements MouseWheelListener, Interactio
     protected int axes = X_AXIS | Y_AXIS;
     protected KeyListenerMask keyListenerMask;
 
-    public DynamicCoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
+    public KLMDynamicCoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
         this.canvas = canvas.asComponent();
         this.coordsys = coordsys;
         this.keyListenerMask = keyListenerMask;
     }
 
-    public DynamicCoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+    public KLMDynamicCoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
         this(canvas, coordsys, new KeyListenerMask(KeyEvent.VK_ALT));
     }
 
@@ -77,13 +79,13 @@ public class DynamicCoordsysScrollZoom implements MouseWheelListener, Interactio
     }
 
     /**
-     * Sets the zoom factor of this {@link CoordSysScrollZoom}.
+     * Sets the zoom factor of this {@link KLMCoordSysScrollZoom}.
      * The default value is 2.0.
      * Using a value in ]0,1[ will reverse the zoom direction.
      * @param zoomFactor to be set
      * @return this for chaining
      */
-    public DynamicCoordsysScrollZoom setZoomFactor(double zoomFactor) {
+    public KLMDynamicCoordsysScrollZoom setZoomFactor(double zoomFactor) {
         this.zoomFactor = zoomFactor;
         return this;
     }
@@ -93,10 +95,10 @@ public class DynamicCoordsysScrollZoom implements MouseWheelListener, Interactio
     }
 
     /**
-     * Adds this {@link CoordSysScrollZoom} as {@link MouseWheelListener} to the associated canvas.
+     * Adds this {@link KLMCoordSysScrollZoom} as {@link MouseWheelListener} to the associated canvas.
      * @return this for chaining
      */
-    public DynamicCoordsysScrollZoom register(){
+    public KLMDynamicCoordsysScrollZoom register(){
         if( ! Arrays.asList(canvas.getMouseWheelListeners()).contains(this))
             canvas.addMouseWheelListener(this);
         if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
@@ -110,7 +112,7 @@ public class DynamicCoordsysScrollZoom implements MouseWheelListener, Interactio
      * @param axes {@link InteractionConstants#X_AXIS}, {@link InteractionConstants#Y_AXIS} or {@code X_AXIS|Y_AXIS}
      * @return this for chaining
      */
-    public DynamicCoordsysScrollZoom setZoomedAxes(int axes){
+    public KLMDynamicCoordsysScrollZoom setZoomedAxes(int axes){
         this.axes = axes;
         return this;
     }
@@ -131,11 +133,11 @@ public class DynamicCoordsysScrollZoom implements MouseWheelListener, Interactio
     }
 
     /**
-     * Removes this {@link CoordSysScrollZoom} from the associated canvas'
+     * Removes this {@link KLMCoordSysScrollZoom} from the associated canvas'
      * mouse wheel listeners.
      * @return this for chaining
      */
-    public DynamicCoordsysScrollZoom deRegister(){
+    public KLMDynamicCoordsysScrollZoom deRegister(){
         canvas.removeMouseWheelListener(this);
         canvas.removeKeyListener(this.keyListenerMask);
         return this;

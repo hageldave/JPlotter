@@ -7,8 +7,8 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.font.FontProvider;
-import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.interaction.KeyListenerMask;
+import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -281,7 +281,7 @@ public class IrisViz {
 						}
 					});
 					// selecting points (brush & link)
-					new CoordSysViewSelector(canvas,coordsys, new KeyListenerMask(0)) {
+					new KLMCoordSysViewSelector(canvas,coordsys, new KeyListenerMask(0)) {
 						// deprecated {extModifierMask=0;/* no shift needed */}
 						public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
 							pointInfo.setText("");
