@@ -59,7 +59,8 @@ public class ScatterPlot {
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
     final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
-
+    final protected ScatterPlotModel<Object> selectedItem = new ScatterPlotModel<>();
+    final protected ScatterPlotModel<Object> hoveredItem = new ScatterPlotModel<>();
 
 
 
@@ -88,7 +89,7 @@ public class ScatterPlot {
     /**
      * used for encapsulating all data interesting for the developer
      */
-    public static class ExtendedPointDetails extends Points.PointDetails {
+    public static class ExtendedPointDetails extends Points.PointDetails implements Comparable<ExtendedPointDetails> {
         public final Points.PointDetails point;
         public final double[][] array;
         public final double arrayIndex;
@@ -106,7 +107,6 @@ public class ScatterPlot {
             this.arrayIndex = arrayIndex;
             this.descr = descr;
         }
-
     }
 
     /**
@@ -379,51 +379,20 @@ public class ScatterPlot {
         this.pickingRegistry.register(item, tempID);
     }
 
+    protected static class ScatterPlotModel<T> extends DataModel<T> {
+        protected T previousValue;
 
-    protected class ScatterPlotModel<T> extends DataModel<T> {
-        protected final Class<T> type;
-        protected T prevVal;
-
-        public ScatterPlotModel(Class<T> type) {
+        public ScatterPlotModel() {
             super();
-            this.type = type;
-            addValListener();
-        }
-
-        public ScatterPlotModel(Class<T> type, T val) {
-            super(val);
-            this.type = type;
-            addValListener();
-        }
-
-        protected void addValListener() {
             this.addValueListener(e -> {
                 if (e != null) {
-                    this.prevVal = e;
+                    this.previousValue = e;
                 }
             });
         }
-
-        /**
-         * Searches for a data point similar to the location the developer clicked on.
-         *
-         * @param e MouseEvent when clicking
-         * @return true if a point was found, false if no point was found in the dataSet
-         */
-        @SuppressWarnings("unchecked")
-        protected boolean findItem(final MouseEvent e) {
-            Object untypedDetails = pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (untypedDetails != null &&
-                    untypedDetails.getClass() == this.type) {
-                this.setSelectedItem((T) untypedDetails);
-                return true;
-            }
-            this.setSelectedItem(null);
-            return false;
-        }
     }
 
-    protected abstract class InteractionInterface<T> extends MouseAdapter {
+    protected abstract class InteractionInterface extends MouseAdapter {
         protected KeyListenerMask keyListenerMask;
 
         public InteractionInterface(final KeyListenerMask keyListenerMask) {
@@ -467,11 +436,8 @@ public class ScatterPlot {
     /**
      * Mouse over interface, which triggers its pointClicked method,
      * when clicking on a point in the coordsys.
-     * // TODO potentiell weniger daten direkt speichern
      */
     public abstract class PointClickedInterface extends InteractionInterface {
-        ScatterPlotModel<ExtendedPointDetails> selectedPoint = new ScatterPlotModel<>(ExtendedPointDetails.class);
-        ScatterPlotModel<ExtendedPointDetails> hoveredPoint = new ScatterPlotModel<>(ExtendedPointDetails.class);
 
         public PointClickedInterface(KeyListenerMask keyListenerMask) {
             super(keyListenerMask);
@@ -484,12 +450,12 @@ public class ScatterPlot {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
-                selectedPoint.findItem(e);
-                selectedPoint.addValueListener(f -> {
-                    if (selectedPoint.prevVal != null)
-                        pointReleased(e.getPoint(), selectedPoint.prevVal.location, selectedPoint.prevVal);
-                    if (f != null)
-                        pointClicked(e.getPoint(), f.location, f);
+                selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
+                selectedItem.addValueListener(f -> {
+                    if (selectedItem.previousValue instanceof ExtendedPointDetails)
+                        pointReleased(e.getPoint(), ((ExtendedPointDetails) selectedItem.previousValue ).location, (ExtendedPointDetails) selectedItem.previousValue);
+                    if (f instanceof ExtendedPointDetails)
+                        pointClicked(e.getPoint(), ((ExtendedPointDetails) f).location, (ExtendedPointDetails) f);
                 });
             }
         }
@@ -497,25 +463,26 @@ public class ScatterPlot {
        @Override
         public void mouseMoved(MouseEvent e) {
            if (keyListenerMask.isKeyTyped()) {
-                hoveredPoint.findItem(e);
-                hoveredPoint.addValueListener(f -> {
-                    if (hoveredPoint.prevVal != null)
-                        mouseLeftPoint(e.getPoint(), hoveredPoint.prevVal.location, hoveredPoint.prevVal);
-                    if (f != null) {
-                        mouseOverPoint(e.getPoint(), f.location, f);
+                hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
+                hoveredItem.addValueListener(f -> {
+                    if (hoveredItem.previousValue instanceof ExtendedPointDetails)
+                        mouseLeftPoint(e.getPoint(), ((ExtendedPointDetails) hoveredItem.previousValue ).location, (ExtendedPointDetails) hoveredItem.previousValue);
+                    if (f instanceof ExtendedPointDetails) {
+                        mouseOverPoint(e.getPoint(), ((ExtendedPointDetails) f).location, (ExtendedPointDetails) f);
                     }
                 });
            }
         }
 
-        /**
-         * Will be called, when a data point is clicked on.
-         *
-         * @param mouseLocation location that was clicked
-         * @param pointLocation location of the clicked point in the coordinate system
-         * @param data          the data array where the data point was found
-         * @param dataIndex     the index of the data point in the returned array
-         */
+
+            /**
+             * Will be called, when a data point is clicked on.
+             *
+             * @param mouseLocation location that was clicked
+             * @param pointLocation location of the clicked point in the coordinate system
+             * @param data          the data array where the data point was found
+             * @param dataIndex     the index of the data point in the returned array
+             */
         public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
         public abstract void pointReleased(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
         public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
@@ -523,8 +490,6 @@ public class ScatterPlot {
     }
 
     public abstract class LegendSelectedInterface extends InteractionInterface {
-        ScatterPlotModel<Legend.GlyphLabel> selectedLegend = new ScatterPlotModel<>(Legend.GlyphLabel.class);
-        ScatterPlotModel<Legend.GlyphLabel> hoveredLegend = new ScatterPlotModel<>(Legend.GlyphLabel.class);
 
         public LegendSelectedInterface(KeyListenerMask keyListenerMask) {
             super(keyListenerMask);
@@ -537,12 +502,12 @@ public class ScatterPlot {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
-                selectedLegend.findItem(e);
-                selectedLegend.addValueListener(f -> {
-                    if (selectedLegend.prevVal != null)
-                        legendItemReleased(e.getPoint(), selectedLegend.prevVal);
-                    if (f != null)
-                        legendItemSelected(e.getPoint(), f);
+                selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
+                selectedItem.addValueListener(f -> {
+                    if (selectedItem.previousValue instanceof Legend.GlyphLabel)
+                        legendItemReleased(e.getPoint(), (Legend.GlyphLabel) selectedItem.previousValue);
+                    if (f instanceof Legend.GlyphLabel)
+                        legendItemSelected(e.getPoint(), (Legend.GlyphLabel) f);
                 });
             }
         }
@@ -550,12 +515,12 @@ public class ScatterPlot {
         @Override
         public void mouseMoved(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
-                hoveredLegend.findItem(e);
-                hoveredLegend.addValueListener(f -> {
-                    if (selectedLegend.prevVal != null)
-                        legendItemLeft(e.getPoint(), hoveredLegend.prevVal);
-                    if (f != null)
-                        legendItemHovered(e.getPoint(), f);
+                hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
+                hoveredItem.addValueListener(f -> {
+                    if (hoveredItem.previousValue instanceof Legend.GlyphLabel)
+                        legendItemLeft(e.getPoint(), (Legend.GlyphLabel) hoveredItem.previousValue);
+                    if (f instanceof Legend.GlyphLabel)
+                        legendItemHovered(e.getPoint(), (Legend.GlyphLabel) f);
                 });
             }
         }
