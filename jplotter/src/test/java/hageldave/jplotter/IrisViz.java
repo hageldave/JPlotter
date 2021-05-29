@@ -8,7 +8,7 @@ import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.interaction.KeyListenerMask;
-import hageldave.jplotter.interaction.keylistenermasked.KLMCoordSysViewSelector;
+import hageldave.jplotter.interaction.klm.KLMCoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;

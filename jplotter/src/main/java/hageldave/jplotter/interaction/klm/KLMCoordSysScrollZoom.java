@@ -1,4 +1,4 @@
-package hageldave.jplotter.interaction.keylistenermasked;
+package hageldave.jplotter.interaction.klm;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.InteractionConstants;
