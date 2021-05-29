@@ -62,9 +62,6 @@ public class ScatterPlot {
     final protected ScatterPlotModel<Object> selectedItem = new ScatterPlotModel<>();
     final protected ScatterPlotModel<Object> hoveredItem = new ScatterPlotModel<>();
 
-
-
-
     public ScatterPlot(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
     }
@@ -89,7 +86,7 @@ public class ScatterPlot {
     /**
      * used for encapsulating all data interesting for the developer
      */
-    public static class ExtendedPointDetails extends Points.PointDetails implements Comparable<ExtendedPointDetails> {
+    public static class ExtendedPointDetails extends Points.PointDetails {
         public final Points.PointDetails point;
         public final double[][] array;
         public final double arrayIndex;
@@ -118,11 +115,17 @@ public class ScatterPlot {
         public Points points;
         public Color color;
         public String descr;
+        final public double[][] array;
+        final public int xLoc;
+        final public int yLoc;
 
-        RenderedPoints(final Points points, final Color color, final String descr) {
+        RenderedPoints(final Points points, final Color color, final String descr, final double[][] array, final int xLoc, final int yLoc) {
             this.points = points;
             this.color = color;
             this.descr = descr;
+            this.array = array;
+            this.xLoc = xLoc;
+            this.yLoc = yLoc;
         }
     }
 
@@ -130,12 +133,12 @@ public class ScatterPlot {
      * adds a set of points to the scatter plot.
      *
      * @param ID     the ID is the key with which the Dataset will be stored in the pointMap
-     * @param points a double array containing the coordinates of the points TODO Spezifikation hier verbessern zu x,y
+     * @param points a double array containing the coordinates of the points
      * @param glyph  the data points will be visualized by that glyph
      * @param color  the color of the glyph
      * @return the old Scatterplot for chaining
      */
-    public Points addData(final int ID, final double[][] points, final int xLoc, final int yLoc,final DefaultGlyph glyph,
+    public Points addData(final int ID, final double[][] points, final int xLoc, final int yLoc, final DefaultGlyph glyph,
                           final Color color, final String descr) {
         Points tempPoints = new Points(glyph);
         int index = 0;
@@ -146,7 +149,7 @@ public class ScatterPlot {
             addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, points, index, descr));
             index++;
         }
-        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr));
+        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr, points, xLoc, yLoc));
         this.dataAdded.add(points);
         this.content.addItemToRender(tempPoints);
         updateLegends(glyph, color, descr);
@@ -542,15 +545,16 @@ public class ScatterPlot {
      */
     public abstract class PointsSelectedInterface {
         protected ArrayList<double[][]> data = new ArrayList<>();
-        protected ArrayList<Integer> dataIndices = new ArrayList<>();
+        protected ArrayList<Double> dataIndices = new ArrayList<>();
+        protected ArrayList<ExtendedPointDetails> points = new ArrayList<>();
 
         public PointsSelectedInterface(final KeyListenerMask keyListenerMask) {
             new CoordSysViewSelector(canvas, coordsys, keyListenerMask) {
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
-                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices);
-                    data.clear(); dataIndices.clear();
+                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices, points);
+                    data.clear(); dataIndices.clear(); points.clear();
                 }
             }.register();
         }
@@ -560,24 +564,26 @@ public class ScatterPlot {
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
-                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices);
-                    data.clear(); dataIndices.clear();
+                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices, points);
+                    data.clear(); dataIndices.clear(); points.clear();
                 }
             }.register();
         }
 
         protected void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
-            int index = 0;
-            for (final double[][] pointList : dataAdded) {
-                for (double[] entry : pointList) {
-                    double x = entry[0], y = entry[1];
+            for (final RenderedPoints points: pointsInRenderer.values()) {
+                for (final double[] pointList : points.array) {
+                    double x = pointList[points.xLoc], y = pointList[points.yLoc];
                     if (x > minX && x < maxX && y > minY && y < maxY) {
-                        this.dataIndices.add(index);
-                        this.data.add(pointList);
+                        Object element = pickingRegistry.lookup(canvas.getPixel((int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getX(),
+                                (int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getY(), true, 5));
+                        if (element instanceof ExtendedPointDetails) {
+                            this.points.add((ExtendedPointDetails) element);
+                            this.dataIndices.add(((ExtendedPointDetails) element).arrayIndex);
+                            this.data.add(((ExtendedPointDetails) element).array);
+                        }
                     }
-                    index++;
                 }
-                index = 0;
             }
         }
 
@@ -588,6 +594,6 @@ public class ScatterPlot {
          * @param data the data sets where points where found
          * @param dataIndices the indices of the data inside the data arrays
          */
-        public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
+        public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ExtendedPointDetails> points);
     }
 }

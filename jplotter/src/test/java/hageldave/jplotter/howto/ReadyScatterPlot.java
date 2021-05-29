@@ -191,11 +191,12 @@ public class ReadyScatterPlot {
             public void legendItemLeft(Point mouseLocation, Legend.GlyphLabel glyphLabel) { }
         }.register();
 
-        plot.new PointsSelectedInterface(new KeyListenerMask(VK_SHIFT)) {
+        plot.new PointsSelectedInterface(new KeyListenerMask(VK_TAB)) {
             @Override
-            public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices) {
+            public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ScatterPlot.ExtendedPointDetails> points) {
                 System.out.println(data);
                 System.out.println(dataIndices);
+                System.out.println(points);
             }
         };
 
