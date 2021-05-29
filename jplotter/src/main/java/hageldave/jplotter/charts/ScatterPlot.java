@@ -60,7 +60,6 @@ public class ScatterPlot {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
     protected CompleteRenderer content;
-    final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
     final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
     final protected ScatterPlotModel<Object> selectedItem = new ScatterPlotModel<>();
@@ -87,26 +86,38 @@ public class ScatterPlot {
         this.coordsys.setyAxisLabel(yLabel);
     }
 
+    public static class ArrayInformation {
+        public final double[][] array;
+        public final int xLoc;
+        public final int yLoc;
+
+        public ArrayInformation(final double[][] array, final int xLoc, final int yLoc) {
+            this.array = array;
+            this.xLoc = xLoc;
+            this.yLoc = yLoc;
+        }
+    }
+
     /**
      * used for encapsulating all data interesting for the developer
      */
     public static class ExtendedPointDetails extends Points.PointDetails {
         public final Points.PointDetails point;
-        public final double[][] array;
+        public final ArrayInformation arrayInformation;
         public final double arrayIndex;
         public final Glyph glyph;
         public final Points pointSet;
-        public final String descr;
+        public final String description;
 
-        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final Points pointSet, final double[][] array,
-                             final double arrayIndex, final String descr) {
+        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final Points pointSet,
+                             final ArrayInformation arrayInformation, final double arrayIndex, final String description) {
             super(point.location);
             this.glyph = glyph;
             this.pointSet = pointSet;
             this.point = point;
-            this.array = array;
+            this.arrayInformation = arrayInformation;
             this.arrayIndex = arrayIndex;
-            this.descr = descr;
+            this.description = description;
         }
     }
 
@@ -118,18 +129,14 @@ public class ScatterPlot {
     public static class RenderedPoints {
         public Points points;
         public Color color;
-        public String descr;
-        final public double[][] array;
-        final public int xLoc;
-        final public int yLoc;
+        public String description;
+        public ArrayInformation arrayInformation;
 
-        RenderedPoints(final Points points, final Color color, final String descr, final double[][] array, final int xLoc, final int yLoc) {
+        RenderedPoints(final Points points, final Color color, final String description, final ArrayInformation arrayInformation) {
             this.points = points;
             this.color = color;
-            this.descr = descr;
-            this.array = array;
-            this.xLoc = xLoc;
-            this.yLoc = yLoc;
+            this.description = description;
+            this.arrayInformation = arrayInformation;
         }
     }
 
@@ -145,16 +152,16 @@ public class ScatterPlot {
     public Points addData(final int ID, final double[][] points, final int xLoc, final int yLoc, final DefaultGlyph glyph,
                           final Color color, final String descr) {
         Points tempPoints = new Points(glyph);
+        ArrayInformation arrayInformation = new ArrayInformation(points, xLoc, yLoc);
         int index = 0;
         for (double[] entry : points) {
             double x = entry[xLoc], y = entry[yLoc];
             Points.PointDetails pointDetail = tempPoints.addPoint(x, y);
             pointDetail.setColor(color);
-            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, points, index, descr));
+            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, arrayInformation, index, descr));
             index++;
         }
-        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr, points, xLoc, yLoc));
-        this.dataAdded.add(points);
+        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr, arrayInformation));
         this.content.addItemToRender(tempPoints);
         updateLegends(glyph, color, descr);
         return tempPoints;
@@ -195,8 +202,8 @@ public class ScatterPlot {
         if (autoAddItems) {
             for (RenderedPoints point: pointsInRenderer.values()) {
                 int registryID = this.pickingRegistry.getNewID();
-                Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.descr, point.points.glyph, point.color.getRGB(), registryID);
-                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr, registryID);
+                Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.description, point.points.glyph, point.color.getRGB(), registryID);
+                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.description, registryID);
                 this.pickingRegistry.register(glyphLabel, registryID);
             }
         }
@@ -214,8 +221,8 @@ public class ScatterPlot {
         if (autoAddItems) {
             for (RenderedPoints point: pointsInRenderer.values()) {
                 int registryID = this.pickingRegistry.getNewID();
-                Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.descr, point.points.glyph, point.color.getRGB(), registryID);
-                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.descr, registryID);
+                Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.description, point.points.glyph, point.color.getRGB(), registryID);
+                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.description, registryID);
                 this.pickingRegistry.register(glyphLabel, registryID);
             }
         }
@@ -311,7 +318,7 @@ public class ScatterPlot {
             public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
                 System.out.println("Mouse location: " + mouseLocation);
                 System.out.println("Point location: " + pointLocation);
-                System.out.println("Data array: " + Arrays.deepToString(pointDetails.array));
+                System.out.println("Data array: " + Arrays.deepToString(pointDetails.arrayInformation.array));
                 System.out.println("Data index: " + pointDetails.arrayIndex);
             }
 
@@ -334,7 +341,7 @@ public class ScatterPlot {
             public void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
                 System.out.println("Mouse location: " + mouseLocation);
                 System.out.println("Point location: " + pointLocation);
-                System.out.println("Data array: " + Arrays.deepToString(pointDetails.array));
+                System.out.println("Data array: " + Arrays.deepToString(pointDetails.arrayInformation.array));
                 System.out.println("Data index: " + pointDetails.arrayIndex);
             }
 
@@ -461,11 +468,11 @@ public class ScatterPlot {
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
                 selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
-                selectedItem.addValueListener(f -> {
+                selectedItem.addValueListener(newValue -> {
                     if (selectedItem.previousValue instanceof ExtendedPointDetails)
                         pointReleased(e.getPoint(), ((ExtendedPointDetails) selectedItem.previousValue ).location, (ExtendedPointDetails) selectedItem.previousValue);
-                    if (f instanceof ExtendedPointDetails)
-                        pointClicked(e.getPoint(), ((ExtendedPointDetails) f).location, (ExtendedPointDetails) f);
+                    if (newValue instanceof ExtendedPointDetails)
+                        pointClicked(e.getPoint(), ((ExtendedPointDetails) newValue).location, (ExtendedPointDetails) newValue);
                 });
             }
         }
@@ -474,16 +481,15 @@ public class ScatterPlot {
         public void mouseMoved(MouseEvent e) {
            if (keyListenerMask.isKeyTyped()) {
                 hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
-                hoveredItem.addValueListener(f -> {
+                hoveredItem.addValueListener(newValue -> {
                     if (hoveredItem.previousValue instanceof ExtendedPointDetails)
                         mouseLeftPoint(e.getPoint(), ((ExtendedPointDetails) hoveredItem.previousValue ).location, (ExtendedPointDetails) hoveredItem.previousValue);
-                    if (f instanceof ExtendedPointDetails) {
-                        mouseOverPoint(e.getPoint(), ((ExtendedPointDetails) f).location, (ExtendedPointDetails) f);
+                    if (newValue instanceof ExtendedPointDetails) {
+                        mouseOverPoint(e.getPoint(), ((ExtendedPointDetails) newValue).location, (ExtendedPointDetails) newValue);
                     }
                 });
            }
         }
-
 
             /**
              * Will be called, when a data point is clicked on.
@@ -513,11 +519,11 @@ public class ScatterPlot {
         public void mouseClicked(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
                 selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
-                selectedItem.addValueListener(f -> {
+                selectedItem.addValueListener(newValue -> {
                     if (selectedItem.previousValue instanceof Legend.GlyphLabel)
                         legendItemReleased(e.getPoint(), (Legend.GlyphLabel) selectedItem.previousValue);
-                    if (f instanceof Legend.GlyphLabel)
-                        legendItemSelected(e.getPoint(), (Legend.GlyphLabel) f);
+                    if (newValue instanceof Legend.GlyphLabel)
+                        legendItemSelected(e.getPoint(), (Legend.GlyphLabel) newValue);
                 });
             }
         }
@@ -526,11 +532,11 @@ public class ScatterPlot {
         public void mouseMoved(MouseEvent e) {
             if (keyListenerMask.isKeyTyped()) {
                 hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
-                hoveredItem.addValueListener(f -> {
+                hoveredItem.addValueListener(newValue -> {
                     if (hoveredItem.previousValue instanceof Legend.GlyphLabel)
                         legendItemLeft(e.getPoint(), (Legend.GlyphLabel) hoveredItem.previousValue);
-                    if (f instanceof Legend.GlyphLabel)
-                        legendItemHovered(e.getPoint(), (Legend.GlyphLabel) f);
+                    if (newValue instanceof Legend.GlyphLabel)
+                        legendItemHovered(e.getPoint(), (Legend.GlyphLabel) newValue);
                 });
             }
         }
@@ -577,17 +583,17 @@ public class ScatterPlot {
             }.register();
         }
 
-        protected void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
+        private void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
             for (final RenderedPoints points: pointsInRenderer.values()) {
-                for (final double[] pointList : points.array) {
-                    double x = pointList[points.xLoc], y = pointList[points.yLoc];
+                for (final double[] pointList : points.arrayInformation.array) {
+                    double x = pointList[points.arrayInformation.xLoc], y = pointList[points.arrayInformation.yLoc];
                     if (x > minX && x < maxX && y > minY && y < maxY) {
                         ExtendedPointDetails element = (ExtendedPointDetails) pickingRegistry.lookup(canvas.getPixel((int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getX(),
                                 (int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getY(), true, 5));
                         if (element != null) {
                             this.points.add(element);
                             this.dataIndices.add(element.arrayIndex);
-                            this.data.add(element.array);
+                            this.data.add(element.arrayInformation.array);
                         }
                     }
                 }

@@ -132,8 +132,8 @@ public class ReadyScatterPlot {
                 selectedSelectedPointInfo.setxPos(pointLocation.getX());
                 selectedSelectedPointInfo.setyPos(pointLocation.getY());
                 selectedSelectedPointInfo.setArrayIndex((int) pointDetails.arrayIndex);
-                selectedSelectedPointInfo.setArray(pointDetails.array);
-                selectedSelectedPointInfo.setArrayText(pointDetails.descr);
+                selectedSelectedPointInfo.setArray(pointDetails.arrayInformation.array);
+                selectedSelectedPointInfo.setArrayText(pointDetails.description);
                 selectedSelectedPointInfo.setCategory(String.valueOf(pointDetails.glyph));
                 selectedSelectedPointInfo.setButtonVisible(true);
             }
