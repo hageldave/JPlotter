@@ -18,13 +18,15 @@ import java.util.stream.IntStream;
 
 
 public class BarChart {
-    final public TreeMap<Integer, BarStruct> trianglesInRenderer = new TreeMap<>();
+    // renderedGroups has to be passed to renderer somehow, so that it knows when to add lines
+    final public TreeMap<Integer, BarGroup> renderedGroups = new TreeMap<>();
     final protected double barSize = 0.8;
     protected CompleteRenderer content;
     protected JPlotterCanvas canvas;
     protected BarRenderer barRenderer;
     protected int chartAlignment;
-    protected int barCount = 0;
+
+    protected int currentRow = 0;
 
     public static class BarStruct {
         final public LinkedList<Triangles> stacks = new LinkedList<>();
@@ -32,20 +34,151 @@ public class BarChart {
         public String descr;
         public int position;
         public double barLength;
+        public int ID;
 
-        public BarStruct(final Triangles stacks, final int position, final String descr, final double dataSet) {
+        public BarStruct(final Triangles stacks, final int position, final String descr, final double dataSet, final int ID) {
             this.stacks.add(stacks);
             this.descr = descr;
             this.position = position;
             this.dataSets.add(dataSet);
+            this.ID = ID;
         }
 
-        public BarStruct(final Triangles stacks, final int position, final String descr, final double dataSet, final double barLength) {
+        public BarStruct(final Triangles stacks, final int position, final String descr, final double dataSet, final double barLength, final int ID) {
             this.stacks.add(stacks);
             this.descr = descr;
             this.position = position;
             this.barLength = barLength;
             this.dataSets.add(dataSet);
+            this.ID = ID;
+        }
+    }
+
+    public class BarGroup {
+        // use hashmap as model and add listener -> everytime it is changed, update sortedBars
+        final protected TreeMap<Integer, BarStruct> groupedBars = new TreeMap<>();
+        protected SortedSet<BarStruct> sortedBars = new TreeSet<>(Comparator.comparingDouble(o -> o.barLength));
+        protected int startingRow;
+
+        public BarGroup() {
+            this.startingRow = ++currentRow;
+        }
+
+        public BarGroup(final TreeMap<Integer, BarStruct> groupedBars) {
+            this.groupedBars.putAll(groupedBars);
+        }
+
+        public BarGroup addBar(final int ID, final double[] data, final Color color, final String descr) {
+            double val = Arrays.stream(data).sum();
+            return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{descr});
+        }
+
+        public BarGroup addBar(final int ID, final double val, final Color color, final String descr) {
+            return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{descr});
+        }
+
+        public BarGroup addBar(final int ID, final double val, final Color color) {
+            return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{""});
+        }
+
+        public BarGroup addData(final int[] IDs, final double[] data, final Color[] color, final String[] descr) {
+            if (!(IDs.length == data.length && data.length == color.length && color.length == descr.length))
+                throw new IllegalArgumentException("All arrays have to have equal size!");
+            for (int i = 0; i < data.length; i++) {
+                if (this.groupedBars.containsKey(IDs[i])) {
+                    addStack(IDs[i], data[i], color[i]);
+                } else {
+                    Triangles triangleRend = makeBar(currentRow++, data[i], color[i]);
+                    this.groupedBars.put(IDs[i],
+                            new BarStruct(triangleRend, currentRow, descr[i], data[i], data[i], IDs[i]));
+                    copyContent(sortedBars, groupedBars.values());
+                    renderBars();
+                }
+            }
+            return this;
+        }
+
+        public BarGroup addData(final int[] IDs, final double[][] data, final Color[] color, final String[] descr) {
+            // recalc data
+            HashMap<Double, Double> vals = new HashMap<>();
+            for (int i = 0; i < data.length; i++) {
+                if (!vals.containsKey(data[i][1])) {
+                    vals.put(data[i][1], data[i][0]);
+                } else {
+                    Double currentHeight = vals.get(data[i][1]) + data[i][0];
+                    vals.put(data[i][1], currentHeight);
+                }
+            }
+
+            int j = 0;
+            for (Double val: vals.values()) {
+                Triangles triangleRend = makeBar(j, val, color[j]);
+                //this.trianglesInRenderer.put(IDs[j], new BarStruct(triangleRend, j, descr[j]));
+                content.addItemToRender(triangleRend);
+                j++;
+            }
+            return this;
+        }
+
+        protected BarGroup addStack(final Integer ID, final double data, final Color color) {
+            Triangles newStack = makeBar(this.groupedBars.get(ID).barLength,
+                    this.groupedBars.get(ID).position - 1, data, color);
+            this.groupedBars.get(ID).stacks.add(newStack);
+            this.groupedBars.get(ID).dataSets.add(data);
+            this.groupedBars.get(ID).barLength += data;
+            copyContent(sortedBars, groupedBars.values());
+            renderBars();
+            return this;
+        }
+
+        public BarGroup removeBars(final int... IDs) {
+            clearRenderedTriangles();
+            for (int ID: IDs) {
+                this.groupedBars.remove(ID);
+            }
+            currentRow -= IDs.length;
+            copyContent(sortedBars, groupedBars.values());
+            renderBars();
+            return this;
+        }
+
+        // orders by height
+        public BarGroup sortBars() {
+            sortBars((o1, o2) -> {
+                if (o1.barLength < o2.barLength) return -1;
+                if (o1.barLength > o2.barLength) return 1;
+                return 0;
+            });
+            return this;
+        }
+
+        public BarGroup sortBars(final Comparator<BarStruct> comparator) {
+            clearRenderedTriangles();
+            this.sortedBars = new TreeSet<>(comparator);
+            copyContent(this.sortedBars, groupedBars.values());
+            renderBars();
+            return this;
+        }
+
+        public BarGroup sortBarsIDs() {
+            clearRenderedTriangles();
+            this.sortedBars = new TreeSet<>((o1, o2) -> {
+                if (o1.ID > o2.ID) return 1;
+                if (o1.ID < o2.ID) return -1;
+                return 0;
+            });
+            copyContent(this.sortedBars, groupedBars.values());
+            renderBars();
+            return this;
+        }
+
+        protected void copyContent(final Collection<BarStruct> c1,
+                                   final Collection<BarStruct> c2) {
+            c1.clear(); c1.addAll(c2);
+        }
+
+        public TreeMap<Integer, BarStruct> getBarsInGroup() {
+            return groupedBars;
         }
     }
 
@@ -71,74 +204,24 @@ public class BarChart {
         this.chartAlignment = chartAlignment;
     }
 
-    public BarChart addBar(final int ID, final double[] data, final Color color, final String descr) {
-        double val = Arrays.stream(data).sum();
-        return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{descr});
+    public BarGroup createGroup(final int ID) {
+        BarGroup barGroup = new BarGroup();
+        this.renderedGroups.put(ID, barGroup);
+        return barGroup;
     }
 
-    public BarChart addBar(final int ID, final double val, final Color color, final String descr) {
-        return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{descr});
-    }
-
-    public BarChart addBar(final int ID, final double val, final Color color) {
-        return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{""});
-    }
-
-    public BarChart addData(final int[] IDs, final double[] data, final Color[] color, final String[] descr) {
-        if (!(IDs.length == data.length && data.length == color.length && color.length == descr.length))
-            throw new IllegalArgumentException("All arrays have to have equal size!");
-        for (int i = 0; i < data.length; i++) {
-            if (this.trianglesInRenderer.containsKey(IDs[i])) {
-                addStack(IDs[i], data[i], color[i]);
-            } else {
-                Triangles triangleRend = makeBar(barCount++, data[i], color[i]);
-                this.trianglesInRenderer.put(IDs[i],
-                            new BarStruct(triangleRend, barCount, descr[i], data[i], data[i]));
-                this.content.addItemToRender(triangleRend);
-            }
-        }
-        return this;
-    }
-
-    // [i][0: val; 1: index] - oder umgekehrt, needs testing
-    public BarChart addData(final int[] IDs, final double[][] data, final Color[] color, final String[] descr) {
-        // recalc data
-        HashMap<Double, Double> vals = new HashMap<>();
-        for (int i = 0; i < data.length; i++) {
-            if (!vals.containsKey(data[i][1])) {
-                vals.put(data[i][1], data[i][0]);
-            } else {
-                Double currentHeight = vals.get(data[i][1]) + data[i][0];
-                vals.put(data[i][1], currentHeight);
+    protected TickMarkGenerator setTickmarks() {
+        String[] description = new String[currentRow];
+        for (BarGroup group: renderedGroups.values()) {
+            for (int key: group.groupedBars.keySet()) {
+                int pos = group.groupedBars.get(key).position - 1;
+                description[pos] = group.groupedBars.get(key).descr;
             }
         }
 
-        int j = 0;
-        for (Double val: vals.values()) {
-            Triangles triangleRend = makeBar(j, val, color[j]);
-            //this.trianglesInRenderer.put(IDs[j], new BarStruct(triangleRend, j, descr[j]));
-            this.content.addItemToRender(triangleRend);
-            j++;
-        }
-        return this;
-    }
-
-    // stack will be added on already existing stack
-    protected BarChart addStack(final Integer ID, final double data, final Color color) {
-        Triangles newStack = makeBar(this.trianglesInRenderer.get(ID).barLength,
-                this.trianglesInRenderer.get(ID).position - 1, data, color);
-        this.trianglesInRenderer.get(ID).stacks.add(newStack);
-        this.trianglesInRenderer.get(ID).dataSets.add(data);
-        this.content.addItemToRender(newStack);
-        this.trianglesInRenderer.get(ID).barLength += data;
-        return this;
-    }
-
-    public TickMarkGenerator setTickmarks() {
-        String[] description = new String[trianglesInRenderer.size()];
-        for (int key: trianglesInRenderer.keySet()) {
-            int pos = trianglesInRenderer.get(key).position - 1;
-            description[pos] = trianglesInRenderer.get(key).descr;
+        for (int j = 0; j < description.length; j++) {
+            if (description[j] == null)
+                description[j] = "";
         }
 
         TickMarkGenerator oldTickGen = barRenderer.getTickMarkGenerator();
@@ -161,55 +244,42 @@ public class BarChart {
         Triangles bar = new Triangles();
         if (this.chartAlignment == AlignmentConstants.HORIZONTAL) {
             bar.addQuad(new Rectangle2D.Double(start, row-(barSize/2), val, barSize));
-        } else {
+        } else if (this.chartAlignment == AlignmentConstants.VERTICAL) {
             bar.addQuad(new Rectangle2D.Double(row-(barSize/2), start, barSize, val));
         }
         bar.getTriangleDetails().forEach(tri -> tri.setColor(color));
         return bar;
     }
 
+    // sets everything together
+    public BarChart renderBars() {
+        AtomicInteger index = new AtomicInteger();
+        for (BarGroup group: renderedGroups.values()) {
+            for (BarStruct struct: group.sortedBars) {
+                reconstructBars(index, struct);
+            }
+            index.incrementAndGet();
+        }
+        setTickmarks();
+        return this;
+    }
+
     public BarChart setBarContentBoundaries() {
         double maxVal = Integer.MIN_VALUE; double minVal = Integer.MAX_VALUE;
-        for (BarStruct value: trianglesInRenderer.values()) {
-            maxVal = Math.max(value.barLength, maxVal);
-            minVal = Math.min(value.barLength, minVal);
+        for (BarGroup value: renderedGroups.values()) {
+            for (BarStruct struct: value.groupedBars.values()) {
+                maxVal = Math.max(struct.barLength, maxVal);
+                minVal = Math.min(struct.barLength, minVal);
+            }
         }
         if (minVal >= 0) {
             minVal = 0.5;
         }
         if (this.chartAlignment == AlignmentConstants.HORIZONTAL) {
-            this.barRenderer.setCoordinateView(minVal - 0.5, -0.8, maxVal + 0.5, barCount);
+            this.barRenderer.setCoordinateView(minVal - 0.5, -0.8, maxVal + 0.5, currentRow);
         } else if (this.chartAlignment == AlignmentConstants.VERTICAL) {
-            this.barRenderer.setCoordinateView(-0.8, minVal - 0.5, barCount, maxVal + 0.5);
+            this.barRenderer.setCoordinateView(-0.8, minVal - 0.5, currentRow, maxVal + 0.5);
         }
-        return this;
-    }
-
-    // orders by height
-    public BarChart sortBars() {
-        sortBars((o1, o2) -> {
-            if (o1 < o2) return -1;
-            if (o1 > o2) return 1;
-            return 0;
-        });
-        return this;
-    }
-
-    public BarChart sortBars(final Comparator<Double> comparator) {
-        removeAllBars();
-        AtomicInteger index = new AtomicInteger();
-        trianglesInRenderer.values().stream()
-                .sorted((a, b) -> comparator.compare(a.barLength, b.barLength))
-                .forEach(e -> reconstructBars(index, e));
-        setTickmarks();
-        return this;
-    }
-
-    public BarChart sortBarsIDs() {
-        removeAllBars();
-        AtomicInteger index = new AtomicInteger();
-        trianglesInRenderer.values().forEach(e -> reconstructBars(index, e));
-        setTickmarks();
         return this;
     }
 
@@ -236,34 +306,13 @@ public class BarChart {
         return this;
     }
 
-    public BarChart removeAllBars() {
+    protected BarChart clearRenderedTriangles() {
         LinkedList<Triangles> items = new LinkedList<>(this.content.triangles.getItemsToRender());
         for (Triangles tri : items) {
             this.content.triangles.removeItemToRender(tri);
         }
         return this;
     }
-
-    public BarChart changeRotation(final int chartAlignment) {
-        this.chartAlignment = chartAlignment;
-        return this;
-    }
-
-    // add stacks
-
-    // TODO discuss interaction methods - when ScatterPlot is finished
-    /*    - panning
-          - scrolling - e.g. https://observablehq.com/@d3/zoomable-bar-chart, 0 is always 0 - panning only via x/y dir
-          - clicking on bar
-          - "focus" on bar
-          -
-    */
-
-    // TODO zwei y bzw. x Achsen für Beschreibungen
-    // TODO bars stacking on top of each other
-    // TODO gruppierungen - idea: https://kb.tableau.com/articles/howto/creation-of-a-grouped-bar-chart
-
-    // TODO text wraparound, when too long
 
     public CompleteRenderer getContent() {
         return content;

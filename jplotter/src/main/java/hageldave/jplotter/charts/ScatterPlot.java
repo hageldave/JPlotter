@@ -470,7 +470,7 @@ public class ScatterPlot {
                 selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
                 selectedItem.addValueListener(newValue -> {
                     if (selectedItem.previousValue instanceof ExtendedPointDetails)
-                        pointReleased(e.getPoint(), ((ExtendedPointDetails) selectedItem.previousValue ).location, (ExtendedPointDetails) selectedItem.previousValue);
+                        pointReleased(e.getPoint(), ((ExtendedPointDetails) selectedItem.previousValue).location, (ExtendedPointDetails) selectedItem.previousValue);
                     if (newValue instanceof ExtendedPointDetails)
                         pointClicked(e.getPoint(), ((ExtendedPointDetails) newValue).location, (ExtendedPointDetails) newValue);
                 });
@@ -483,7 +483,7 @@ public class ScatterPlot {
                 hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
                 hoveredItem.addValueListener(newValue -> {
                     if (hoveredItem.previousValue instanceof ExtendedPointDetails)
-                        mouseLeftPoint(e.getPoint(), ((ExtendedPointDetails) hoveredItem.previousValue ).location, (ExtendedPointDetails) hoveredItem.previousValue);
+                        mouseLeftPoint(e.getPoint(), ((ExtendedPointDetails) hoveredItem.previousValue).location, (ExtendedPointDetails) hoveredItem.previousValue);
                     if (newValue instanceof ExtendedPointDetails) {
                         mouseOverPoint(e.getPoint(), ((ExtendedPointDetails) newValue).location, (ExtendedPointDetails) newValue);
                     }

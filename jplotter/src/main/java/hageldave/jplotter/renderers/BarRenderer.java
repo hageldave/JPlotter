@@ -21,15 +21,10 @@ import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 import java.util.Objects;
 
-/*
-    TODO:
-    Changelist: - remove bar right/top
-                - vertical/horizontal lines depending on alignment
 
- */
 public class BarRenderer implements Renderer {
 
-    protected Alignment alignment;
+    protected int alignment;
 
     protected LinesRenderer preContentLinesR = new LinesRenderer();
     protected TextRenderer preContentTextR = new TextRenderer();
@@ -54,31 +49,35 @@ public class BarRenderer implements Renderer {
     protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
     protected TickMarkGenerator tickMarkGenerator = new ExtendedWilkinson();
-    protected TickMarkGenerator dualTickMarkGenerator = new ExtendedWilkinson();
+    //protected TickMarkGenerator dualTickMarkGenerator = new ExtendedWilkinson();
 
     protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
     protected Lines guides = new Lines().setVertexRoundingEnabled(true);
     protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
-    protected LinkedList<Text> dualTickMarkLabels = new LinkedList<>();
+    //protected LinkedList<Text> dualTickMarkLabels = new LinkedList<>();
     protected Text xAxisLabelText = new Text("", 13, Font.PLAIN);
     protected Text yAxisLabelText = new Text("", 13, Font.PLAIN);
 
     protected double[] xticks;
     protected double[] yticks;
-    protected double[] xDualticks;
-    protected double[] yDualticks;
+    /*protected double[] xDualticks;
+    protected double[] yDualticks;*/
 
     protected int viewportwidth=0;
     protected int viewportheight=0;
     protected boolean isDirty = true;
 
     protected Color tickColor = Color.DARK_GRAY;
+    protected Color doubleTickColor = Color.LIGHT_GRAY;
     protected Color guideColor = new Color(0xdddddd);
 
     protected int paddingLeft = 10;
     protected int paddingRight = 10;
     protected int paddingTop = 10;
     protected int paddingBot = 10;
+
+    final protected LinkedList<int[]> groupedBars = new LinkedList<>();
+    protected double barSize;
 
     @Annotations.GLCoordinates
     protected PointeredPoint2D coordsysAreaLB = new PointeredPoint2D();
@@ -94,16 +93,21 @@ public class BarRenderer implements Renderer {
 
     protected ActionListener coordviewListener;
     protected boolean isEnabled=true;
-    protected boolean dualTickmarksEnabled = false;
+    //protected boolean dualTickmarksEnabled = false;
 
-    public BarRenderer(final Alignment alignment) {
+    public BarRenderer(final int alignment, final double barSize) {
         this.alignment = alignment;
+        this.barSize = barSize;
         this.preContentLinesR
                 .addItemToRender(guides)
                 .addItemToRender(ticks);
         this.preContentTextR
                 .addItemToRender(xAxisLabelText)
                 .addItemToRender(yAxisLabelText);
+    }
+
+    public BarRenderer(final int alignment) {
+        this(alignment, 0.8);
     }
 
     /**
@@ -319,6 +323,7 @@ public class BarRenderer implements Renderer {
      * </ul>
      */
     protected void setupAndLayout() {
+        // TODO if groups implemented - shift ticks, guides and labels
         Pair<double[],String[]> xticksAndLabels = tickMarkGenerator.genTicksAndLabels(
                 coordinateView.getMinX(),
                 coordinateView.getMaxX(),
@@ -329,7 +334,7 @@ public class BarRenderer implements Renderer {
                 coordinateView.getMaxY(),
                 5,
                 true);
-        Pair<double[],String[]> xDualticksAndLabels = dualTickMarkGenerator.genTicksAndLabels(
+        /*Pair<double[],String[]> xDualticksAndLabels = dualTickMarkGenerator.genTicksAndLabels(
                 coordinateView.getMinX(),
                 coordinateView.getMaxX(),
                 5,
@@ -338,16 +343,16 @@ public class BarRenderer implements Renderer {
                 coordinateView.getMinY(),
                 coordinateView.getMaxY(),
                 5,
-                true);
+                true);*/
         this.xticks = xticksAndLabels.first;
         this.yticks = yticksAndLabels.first;
         String[] xticklabels = xticksAndLabels.second;
         String[] yticklabels = yticksAndLabels.second;
 
-        this.xDualticks = xDualticksAndLabels.first;
+        /*this.xDualticks = xDualticksAndLabels.first;
         this.yDualticks = yDualticksAndLabels.first;
         String[] xDualticklabels = xDualticksAndLabels.second;
-        String[] yDualticklabels = yDualticksAndLabels.second;
+        String[] yDualticklabels = yDualticksAndLabels.second;*/
 
         final int tickfontSize = 11;
         final int labelfontSize = 12;
@@ -360,12 +365,12 @@ public class BarRenderer implements Renderer {
         }
         // find maximum length of dual y axis label
         int maxYDualTickLabelWidth = 0;
-        if (dualTickmarksEnabled) {
+        /*if (dualTickmarksEnabled) {
             for(String label:yDualticklabels){
                 int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
                 maxYDualTickLabelWidth = Math.max(maxYDualTickLabelWidth, labelW);
             }
-        }
+        }*/
 
         int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
         int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style).getBounds().height;
@@ -387,12 +392,12 @@ public class BarRenderer implements Renderer {
             preContentTextR.removeItemToRender(txt);
             txt.close();
         }
-        for(Text txt:dualTickMarkLabels){
+        /*for(Text txt:dualTickMarkLabels){
             preContentTextR.removeItemToRender(txt);
             txt.close();
-        }
+        }*/
         tickMarkLabels.clear();
-        dualTickMarkLabels.clear();
+       //dualTickMarkLabels.clear();
 
         // create new stuff
         double xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
@@ -402,8 +407,24 @@ public class BarRenderer implements Renderer {
             // tick
             double m = (xticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
             double x = coordsysAreaLB.getX()+m*xAxisWidth;
+
+            // barticks
+            double mBarLeft = (xticks[i]-(barSize/2)-coordinateView.getMinX())/coordinateView.getWidth();
+            double mBarRight = (xticks[i]+(barSize/2)-coordinateView.getMinX())/coordinateView.getWidth();
+            double xLeft = coordsysAreaLB.getX()+mBarLeft*xAxisWidth;
+            double xRight = coordsysAreaLB.getX()+mBarRight*xAxisWidth;
+
             Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
-            ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
+            if (this.alignment == AlignmentConstants.HORIZONTAL) {
+                ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
+            } else if (this.alignment == AlignmentConstants.VERTICAL) {
+                // create double ticks
+                Point2D barBorder = new Point2D.Double(Math.round(xLeft),coordsysAreaLB.getY());
+                ticks.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, -3)).setColor(doubleTickColor);
+                barBorder = new Point2D.Double(Math.round(xRight),coordsysAreaLB.getY());
+                ticks.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, -3)).setColor(doubleTickColor);
+            }
+
             // label
             Text label = new Text(xticklabels[i], tickfontSize, style);
             Dimension textSize = label.getTextSize();
@@ -411,8 +432,9 @@ public class BarRenderer implements Renderer {
                     (int)(onaxis.getX()-textSize.getWidth()/2.0),
                     (int)(onaxis.getY()-6-textSize.getHeight())+0.5));
             tickMarkLabels.add(label);
+
             // guide
-            if (this.alignment == Alignment.HORIZONTAL) {
+            if (this.alignment == AlignmentConstants.HORIZONTAL) {
                 guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, yAxisHeight)).setColor(guideColor);
             }
         }
@@ -421,21 +443,36 @@ public class BarRenderer implements Renderer {
             // tick
             double m = (yticks[i]-coordinateView.getMinY())/coordinateView.getHeight();
             double y = m*yAxisHeight;
+
+            // barticks
+            double mBarBottom = (yticks[i]-(barSize/2)-coordinateView.getMinY())/coordinateView.getHeight();
+            double mBarTop = (yticks[i]+(barSize/2)-coordinateView.getMinY())/coordinateView.getHeight();
+            double yBottom = mBarBottom*yAxisHeight;
+            double yTop = mBarTop*yAxisHeight;
+
             Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, Math.round(y));
-            ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
+            if (this.alignment == AlignmentConstants.HORIZONTAL) {
+                // create double ticks
+                Point2D barBorder = new TranslatedPoint2D(coordsysAreaLB, 0, Math.round(yBottom));
+                ticks.addSegment(barBorder, new TranslatedPoint2D(barBorder, -3, 0)).setColor(doubleTickColor);
+                barBorder = new TranslatedPoint2D(coordsysAreaLB, 0, Math.round(yTop));
+                ticks.addSegment(barBorder, new TranslatedPoint2D(barBorder, -3, 0)).setColor(doubleTickColor);
+            } else if (this.alignment == AlignmentConstants.VERTICAL) {
+                ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
+            }
             // label
             Text label = new Text(yticklabels[i], tickfontSize, style);
             Dimension textSize = label.getTextSize();
             label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -Math.round(textSize.getHeight()/2.0)+0.5));
             tickMarkLabels.add(label);
             // guide
-            if (this.alignment == Alignment.VERTICAL) {
+            if (this.alignment == AlignmentConstants.VERTICAL) {
                 guides.addSegment(onaxis, new TranslatedPoint2D(coordsysAreaRB, 0, m * yAxisHeight)).setColor(guideColor);
             }
         }
 
         // dual tickmark labels
-        if (dualTickmarksEnabled) {
+        /*if (dualTickmarksEnabled) {
             for(int i=0; i<xDualticks.length; i++) {
                 double m = (xDualticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
                 double x = coordsysAreaLB.getX()+m*xAxisWidth;
@@ -459,23 +496,23 @@ public class BarRenderer implements Renderer {
                 dualLabel.setOrigin(new TranslatedPoint2D(onRightaxis, 6, -Math.round(textSize.getHeight()/2.0)+0.5));
                 dualTickMarkLabels.add(dualLabel);
             }
-        }
+        }*/
 
         for(Text txt: tickMarkLabels){
             preContentTextR.addItemToRender(txt);
         }
-        for(Text txt: dualTickMarkLabels){
+        /*for(Text txt: dualTickMarkLabels){
             preContentTextR.addItemToRender(txt);
-        }
+        }*/
 
         // axis labels
-        if (!dualTickmarksEnabled) {
+        //if (!dualTickmarksEnabled) {
             xAxisLabelText.setTextString(getxAxisLabel());
             xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth / 2 - xAxisLabelText.getTextSize().width / 2, 4));
             yAxisLabelText.setTextString(getyAxisLabel());
             yAxisLabelText.setAngle(-(float) Math.PI / 2);
             yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight / 2 + yAxisLabelText.getTextSize().width / 2));
-        }
+        //}
 
         // setup legend areas
         if(Objects.nonNull(legendRight)){
@@ -555,6 +592,11 @@ public class BarRenderer implements Renderer {
     public BarRenderer setTickMarkGenerator(TickMarkGenerator tickMarkGenerator) {
         this.tickMarkGenerator = tickMarkGenerator;
         setDirty();
+        return this;
+    }
+
+    public BarRenderer addGroups() {
+        //this.groupedBars.add();
         return this;
     }
 
@@ -950,7 +992,7 @@ public class BarRenderer implements Renderer {
         return this.isEnabled;
     }
 
-    public TickMarkGenerator getDualTickMarkGenerator() {
+    /*public TickMarkGenerator getDualTickMarkGenerator() {
         return dualTickMarkGenerator;
     }
 
@@ -959,5 +1001,5 @@ public class BarRenderer implements Renderer {
         this.dualTickmarksEnabled = true;
         setDirty();
         return this;
-    }
+    }*/
 }
