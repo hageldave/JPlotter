@@ -19,6 +19,10 @@ import java.util.stream.IntStream;
 
 public class BarChart {
     // renderedGroups has to be passed to renderer somehow, so that it knows when to add lines
+
+    // add legend
+
+    // renderer und barchart vereinen
     final public TreeMap<Integer, BarGroup> renderedGroups = new TreeMap<>();
     final protected double barSize = 0.8;
     protected CompleteRenderer content;
@@ -54,6 +58,7 @@ public class BarChart {
         }
     }
 
+    // TODO soll renderable sein, aber wie Lines, etc
     public class BarGroup {
         // use hashmap as model and add listener -> everytime it is changed, update sortedBars
         final protected TreeMap<Integer, BarStruct> groupedBars = new TreeMap<>();

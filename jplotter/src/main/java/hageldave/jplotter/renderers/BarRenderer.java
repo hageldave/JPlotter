@@ -21,7 +21,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 import java.util.Objects;
 
-
+// TODO Labels direkt + daten evt. direkt zeichnen
 public class BarRenderer implements Renderer {
 
     protected int alignment;

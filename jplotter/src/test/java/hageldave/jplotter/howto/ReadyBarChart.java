@@ -16,12 +16,12 @@ public class ReadyBarChart {
         double[] scores = IntStream.range(0, cases.length)
                 .mapToDouble(i->Math.random()).toArray();
         //scores[scores.length-2] = -5.269;
-        //scores[scores.length-1] = -5.22;
+        scores[scores.length-1] = -5.22;
         int[] ids = IntStream.range(0, cases.length).toArray();
 
         Color[] color = new Color[]{Color.RED, Color.RED, Color.RED, Color.RED, Color.RED};
 
-        BarChart barChart = new BarChart(false, AlignmentConstants.HORIZONTAL);
+        BarChart barChart = new BarChart(false, AlignmentConstants.VERTICAL);
 
         BarChart.BarGroup group1 = barChart.createGroup(1);
         BarChart.BarGroup group2 = barChart.createGroup(2);
