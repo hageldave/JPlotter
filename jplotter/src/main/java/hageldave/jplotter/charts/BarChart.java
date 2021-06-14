@@ -25,7 +25,6 @@ public class BarChart {
     protected JPlotterCanvas canvas;
     protected BarRenderer barRenderer;
     protected int chartAlignment;
-
     protected int currentRow = 0;
 
     public static class BarStruct {

@@ -18,6 +18,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Objects;
 
@@ -348,6 +349,9 @@ public class BarRenderer implements Renderer {
         this.yticks = yticksAndLabels.first;
         String[] xticklabels = xticksAndLabels.second;
         String[] yticklabels = yticksAndLabels.second;
+
+        System.out.println(Arrays.toString(yticklabels));
+        System.out.println(Arrays.toString(yticks));
 
         /*this.xDualticks = xDualticksAndLabels.first;
         this.yDualticks = yDualticksAndLabels.first;
