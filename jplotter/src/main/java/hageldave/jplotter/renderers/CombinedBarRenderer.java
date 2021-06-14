@@ -492,9 +492,9 @@ public class CombinedBarRenderer implements Renderer {
             tickMarkLabels.add(label);
 
             if (this.alignment == AlignmentConstants.VERTICAL) {
-                double textWidth = label.getBounds().getWidth();
-                double barWidth = xRight - xLeft;
-                if (textWidth + 4 > barWidth) {
+                double textWidth = label.getTextSize().getWidth();
+                double barWidth = (xRight - xLeft);
+                if (textWidth+15 > barWidth) {
                     // enable shifting
                     shiftLabels = true;
                 }
@@ -544,18 +544,20 @@ public class CombinedBarRenderer implements Renderer {
             }
         }
 
+        // TODO add group labels (but only if groups are set)
+            // add those below x/y descr
         // set group separators and labels
         for (int i=0; i<groupSeparators.length-1; i++) {
             if (this.alignment == AlignmentConstants.HORIZONTAL) {
                 double m = (groupSeparators[i]-coordinateView.getMinY())/coordinateView.getHeight();
                 double y = m*yAxisHeight;
-                Point2D barBorder = new TranslatedPoint2D(coordsysAreaLB, -10, Math.round(y));
+                Point2D barBorder = new TranslatedPoint2D(coordsysAreaLB, -12, Math.round(y));
                 guides.addSegment(barBorder, new TranslatedPoint2D(barBorder, xAxisWidth, 0)).setColor(groupGuideColor);
             } else if (this.alignment == AlignmentConstants.VERTICAL) {
                 double m = (groupSeparators[i]-coordinateView.getMinX())/coordinateView.getWidth();
                 double x = coordsysAreaLB.getX()+m*xAxisWidth;
-                Point2D barBorder = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
-                guides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, yAxisHeight)).setColor(groupGuideColor);
+                Point2D barBorder = new Point2D.Double(Math.round(x), coordsysAreaLB.getY()-12);
+                guides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, yAxisHeight+12)).setColor(groupGuideColor);
             }
         }
 
@@ -571,10 +573,10 @@ public class CombinedBarRenderer implements Renderer {
 
         // set bar renderer boundaries
         // x axis
-        guides.addSegment(new Point2D.Double(coordsysAreaLB.getX()-15, coordsysAreaLB.getY()),
+        guides.addSegment(new Point2D.Double(coordsysAreaLB.getX()-17, coordsysAreaLB.getY()),
                 new TranslatedPoint2D(coordsysAreaLB, xAxisWidth, 0)).setColor(groupGuideColor);
         //y axis
-        guides.addSegment(new Point2D.Double(coordsysAreaLB.getX(), coordsysAreaLB.getY()-15),
+        guides.addSegment(new Point2D.Double(coordsysAreaLB.getX(), coordsysAreaLB.getY()-17),
                 new TranslatedPoint2D(coordsysAreaLB, 0, yAxisHeight)).setColor(groupGuideColor);
 
         for(Text txt: tickMarkLabels){
