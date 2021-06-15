@@ -5,8 +5,6 @@ import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
-import hageldave.jplotter.interaction.CoordSysPanning;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordinateViewListener;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;

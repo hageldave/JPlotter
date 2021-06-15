@@ -1,7 +1,6 @@
-package hageldave.jplotter.interaction.klm;
+package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.interaction.KeyListenerMask;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
@@ -54,16 +53,16 @@ import java.util.Arrays;
  * </pre>
  * @author hageldave
  */
-public abstract class KLMCoordSysViewSelector extends MouseAdapter {
+public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	protected Component canvas;
 	protected CoordSysRenderer coordsys;
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
-	protected KeyListenerMask keyListenerMask;
+	protected KeyMaskListener keyListenerMask;
 
-	public KLMCoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
+	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
 		this.keyListenerMask = keyListenerMask;
@@ -79,8 +78,8 @@ public abstract class KLMCoordSysViewSelector extends MouseAdapter {
 		}
 	}
 
-	public KLMCoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
-		this(canvas, coordsys, new KeyListenerMask(KeyEvent.VK_SHIFT));
+	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this(canvas, coordsys, new KeyMaskListener(KeyEvent.VK_SHIFT));
 	}
 	
 	@Override
@@ -149,7 +148,7 @@ public abstract class KLMCoordSysViewSelector extends MouseAdapter {
 		end = null;
 	}
 
-	public void setKeyListenerMask(KeyListenerMask keyListenerMask) {
+	public void setKeyListenerMask(KeyMaskListener keyListenerMask) {
 		canvas.removeKeyListener(this.keyListenerMask);
 		this.keyListenerMask = keyListenerMask;
 		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
@@ -157,11 +156,11 @@ public abstract class KLMCoordSysViewSelector extends MouseAdapter {
 	}
 
 	/**
-	 * Adds this {@link KLMCoordSysViewSelector} as {@link MouseListener} and
+	 * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
 	 * {@link MouseMotionListener} to the associated canvas.
 	 * @return this for chaining
 	 */
-	public KLMCoordSysViewSelector register(){
+	public CoordSysViewSelector register(){
 		if( ! Arrays.asList(canvas.getMouseListeners()).contains(this))
 			canvas.addMouseListener(this);
 		if( ! Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
@@ -172,11 +171,11 @@ public abstract class KLMCoordSysViewSelector extends MouseAdapter {
 	}
 	
 	/**
-	 * Removes this {@link KLMCoordSysViewSelector} from the associated canvas'
+	 * Removes this {@link CoordSysViewSelector} from the associated canvas'
 	 * mouse and mouse motion listeners.
 	 * @return this for chaining
 	 */
-	public KLMCoordSysViewSelector deRegister(){
+	public CoordSysViewSelector deRegister(){
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
 		canvas.removeKeyListener(this.keyListenerMask);

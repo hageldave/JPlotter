@@ -5,7 +5,7 @@ import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.charts.ScatterPlot;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.KeyListenerMask;
+import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
@@ -118,12 +118,12 @@ public class ReadyScatterPlot {
         }
 
         plot.alignCoordsys(140);
-        plot.addPanning().setKeyListenerMask(new KeyListenerMask(VK_W));
+        plot.addPanning().setKeyListenerMask(new KeyMaskListener(VK_W));
         plot.addZoomViewSelector();
         plot.addScrollZoom();
         plot.addLegendBottom(50);
 
-        plot.new PointClickedInterface(new KeyListenerMask(VK_ALT)) {
+        plot.new PointClickedInterface(new KeyMaskListener(VK_ALT)) {
             Points points = null;
             @Override
             public void pointClicked(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
@@ -191,7 +191,7 @@ public class ReadyScatterPlot {
             public void legendItemLeft(Point mouseLocation, Legend.GlyphLabel glyphLabel) { }
         }.register();
 
-        plot.new PointsSelectedInterface(new KeyListenerMask(VK_TAB)) {
+        plot.new PointsSelectedInterface(new KeyMaskListener(VK_TAB)) {
             @Override
             public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ScatterPlot.ExtendedPointDetails> points) {
                 System.out.println(data);

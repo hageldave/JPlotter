@@ -3,11 +3,11 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.interaction.KeyListenerMask;
-import hageldave.jplotter.interaction.klm.KLMCoordSysPanning;
-import hageldave.jplotter.interaction.klm.KLMCoordSysScrollZoom;
-import hageldave.jplotter.interaction.klm.KLMCoordSysViewSelector;
-import hageldave.jplotter.interaction.klm.KLMDynamicCoordsysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysPanning;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.DynamicCoordsysScrollZoom;
+import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -249,37 +249,37 @@ public class ScatterPlot {
     /**
      * Adds a scroll zoom to the Scatterplot
      *
-     * @return the {@link KLMCoordSysScrollZoom} so that it can be further customized
+     * @return the {@link CoordSysScrollZoom} so that it can be further customized
      */
-    public KLMDynamicCoordsysScrollZoom addScrollZoom() {
-        return new KLMDynamicCoordsysScrollZoom(this.canvas, this.coordsys).register();
+    public DynamicCoordsysScrollZoom addScrollZoom() {
+        return new DynamicCoordsysScrollZoom(this.canvas, this.coordsys).register();
     }
 
-    public KLMCoordSysScrollZoom addScrollZoom(final KeyListenerMask keyListenerMask) {
-        return new KLMCoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
+    public CoordSysScrollZoom addScrollZoom(final KeyMaskListener keyListenerMask) {
+        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
     }
 
     /**
      *
      * Adds panning functionality to the Scatterplot
      *
-     * @return the {@link KLMCoordSysPanning} so that it can be further customized
+     * @return the {@link CoordSysPanning} so that it can be further customized
      */
-    public KLMCoordSysPanning addPanning() {
-        return new KLMCoordSysPanning(this.canvas, this.coordsys).register();
+    public CoordSysPanning addPanning() {
+        return new CoordSysPanning(this.canvas, this.coordsys).register();
     }
 
-    public KLMCoordSysPanning addPanning(final KeyListenerMask keyListenerMask) {
-        return new KLMCoordSysPanning(this.canvas, this.coordsys, keyListenerMask).register();
+    public CoordSysPanning addPanning(final KeyMaskListener keyListenerMask) {
+        return new CoordSysPanning(this.canvas, this.coordsys, keyListenerMask).register();
     }
 
     /**
      * Adds a zoom functionality by selecting a rectangle.
      *
-     * @return the {@link KLMCoordSysViewSelector} so that it can be further customized
+     * @return the {@link CoordSysViewSelector} so that it can be further customized
      */
-    public KLMCoordSysViewSelector addZoomViewSelector() {
-        return new KLMCoordSysViewSelector(this.canvas, this.coordsys) {
+    public CoordSysViewSelector addZoomViewSelector() {
+        return new CoordSysViewSelector(this.canvas, this.coordsys) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);
@@ -287,8 +287,8 @@ public class ScatterPlot {
         }.register();
     }
 
-    public KLMCoordSysViewSelector addZoomViewSelector(final KeyListenerMask keyListenerMask) {
-        return new KLMCoordSysViewSelector(this.canvas, this.coordsys, keyListenerMask) {
+    public CoordSysViewSelector addZoomViewSelector(final KeyMaskListener keyListenerMask) {
+        return new CoordSysViewSelector(this.canvas, this.coordsys, keyListenerMask) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);
@@ -410,18 +410,18 @@ public class ScatterPlot {
     }
 
     protected abstract class InteractionInterface extends MouseAdapter {
-        protected KeyListenerMask keyListenerMask;
+        protected KeyMaskListener keyListenerMask;
 
-        public InteractionInterface(final KeyListenerMask keyListenerMask) {
+        public InteractionInterface(final KeyMaskListener keyListenerMask) {
             this.keyListenerMask = keyListenerMask;
         }
 
         public InteractionInterface() {
-            this(new KeyListenerMask(0));
+            this(new KeyMaskListener(0));
         }
 
         /**
-         * Adds this {@link KLMCoordSysViewSelector} as {@link MouseListener} and
+         * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
          * {@link MouseMotionListener} to the associated canvas.
          *
          * @return this for chaining
@@ -437,7 +437,7 @@ public class ScatterPlot {
         }
 
         /**
-         * Removes this {@link KLMCoordSysViewSelector} from the associated canvas'
+         * Removes this {@link CoordSysViewSelector} from the associated canvas'
          * mouse and mouse motion listeners.
          *
          * @return this for chaining
@@ -456,7 +456,7 @@ public class ScatterPlot {
      */
     public abstract class PointClickedInterface extends InteractionInterface {
 
-        public PointClickedInterface(KeyListenerMask keyListenerMask) {
+        public PointClickedInterface(KeyMaskListener keyListenerMask) {
             super(keyListenerMask);
         }
 
@@ -507,7 +507,7 @@ public class ScatterPlot {
 
     public abstract class LegendSelectedInterface extends InteractionInterface {
 
-        public LegendSelectedInterface(KeyListenerMask keyListenerMask) {
+        public LegendSelectedInterface(KeyMaskListener keyListenerMask) {
             super(keyListenerMask);
         }
 
@@ -561,8 +561,8 @@ public class ScatterPlot {
         protected ArrayList<Double> dataIndices = new ArrayList<>();
         protected ArrayList<ExtendedPointDetails> points = new ArrayList<>();
 
-        public PointsSelectedInterface(final KeyListenerMask keyListenerMask) {
-            new KLMCoordSysViewSelector(canvas, coordsys, keyListenerMask) {
+        public PointsSelectedInterface(final KeyMaskListener keyListenerMask) {
+            new CoordSysViewSelector(canvas, coordsys, keyListenerMask) {
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);
@@ -573,7 +573,7 @@ public class ScatterPlot {
         }
 
         public PointsSelectedInterface() {
-            new KLMCoordSysViewSelector(canvas, coordsys) {
+            new CoordSysViewSelector(canvas, coordsys) {
                 @Override
                 public void areaSelected(double minX, double minY, double maxX, double maxY) {
                     calcPoints(minX, minY, maxX, maxY);

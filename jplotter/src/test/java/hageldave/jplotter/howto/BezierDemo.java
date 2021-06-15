@@ -7,9 +7,9 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.klm.KLMCoordSysPanning;
-import hageldave.jplotter.interaction.klm.KLMCoordSysScrollZoom;
-import hageldave.jplotter.interaction.klm.KLMCoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.CoordSysPanning;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Lines;
@@ -238,9 +238,9 @@ public class BezierDemo {
 				.withAppended(  new LinesRenderer().addItemToRender(lines))
 				.withAppended(	new CurvesRenderer().addItemToRender(curves)));
 		timecurvesCoordsys.setCoordinateView(points.getBounds());
-		new KLMCoordSysPanning(timeCurveCanvas,timecurvesCoordsys).register();
-		new KLMCoordSysScrollZoom(timeCurveCanvas, timecurvesCoordsys).register();
-		new KLMCoordSysViewSelector(timeCurveCanvas,timecurvesCoordsys) {
+		new CoordSysPanning(timeCurveCanvas,timecurvesCoordsys).register();
+		new CoordSysScrollZoom(timeCurveCanvas, timecurvesCoordsys).register();
+		new CoordSysViewSelector(timeCurveCanvas,timecurvesCoordsys) {
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
 				timecurvesCoordsys.setCoordinateView(minX, minY, maxX, maxY);

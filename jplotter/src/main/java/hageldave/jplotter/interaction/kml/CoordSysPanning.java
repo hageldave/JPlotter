@@ -1,8 +1,7 @@
-package hageldave.jplotter.interaction.klm;
+package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.InteractionConstants;
-import hageldave.jplotter.interaction.KeyListenerMask;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 
 import java.awt.*;
@@ -27,27 +26,27 @@ import java.util.Arrays;
  * 
  * @author hageldave
  */
-public class KLMCoordSysPanning extends MouseAdapter implements InteractionConstants {
+public class CoordSysPanning extends MouseAdapter implements InteractionConstants {
 	
 	protected Point startPoint;
 	protected Component canvas;
 	protected CoordSysRenderer coordsys;
-	protected KeyListenerMask keyListenerMask;
+	protected KeyMaskListener keyListenerMask;
 	protected int axes = X_AXIS | Y_AXIS;
 
 	/**
-	 * Creates a new {@link KLMCoordSysPanning} for the specified canvas and corresponding coordinate system.
+	 * Creates a new {@link CoordSysPanning} for the specified canvas and corresponding coordinate system.
 	 * @param canvas displaying the coordsys
 	 * @param coordsys the coordinate system to apply the panning in
 	 */
-	public KLMCoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
+	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
 		this.keyListenerMask = keyListenerMask;
 	}
 
-	public KLMCoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
-		this(canvas, coordsys, new KeyListenerMask(KeyEvent.VK_CONTROL));
+	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this(canvas, coordsys, new KeyMaskListener(KeyEvent.VK_CONTROL));
 	}
 
 	@Override
@@ -94,7 +93,7 @@ public class KLMCoordSysPanning extends MouseAdapter implements InteractionConst
 	 * @param axes {@link InteractionConstants#X_AXIS}, {@link InteractionConstants#Y_AXIS} or {@code X_AXIS|Y_AXIS}
 	 * @return this for chaining
 	 */
-	public KLMCoordSysPanning setPannedAxes(int axes){
+	public CoordSysPanning setPannedAxes(int axes){
 		this.axes = axes;
 		return this;
 	}
@@ -107,7 +106,7 @@ public class KLMCoordSysPanning extends MouseAdapter implements InteractionConst
 		return axes;
 	}
 
-	public void setKeyListenerMask(KeyListenerMask keyListenerMask) {
+	public void setKeyListenerMask(KeyMaskListener keyListenerMask) {
 		canvas.removeKeyListener(this.keyListenerMask);
 		this.keyListenerMask = keyListenerMask;
 		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
@@ -115,11 +114,11 @@ public class KLMCoordSysPanning extends MouseAdapter implements InteractionConst
 	}
 
 	/**
-	 * Adds this {@link KLMCoordSysPanning} as {@link MouseListener} and
+	 * Adds this {@link CoordSysPanning} as {@link MouseListener} and
 	 * {@link MouseMotionListener} to the associated canvas.
 	 * @return this for chaining
 	 */
-	public KLMCoordSysPanning register(){
+	public CoordSysPanning register(){
 		if( ! Arrays.asList(canvas.getMouseListeners()).contains(this))
 			canvas.addMouseListener(this);
 		if( ! Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
@@ -130,11 +129,11 @@ public class KLMCoordSysPanning extends MouseAdapter implements InteractionConst
 	}
 	
 	/**
-	 * Removes this {@link KLMCoordSysPanning} from the associated canvas'
+	 * Removes this {@link CoordSysPanning} from the associated canvas'
 	 * mouse and mouse motion listeners.
 	 * @return this for chaining
 	 */
-	public KLMCoordSysPanning deRegister(){
+	public CoordSysPanning deRegister(){
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
 		canvas.removeKeyListener(this.keyListenerMask);

@@ -62,7 +62,9 @@ import hageldave.jplotter.util.Utils;
  * </pre>
  * 
  * @author hageldave
+ * @deprecated Replaced by {@link hageldave.jplotter.interaction.kml.CoordSysViewSelector}
  */
+@Deprecated
 public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	protected Component canvas;

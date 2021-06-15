@@ -5,8 +5,8 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.FontProvider;
-import hageldave.jplotter.interaction.KeyListenerMask;
-import hageldave.jplotter.interaction.klm.KLMCoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -334,7 +334,7 @@ public class StatLogSPLOMViz {
 						}
 					});
 					// selecting points (brush & link)
-					new KLMCoordSysViewSelector(canvas,coordsys, new KeyListenerMask(0)) {
+					new CoordSysViewSelector(canvas,coordsys, new KeyMaskListener(0)) {
 						// deprecated {extModifierMask=0;/* no shift needed */}
 						public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
 							pointInfo.setText("");

@@ -1,4 +1,4 @@
-package hageldave.jplotter.interaction;
+package hageldave.jplotter.interaction.kml;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -7,18 +7,18 @@ import java.util.HashMap;
 /**
  * TODO add documentation
  */
-public class KeyListenerMask extends KeyAdapter {
+public class KeyMaskListener extends KeyAdapter {
     protected boolean keyTyped = false;
     protected boolean noMasking = false;
     final protected HashMap<Integer, Boolean> keyTypedInMask = new HashMap<>();
 
-    public KeyListenerMask(final int... extModifierMask) {
+    public KeyMaskListener(final int... extModifierMask) {
         for (int j : extModifierMask) {
             this.keyTypedInMask.put(j, false);
         }
     }
 
-    public KeyListenerMask(final int extModifierMask) {
+    public KeyMaskListener(final int extModifierMask) {
         if (extModifierMask == 0) {
             this.noMasking = true;
         } else {
