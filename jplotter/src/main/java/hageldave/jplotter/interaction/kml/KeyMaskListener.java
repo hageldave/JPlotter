@@ -8,13 +8,13 @@ import java.util.HashMap;
  * TODO add documentation
  */
 public class KeyMaskListener extends KeyAdapter {
-    protected boolean keyTyped = false;
+    protected boolean keysPressed = false;
     protected boolean noMasking = false;
-    final protected HashMap<Integer, Boolean> keyTypedInMask = new HashMap<>();
+    final protected HashMap<Integer, Boolean> keyPressedInMask = new HashMap<>();
 
     public KeyMaskListener(final int... extModifierMask) {
         for (int j : extModifierMask) {
-            this.keyTypedInMask.put(j, false);
+            this.keyPressedInMask.put(j, false);
         }
     }
 
@@ -22,42 +22,42 @@ public class KeyMaskListener extends KeyAdapter {
         if (extModifierMask == 0) {
             this.noMasking = true;
         } else {
-            this.keyTypedInMask.put(extModifierMask, false);
+            this.keyPressedInMask.put(extModifierMask, false);
         }
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         if (!noMasking) {
-            if (keyTypedInMask.containsKey(e.getKeyCode())) {
-                keyTypedInMask.put(e.getKeyCode(), true);
+            if (keyPressedInMask.containsKey(e.getKeyCode())) {
+                keyPressedInMask.put(e.getKeyCode(), true);
             }
             boolean areKeysPressed = true;
-            for (Boolean values : keyTypedInMask.values()) {
+            for (Boolean values : keyPressedInMask.values()) {
                 if (!values) {
                     areKeysPressed = false;
                     break;
                 }
             }
             if (areKeysPressed)
-                keyTyped = true;
+                keysPressed = true;
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         if (!noMasking) {
-            if (keyTypedInMask.containsKey(e.getKeyCode())) {
-                keyTyped = false;
-                keyTypedInMask.put(e.getKeyCode(), false);
+            if (keyPressedInMask.containsKey(e.getKeyCode())) {
+                keysPressed = false;
+                keyPressedInMask.put(e.getKeyCode(), false);
             }
         }
     }
 
-    public boolean isKeyTyped() {
+    public boolean isKeysPressed() {
         if (noMasking) {
             return true;
         }
-        return keyTyped;
+        return keysPressed;
     }
 }

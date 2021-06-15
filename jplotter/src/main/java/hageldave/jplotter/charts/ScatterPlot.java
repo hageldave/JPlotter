@@ -466,7 +466,7 @@ public class ScatterPlot {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (keyListenerMask.isKeyTyped()) {
+            if (keyListenerMask.isKeysPressed()) {
                 selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
                 selectedItem.addValueListener(newValue -> {
                     if (selectedItem.previousValue instanceof ExtendedPointDetails)
@@ -479,7 +479,7 @@ public class ScatterPlot {
 
        @Override
         public void mouseMoved(MouseEvent e) {
-           if (keyListenerMask.isKeyTyped()) {
+           if (keyListenerMask.isKeysPressed()) {
                 hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
                 hoveredItem.addValueListener(newValue -> {
                     if (hoveredItem.previousValue instanceof ExtendedPointDetails)
@@ -517,7 +517,7 @@ public class ScatterPlot {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (keyListenerMask.isKeyTyped()) {
+            if (keyListenerMask.isKeysPressed()) {
                 selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
                 selectedItem.addValueListener(newValue -> {
                     if (selectedItem.previousValue instanceof Legend.GlyphLabel)
@@ -530,7 +530,7 @@ public class ScatterPlot {
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            if (keyListenerMask.isKeyTyped()) {
+            if (keyListenerMask.isKeysPressed()) {
                 hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
                 hoveredItem.addValueListener(newValue -> {
                     if (hoveredItem.previousValue instanceof Legend.GlyphLabel)

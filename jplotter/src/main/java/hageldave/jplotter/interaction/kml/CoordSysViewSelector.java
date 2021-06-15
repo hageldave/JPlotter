@@ -84,7 +84,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (this.keyListenerMask.isKeyTyped()) {
+		if (this.keyListenerMask.isKeysPressed()) {
 			start = e.getPoint();
 			overlay.addItemToRender(areaBorder);
 		}
@@ -92,7 +92,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(start == null || !this.keyListenerMask.isKeyTyped()){
+		if(start == null || !this.keyListenerMask.isKeysPressed()){
 			return;
 		}
 		{

@@ -43,7 +43,7 @@ public class DynamicCoordsysScrollZoom implements MouseWheelListener, Interactio
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if (keyListenerMask.isKeyTyped()) {
+        if (keyListenerMask.isKeysPressed()) {
             if (!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
                return;
 
