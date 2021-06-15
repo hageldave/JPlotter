@@ -609,4 +609,28 @@ public class ScatterPlot {
          */
         public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ExtendedPointDetails> points);
     }
+    
+    // TODO: Think again if this is a good idea
+    // TODO: if good Idea -> replace plot.new *Interface(){...}.register() mechanic by plot.addPointInteractionListener(..) method call  
+    public static interface PointInteractionListener {
+    	
+    	public default void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {}
+    	
+    	public default void noPointClicked(Point mouseLocation, Point2D noPointLocation) {}
+    	
+    	public default void pointPressed(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {}
+    	
+    	public default void pointReleased(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {}
+    	
+    	public default void pointHovered(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {}
+    	
+    	public default void noPointHovered(Point mouseLocation, Point2D noPointLocation) {}
+    	
+    }
+    
+    
+
+	public void addPointInteractionListener(KeyMaskListener keyMaskListener, PointInteractionListener pil) {
+		
+	}
 }
