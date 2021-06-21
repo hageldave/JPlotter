@@ -1,25 +1,23 @@
 package hageldave.jplotter.renderables;
 
+import hageldave.jplotter.util.AlignmentConstants;
 import hageldave.jplotter.util.Pair;
-import hageldave.jplotter.util.Quadruple;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.util.*;
 
 // renderable class for bars
-public class BarGroup implements Comparable {
-    // probably not needed, as reference might exist
+public class BarGroup {
     final protected TreeMap<Integer, BarStruct> groupedBars = new TreeMap<>();
-    protected SortedSet<BarStruct> sortedBars =
-            new TreeSet<>(Comparator.comparingDouble(o -> o.ID));
-    protected String description;
+    protected PriorityQueue<BarStruct> sortedBars =
+            new PriorityQueue<>(Comparator.comparingDouble(o -> o.ID));
+    protected String label;
 
-    public BarGroup() {
-        this.description = "";
-    }
+    public BarGroup() { }
 
-    public BarGroup(final String description) {
-        this.description = description;
+    public BarGroup(final String label) {
+        this.label = label;
     }
 
     public BarGroup addBar(final int ID, final double[] data, final Color color, final String descr) {
@@ -46,7 +44,6 @@ public class BarGroup implements Comparable {
                 this.groupedBars.put(IDs[i], new BarStruct(data[i], color[i], descr[i], IDs[i]));
             }
         }
-        copyContent(sortedBars, groupedBars.values());
         return this;
     }
 
@@ -58,8 +55,7 @@ public class BarGroup implements Comparable {
     }
 
     public BarGroup sortBars(final Comparator<BarStruct> comparator) {
-        this.sortedBars = new TreeSet<>(comparator);
-        copyContent(this.sortedBars, groupedBars.values());
+        this.sortedBars = new PriorityQueue<>(comparator);
         return this;
     }
 
@@ -67,7 +63,7 @@ public class BarGroup implements Comparable {
      * important! bounds do not represent the coordinate system
      * @return
      */
-    public Quadruple<Double, Double, Double, Double> getBounds() {
+    public Rectangle2D getBounds(final int alignment) {
         double minValueBar = groupedBars.values().parallelStream()
                         .map(BarStruct::getBounds)
                         .mapToDouble(e->e.first)
@@ -78,7 +74,12 @@ public class BarGroup implements Comparable {
                 .max().orElse(0);
         double start = 0;
         double end = groupedBars.size();
-        return new Quadruple<>(minValueBar, maxValueBar, start, end);
+        if (alignment == AlignmentConstants.VERTICAL) {
+            return new Rectangle2D.Double(start, minValueBar, end, maxValueBar);
+        } else if (alignment == AlignmentConstants.HORIZONTAL) {
+            return new Rectangle2D.Double(minValueBar, start, maxValueBar, end);
+        }
+        return null;
     }
 
     protected void copyContent(final Collection<BarStruct> c1,
@@ -86,11 +87,16 @@ public class BarGroup implements Comparable {
         c1.clear(); c1.addAll(c2);
     }
 
+    public String getLabel() {
+        return label;
+    }
+
     public TreeMap<Integer, BarStruct> getGroupedBars() {
         return groupedBars;
     }
 
-    public SortedSet<BarStruct> getSortedBars() {
+    public PriorityQueue<BarStruct> getSortedBars() {
+        copyContent(this.sortedBars, groupedBars.values());
         return sortedBars;
     }
 
@@ -122,7 +128,6 @@ public class BarGroup implements Comparable {
             return null;
         }
 
-        // depends on orientation of bar
         public Pair<Double, Double> getBounds() {
             double minVal = 0; double maxVal = 0;
             double tempStackLength = 0;
@@ -175,11 +180,5 @@ public class BarGroup implements Comparable {
             this.pickColor = pickID;
             return this;
         }
-    }
-
-    // TODO implement this
-    @Override
-    public int compareTo(Object o) {
-        return 0;
     }
 }
