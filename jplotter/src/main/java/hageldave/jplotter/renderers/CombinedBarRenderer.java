@@ -436,7 +436,7 @@ public class CombinedBarRenderer implements Renderer {
             double x = ((xticks[i] - coordinateView.getMinX()) / coordinateView.getWidth()) * xAxisWidth;
             Text label = new Text(xticklabels[i], tickfontSize, style);
             if (label.getTextSize().width >
-                    ((barSize) / coordinateView.getWidth()) * xAxisWidth) {
+                    (barSize / coordinateView.getWidth()) * xAxisWidth) {
                 // enable shifting
                 shiftLabels = true;
             }
@@ -451,22 +451,20 @@ public class CombinedBarRenderer implements Renderer {
         // yaxis ticks
         for (int i = 0; i < yticks.length; i++) {
             // tick
-            double m = ( yticks[i] - coordinateView.getMinY() ) / coordinateView.getHeight();
-            double y = m * yAxisHeight;
+            double y = (( yticks[i] - coordinateView.getMinY() ) / coordinateView.getHeight()) * yAxisHeight;
             Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, Math.round(y));
             ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
             // label
             Text label = new Text(yticklabels[i], tickfontSize, style);
             Dimension textSize = label.getTextSize();
             label.setOrigin(new TranslatedPoint2D(onaxis, -7 - textSize.getWidth(), -Math.round(textSize.getHeight() / 2.0) + 0.5));
-
             // avoid conflict with coordsys axes in bottom left corner, as they are bigger
             if (y < textSize.height)
                 label.setOrigin(new TranslatedPoint2D(onaxis, -17 - textSize.getWidth(), -Math.round(textSize.getHeight() / 2.0) + 0.5));
 
             tickMarkLabels.add(label);
             // guide
-            guides.addSegment(onaxis, new TranslatedPoint2D(coordsysAreaRB, 0, m * yAxisHeight)).setColor(guideColor);
+            guides.addSegment(onaxis, new TranslatedPoint2D(coordsysAreaRB, 0, y)).setColor(guideColor);
         }
 
         if (shiftLabels) {
@@ -480,7 +478,7 @@ public class CombinedBarRenderer implements Renderer {
         for (int i = 0; i < groupSeparators.length; i++) {
             double x = (( groupSeparators[i] - coordinateView.getMinX() ) / coordinateView.getWidth()) * xAxisWidth;
             Point2D barBorder = new Point2D.Double(Math.round(x), coordsysAreaLB.getY());
-            xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, yAxisHeight - 6)).setColor(groupGuideColor);
+            xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, yAxisHeight)).setColor(groupGuideColor);
             xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, -12)).setColor(boundaryColor);
             double xNext = (( groupSeparators[i == groupSeparators.length - 1 ? i : i + 1] - coordinateView.getMinX() )
                     / coordinateView.getWidth()) * xAxisWidth;
@@ -639,7 +637,7 @@ public class CombinedBarRenderer implements Renderer {
         for (int i=0; i<groupSeparators.length; i++) {
             double y = ((groupSeparators[i]-coordinateView.getMinY())/coordinateView.getHeight())*yAxisHeight;
             Point2D barBorder = new TranslatedPoint2D(new Point2D.Double(coordsysAreaLB.getX(), 0), 0, Math.round(y));
-            xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, xAxisWidth-6, 0)).setColor(groupGuideColor);
+            xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, xAxisWidth, 0)).setColor(groupGuideColor);
             xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, -12, 0)).setColor(boundaryColor);
             double yNext = ((groupSeparators[i == groupSeparators.length - 1 ? i : i + 1] - coordinateView.getMinY() )
                     / coordinateView.getHeight())*yAxisHeight;

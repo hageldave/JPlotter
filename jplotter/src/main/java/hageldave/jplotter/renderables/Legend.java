@@ -5,6 +5,7 @@ import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.font.CharacterAtlas;
+import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
 import hageldave.jplotter.renderables.Points.PointDetails;
@@ -46,6 +47,8 @@ public class Legend implements Renderable, Renderer {
 	protected ArrayList<LineLabel> lineLabels = new ArrayList<>(0);
 
 	protected ArrayList<ColormapLabel> colormapLabels = new ArrayList<>(0);
+
+	protected ArrayList<BarLabel> barLabels = new ArrayList<>(0);
 
 	protected Map<Glyph, Points> glyph2points = new LinkedHashMap<>();
 
@@ -90,6 +93,19 @@ public class Legend implements Renderable, Renderer {
 		public GlyphLabel(String labelText, Glyph glyph, int color, int pickColor) {
 			this.labelText = labelText;
 			this.glyph = glyph;
+			this.color = color;
+			this.pickColor = pickColor;
+		}
+	}
+
+	public static class BarLabel {
+		public String labelText;
+		public Glyph glyph = DefaultGlyph.SQUARE_F;
+		public int color;
+		public int pickColor;
+
+		public BarLabel(String labelText, int color, int pickColor) {
+			this.labelText = labelText;
 			this.color = color;
 			this.pickColor = pickColor;
 		}
@@ -165,6 +181,18 @@ public class Legend implements Renderable, Renderer {
 	}
 
 	/**
+	 * Adds a label for a bar to this legend.
+	 * @param color integer packed ARGB color value of the glyph
+	 * @param labeltxt text of the label
+	 * @param pickColor picking color (see {@link FBOCanvas})
+	 * @return this for chaining
+	 */
+	public Legend addBarLabel(int color, String labeltxt, int pickColor){
+		barLabels.add(new BarLabel(labeltxt, color, pickColor));
+		return setDirty();
+	}
+
+	/**
 	 * Adds a label for a glyph to this legend.
 	 * @param glyph to appear in front of the label text
 	 * @param color integer packed ARGB color value of the glyph
@@ -190,6 +218,8 @@ public class Legend implements Renderable, Renderer {
 		}
 		return addGlyphLabel(glyph, color, labeltxt, 0);
 	}
+
+
 
 	/**
 	 * Adds a label for a line to this legend.
@@ -352,19 +382,25 @@ public class Legend implements Renderable, Renderer {
 				.max()
 				.orElseGet(()->0
 						);
-		maxTextWidth = Math.max(maxTextWidth,lineLabels.stream()
+		maxTextWidth = Math.max(maxTextWidth, lineLabels.stream()
 				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0)
 				);
-		maxTextWidth = Math.max(maxTextWidth,colormapLabels.stream()
+		maxTextWidth = Math.max(maxTextWidth, barLabels.stream()
+				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width)
+				.mapToInt(i->i)
+				.max()
+				.orElseGet(()->0)
+				);
+		maxTextWidth = Math.max(maxTextWidth, colormapLabels.stream()
 				.map(l->CharacterAtlas.boundsForText(l.labelText.length(), fontSize, fontStyle).getBounds().width-20)
 				.mapToInt(i->i)
 				.max()
 				.orElseGet(()->0)
 				);
-		maxTextWidth = Math.max(maxTextWidth,colormapLabels.stream()
+		maxTextWidth = Math.max(maxTextWidth, colormapLabels.stream()
 				.flatMap(l->Arrays.stream(l.ticklabels))
 				.map(t->CharacterAtlas.boundsForText(t.length(), fontSize-2, fontStyle).getBounds().width)
 				.mapToInt(i->i)
@@ -403,6 +439,39 @@ public class Legend implements Renderable, Renderer {
 				}
 			});
 		}
+
+		// TODO new
+		for(BarLabel barLabel : barLabels) {
+			Glyph glyph = barLabel.glyph;
+			if(!glyph2points.containsKey(glyph)){
+				glyph2points.put(glyph, new Points(glyph));
+			}
+			Points points = glyph2points.get(glyph);
+			elements.add(new LegendElement() {
+				Text lbltxt;
+				PointDetails pd;
+				Rectangle2D rect;
+				{
+					lbltxt = new Text(barLabel.labelText, fontSize, fontStyle, textColor)
+							.setPickColor(barLabel.pickColor)
+							.setOrigin(itemWidth+itemTextSpacing,0);
+					texts.add(lbltxt);
+					pd = points.addPoint(itemWidth/2, fontHeight/2-0.5).setColor(barLabel.color).setScaling(1.5);
+					rect = new Rectangle((int) (itemWidth+itemTextSpacing+lbltxt.getTextSize().width*1.2), (int) (fontHeight*1.2));
+				}
+				@Override
+				public void translate(int dx, int dy) {
+					Utils.translate(lbltxt.getOrigin(), dx, dy);
+					Utils.translate(pd.location, dx, dy);
+					Utils.translate(rect, dx, dy);
+				}
+				@Override
+				public Rectangle2D getSize() {
+					return rect;
+				}
+			});
+		} // end new
+
 		// layout
 		int currentY = viewPortHeight-fontHeight;
 		RectangleLayout layout = new RectangleLayout();
