@@ -1,13 +1,12 @@
 package hageldave.jplotter.renderers;
 
+import hageldave.jplotter.color.ColorScheme;
+import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordinateViewListener;
-import hageldave.jplotter.renderables.BarGroup;
-import hageldave.jplotter.renderables.Lines;
-import hageldave.jplotter.renderables.Text;
-import hageldave.jplotter.renderables.Triangles;
+import hageldave.jplotter.renderables.*;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.*;
 import org.lwjgl.opengl.GL11;
@@ -23,6 +22,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.util.List;
 import java.util.*;
+import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
 public class CombinedBarRenderer implements Renderer {
@@ -76,10 +76,11 @@ public class CombinedBarRenderer implements Renderer {
     protected int viewportheight = 0;
     protected boolean isDirty = true;
 
-    protected Color tickColor = Color.DARK_GRAY;
-    protected Color guideColor = new Color(0xdddddd);
-    protected Color groupGuideColor = Color.LIGHT_GRAY;
-    protected Color boundaryColor = Color.DARK_GRAY;
+    protected IntSupplier textColor;
+    protected IntSupplier tickColor;
+    protected IntSupplier guideColor;
+    protected IntSupplier groupGuideColor;
+    protected IntSupplier boundaryColor;
 
     final int tickfontSize = 11;
     final int labelfontSize = 12;
@@ -93,6 +94,8 @@ public class CombinedBarRenderer implements Renderer {
     // Linkedlist for now - later might be replaced by treeset
     final protected LinkedList<BarGroup> groupedBars = new LinkedList<>();
     protected double barSize;
+
+    protected ColorScheme colorScheme;
 
     @Annotations.GLCoordinates
     protected PointeredPoint2D coordsysAreaLB = new PointeredPoint2D();
@@ -109,9 +112,22 @@ public class CombinedBarRenderer implements Renderer {
     protected ActionListener coordviewListener;
     protected boolean isEnabled = true;
 
-    public CombinedBarRenderer(final int alignment, final double barSize) {
+    public CombinedBarRenderer(final int alignment, final double barSize, final ColorScheme cs) {
         this.alignment = alignment;
         this.barSize = barSize;
+        this.colorScheme = cs;
+        setupBarRenderer();
+    }
+
+    public CombinedBarRenderer(final int alignment, final ColorScheme cs) {
+        this(alignment, 0.8, cs);
+    }
+
+    public CombinedBarRenderer(final int alignment) {
+        this(alignment, 0.8, DefaultColorScheme.LIGHT.get());
+    }
+
+    protected void setupBarRenderer() {
         this.preContentLinesR
                 .addItemToRender(ticks)
                 .addItemToRender(guides);
@@ -121,10 +137,25 @@ public class CombinedBarRenderer implements Renderer {
         this.xyCondBoundsLinesR
                 .addItemToRender(xyCondTicks)
                 .addItemToRender(xyCondGuides);
+
+        this.textColor = ()->getColorScheme().getColorText();
+        this.tickColor = ()->getColorScheme().getColor3();
+        this.guideColor = ()->getColorScheme().getColor4();
+        this.groupGuideColor = ()->getColorScheme().getColor4();
+        this.boundaryColor = ()->getColorScheme().getColor3();
+        updateColors();
     }
 
-    public CombinedBarRenderer(final int alignment) {
-        this(alignment, 0.8);
+    /**
+     * Helper method to update the colors if the color scheme is changed.
+     */
+    protected CombinedBarRenderer updateColors() {
+        this.xAxisLabelText.setColor(this.textColor.getAsInt());
+        this.yAxisLabelText.setColor(this.textColor.getAsInt());
+        updateLegendColorScheme(legendBottom);
+        updateLegendColorScheme(legendRight);
+        setDirty();
+        return this;
     }
 
     /**
@@ -163,6 +194,9 @@ public class CombinedBarRenderer implements Renderer {
     public Renderer setLegendRight(Renderer legend) {
         Renderer old = this.legendRight;
         this.legendRight = legend;
+
+        // if the legend is of type Legend, a color scheme is automatically set
+        updateLegendColorScheme(legend);
         return old;
     }
 
@@ -178,7 +212,19 @@ public class CombinedBarRenderer implements Renderer {
     public Renderer setLegendBottom(Renderer legend) {
         Renderer old = this.legendBottom;
         this.legendBottom = legend;
+
+        // if the legend is of type Legend, a color scheme is automatically set
+        updateLegendColorScheme(legend);
         return old;
+    }
+
+    /**
+     * @param legend color scheme of the legend will be updated if it is from type {@link Legend}
+     */
+    protected void updateLegendColorScheme(final Renderer legend) {
+        if (legend instanceof Legend) {
+            ((Legend) legend).setColorScheme(getColorScheme());
+        }
     }
 
     /**
@@ -340,6 +386,13 @@ public class CombinedBarRenderer implements Renderer {
     }
 
     /**
+     * @return the {@link ColorScheme} of the BarRenderer.
+     */
+    public ColorScheme getColorScheme() {
+        return colorScheme;
+    }
+
+    /**
      * Sets up pretty much everything.
      * <ul>
      * <li>the bounds of the coordinate system frame ({@link #coordsysAreaLB}, {@link #coordsysAreaRT})</li>
@@ -434,7 +487,7 @@ public class CombinedBarRenderer implements Renderer {
             }
 
             double x = ((xticks[i] - coordinateView.getMinX()) / coordinateView.getWidth()) * xAxisWidth;
-            Text label = new Text(xticklabels[i], tickfontSize, style);
+            Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor.getAsInt());
             Text invisibleLabel = new Text(xticklabels[i] + "0", tickfontSize, style);
             if (invisibleLabel.getTextSize().width >
                     // + 0.2 bc size between every bar is 1 and barwidth is 0.8
@@ -457,7 +510,7 @@ public class CombinedBarRenderer implements Renderer {
             Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, Math.round(y));
             ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
             // label
-            Text label = new Text(yticklabels[i], tickfontSize, style);
+            Text label = new Text(yticklabels[i], tickfontSize, style, this.textColor.getAsInt());
             Dimension textSize = label.getTextSize();
             label.setOrigin(new TranslatedPoint2D(onaxis, -7 - textSize.getWidth(), -Math.round(textSize.getHeight() / 2.0) + 0.5));
             // avoid conflict with coordsys axes in bottom left corner, as they are bigger
@@ -488,7 +541,7 @@ public class CombinedBarRenderer implements Renderer {
 
             // add group labels
             if (i < groupSeparators.length - 1 && this.groupDescriptions.get(i) != null) {
-                Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1);
+                Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1, this.textColor.getAsInt());
                 groupLabel.setOrigin(new TranslatedPoint2D(barBorder, -groupLabel.getTextSize().getWidth() / 2,
                         -Math.round(groupLabel.getTextSize().getHeight() * 2) - 2.5));
                 // if shifting is enabled
@@ -599,7 +652,7 @@ public class CombinedBarRenderer implements Renderer {
             Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
             ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
             // label
-            Text label = new Text(xticklabels[i], tickfontSize, style);
+            Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor.getAsInt());
             Dimension textSize = label.getTextSize();
             label.setOrigin(new Point2D.Double(
                     (int)(onaxis.getX()-textSize.getWidth()/2.0),
@@ -630,7 +683,7 @@ public class CombinedBarRenderer implements Renderer {
                 xyCondTicks.addSegment(barBorder, new TranslatedPoint2D(barBorder, -6, 0)).setColor(boundaryColor);
             }
             // label
-            Text label = new Text(yticklabels[i], tickfontSize, style);
+            Text label = new Text(yticklabels[i], tickfontSize, style, this.textColor.getAsInt());
             Dimension textSize = label.getTextSize();
             label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -Math.round(textSize.getHeight()/2.0)+0.5));
             xyCondTickMarkLabels.add(label);
@@ -647,7 +700,7 @@ public class CombinedBarRenderer implements Renderer {
 
             // add group labels
             if (i < groupSeparators.length - 1 && this.groupDescriptions.get(i) != null) {
-                Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1);
+                Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1, this.textColor.getAsInt());
                 groupLabel.setAngle(0.5 * Math.PI)
                         .setOrigin(new TranslatedPoint2D(barBorder, 0, -groupLabel.getTextSize().getWidth()/2));
                 xyCondTickMarkLabels.add(groupLabel);
