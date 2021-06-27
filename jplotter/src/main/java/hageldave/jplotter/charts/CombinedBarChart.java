@@ -10,6 +10,7 @@ import hageldave.jplotter.renderers.TrianglesRenderer;
 import hageldave.jplotter.util.AlignmentConstants;
 
 import java.awt.*;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 public class CombinedBarChart {
@@ -26,7 +27,7 @@ public class CombinedBarChart {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
-        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.HORIZONTAL);
+        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.VERTICAL);
         this.content = new TrianglesRenderer();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
         this.barRenderer.setContent(content);
@@ -41,40 +42,54 @@ public class CombinedBarChart {
         return this;
     }
 
-    public Legend addRightLegend(final int width, final boolean autoAddItems) {
+    public Legend addRightLegend(final int width, final String[] categories,
+                                 final int[] colors, final int[] pickColors) {
+        if (categories.length != colors.length || categories.length != pickColors.length) {
+            throw new IllegalArgumentException("Arrays have to have equal length!");
+        }
         Legend lgd = new Legend();
         this.barRenderer.setLegendRight(lgd);
         this.barRenderer.setLegendRightWidth(width);
-        for (BarGroup group: barsInRenderer) {
-            for (BarGroup.BarStruct struct: group.getGroupedBars().values()) {
-                for (BarGroup.Stack stack: struct.stacks) {
-                    lgd.addBarLabel(stack.stackColor.getRGB(), struct.description, stack.pickColor);
-                }
-            }
+        for (int i = 0; i < categories.length; i++) {
+            lgd.addBarLabel(colors[i], categories[i], pickColors[i]);
         }
         return lgd;
+    }
+
+    public Legend addRightLegend(final int width, final String[] categories,
+                                  final int[] colors) {
+        int[] pickColors = new int[colors.length];
+        Arrays.fill(pickColors, 0);
+        return addRightLegend(width, categories, colors, pickColors);
     }
 
     public Legend addRightLegend() {
-        return addRightLegend(70, false);
+        return addRightLegend(70, new String[]{}, new int[]{}, new int[]{});
     }
 
-    public Legend addBottomLegend(final int height, final boolean autoAddItems) {
+    public Legend addBottomLegend(final int height, final String[] categories,
+                                  final int[] colors, final int[] pickColors) {
+        if (categories.length != colors.length || categories.length != pickColors.length) {
+            throw new IllegalArgumentException("Arrays have to have equal length!");
+        }
         Legend lgd = new Legend();
         this.barRenderer.setLegendBottom(lgd);
         this.barRenderer.setLegendBottomHeight(height);
-        for (BarGroup group: barsInRenderer) {
-            for (BarGroup.BarStruct struct: group.getGroupedBars().values()) {
-                for (BarGroup.Stack stack: struct.stacks) {
-                    lgd.addBarLabel(stack.stackColor.getRGB(), struct.description, stack.pickColor);
-                }
-            }
+        for (int i = 0; i < categories.length; i++) {
+            lgd.addBarLabel(colors[i], categories[i], pickColors[i]);
         }
         return lgd;
     }
 
+    public Legend addBottomLegend(final int height, final String[] categories,
+                                  final int[] colors) {
+        int[] pickColors = new int[colors.length];
+        Arrays.fill(pickColors, 0);
+        return addBottomLegend(height, categories, colors, pickColors);
+    }
+
     public Legend addBottomLegend() {
-        return addBottomLegend(30, false);
+        return addBottomLegend(30, new String[]{}, new int[]{}, new int[]{});
     }
 
     public TrianglesRenderer getContent() {
