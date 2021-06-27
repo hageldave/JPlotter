@@ -435,8 +435,10 @@ public class CombinedBarRenderer implements Renderer {
 
             double x = ((xticks[i] - coordinateView.getMinX()) / coordinateView.getWidth()) * xAxisWidth;
             Text label = new Text(xticklabels[i], tickfontSize, style);
-            if (label.getTextSize().width >
-                    (barSize / coordinateView.getWidth()) * xAxisWidth) {
+            Text invisibleLabel = new Text(xticklabels[i] + "0", tickfontSize, style);
+            if (invisibleLabel.getTextSize().width >
+                    // + 0.2 bc size between every bar is 1 and barwidth is 0.8
+                    ((barSize + 0.2) / coordinateView.getWidth()) * xAxisWidth) {
                 // enable shifting
                 shiftLabels = true;
             }
@@ -1273,6 +1275,7 @@ public class CombinedBarRenderer implements Renderer {
     /**
      * @return
      */
+    // TODO padding bei den bars hinzufügen, bspw. links rechts bei VERTICAL
     public Rectangle2D getBounds() {
         // default values
         double minX = 0;
