@@ -3,6 +3,7 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.renderables.BarGroup;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderers.CombinedBarRenderer;
@@ -26,8 +27,8 @@ public class CombinedBarChart {
     public CombinedBarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
-        this.canvas.asComponent().setBackground(Color.white);
-        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.VERTICAL);
+        this.canvas.asComponent().setBackground(Color.black);
+        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.VERTICAL, DefaultColorScheme.DARK.get());
         this.content = new TrianglesRenderer();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
         this.barRenderer.setContent(content);
