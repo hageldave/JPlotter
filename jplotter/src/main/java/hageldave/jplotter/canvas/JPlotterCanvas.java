@@ -1,16 +1,17 @@
 package hageldave.jplotter.canvas;
 
-import java.awt.Component;
-import java.awt.Window;
-import java.awt.event.WindowListener;
-import java.util.Arrays;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.event.WindowListener;
+import java.util.Arrays;
 
 /**
  * This interface defines the methods required by an implementation of a 
@@ -162,7 +163,32 @@ public interface JPlotterCanvas {
 		if(renderer != null) 
 			renderer.renderSVG(doc, parent, w, h);
 	}
-	
+
+	// TODO WIP
+	public default PDDocument paintPDF() {
+		PDDocument document = new PDDocument();
+		PDPage page = new PDPage();
+
+
+		document.addPage(page);
+		paintPDF(document, page);
+		return document;
+	}
+
+	public default void paintPDF(PDDocument document, PDPage page) {
+		int w,h;
+		if ((w=asComponent().getWidth()) > 0 && (h=asComponent().getHeight()) > 0) {
+			page.setMediaBox(new PDRectangle(w, h));
+			paintToPDF(document, page, w, h);
+		}
+	}
+
+	public default void paintToPDF(PDDocument document, PDPage page, int w, int h) {
+		Renderer renderer = getRenderer();
+		if(renderer != null)
+			renderer.renderPDF(document, page, 0, 0, w, h);
+	}
+
 	/**
 	 * Sets the renderer of this canvas.
 	 * @param renderer to draw contents.

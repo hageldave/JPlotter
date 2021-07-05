@@ -17,6 +17,8 @@ import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
 import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.lwjgl.opengl.GL11;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -173,6 +175,9 @@ public class CoordSysRenderer implements Renderer {
 		this.guideColor = ()->getColorScheme().getColor4();
 		this.tickColor = ()->getColorScheme().getColor3();
 		this.textColor = ()->getColorScheme().getColorText();
+
+		// TODO remove later
+		yAxisLabelText.setBackground(Color.BLUE);
 		
 		updateColors();
 	}
@@ -802,7 +807,30 @@ public class CoordSysRenderer implements Renderer {
 			legendBottom.renderSVG(doc, legendGroup, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
 	}
-	
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		preContentLinesR.renderPDF(doc, page, 0, 0, w, h);
+		preContentTextR.renderPDF(doc, page, 0,0, w, h);
+		if(content != null){
+			int viewPortX = (int)coordsysAreaLB.getX();
+			int viewPortY = (int)coordsysAreaLB.getY();
+			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
+			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
+			if(content instanceof AdaptableView){
+				((AdaptableView) content).setView(coordinateView);
+			}
+			// render the content into the group
+			content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
+		}
+		postContentLinesR.renderPDF(doc, page, 0, 0, w, h);
+		postContentTextR.renderPDF(doc, page, 0, 0, w, h);
+
+	}
+
 	/**
 	 * Sets the coordinate view. This is the range of x and y coordinates that is displayed by this
 	 * {@link CoordSysRenderer}. It is not the rectangular area in which the content appears on screen
