@@ -1,13 +1,14 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Graphics2D;
-
+import hageldave.jplotter.svg.SVGUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.lwjgl.opengl.GL11;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import hageldave.jplotter.svg.SVGUtils;
+import java.awt.*;
 
 /**
  * The SplitScreenRenderer is a space dividing renderer which defines two separate
@@ -237,6 +238,30 @@ public class SplitScreenRenderer implements Renderer {
 			contentGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
 			// render the content into the group
 			r2.renderSVG(doc, contentGroup, w2, h2);
+		}
+	}
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled())
+			return;
+
+		int w1 = verticalSplit ? (int)Math.round(w*dividerLocation):w;
+		int h1 = verticalSplit ? h:(int)Math.round(h*dividerLocation);
+		int w2 = verticalSplit ? w-w1:w;
+		int h2 = verticalSplit ? h:h-h1;
+		int x1 = 0;
+		int y1 = verticalSplit ? 0:h2;
+		int x2 = verticalSplit ? w1:0;
+		int y2 = 0;
+
+		x1=x1+x;x2=x2+x;y1=y1+y;y2=y2+y;
+
+		if(r1 != null) {
+			r1.renderPDF(doc, page, x1, y1, w1, h1);
+		}
+		if(r2 != null) {
+			r2.renderPDF(doc, page, x2, y2, w2, h2);
 		}
 	}
 

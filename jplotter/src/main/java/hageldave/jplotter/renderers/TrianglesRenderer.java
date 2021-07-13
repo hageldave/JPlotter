@@ -1,18 +1,8 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.geom.Rectangle2D;
-import java.util.Objects;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
@@ -22,6 +12,19 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.BarycentricGradientPaint;
 import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.util.Objects;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -257,6 +260,54 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 						viewportRect);
 			}
 		}
+	}
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		try {
+			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+			for(Triangles tris : getItemsToRender()){
+				if(tris.isHidden()){
+					continue;
+				}
+
+				if(tris.isCrispEdgesForSVGEnabled()){
+					//trianglesGroup.setAttributeNS(null, "shape-rendering", "crispEdges");
+				}
+				for(TriangleDetails tri : tris.getTriangleDetails()){
+					double x0,y0, x1,y1, x2,y2;
+					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
+					x0-=translateX; x1-=translateX; x2-=translateX;
+					y0-=translateY; y1-=translateY; y2-=translateY;
+					x0*=scaleX; x1*=scaleX; x2*=scaleX;
+					y0*=scaleY; y1*=scaleY; y2*=scaleY;
+					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
+
+					// clipping area
+					contentStream.saveGraphicsState();
+					contentStream.addRect(x, y, w, h);
+					contentStream.closePath();
+					contentStream.clip();
+					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
+							new Point2D.Double(x2, y2), new Color(tri.c0.getAsInt()), new Color(tri.c1.getAsInt()), new Color(tri.c2.getAsInt()));
+					contentStream.restoreGraphicsState();
+				}
+			}
+			contentStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+
 	}
 
 	protected String getSvgTriangleStrategy() {
