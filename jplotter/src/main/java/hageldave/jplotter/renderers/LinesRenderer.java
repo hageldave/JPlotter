@@ -842,9 +842,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                 double y2_ = y1 + dy * m2;
 
                                 strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-                                PDFUtils.createPDFSegment(contentStream,
-                                        new Point2D.Double(x1_ + miterX * t1_ + x, y1_ + miterY * t1_ + y),
-                                        new Point2D.Double(x2_ + miterX * t2_ + x, y2_ + miterY * t2_ + y));
+
+                                PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,
+                                        (x2_ - miterX * t2_) + x, (x1_ - miterX * t1_) + x}, new double[]{(y1_ + miterY * t1_) + y, (y2_ + miterY * t2_) + y,
+                                        (y2_ - miterY * t2_) + y, (y1_ - miterY * t1_) + y});
                                 contentStream.setStrokingColor(new Color(seg.color0.getAsInt()));
                                 contentStream.setLineWidth((float) seg.thickness0.getAsDouble());
                                 contentStream.stroke();
