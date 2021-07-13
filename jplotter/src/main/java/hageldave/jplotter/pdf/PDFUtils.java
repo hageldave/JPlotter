@@ -6,7 +6,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
@@ -14,11 +14,13 @@ import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
 
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.OutputStream;
 
 public class PDFUtils {
+
 
     public static PDPageContentStream createPDFRect(PDPageContentStream cs,
                                                     double x, double y, double w, double h)
@@ -125,10 +127,8 @@ public class PDFUtils {
         return cs;
     }
 
-    public static PDPageContentStream createPDFShadedTriangle(PDDocument doc, PDPage page, Point2D p0,
+    public static PDPageContentStream createPDFShadedTriangle(PDPageContentStream cs, Point2D p0,
                                                               Point2D p1, Point2D p2, Color c0, Color c1, Color c2) throws IOException {
-        PDPageContentStream cs = new PDPageContentStream(doc, page,
-                PDPageContentStream.AppendMode.APPEND, false);
         // See PDF 32000 specification,
         // 8.7.4.5.5 Type 4 Shadings (Free-Form Gouraud-Shaded Triangle Meshes)
         PDShadingType4 gouraudShading = new PDShadingType4(new COSStream());
@@ -193,24 +193,47 @@ public class PDFUtils {
         mcos.writeShort((int) p2.getY());
         // r3 g3 b3 (blue)
         mcos.writeByte(c2.getRed());
-        mcos.writeByte(c2.getRed());
-        mcos.writeByte(c2.getRGB());
+        mcos.writeByte(c2.getGreen());
+        mcos.writeByte(c2.getBlue());
         mcos.close();
         os.close();
         cs.shadingFill(gouraudShading);
         return cs;
     }
 
-    public static PDPageContentStream createPDFText(PDPageContentStream cs, String txt,
-                                                    Point2D point, Color color, int textSize, int style) throws IOException {
+    public static PDPageContentStream createPDFText(PDDocument document, PDPageContentStream cs, String txt,
+                                                    Point2D point, Color color, int fontSize, int style, float angle) throws IOException {
         cs.setNonStrokingColor(color);
         cs.stroke();
+
+        // set correct font
+        if (style==1) {
+            PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-B.ttf"));
+            cs.setFont(font, fontSize);
+        } else if (style==2) {
+            PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-RI.ttf"));
+            cs.setFont(font, fontSize);
+        } else if (style==(1|2)) {
+            PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-BI.ttf"));
+            cs.setFont(font, fontSize);
+        } else {
+            PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-R.ttf"));
+            cs.setFont(font, fontSize);
+        }
+
         cs.beginText();
-        cs.setFont(PDType1Font.HELVETICA_BOLD, textSize);
-        cs.newLineAtOffset((float) point.getX(), (float) point.getY());
+        AffineTransform at = new AffineTransform(1, 0.0, 0.0,
+               1, point.getX(), point.getY());
+        at.rotate(angle);
+        cs.setTextMatrix(at);
         cs.showText(txt);
         cs.endText();
         return cs;
+    }
+
+    public static PDPageContentStream createPDFText(PDDocument document, PDPageContentStream cs, String txt,
+                                                    Point2D point, Color color, Dimension textSize, int fontSize, int style) throws IOException {
+        return createPDFText(document, cs, txt, point, color, fontSize, style, 0);
     }
 
     public static PDPageContentStream createPDFGlyph(PDDocument doc, PDPage page, String txt) throws IOException {
@@ -220,5 +243,22 @@ public class PDFUtils {
 
     public static Point2D transformPDFToCoordSys(Point2D point, PDPage page) {
         return Utils.swapYAxis(point, (int) page.getMediaBox().getHeight());
+    }
+
+    public static PDPageContentStream createPDFPolygon(PDPageContentStream cs, double[] x, double[] y) throws IOException {
+            if (x.length != y.length) {
+                throw new IllegalArgumentException("Error: some points are missing coordinate");
+            }
+            for (int i = 0; i < x.length; i++) {
+                if (i == 0) {
+                    cs.moveTo((float) x[i], (float) y[i]);
+                }
+                else {
+                    cs.lineTo((float) x[i], (float) y[i]);
+                }
+            }
+            cs.closePath();
+            cs.fill();
+            return cs;
     }
 }

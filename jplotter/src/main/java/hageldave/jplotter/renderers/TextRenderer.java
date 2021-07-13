@@ -451,22 +451,18 @@ public class TextRenderer extends GenericRenderer<Text> {
 					contentStream.closePath();
 					contentStream.clip();
 
+
 					// TODO place text rendering here
-					PDFUtils.createPDFText(contentStream, txt.getTextString(), new Point2D.Double(txt.getOrigin().getX(), txt.getOrigin().getY()),
-							txt.getColor(), txt.fontsize, txt.style);
-
-					// todo rotate text if necessary
-					/*backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-					backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
-					if(txt.getAngle() != 0){
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+")");
+					if (txt.getAngle()==0) {
+						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(txt.getBounds().getX(),
+										txt.getBounds().getY()+(txt.getTextSize().getHeight()- txt.fontsize)+1),
+								txt.getColor(), txt.getTextSize(), txt.fontsize, txt.style);
 					} else {
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")");
-					}*/
-
+						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(txt.getBoundsWithRotation().getCenterX(),
+										txt.getBoundsWithRotation().getCenterY()), txt.getColor(), txt.fontsize, txt.style, txt.getAngle());
+					}
 					// restore graphics
 					contentStream.restoreGraphicsState();
-
 				}
 			}
 			contentStream.close();
