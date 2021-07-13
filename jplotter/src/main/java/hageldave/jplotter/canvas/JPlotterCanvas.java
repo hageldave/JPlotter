@@ -5,12 +5,14 @@ import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.awt.*;
 import java.awt.event.WindowListener;
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -164,7 +166,7 @@ public interface JPlotterCanvas {
 			renderer.renderSVG(doc, parent, w, h);
 	}
 
-	public default PDDocument paintPDF() {
+	public default PDDocument paintPDF() throws IOException {
 		PDDocument document = new PDDocument();
 		PDPage page = new PDPage();
 		document.addPage(page);
@@ -172,10 +174,16 @@ public interface JPlotterCanvas {
 		return document;
 	}
 
-	public default void paintPDF(PDDocument document, PDPage page) {
+	public default void paintPDF(PDDocument document, PDPage page) throws IOException {
 		int w,h;
 		if ((w=asComponent().getWidth()) > 0 && (h=asComponent().getHeight()) > 0) {
 			page.setMediaBox(new PDRectangle(w, h));
+			PDPageContentStream contentStream = new PDPageContentStream(document, page,
+					PDPageContentStream.AppendMode.APPEND, false);
+			contentStream.addRect(0, 0, w, h);
+			contentStream.setNonStrokingColor(asComponent().getBackground());
+			contentStream.fill();
+			contentStream.close();
 			paintToPDF(document, page, w, h);
 		}
 	}
