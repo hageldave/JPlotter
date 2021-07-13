@@ -164,12 +164,9 @@ public interface JPlotterCanvas {
 			renderer.renderSVG(doc, parent, w, h);
 	}
 
-	// TODO WIP
 	public default PDDocument paintPDF() {
 		PDDocument document = new PDDocument();
 		PDPage page = new PDPage();
-
-
 		document.addPage(page);
 		paintPDF(document, page);
 		return document;
