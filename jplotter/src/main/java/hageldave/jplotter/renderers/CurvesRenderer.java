@@ -499,6 +499,8 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
         double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
 
+        // todo exc mit runtime exc abfangen
+
         try {
             PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
             for (Curves curves : getItemsToRender()) {

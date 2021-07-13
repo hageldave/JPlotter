@@ -280,9 +280,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					continue;
 				}
 
-				if(tris.isCrispEdgesForSVGEnabled()){
-					//trianglesGroup.setAttributeNS(null, "shape-rendering", "crispEdges");
-				}
 				for(TriangleDetails tri : tris.getTriangleDetails()){
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();

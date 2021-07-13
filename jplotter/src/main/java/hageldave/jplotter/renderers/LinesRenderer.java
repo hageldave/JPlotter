@@ -744,7 +744,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
 
         try {
-            PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+            PDPageContentStream contentStream = new PDPageContentStream(doc, page,
+                    PDPageContentStream.AppendMode.APPEND, false);
             for (Lines lines : getItemsToRender()) {
                 if (lines.isHidden() || lines.getStrokePattern() == 0 || lines.numSegments() == 0) {
                     // line is invisible

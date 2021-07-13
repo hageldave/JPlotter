@@ -828,6 +828,12 @@ public class CoordSysRenderer implements Renderer {
 		}
 		postContentLinesR.renderPDF(doc, page, 0, 0, w, h);
 		postContentTextR.renderPDF(doc, page, 0, 0, w, h);
+		if(Objects.nonNull(legendRight)){
+			legendRight.renderPDF(doc, page, legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+		}
+		if(Objects.nonNull(legendBottom)){
+			legendBottom.renderPDF(doc, page, legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+		}
 
 	}
 

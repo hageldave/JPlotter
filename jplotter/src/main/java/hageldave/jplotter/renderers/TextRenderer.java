@@ -422,13 +422,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 					double x1, y1;
 					x1 = txt.getOrigin().getX();
 					y1 = txt.getOrigin().getY();
-
 					x1 -= translateX;
 					y1 -= translateY;
 					x1 *= scaleX;
 					y1 *= scaleY;
-
-					y1 += 1;
+					y1 += 2;
+					x1 += 1;
 
 					// test if inside of view port
 					if (x1 + txt.getTextSize().width < 0 || x1 - txt.getTextSize().width > w) {
@@ -440,7 +439,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 
 					if(txt.getBackground().getRGB() != 0){
 						PDFUtils.createPDFRect(contentStream,
-								txt.getBoundsWithRotation().getX(), txt.getBoundsWithRotation().getY(), txt.getBoundsWithRotation().getWidth(), txt.getBoundsWithRotation().getHeight());
+								txt.getBoundsWithRotation().getX(), txt.getBoundsWithRotation().getY(),
+								txt.getBoundsWithRotation().getWidth(), txt.getBoundsWithRotation().getHeight());
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
 					}
@@ -451,15 +451,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 					contentStream.closePath();
 					contentStream.clip();
 
-
-					// TODO place text rendering here
 					if (txt.getAngle()==0) {
-						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(txt.getBounds().getX(),
-										txt.getBounds().getY()+(txt.getTextSize().getHeight()- txt.fontsize)+1),
+						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1,y1),
 								txt.getColor(), txt.getTextSize(), txt.fontsize, txt.style);
 					} else {
-						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(txt.getBoundsWithRotation().getCenterX(),
-										txt.getBoundsWithRotation().getCenterY()), txt.getColor(), txt.fontsize, txt.style, txt.getAngle());
+						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1, y1),
+								txt.getColor(), txt.fontsize, txt.style, txt.getAngle());
 					}
 					// restore graphics
 					contentStream.restoreGraphicsState();

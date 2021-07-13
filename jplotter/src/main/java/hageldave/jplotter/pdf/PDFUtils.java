@@ -45,10 +45,9 @@ public class PDFUtils {
 
     public static PDPageContentStream createPDFSegment(PDPageContentStream cs, Point2D p0,
                                                        Point2D p1) throws IOException {
-        PDPageContentStream copy = cs;
-        copy.moveTo((float) p0.getX(), (float) p0.getY());
-        copy.lineTo((float) p1.getX(), (float) p1.getY());
-        return copy;
+        cs.moveTo((float) p0.getX(), (float) p0.getY());
+        cs.lineTo((float) p1.getX(), (float) p1.getY());
+        return cs;
     }
 
     public static PDPageContentStream createShadedPDFSegment(PDDocument doc, PDPage page, Point2D p0,
@@ -110,12 +109,9 @@ public class PDFUtils {
         axialShading.setFunction(func); // and this determines all the curves etc?
         cs.shadingFill(axialShading); // where CStr is a ContentStream for my PDDocument*/
 
-        // TODO do it as below
-        System.out.println(axialShading.getCOSObject());
+
 
         cs.restoreGraphicsState();
-
-
         return cs;
     }
 
@@ -205,7 +201,6 @@ public class PDFUtils {
                                                     Point2D point, Color color, int fontSize, int style, float angle) throws IOException {
         cs.setNonStrokingColor(color);
         cs.stroke();
-
         // set correct font
         if (style==1) {
             PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-B.ttf"));
@@ -247,7 +242,7 @@ public class PDFUtils {
 
     public static PDPageContentStream createPDFPolygon(PDPageContentStream cs, double[] x, double[] y) throws IOException {
             if (x.length != y.length) {
-                throw new IllegalArgumentException("Error: some points are missing coordinate");
+                throw new IllegalArgumentException("Length of x and y coordinate arrays have to be equal!");
             }
             for (int i = 0; i < x.length; i++) {
                 if (i == 0) {
