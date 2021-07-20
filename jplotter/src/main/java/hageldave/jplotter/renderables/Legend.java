@@ -12,6 +12,8 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -741,6 +743,14 @@ public class Legend implements Renderable, Renderer {
 			return;
 		}
 		delegate.renderSVG(doc, parent, w, h);
+	}
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		delegate.renderPDF(doc, page, x, y, w, h);
 	}
 
 	@Override

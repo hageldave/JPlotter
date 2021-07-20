@@ -393,8 +393,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					contentStream.transform(new Matrix(1, 0, 0, 1, (float) x1 + x, (float) y1 + y));
 					if(point.rot.getAsDouble() != 0){
 						// scale
-						/*contentStream.transform(new Matrix((float) point.scale.getAsDouble(), 0, 0, (float) point.scale.getAsDouble(),
-								(float) x1 + x, (float) y1 + y));*/
+						contentStream.transform(new Matrix((float) Math.cos(-point.rot.getAsDouble()),(float) -Math.sin(-point.rot.getAsDouble()),
+								(float) Math.sin(-point.rot.getAsDouble()),(float) Math.cos(-point.rot.getAsDouble()), 0, 0));
 					}
 					if(glyphScaling*point.scale.getAsDouble() != 1){
 						// scale

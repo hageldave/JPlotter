@@ -15,6 +15,7 @@ import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -438,11 +439,17 @@ public class TextRenderer extends GenericRenderer<Text> {
 					}
 
 					if(txt.getBackground().getRGB() != 0){
-						PDFUtils.createPDFRect(contentStream,
-								txt.getBoundsWithRotation().getX(), txt.getBoundsWithRotation().getY(),
-								txt.getBoundsWithRotation().getWidth(), txt.getBoundsWithRotation().getHeight());
+						contentStream.saveGraphicsState();
+						contentStream.transform(new Matrix((float) Math.cos(-txt.getAngle()),(float) -Math.sin(-txt.getAngle()),
+								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), (float) txt.getBounds().getX(), (float) txt.getBounds().getY()));
+
+						PDFUtils.createPDFPolygon(contentStream,
+								new double[]{0, txt.getBounds().getWidth(), txt.getBounds().getWidth(), 0},
+								new double[]{0, 0, txt.getBounds().getHeight(),  txt.getBounds().getHeight()});
+
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
+						contentStream.restoreGraphicsState();
 					}
 
 					// clipping area
