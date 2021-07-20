@@ -197,6 +197,7 @@ public class PDFUtils {
         return cs;
     }
 
+
     public static PDPageContentStream createPDFText(PDDocument document, PDPageContentStream cs, String txt,
                                                     Point2D point, Color color, int fontSize, int style, float angle) throws IOException {
         cs.setNonStrokingColor(color);
@@ -253,7 +254,6 @@ public class PDFUtils {
                 }
             }
             cs.closePath();
-            cs.fill();
             return cs;
     }
 }

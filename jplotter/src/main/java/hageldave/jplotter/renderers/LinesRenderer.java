@@ -842,6 +842,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                 double y1_ = y1 + dy * m1;
                                 double y2_ = y1 + dy * m2;
 
+                                // TODO: verschiedene Breiten probieren
                                 strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 
                                 PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,

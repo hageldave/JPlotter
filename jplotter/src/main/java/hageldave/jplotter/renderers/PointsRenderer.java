@@ -1,18 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
-import java.util.Objects;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL31;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
@@ -21,8 +8,23 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.ShaderRegistry;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.util.Matrix;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL31;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.util.Objects;
 
 /**
  * The PointsRenderer is an implementation of the {@link GenericRenderer}
@@ -341,4 +343,80 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		}
 	}
 
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+
+		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+
+		try {
+			PDPageContentStream contentStream = new PDPageContentStream(doc, page,
+					PDPageContentStream.AppendMode.APPEND, false);
+			for (Points points : getItemsToRender()) {
+				if (points.isHidden()) {
+					continue;
+				}
+				Glyph glyph = points.glyph;
+
+				for (PointDetails point : points.getPointDetails()) {
+					double x1, y1;
+					x1 = point.location.getX();
+					y1 = point.location.getY();
+
+					x1 -= translateX;
+					y1 -= translateY;
+					x1 *= scaleX;
+					y1 *= scaleY;
+
+					if (!viewportRect.intersects(
+							x1 - glyph.pixelSize() / 2,
+							y1 - glyph.pixelSize() / 2,
+							glyph.pixelSize(),
+							glyph.pixelSize())) {
+						continue;
+					}
+
+					// clipping area
+					contentStream.saveGraphicsState();
+					contentStream.addRect(x, y, w, h);
+					contentStream.closePath();
+					contentStream.clip();
+
+					// transform
+					contentStream.transform(new Matrix(1, 0, 0, 1, (float) x1 + x, (float) y1 + y));
+					if(point.rot.getAsDouble() != 0){
+						// scale
+						/*contentStream.transform(new Matrix((float) point.scale.getAsDouble(), 0, 0, (float) point.scale.getAsDouble(),
+								(float) x1 + x, (float) y1 + y));*/
+					}
+					if(glyphScaling*point.scale.getAsDouble() != 1){
+						// scale
+						contentStream.transform(new Matrix((float) point.scale.getAsDouble(), 0, 0, (float) point.scale.getAsDouble(),
+								0, 0));
+					}
+
+					glyph.createPDFElement(contentStream);
+					if(glyph.isFilled()){
+						contentStream.setNonStrokingColor(new Color(point.color.getAsInt()));
+						contentStream.fill();
+					} else {
+						contentStream.setStrokingColor(new Color(point.color.getAsInt()));
+						contentStream.stroke();
+					}
+					// restore graphics
+					contentStream.restoreGraphicsState();
+				}
+			}
+			contentStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
