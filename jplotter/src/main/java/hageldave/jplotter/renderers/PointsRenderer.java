@@ -364,7 +364,6 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					continue;
 				}
 				Glyph glyph = points.glyph;
-
 				for (PointDetails point : points.getPointDetails()) {
 					double x1, y1;
 					x1 = point.location.getX();
@@ -392,7 +391,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					// transform
 					contentStream.transform(new Matrix(1, 0, 0, 1, (float) x1 + x, (float) y1 + y));
 					if(point.rot.getAsDouble() != 0){
-						// scale
+						// rotation
 						contentStream.transform(new Matrix((float) Math.cos(-point.rot.getAsDouble()),(float) -Math.sin(-point.rot.getAsDouble()),
 								(float) Math.sin(-point.rot.getAsDouble()),(float) Math.cos(-point.rot.getAsDouble()), 0, 0));
 					}

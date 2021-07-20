@@ -232,11 +232,6 @@ public class PDFUtils {
         return createPDFText(document, cs, txt, point, color, fontSize, style, 0);
     }
 
-    public static PDPageContentStream createPDFGlyph(PDDocument doc, PDPage page, String txt) throws IOException {
-        // TODO
-        return null;
-    }
-
     public static Point2D transformPDFToCoordSys(Point2D point, PDPage page) {
         return Utils.swapYAxis(point, (int) page.getMediaBox().getHeight());
     }

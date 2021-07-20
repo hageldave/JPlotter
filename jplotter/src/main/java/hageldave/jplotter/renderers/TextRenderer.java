@@ -444,8 +444,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), (float) txt.getBounds().getX(), (float) txt.getBounds().getY()));
 
 						PDFUtils.createPDFPolygon(contentStream,
-								new double[]{0, txt.getBounds().getWidth(), txt.getBounds().getWidth(), 0},
-								new double[]{0, 0, txt.getBounds().getHeight(),  txt.getBounds().getHeight()});
+								new double[]{-1.5, txt.getBounds().getWidth(), txt.getBounds().getWidth(), -1.5},
+								new double[]{0, 0, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
 
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
@@ -459,10 +459,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 					contentStream.clip();
 
 					if (txt.getAngle()==0) {
-						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1,y1),
+						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
 								txt.getColor(), txt.getTextSize(), txt.fontsize, txt.style);
 					} else {
-						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1, y1),
+						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
 								txt.getColor(), txt.fontsize, txt.style, txt.getAngle());
 					}
 					// restore graphics

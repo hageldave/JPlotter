@@ -303,8 +303,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-
 	}
 
 	protected String getSvgTriangleStrategy() {
