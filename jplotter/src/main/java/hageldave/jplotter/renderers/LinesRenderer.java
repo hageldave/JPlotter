@@ -848,12 +848,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                 PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,
                                         (x2_ - miterX * t2_) + x, (x1_ - miterX * t1_) + x}, new double[]{(y1_ + miterY * t1_) + y, (y2_ + miterY * t2_) + y,
                                         (y2_ - miterY * t2_) + y, (y1_ - miterY * t1_) + y});
-                                contentStream.setStrokingColor(new Color(seg.color0.getAsInt()));
+                                contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
                                 contentStream.setLineWidth((float) seg.thickness0.getAsDouble());
-                                contentStream.stroke();
+                                contentStream.fill();
                             }
                         }
                     } else {
+
+
                         // TODO Implement shaded lines with different start/end points
                         PDFUtils.createPDFSegment(contentStream, new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
                         contentStream.setStrokingColor(new Color(seg.color0.getAsInt()));
