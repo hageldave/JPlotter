@@ -68,12 +68,16 @@ public class PickingRegistry<T> {
 	 * not 0xff, i.e. the ID has a translucent alpha channel if used as a color.
 	 */
 	public int register(T element, int id){
-		if((id >> 24) == 0xff ){
+		if((id >>> 24) != 0xff ){
 			throw new IllegalArgumentException(
 					"Picking IDs cannot have transparent alpha: " + Integer.toHexString(id));
 		}
 		pickID2Element.put(id, element);
 		return id;
+	}
+	
+	public static void main(String[] args) {
+		new PickingRegistry<>().register(null, 0xfe004544);
 	}
 	
 	/**
