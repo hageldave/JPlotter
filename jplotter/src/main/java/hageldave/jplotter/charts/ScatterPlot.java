@@ -3,6 +3,7 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
 import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
@@ -15,6 +16,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.DataModel;
+import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
 
 import java.awt.*;
@@ -27,6 +29,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  *
@@ -62,8 +65,8 @@ public class ScatterPlot {
     protected CompleteRenderer content;
     final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
-    final protected ScatterPlotModel<Object> selectedItem = new ScatterPlotModel<>();
-    final protected ScatterPlotModel<Object> hoveredItem = new ScatterPlotModel<>();
+    final protected ScatterPlotModel_<Object> selectedItem = new ScatterPlotModel_<>();
+    final protected ScatterPlotModel_<Object> hoveredItem = new ScatterPlotModel_<>();
 
     public ScatterPlot(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
@@ -85,6 +88,73 @@ public class ScatterPlot {
         this.coordsys.setxAxisLabel(xLabel);
         this.coordsys.setyAxisLabel(yLabel);
     }
+    
+    public static class ScatterPlotDataModel {
+    	protected ArrayList<double[][]> dataChunks = new ArrayList<>();
+    	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();;
+    	protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
+    	
+    	protected LinkedList<ScatterPlotDataModelListener> listeners = new LinkedList<>();
+    	
+    	public static interface ScatterPlotDataModelListener {
+    		public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx);
+    	}
+    	
+    	public synchronized void addData(double[][] dataChunk, int xIdx, int yIdx, String chunkDescription) {
+    		int chunkIdx = this.dataChunks.size();
+    		this.dataChunks.add(dataChunk);
+    		this.xyIndicesPerChunk.add(Pair.of(xIdx, yIdx));
+    		this.descriptionPerChunk.add(chunkDescription);
+    		
+    		notifyDataAdded(chunkIdx);
+    	}
+    	
+    	public int numChunks() {
+    		return dataChunks.size();
+    	}
+    	
+    	public double[][] getDataChunk(int chunkIdx){
+    		return dataChunks.get(chunkIdx);
+    	}
+    	
+    	public int getXIdx(int chunkIdx) {
+    		return xyIndicesPerChunk.get(chunkIdx).first;
+    	}
+    	
+    	public int getYIdx(int chunkIdx) {
+    		return xyIndicesPerChunk.get(chunkIdx).second;
+    	}
+    	
+    	public String getChunkDescription(int chunkIdx) {
+    		return descriptionPerChunk.get(chunkIdx);
+    	}
+    	
+    	protected synchronized void notifyDataAdded(int chunkIdx) {
+    		for(ScatterPlotDataModelListener l:listeners)
+    			l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
+    	}
+    	
+    }
+    
+    public static interface ScatterPlotVisualMapping {
+    	
+    	public default Glyph getGlyphForChunk(int chunkIdx, String chunkDescr) {
+    		Glyph[] usualScatterPlotGlyphs = { 
+        			DefaultGlyph.CIRCLE_F, DefaultGlyph.SQUARE_F,DefaultGlyph.TRIANGLE_F,
+        			DefaultGlyph.CROSS,
+        			DefaultGlyph.CIRCLE,DefaultGlyph.SQUARE,DefaultGlyph.TRIANGLE
+        	};
+    		return usualScatterPlotGlyphs[chunkIdx%usualScatterPlotGlyphs.length];
+    	}
+    	
+    	public default int getColorForDataPoint(int chunkIdx, String chunkDescr, double[][] dataChunk, int pointIdx) {
+    		DefaultColorMap colorMap = DefaultColorMap.Q_8_SET2;
+    		return colorMap.getColor(chunkIdx%colorMap.numColors());
+    	}
+    	
+    }
+    
+    
 
     public static class ArrayInformation {
         public final double[][] array;
@@ -393,11 +463,11 @@ public class ScatterPlot {
         this.pickingRegistry.register(item, tempID);
     }
 
-    protected static class ScatterPlotModel<T> extends DataModel<T> {
+    protected static class ScatterPlotModel_<T> extends DataModel<T> {
         protected T previousValue;
         protected T notNull;
 
-        public ScatterPlotModel() {
+        public ScatterPlotModel_() {
             super();
             this.addValueListener(e -> {
                 if (e != null) {
