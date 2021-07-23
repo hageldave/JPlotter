@@ -29,12 +29,14 @@ public class PickingRegistry<T> {
 	
 	/**
 	 * Generates a new ID. IDs range from 0xff000001 to 0xffffffff.
+	 * This increments the ID counter until an unused id is found.
 	 * @return a new ID by incrementing the ID counter
 	 * @throws IllegalStateException when all unique IDs have been generated already. 
 	 * The total number of possibles ID's is {@code 0xffffff-1 = 16.777.214}.
 	 */
 	public int getNewID() {
-		int id = uniqueIDCounter.incrementAndGet();
+		int id;
+		while( pickID2Element.containsKey(id=uniqueIDCounter.incrementAndGet()) && id != 0 ){ /* try next */ }
 		if(id == 0){
 			throw new IllegalStateException("All unique Ids are already generated. Cannot create new, limit exceeded.");
 		}

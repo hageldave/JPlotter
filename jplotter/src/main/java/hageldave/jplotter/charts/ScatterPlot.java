@@ -13,11 +13,13 @@ import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.DataModel;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
+import hageldave.jplotter.util.Utils;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.TreeSet;
 
 /**
  *
@@ -63,11 +66,21 @@ public class ScatterPlot {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
     protected CompleteRenderer content;
-    final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
+//    final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
     final protected ScatterPlotModel_<Object> selectedItem = new ScatterPlotModel_<>();
     final protected ScatterPlotModel_<Object> hoveredItem = new ScatterPlotModel_<>();
+    
 
+    final protected ScatterPlotDataModel dataModel = new ScatterPlotDataModel();
+    final protected ArrayList<Points> pointsPerDataChunk = new ArrayList<>();
+    final protected ArrayList<Integer> legendElementPickIds = new ArrayList<>();
+    final protected TreeSet<Integer> freedPickIds = new TreeSet<>();
+    final protected Legend legend = new Legend();
+    protected ScatterPlotVisualMapping visualMapping = new ScatterPlotVisualMapping(){};
+	private int legendRightWidth = 100;
+	private int legendBottomHeight = 60;
+    
     public ScatterPlot(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
     }
@@ -87,6 +100,83 @@ public class ScatterPlot {
         this.canvas.setRenderer(coordsys);
         this.coordsys.setxAxisLabel(xLabel);
         this.coordsys.setyAxisLabel(yLabel);
+        
+        this.dataModel.addListener(new ScatterPlotDataModel.ScatterPlotDataModelListener() {
+			@Override
+			public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
+				onDataAdded(chunkIdx, chunkData, chunkDescription, xIdx, yIdx);
+			}
+        	@Override
+			public void dataChanged(int chunkIdx, double[][] chunkData) {
+					
+			}
+		});
+    }
+    
+    public ScatterPlotVisualMapping getVisualMapping() {
+		return visualMapping;
+	}
+    
+    public void setVisualMapping(ScatterPlotVisualMapping visualMapping) {
+		this.visualMapping = visualMapping;
+		for(Points p:pointsPerDataChunk)
+			p.setDirty();
+		this.canvas.scheduleRepaint();
+	}
+    
+    public ScatterPlotDataModel getDataModel() {
+		return dataModel;
+	}
+    
+    protected synchronized int registerInPickingRegistry(Object obj) {
+    	int id = freedPickIds.isEmpty() ? pickingRegistry.getNewID() : freedPickIds.pollFirst();
+    	pickingRegistry.register(obj, id);
+    	return id;
+    }
+    
+    protected synchronized Object deregisterFromPickingRegistry(int id) {
+    	Object old = pickingRegistry.lookup(id);
+    	pickingRegistry.register(null, id);
+    	freedPickIds.add(id);
+    	return old;
+    }
+    
+    protected synchronized void onDataAdded(int chunkIdx, double[][] dataChunk, String chunkDescription, int xIdx, int yIdx) {
+    	Points points = new Points(getVisualMapping().getGlyphForChunk(chunkIdx, chunkDescription));
+    	pointsPerDataChunk.add(points);
+    	content.addItemToRender(points);
+    	for(int i=0; i<dataChunk.length; i++) {
+    		int i_=i;
+    		double[] datapoint = dataChunk[i];
+    		PointDetails pointDetails = points.addPoint(datapoint[xIdx], datapoint[yIdx]);
+    		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, chunkDescription, dataChunk, i_));
+    		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+    	}
+    	// create a picking ID for use in legend for this data chunk
+    	this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
+    	visualMapping.createLegendElementForChunk(legend, chunkIdx, chunkDescription, legendElementPickIds.get(chunkIdx));
+    	
+    	this.canvas.scheduleRepaint();
+    }
+    
+    protected synchronized void onDataChanged(int chunkIdx, double[][] dataChunk) {
+    	Points points = pointsPerDataChunk.get(chunkIdx);
+    	// collect pick id's from current points for later reuse
+    	for(PointDetails pd:points.getPointDetails()) {
+    		int pickId = pd.pickColor;
+    		if(pickId != 0) {
+    			deregisterFromPickingRegistry(pickId);
+    		}
+    	}
+    	points.removeAllPoints();
+    	// add changed data
+    	for(int i=0; i<dataChunk.length; i++) {
+    		int i_=i;
+    		double[] datapoint = dataChunk[i];
+    		PointDetails pointDetails = points.addPoint(datapoint[dataModel.getXIdx(chunkIdx)], datapoint[dataModel.getYIdx(chunkIdx)]);
+    		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
+    		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+    	}
     }
     
     public static class ScatterPlotDataModel {
@@ -98,6 +188,8 @@ public class ScatterPlot {
     	
     	public static interface ScatterPlotDataModelListener {
     		public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx);
+    		
+    		public void dataChanged(int chunkIdx, double[][] chunkData);
     	}
     	
     	public synchronized void addData(double[][] dataChunk, int xIdx, int yIdx, String chunkDescription) {
@@ -117,6 +209,13 @@ public class ScatterPlot {
     		return dataChunks.get(chunkIdx);
     	}
     	
+    	public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
+    		if(chunkIdx >= numChunks())
+    			throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
+    		this.dataChunks.set(chunkIdx, dataChunk);
+    		this.notifyDataChanged(chunkIdx);
+    	}
+    	
     	public int getXIdx(int chunkIdx) {
     		return xyIndicesPerChunk.get(chunkIdx).first;
     	}
@@ -129,9 +228,18 @@ public class ScatterPlot {
     		return descriptionPerChunk.get(chunkIdx);
     	}
     	
+    	public synchronized void addListener(ScatterPlotDataModelListener l) {
+    		listeners.add(l);
+    	}
+    	
     	protected synchronized void notifyDataAdded(int chunkIdx) {
     		for(ScatterPlotDataModelListener l:listeners)
     			l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
+    	}
+    	
+    	public synchronized void notifyDataChanged(int chunkIdx) {
+    		for(ScatterPlotDataModelListener l:listeners)
+    			l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
     	}
     	
     }
@@ -152,168 +260,154 @@ public class ScatterPlot {
     		return colorMap.getColor(chunkIdx%colorMap.numColors());
     	}
     	
+    	public default void createLegendElementForChunk(Legend legend, int chunkIdx, String chunkDescr, int pickColor) {
+    		Glyph glyph = getGlyphForChunk(chunkIdx, chunkDescr);
+    		int color = getColorForDataPoint(chunkIdx, chunkDescr, null, -1);
+    		legend.addGlyphLabel(glyph, color, chunkDescr, pickColor);	
+    	}
+    	
+    	public default void createGeneralLegendElements(Legend legend) {};
+    	
     }
     
     
 
-    public static class ArrayInformation {
-        public final double[][] array;
-        public final int xLoc;
-        public final int yLoc;
+//    public static class ArrayInformation {
+//        public final double[][] array;
+//        public final int xLoc;
+//        public final int yLoc;
+//
+//        public ArrayInformation(final double[][] array, final int xLoc, final int yLoc) {
+//            this.array = array;
+//            this.xLoc = xLoc;
+//            this.yLoc = yLoc;
+//        }
+//    }
 
-        public ArrayInformation(final double[][] array, final int xLoc, final int yLoc) {
-            this.array = array;
-            this.xLoc = xLoc;
-            this.yLoc = yLoc;
+//    /**
+//     * used for encapsulating all data interesting for the developer
+//     */
+//    public static class ExtendedPointDetails extends Points.PointDetails {
+//        public final Points.PointDetails point;
+//        public final ArrayInformation arrayInformation;
+//        public final double arrayIndex;
+//        public final Glyph glyph;
+//        public final Points pointSet;
+//        public final String description;
+//
+//        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final Points pointSet,
+//                             final ArrayInformation arrayInformation, final double arrayIndex, final String description) {
+//            super(point.location);
+//            this.glyph = glyph;
+//            this.pointSet = pointSet;
+//            this.point = point;
+//            this.arrayInformation = arrayInformation;
+//            this.arrayIndex = arrayIndex;
+//            this.description = description;
+//        }
+//    }
+
+//    /**
+//     * Internal data structure to store information regarding color, glyph and description of data points.
+//     * This is used for displaying points (and their information) in the legend.
+//     *
+//     */
+//    public static class RenderedPoints {
+//        public Points points;
+//        public Color color;
+//        public String description;
+//        public ArrayInformation arrayInformation;
+//
+//        RenderedPoints(final Points points, final Color color, final String description, final ArrayInformation arrayInformation) {
+//            this.points = points;
+//            this.color = color;
+//            this.description = description;
+//            this.arrayInformation = arrayInformation;
+//        }
+//    }
+
+//    /**
+//     * adds a set of points to the scatter plot.
+//     *
+//     * @param ID     the ID is the key with which the Dataset will be stored in the pointMap
+//     * @param points a double array containing the coordinates of the points
+//     * @param glyph  the data points will be visualized by that glyph
+//     * @param color  the color of the glyph
+//     * @return the old Scatterplot for chaining
+//     */
+//    public Points addData(final int ID, final double[][] points, final int xLoc, final int yLoc, final DefaultGlyph glyph,
+//                          final Color color, final String descr) {
+//        Points tempPoints = new Points(glyph);
+//        ArrayInformation arrayInformation = new ArrayInformation(points, xLoc, yLoc);
+//        int index = 0;
+//        for (double[] entry : points) {
+//            double x = entry[xLoc], y = entry[yLoc];
+//            Points.PointDetails pointDetail = tempPoints.addPoint(x, y);
+//            pointDetail.setColor(color);
+//            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, arrayInformation, index, descr));
+//            index++;
+//        }
+//        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr, arrayInformation));
+//        this.content.addItemToRender(tempPoints);
+//        updateLegends(glyph, color, descr);
+//        return tempPoints;
+//    }
+
+//    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
+//                          final Color color, final String descr) {
+//        return addData(ID, points, 0, 1, glyph, color, descr);
+//    }
+//
+//    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
+//                          final Color color) {
+//        return addData(ID, points, glyph, color, "undefined");
+//    }
+
+    public ScatterPlot alignCoordsys(final double scaling) {
+        Rectangle2D union = null;
+    	for (Points points: pointsPerDataChunk) {
+            if(union==null)
+            	union = points.getBounds();
+            else
+            	Rectangle2D.union(points.getBounds(), union, union);
         }
-    }
-
-    /**
-     * used for encapsulating all data interesting for the developer
-     */
-    public static class ExtendedPointDetails extends Points.PointDetails {
-        public final Points.PointDetails point;
-        public final ArrayInformation arrayInformation;
-        public final double arrayIndex;
-        public final Glyph glyph;
-        public final Points pointSet;
-        public final String description;
-
-        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final Points pointSet,
-                             final ArrayInformation arrayInformation, final double arrayIndex, final String description) {
-            super(point.location);
-            this.glyph = glyph;
-            this.pointSet = pointSet;
-            this.point = point;
-            this.arrayInformation = arrayInformation;
-            this.arrayIndex = arrayIndex;
-            this.description = description;
-        }
-    }
-
-    /**
-     * Internal data structure to store information regarding color, glyph and description of data points.
-     * This is used for displaying points (and their information) in the legend.
-     *
-     */
-    public static class RenderedPoints {
-        public Points points;
-        public Color color;
-        public String description;
-        public ArrayInformation arrayInformation;
-
-        RenderedPoints(final Points points, final Color color, final String description, final ArrayInformation arrayInformation) {
-            this.points = points;
-            this.color = color;
-            this.description = description;
-            this.arrayInformation = arrayInformation;
-        }
-    }
-
-    /**
-     * adds a set of points to the scatter plot.
-     *
-     * @param ID     the ID is the key with which the Dataset will be stored in the pointMap
-     * @param points a double array containing the coordinates of the points
-     * @param glyph  the data points will be visualized by that glyph
-     * @param color  the color of the glyph
-     * @return the old Scatterplot for chaining
-     */
-    public Points addData(final int ID, final double[][] points, final int xLoc, final int yLoc, final DefaultGlyph glyph,
-                          final Color color, final String descr) {
-        Points tempPoints = new Points(glyph);
-        ArrayInformation arrayInformation = new ArrayInformation(points, xLoc, yLoc);
-        int index = 0;
-        for (double[] entry : points) {
-            double x = entry[xLoc], y = entry[yLoc];
-            Points.PointDetails pointDetail = tempPoints.addPoint(x, y);
-            pointDetail.setColor(color);
-            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, arrayInformation, index, descr));
-            index++;
-        }
-        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr, arrayInformation));
-        this.content.addItemToRender(tempPoints);
-        updateLegends(glyph, color, descr);
-        return tempPoints;
-    }
-
-    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
-                          final Color color, final String descr) {
-        return addData(ID, points, 0, 1, glyph, color, descr);
-    }
-
-    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
-                          final Color color) {
-        return addData(ID, points, glyph, color, "undefined");
-    }
-
-    public ScatterPlot alignCoordsys(final int padding) {
-        ScatterPlot old = this;
-        double minX = Integer.MAX_VALUE; double maxX = Integer.MIN_VALUE; double minY = Integer.MAX_VALUE; double maxY = Integer.MIN_VALUE;
-        for (RenderedPoints points: pointsInRenderer.values()) {
-            minX = Math.min(minX, points.points.getBounds().getMinX());
-            maxX = Math.max(maxX, points.points.getBounds().getMaxX());
-            minY = Math.min(minY, points.points.getBounds().getMinY());
-            maxY = Math.max(maxY, points.points.getBounds().getMaxY());
-        }
-        this.coordsys.setCoordinateView(minX - padding, minY - padding,
-                maxX + padding, maxY + padding);
-        return old;
+    	if(union != null)
+    		this.coordsys.setCoordinateView(Utils.scaleRect(union, scaling));
+    	this.canvas.scheduleRepaint();
+        return this;
     }
 
     public ScatterPlot alignCoordsys() {
         return alignCoordsys(1);
     }
 
-    public Legend addLegendRight(final int width, final boolean autoAddItems) {
-        Legend legend = new Legend();
-        coordsys.setLegendRightWidth(width);
-        coordsys.setLegendRight(legend);
-        if (autoAddItems) {
-            for (RenderedPoints point: pointsInRenderer.values()) {
-                int registryID = this.pickingRegistry.getNewID();
-                Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.description, point.points.glyph, point.color.getRGB(), registryID);
-                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.description, registryID);
-                this.pickingRegistry.register(glyphLabel, registryID);
-            }
-        }
-        return legend;
+    public void placeLegendOnRight() {
+    	if(coordsys.getLegendBottom() == legend) {
+    		coordsys.setLegendBottom(null);
+    		coordsys.setLegendBottomHeight(0);
+    	}
+    	coordsys.setLegendRight(legend);
+    	coordsys.setLegendRightWidth(this.legendRightWidth);
     }
-
-    public Legend addLegendRight(final int width) {
-        return addLegendRight(width, true);
+    
+    public void placeLegendOnBottom() {
+    	if(coordsys.getLegendRight() == legend) {
+    		coordsys.setLegendRight(null);
+    		coordsys.setLegendRightWidth(0);
+    	}
+    	coordsys.setLegendBottom(legend);
+    	coordsys.setLegendBottomHeight(this.legendBottomHeight);
     }
-
-    public Legend addLegendBottom(final int height, final boolean autoAddItems) {
-        Legend legend = new Legend();
-        coordsys.setLegendBottomHeight(height);
-        coordsys.setLegendBottom(legend);
-        if (autoAddItems) {
-            for (RenderedPoints point: pointsInRenderer.values()) {
-                int registryID = this.pickingRegistry.getNewID();
-                Legend.GlyphLabel glyphLabel = new Legend.GlyphLabel(point.description, point.points.glyph, point.color.getRGB(), registryID);
-                legend.addGlyphLabel(point.points.glyph, point.color.getRGB(), point.description, registryID);
-                this.pickingRegistry.register(glyphLabel, registryID);
-            }
-        }
-        return legend;
-    }
-
-    public Legend addLegendBottom(final int height) {
-        return addLegendBottom(height, true);
-    }
-
-    protected ScatterPlot updateLegends(final DefaultGlyph glyph, final Color color, final String descr) {
-        Legend legendBottom = (Legend) this.getCoordsys().getLegendBottom();
-        Legend legendRight = (Legend) this.getCoordsys().getLegendRight();
-        int registryID = this.pickingRegistry.getNewID();
-        if (legendBottom != null)
-            legendBottom.addGlyphLabel(glyph, color.getRGB(), descr, registryID);
-        if (legendRight != null)
-            legendRight.addGlyphLabel(glyph, color.getRGB(), descr, registryID);
-        this.pickingRegistry.register(new Legend.GlyphLabel(descr, glyph, color.getRGB(), registryID),
-                registryID);
-        return this;
+    
+    public void placeLegendNowhere() {
+    	if(coordsys.getLegendRight() == legend) {
+    		coordsys.setLegendRight(null);
+    		coordsys.setLegendRightWidth(0);
+    	}
+    	if(coordsys.getLegendBottom() == legend) {
+    		coordsys.setLegendBottom(null);
+    		coordsys.setLegendBottomHeight(0);
+    	}
     }
 
     /**
@@ -365,6 +459,7 @@ public class ScatterPlot {
             }
         }.register();
     }
+    
 
     /**
      * Adds a (already implemented) mouse movement listener,
