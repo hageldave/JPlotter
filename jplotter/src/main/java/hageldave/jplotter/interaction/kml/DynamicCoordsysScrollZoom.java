@@ -23,6 +23,7 @@ import java.util.Arrays;
  * @author hageldave
  *
  */
+// TODO: better name, maybe FocusedCoordsysScrollZoom
 public class DynamicCoordsysScrollZoom implements MouseWheelListener, InteractionConstants {
 
     protected Component canvas;

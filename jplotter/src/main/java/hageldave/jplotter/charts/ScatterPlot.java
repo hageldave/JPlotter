@@ -4,6 +4,7 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
 import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
@@ -68,8 +69,8 @@ public class ScatterPlot {
     protected CompleteRenderer content;
 //    final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
-    final protected ScatterPlotModel_<Object> selectedItem = new ScatterPlotModel_<>();
-    final protected ScatterPlotModel_<Object> hoveredItem = new ScatterPlotModel_<>();
+//    final protected ScatterPlotModel_<Object> selectedItem = new ScatterPlotModel_<>();
+//    final protected ScatterPlotModel_<Object> hoveredItem = new ScatterPlotModel_<>();
     
 
     final protected ScatterPlotDataModel dataModel = new ScatterPlotDataModel();
@@ -78,6 +79,7 @@ public class ScatterPlot {
     final protected TreeSet<Integer> freedPickIds = new TreeSet<>();
     final protected Legend legend = new Legend();
     protected ScatterPlotVisualMapping visualMapping = new ScatterPlotVisualMapping(){};
+    final protected LinkedList<ScatterPlotMouseEventListener> mouseEventListeners = new LinkedList<>();
 	private int legendRightWidth = 100;
 	private int legendBottomHeight = 60;
     
@@ -108,9 +110,11 @@ public class ScatterPlot {
 			}
         	@Override
 			public void dataChanged(int chunkIdx, double[][] chunkData) {
-					
+				onDataChanged(chunkIdx, chunkData);
 			}
 		});
+        
+        createMouseEventHandler();
     }
     
     public ScatterPlotVisualMapping getVisualMapping() {
@@ -243,6 +247,8 @@ public class ScatterPlot {
     	}
     	
     }
+    
+
     
     public static interface ScatterPlotVisualMapping {
     	
@@ -460,71 +466,105 @@ public class ScatterPlot {
         }.register();
     }
     
-
-    /**
-     * Adds a (already implemented) mouse movement listener,
-     * which is notified, when the mouse moves over a point.
-     *
-     * @return listener class
-     */
-    public PointClickedInterface printPointMouseOver() {
-        return (PointClickedInterface) new PointClickedInterface() {
-            @Override
-            public void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
-
-            }
-
-            @Override
-            public void pointReleased(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
-
-            }
-
-            @Override
-            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
-                System.out.println("Mouse location: " + mouseLocation);
-                System.out.println("Point location: " + pointLocation);
-                System.out.println("Data array: " + Arrays.deepToString(pointDetails.arrayInformation.array));
-                System.out.println("Data index: " + pointDetails.arrayIndex);
-            }
-
-            @Override
-            public void mouseLeftPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
-                System.out.println("Mouse left point");
-            }
-        }.register();
+    
+    protected void createMouseEventHandler() {
+    	MouseAdapter mouseEventHandler = new MouseAdapter() {
+    		@Override
+    		public void mouseMoved(MouseEvent e) { mouseAction(ScatterPlotMouseEventListener.MOUSE_EVENT_TYPE_MOVED, e); }
+    		
+    		@Override
+    		public void mouseClicked(MouseEvent e) { mouseAction(ScatterPlotMouseEventListener.MOUSE_EVENT_TYPE_CLICKED, e); }
+    		
+    		@Override
+    		public void mousePressed(MouseEvent e) { mouseAction(ScatterPlotMouseEventListener.MOUSE_EVENT_TYPE_PRESSED, e); }
+    		
+    		@Override
+    		public void mouseReleased(MouseEvent e) { mouseAction(ScatterPlotMouseEventListener.MOUSE_EVENT_TYPE_RELEASED, e); }
+    		
+    		@Override
+    		public void mouseDragged(MouseEvent e) { mouseAction(ScatterPlotMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED, e); }
+    		
+    		
+    		private void mouseAction(String eventType, MouseEvent e) {
+    			if(coordsys.getCoordSysArea().contains(e.getPoint())) {
+    				/* mouse inside coordinate area */
+    				Point2D coordsysPoint = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
+    				// get pick color under cursor
+    				int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+    				if((pixel & 0x00ffffff) == 0) {
+    					notifyInsideMouseEventNone(eventType, e, coordsysPoint);
+    				} else {
+    					Object pointLocalizer = pickingRegistry.lookup(pixel);
+    					if(pointLocalizer instanceof int[]) {
+    						int junkIdx = ((int[])pointLocalizer)[0];
+    						int pointIdx = ((int[])pointLocalizer)[1];
+    						notifyInsideMouseEventPoint(eventType, e, coordsysPoint, junkIdx, pointIdx);
+    					}
+    				}
+    			} else {
+    				/* mouse outside coordinate area */
+    				// get pick color under cursor
+    				int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+    				if((pixel & 0x00ffffff) == 0) {
+    					notifyOutsideMouseEventeNone(eventType, e);
+    				} else {
+    					Object miscLocalizer = pickingRegistry.lookup(pixel);
+    					if(miscLocalizer instanceof Integer) {
+    						int junkIdx = (int)miscLocalizer;
+    						notifyOutsideMouseEventElement(eventType, e, junkIdx);
+    					}
+    				}
+    			}
+    		}
+    		
+		};
+    	this.canvas.asComponent().addMouseListener(mouseEventHandler);
+    	this.canvas.asComponent().addMouseMotionListener(mouseEventHandler);
     }
-
-    /**
-     * Adds a (already implemented) click listener,
-     * which is notified, when a point is clicked.
-     *
-     * @return listener class
-     */
-    public PointClickedInterface printPointClicked() {
-        return (PointClickedInterface) new PointClickedInterface() {
-            @Override
-            public void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
-                System.out.println("Mouse location: " + mouseLocation);
-                System.out.println("Point location: " + pointLocation);
-                System.out.println("Data array: " + Arrays.deepToString(pointDetails.arrayInformation.array));
-                System.out.println("Data index: " + pointDetails.arrayIndex);
-            }
-
-            @Override
-            public void pointReleased(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
-                System.out.println("Mouse left point");
-            }
-
-            @Override
-            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
-
-            }
-
-            @Override
-            public void mouseLeftPoint(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {
-
-            }
-        }.register();
+    
+    protected synchronized void notifyInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+    	for(ScatterPlotMouseEventListener l:mouseEventListeners)
+    		l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
+    }
+    
+    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int junkIdx, int pointIdx) {
+    	for(ScatterPlotMouseEventListener l:mouseEventListeners)
+    		l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, junkIdx, pointIdx);
+    }
+    
+    protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+    	for(ScatterPlotMouseEventListener l:mouseEventListeners)
+    		l.onOutsideMouseEventeNone(mouseEventType, e);
+    }
+    
+    protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, int junkIdx) {
+    	for(ScatterPlotMouseEventListener l:mouseEventListeners)
+    		l.onOutsideMouseEventElement(mouseEventType, e, junkIdx);
+    }
+    
+    public static interface ScatterPlotMouseEventListener {
+    	static final String MOUSE_EVENT_TYPE_MOVED="moved";
+    	static final String MOUSE_EVENT_TYPE_CLICKED="clicked";
+    	static final String MOUSE_EVENT_TYPE_PRESSED="pressed";
+    	static final String MOUSE_EVENT_TYPE_RELEASED="released";
+    	static final String MOUSE_EVENT_TYPE_DRAGGED="dragged";
+    	
+    	public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
+        
+        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int junkIdx, int pointIdx) {}
+        
+        public default void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
+        
+        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int junkIdx) {}
+    }
+    
+    public synchronized ScatterPlotMouseEventListener addScatterPlotMouseEventListener(ScatterPlotMouseEventListener l) {
+    	this.mouseEventListeners.add(l);
+    	return l;
+    }
+    
+    public synchronized boolean removeScatterPlotMouseEventListener(ScatterPlotMouseEventListener l) {
+    	return this.mouseEventListeners.remove(l);
     }
 
     public JPlotterCanvas getCanvas() {
@@ -538,264 +578,68 @@ public class ScatterPlot {
     public CompleteRenderer getContent() {
         return content;
     }
-
-    public HashMap<Integer, RenderedPoints> getPointsInRenderer() {
-        return pointsInRenderer;
-    }
-
-    public RenderedPoints getPointInRenderer(final int index) {
-        return pointsInRenderer.get(index);
-    }
-
-    /**
-     * Adds point to picking registry
-     *
-     * @param point to be added
-     */
-    protected void addItemToRegistry(ExtendedPointDetails item) {
-        int tempID = this.pickingRegistry.getNewID();
-        item.point.setPickColor(tempID);
-        this.pickingRegistry.register(item, tempID);
-    }
-
-    protected static class ScatterPlotModel_<T> extends DataModel<T> {
-        protected T previousValue;
-        protected T notNull;
-
-        public ScatterPlotModel_() {
-            super();
-            this.addValueListener(e -> {
-                if (e != null) {
-                    if (notNull != null)
-                        this.previousValue = this.notNull;
-                    this.notNull = e;
-                }
-            });
-        }
-    }
-
-    protected abstract class InteractionInterface extends MouseAdapter {
-        protected KeyMaskListener keyListenerMask;
-
-        public InteractionInterface(final KeyMaskListener keyListenerMask) {
-            this.keyListenerMask = keyListenerMask;
-        }
-
-        public InteractionInterface() {
-            this(new KeyMaskListener(0));
-        }
-
-        /**
-         * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
-         * {@link MouseMotionListener} to the associated canvas.
-         *
-         * @return this for chaining
-         */
-        public InteractionInterface register() {
-            if (!Arrays.asList(canvas.asComponent().getMouseListeners()).contains(this))
-                canvas.asComponent().addMouseListener(this);
-            if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
-                canvas.asComponent().addMouseMotionListener(this);
-            if (!Arrays.asList(canvas.asComponent().getKeyListeners()).contains(keyListenerMask))
-                canvas.asComponent().addKeyListener(keyListenerMask);
-            return this;
-        }
-
-        /**
-         * Removes this {@link CoordSysViewSelector} from the associated canvas'
-         * mouse and mouse motion listeners.
-         *
-         * @return this for chaining
-         */
-        public InteractionInterface deRegister() {
-            canvas.asComponent().removeMouseListener(this);
-            canvas.asComponent().removeMouseMotionListener(this);
-            canvas.asComponent().removeKeyListener(keyListenerMask);
-            return this;
-        }
-    }
-
-    /**
-     * Mouse over interface, which triggers its pointClicked method,
-     * when clicking on a point in the coordsys.
-     */
-    public abstract class PointClickedInterface extends InteractionInterface {
-
-        public PointClickedInterface(KeyMaskListener keyListenerMask) {
-            super(keyListenerMask);
-        }
-
-        public PointClickedInterface() {
-            super();
-        }
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (keyListenerMask.isKeysPressed()) {
-                selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
-                selectedItem.addValueListener(newValue -> {
-                    if (selectedItem.previousValue instanceof ExtendedPointDetails)
-                        pointReleased(e.getPoint(), ((ExtendedPointDetails) selectedItem.previousValue).location, (ExtendedPointDetails) selectedItem.previousValue);
-                    if (newValue instanceof ExtendedPointDetails)
-                        pointClicked(e.getPoint(), ((ExtendedPointDetails) newValue).location, (ExtendedPointDetails) newValue);
-                });
-            }
-        }
-
-       @Override
-        public void mouseMoved(MouseEvent e) {
-           if (keyListenerMask.isKeysPressed()) {
-                hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
-                hoveredItem.addValueListener(newValue -> {
-                    if (hoveredItem.previousValue instanceof ExtendedPointDetails)
-                        mouseLeftPoint(e.getPoint(), ((ExtendedPointDetails) hoveredItem.previousValue).location, (ExtendedPointDetails) hoveredItem.previousValue);
-                    if (newValue instanceof ExtendedPointDetails) {
-                        mouseOverPoint(e.getPoint(), ((ExtendedPointDetails) newValue).location, (ExtendedPointDetails) newValue);
-                    }
-                });
-           }
-        }
-
-            /**
-             * Will be called, when a data point is clicked on.
-             *
-             * @param mouseLocation location that was clicked
-             * @param pointLocation location of the clicked point in the coordinate system
-             * @param data          the data array where the data point was found
-             * @param dataIndex     the index of the data point in the returned array
-             */
-        public abstract void pointClicked(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
-        public abstract void pointReleased(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
-        public abstract void mouseOverPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
-        public abstract void mouseLeftPoint(final Point mouseLocation, final Point2D pointLocation, final ExtendedPointDetails pointDetails);
-    }
-
-    public abstract class LegendSelectedInterface extends InteractionInterface {
-
-        public LegendSelectedInterface(KeyMaskListener keyListenerMask) {
-            super(keyListenerMask);
-        }
-
-        public LegendSelectedInterface() {
-            super();
-        }
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (keyListenerMask.isKeysPressed()) {
-                selectedItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
-                selectedItem.addValueListener(newValue -> {
-                    if (selectedItem.previousValue instanceof Legend.GlyphLabel)
-                        legendItemReleased(e.getPoint(), (Legend.GlyphLabel) selectedItem.previousValue);
-                    if (newValue instanceof Legend.GlyphLabel)
-                        legendItemSelected(e.getPoint(), (Legend.GlyphLabel) newValue);
-                });
-            }
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            if (keyListenerMask.isKeysPressed()) {
-                hoveredItem.setSelectedItem(pickingRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5)));
-                hoveredItem.addValueListener(newValue -> {
-                    if (hoveredItem.previousValue instanceof Legend.GlyphLabel)
-                        legendItemLeft(e.getPoint(), (Legend.GlyphLabel) hoveredItem.previousValue);
-                    if (newValue instanceof Legend.GlyphLabel)
-                        legendItemHovered(e.getPoint(), (Legend.GlyphLabel) newValue);
-                });
-            }
-        }
-
-        public abstract void legendItemSelected(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-        public abstract void legendItemReleased(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-        public abstract void legendItemHovered(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-        public abstract void legendItemLeft(final Point mouseLocation, final Legend.GlyphLabel glyphLabel);
-    }
-
-
-    /**
-     * This interface realizes a functionality, which returns all data points that were selected before.
-     * The selection of the data points is realized by the @link{CoordSysViewSelector}, with the alt-key as the modifierMask.
-     *
-     * If the selections is done, the abstract pointsSelected interface is called with the parameters
-     * 'Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices'.
-     *
-     */
-    public abstract class PointsSelectedInterface {
-        protected ArrayList<double[][]> data = new ArrayList<>();
-        protected ArrayList<Double> dataIndices = new ArrayList<>();
-        protected ArrayList<ExtendedPointDetails> points = new ArrayList<>();
-
-        public PointsSelectedInterface(final KeyMaskListener keyListenerMask) {
-            new CoordSysViewSelector(canvas, coordsys, keyListenerMask) {
-                @Override
-                public void areaSelected(double minX, double minY, double maxX, double maxY) {
-                    calcPoints(minX, minY, maxX, maxY);
-                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices, points);
-                    data.clear(); dataIndices.clear(); points.clear();
-                }
-            }.register();
-        }
-
-        public PointsSelectedInterface() {
-            new CoordSysViewSelector(canvas, coordsys) {
-                @Override
-                public void areaSelected(double minX, double minY, double maxX, double maxY) {
-                    calcPoints(minX, minY, maxX, maxY);
-                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices, points);
-                    data.clear(); dataIndices.clear(); points.clear();
-                }
-            }.register();
-        }
-
-        private void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
-            for (final RenderedPoints points: pointsInRenderer.values()) {
-                for (final double[] pointList : points.arrayInformation.array) {
-                    double x = pointList[points.arrayInformation.xLoc], y = pointList[points.arrayInformation.yLoc];
-                    if (x > minX && x < maxX && y > minY && y < maxY) {
-                        ExtendedPointDetails element = (ExtendedPointDetails) pickingRegistry.lookup(canvas.getPixel((int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getX(),
-                                (int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getY(), true, 5));
-                        if (element != null) {
-                            this.points.add(element);
-                            this.dataIndices.add(element.arrayIndex);
-                            this.data.add(element.arrayInformation.array);
-                        }
-                    }
-                }
-            }
-        }
-
-        /**
-         * This method will be called, when a rectangle was selected and the mouse was released.
-         *
-         * @param bounds the selected rectangle
-         * @param data the data sets where points where found
-         * @param dataIndices the indices of the data inside the data arrays
-         */
-        public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ExtendedPointDetails> points);
-    }
     
-    // TODO: Think again if this is a good idea
-    // TODO: if good Idea -> replace plot.new *Interface(){...}.register() mechanic by plot.addPointInteractionListener(..) method call  
-    public static interface PointInteractionListener {
-    	
-    	public default void pointClicked(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {}
-    	
-    	public default void noPointClicked(Point mouseLocation, Point2D noPointLocation) {}
-    	
-    	public default void pointPressed(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {}
-    	
-    	public default void pointReleased(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {}
-    	
-    	public default void pointHovered(Point mouseLocation, Point2D pointLocation, ExtendedPointDetails pointDetails) {}
-    	
-    	public default void noPointHovered(Point mouseLocation, Point2D noPointLocation) {}
-    	
-    }
+    // TODO: implement point set selection listener capabilities to remove the following
+//    /**
+//     * This interface realizes a functionality, which returns all data points that were selected before.
+//     * The selection of the data points is realized by the @link{CoordSysViewSelector}, with the alt-key as the modifierMask.
+//     *
+//     * If the selections is done, the abstract pointsSelected interface is called with the parameters
+//     * 'Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices'.
+//     *
+//     */
+//    public abstract class PointsSelectedInterface {
+//        protected ArrayList<double[][]> data = new ArrayList<>();
+//        protected ArrayList<Double> dataIndices = new ArrayList<>();
+//        protected ArrayList<ExtendedPointDetails> points = new ArrayList<>();
+//
+//        public PointsSelectedInterface(final KeyMaskListener keyListenerMask) {
+//            new CoordSysViewSelector(canvas, coordsys, keyListenerMask) {
+//                @Override
+//                public void areaSelected(double minX, double minY, double maxX, double maxY) {
+//                    calcPoints(minX, minY, maxX, maxY);
+//                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices, points);
+//                    data.clear(); dataIndices.clear(); points.clear();
+//                }
+//            }.register();
+//        }
+//
+//        public PointsSelectedInterface() {
+//            new CoordSysViewSelector(canvas, coordsys) {
+//                @Override
+//                public void areaSelected(double minX, double minY, double maxX, double maxY) {
+//                    calcPoints(minX, minY, maxX, maxY);
+//                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices, points);
+//                    data.clear(); dataIndices.clear(); points.clear();
+//                }
+//            }.register();
+//        }
+//
+//        private void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
+//            for (final RenderedPoints points: pointsInRenderer.values()) {
+//                for (final double[] pointList : points.arrayInformation.array) {
+//                    double x = pointList[points.arrayInformation.xLoc], y = pointList[points.arrayInformation.yLoc];
+//                    if (x > minX && x < maxX && y > minY && y < maxY) {
+//                        ExtendedPointDetails element = (ExtendedPointDetails) pickingRegistry.lookup(canvas.getPixel((int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getX(),
+//                                (int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getY(), true, 5));
+//                        if (element != null) {
+//                            this.points.add(element);
+//                            this.dataIndices.add(element.arrayIndex);
+//                            this.data.add(element.arrayInformation.array);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        /**
+//         * This method will be called, when a rectangle was selected and the mouse was released.
+//         *
+//         * @param bounds the selected rectangle
+//         * @param data the data sets where points where found
+//         * @param dataIndices the indices of the data inside the data arrays
+//         */
+//        public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ExtendedPointDetails> points);
+//    }
     
-    
-
-	public void addPointInteractionListener(KeyMaskListener keyMaskListener, PointInteractionListener pil) {
-		
-	}
 }
