@@ -23,6 +23,7 @@ import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -31,7 +32,9 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TreeSet;
 
@@ -80,6 +83,8 @@ public class ScatterPlot {
     final protected Legend legend = new Legend();
     protected ScatterPlotVisualMapping visualMapping = new ScatterPlotVisualMapping(){};
     final protected LinkedList<ScatterPlotMouseEventListener> mouseEventListeners = new LinkedList<>();
+    final protected LinkedList<PointSetSelectionListener> pointSetSelectionListeners = new LinkedList<>();
+    final protected LinkedList<PointSetSelectionListener> pointSetSelectionOngoingListeners = new LinkedList<>();
 	private int legendRightWidth = 100;
 	private int legendBottomHeight = 60;
     
@@ -115,6 +120,7 @@ public class ScatterPlot {
 		});
         
         createMouseEventHandler();
+        createRectangularPointSetSelectionCapabilities();
     }
     
     public ScatterPlotVisualMapping getVisualMapping() {
@@ -232,6 +238,20 @@ public class ScatterPlot {
     		return descriptionPerChunk.get(chunkIdx);
     	}
     	
+    	public TreeSet<Integer> getIndicesOfPointsInArea(int junkIdx, Rectangle2D area){
+    		// naive search for contained points
+    		// TODO: quadtree supported search (quadtrees per junk have to be kept up to date)
+    		int xIdx = getXIdx(junkIdx);
+    		int yIdx = getYIdx(junkIdx);
+    		double[][] data = getDataChunk(junkIdx);
+    		TreeSet<Integer> containedPointIndices = new TreeSet<>();
+    		for(int i=0; i<data.length; i++) {
+    			if(area.contains(data[i][xIdx], data[i][yIdx]))
+    				containedPointIndices.add(i);
+    		}
+    		return containedPointIndices;
+    	}
+    	
     	public synchronized void addListener(ScatterPlotDataModelListener l) {
     		listeners.add(l);
     	}
@@ -276,98 +296,6 @@ public class ScatterPlot {
     	
     }
     
-    
-
-//    public static class ArrayInformation {
-//        public final double[][] array;
-//        public final int xLoc;
-//        public final int yLoc;
-//
-//        public ArrayInformation(final double[][] array, final int xLoc, final int yLoc) {
-//            this.array = array;
-//            this.xLoc = xLoc;
-//            this.yLoc = yLoc;
-//        }
-//    }
-
-//    /**
-//     * used for encapsulating all data interesting for the developer
-//     */
-//    public static class ExtendedPointDetails extends Points.PointDetails {
-//        public final Points.PointDetails point;
-//        public final ArrayInformation arrayInformation;
-//        public final double arrayIndex;
-//        public final Glyph glyph;
-//        public final Points pointSet;
-//        public final String description;
-//
-//        ExtendedPointDetails(final Points.PointDetails point, final Glyph glyph, final Points pointSet,
-//                             final ArrayInformation arrayInformation, final double arrayIndex, final String description) {
-//            super(point.location);
-//            this.glyph = glyph;
-//            this.pointSet = pointSet;
-//            this.point = point;
-//            this.arrayInformation = arrayInformation;
-//            this.arrayIndex = arrayIndex;
-//            this.description = description;
-//        }
-//    }
-
-//    /**
-//     * Internal data structure to store information regarding color, glyph and description of data points.
-//     * This is used for displaying points (and their information) in the legend.
-//     *
-//     */
-//    public static class RenderedPoints {
-//        public Points points;
-//        public Color color;
-//        public String description;
-//        public ArrayInformation arrayInformation;
-//
-//        RenderedPoints(final Points points, final Color color, final String description, final ArrayInformation arrayInformation) {
-//            this.points = points;
-//            this.color = color;
-//            this.description = description;
-//            this.arrayInformation = arrayInformation;
-//        }
-//    }
-
-//    /**
-//     * adds a set of points to the scatter plot.
-//     *
-//     * @param ID     the ID is the key with which the Dataset will be stored in the pointMap
-//     * @param points a double array containing the coordinates of the points
-//     * @param glyph  the data points will be visualized by that glyph
-//     * @param color  the color of the glyph
-//     * @return the old Scatterplot for chaining
-//     */
-//    public Points addData(final int ID, final double[][] points, final int xLoc, final int yLoc, final DefaultGlyph glyph,
-//                          final Color color, final String descr) {
-//        Points tempPoints = new Points(glyph);
-//        ArrayInformation arrayInformation = new ArrayInformation(points, xLoc, yLoc);
-//        int index = 0;
-//        for (double[] entry : points) {
-//            double x = entry[xLoc], y = entry[yLoc];
-//            Points.PointDetails pointDetail = tempPoints.addPoint(x, y);
-//            pointDetail.setColor(color);
-//            addItemToRegistry(new ExtendedPointDetails(pointDetail, glyph, tempPoints, arrayInformation, index, descr));
-//            index++;
-//        }
-//        this.pointsInRenderer.put(ID, new RenderedPoints(tempPoints, color, descr, arrayInformation));
-//        this.content.addItemToRender(tempPoints);
-//        updateLegends(glyph, color, descr);
-//        return tempPoints;
-//    }
-
-//    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
-//                          final Color color, final String descr) {
-//        return addData(ID, points, 0, 1, glyph, color, descr);
-//    }
-//
-//    public Points addData(final int ID, final double[][] points, final DefaultGlyph glyph,
-//                          final Color color) {
-//        return addData(ID, points, glyph, color, "undefined");
-//    }
 
     public ScatterPlot alignCoordsys(final double scaling) {
         Rectangle2D union = null;
@@ -448,7 +376,7 @@ public class ScatterPlot {
      *
      * @return the {@link CoordSysViewSelector} so that it can be further customized
      */
-    public CoordSysViewSelector addZoomViewSelector() {
+    public CoordSysViewSelector addRectangleSelectionZoom() {
         return new CoordSysViewSelector(this.canvas, this.coordsys) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
@@ -457,7 +385,7 @@ public class ScatterPlot {
         }.register();
     }
 
-    public CoordSysViewSelector addZoomViewSelector(final KeyMaskListener keyListenerMask) {
+    public CoordSysViewSelector addRectangleSelectionZoom(final KeyMaskListener keyListenerMask) {
         return new CoordSysViewSelector(this.canvas, this.coordsys, keyListenerMask) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
@@ -486,6 +414,10 @@ public class ScatterPlot {
     		
     		
     		private void mouseAction(String eventType, MouseEvent e) {
+    			/* TODO: check key mask listeners of panning, zooming, and rectangular point selection
+    			 * to figure out if the mouse event is being handled by them. If not handled by any of them
+    			 * then go on with the following.
+    			 */
     			if(coordsys.getCoordSysArea().contains(e.getPoint())) {
     				/* mouse inside coordinate area */
     				Point2D coordsysPoint = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
@@ -579,67 +511,96 @@ public class ScatterPlot {
         return content;
     }
     
-    // TODO: implement point set selection listener capabilities to remove the following
-//    /**
-//     * This interface realizes a functionality, which returns all data points that were selected before.
-//     * The selection of the data points is realized by the @link{CoordSysViewSelector}, with the alt-key as the modifierMask.
-//     *
-//     * If the selections is done, the abstract pointsSelected interface is called with the parameters
-//     * 'Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices'.
-//     *
-//     */
-//    public abstract class PointsSelectedInterface {
-//        protected ArrayList<double[][]> data = new ArrayList<>();
-//        protected ArrayList<Double> dataIndices = new ArrayList<>();
-//        protected ArrayList<ExtendedPointDetails> points = new ArrayList<>();
-//
-//        public PointsSelectedInterface(final KeyMaskListener keyListenerMask) {
-//            new CoordSysViewSelector(canvas, coordsys, keyListenerMask) {
-//                @Override
-//                public void areaSelected(double minX, double minY, double maxX, double maxY) {
-//                    calcPoints(minX, minY, maxX, maxY);
-//                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices, points);
-//                    data.clear(); dataIndices.clear(); points.clear();
-//                }
-//            }.register();
-//        }
-//
-//        public PointsSelectedInterface() {
-//            new CoordSysViewSelector(canvas, coordsys) {
-//                @Override
-//                public void areaSelected(double minX, double minY, double maxX, double maxY) {
-//                    calcPoints(minX, minY, maxX, maxY);
-//                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices, points);
-//                    data.clear(); dataIndices.clear(); points.clear();
-//                }
-//            }.register();
-//        }
-//
-//        private void calcPoints(final double minX, final double minY, final double maxX, final double maxY) {
-//            for (final RenderedPoints points: pointsInRenderer.values()) {
-//                for (final double[] pointList : points.arrayInformation.array) {
-//                    double x = pointList[points.arrayInformation.xLoc], y = pointList[points.arrayInformation.yLoc];
-//                    if (x > minX && x < maxX && y > minY && y < maxY) {
-//                        ExtendedPointDetails element = (ExtendedPointDetails) pickingRegistry.lookup(canvas.getPixel((int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getX(),
-//                                (int) coordsys.transformCoordSys2AWT(new Point2D.Double(x, y), canvas.asComponent().getHeight()).getY(), true, 5));
-//                        if (element != null) {
-//                            this.points.add(element);
-//                            this.dataIndices.add(element.arrayIndex);
-//                            this.data.add(element.arrayInformation.array);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        /**
-//         * This method will be called, when a rectangle was selected and the mouse was released.
-//         *
-//         * @param bounds the selected rectangle
-//         * @param data the data sets where points where found
-//         * @param dataIndices the indices of the data inside the data arrays
-//         */
-//        public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ExtendedPointDetails> points);
-//    }
+    public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Rectangle2D area){
+    	ArrayList<Pair<Integer, TreeSet<Integer>>> pointLocators = new ArrayList<>();
+    	for(int junkIdx=0; junkIdx<dataModel.numChunks(); junkIdx++) {
+    		TreeSet<Integer> containedPointIndices = getDataModel().getIndicesOfPointsInArea(junkIdx, area);
+    		if(!containedPointIndices.isEmpty())
+    			pointLocators.add(Pair.of(junkIdx, containedPointIndices));
+    	}
+    	return pointLocators;
+    }
+    
+    protected void createRectangularPointSetSelectionCapabilities() {
+    	Comparator<Pair<Integer, TreeSet<Integer>>> comparator = new Comparator<Pair<Integer, TreeSet<Integer>>>() {
+			@Override
+			public int compare(Pair<Integer, TreeSet<Integer>> o1, Pair<Integer, TreeSet<Integer>> o2) {
+				int junkIdxComp = o1.first.compareTo(o2.first);
+				if(junkIdxComp != 0)
+					return junkIdxComp;
+				int setSizeComp = Integer.compare(o1.second.size(),o2.second.size());
+				if(setSizeComp != 0)
+					return setSizeComp;
+				// compare elements of both sets in ascending order until mismatch
+				Iterator<Integer> it1 = o1.second.iterator();
+				Iterator<Integer> it2 = o2.second.iterator();
+				int elementComp=0;
+				while(it1.hasNext() && elementComp==0) {
+					elementComp=it1.next().compareTo(it2.next());
+				}
+				return elementComp;
+			}
+		};
+    	SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = new SimpleSelectionModel<>(comparator);
+    	SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = new SimpleSelectionModel<>(comparator);
+    	
+    	Rectangle2D[] selectionRectMemory = {null,null};
+    	
+    	KeyMaskListener keyMask = new KeyMaskListener(KeyEvent.VK_S);
+    	CoordSysViewSelector selector = new CoordSysViewSelector(this.canvas, this.coordsys, keyMask) {
+    		@Override
+    		public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
+    			if(pointSetSelectionOngoingListeners.isEmpty())
+    				return;
+    			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+    			selectionRectMemory[0] = area;
+    			selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(area));
+    		}
+    		
+    		@Override
+			public void areaSelected(double minX, double minY, double maxX, double maxY) {
+    			if(pointSetSelectionListeners.isEmpty())
+    				return;
+    			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+    			selectionRectMemory[1] = area;
+    			selectedPoints.setSelection(getIndicesOfPointsInArea(area));
+			}
+		};
+		selector.register();
+		
+		selectedPointsOngoing.addSelectionListener(s->{
+			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+			notifyPointSetSelectionChangeOngoing(list, selectionRectMemory[0]);
+		});
+		selectedPointsOngoing.addSelectionListener(s->{
+			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+			notifyPointSetSelectionChange(list, selectionRectMemory[1]);
+		});
+    }
+    
+    public static interface PointSetSelectionListener {
+    	public void onPointSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Rectangle2D selectionArea);
+    }
+    
+    protected synchronized void notifyPointSetSelectionChangeOngoing(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
+    	for(PointSetSelectionListener l:pointSetSelectionOngoingListeners) {
+			l.onPointSetSelectionChanged(list, rect);
+		}
+    }
+    
+    protected synchronized void notifyPointSetSelectionChange(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
+    	for(PointSetSelectionListener l:pointSetSelectionListeners) {
+			l.onPointSetSelectionChanged(list, rect);
+		}
+    }
+    
+    public synchronized void addPointSetSelectionListener(PointSetSelectionListener l) {
+    	this.pointSetSelectionListeners.add(l);
+    }
+    
+    public synchronized void addPointSetSelectionOngoingListener(PointSetSelectionListener l) {
+    	this.pointSetSelectionOngoingListeners.add(l);
+    }
+    
     
 }

@@ -119,7 +119,7 @@ public class ReadyScatterPlot {
 
         plot.alignCoordsys(140);
         plot.addPanning().setKeyListenerMask(new KeyMaskListener(VK_W));
-        plot.addZoomViewSelector();
+        plot.addRectangleZoom();
         plot.addScrollZoom();
         plot.addLegendBottom(50);
 
