@@ -138,7 +138,19 @@ public class ScatterPlot {
 		return dataModel;
 	}
     
-    protected synchronized int registerInPickingRegistry(Object obj) {
+    public JPlotterCanvas getCanvas() {
+	    return canvas;
+	}
+
+	public CoordSysRenderer getCoordsys() {
+	    return coordsys;
+	}
+
+	public CompleteRenderer getContent() {
+	    return content;
+	}
+
+	protected synchronized int registerInPickingRegistry(Object obj) {
     	int id = freedPickIds.isEmpty() ? pickingRegistry.getNewID() : freedPickIds.pollFirst();
     	pickingRegistry.register(obj, id);
     	return id;
@@ -499,18 +511,6 @@ public class ScatterPlot {
     	return this.mouseEventListeners.remove(l);
     }
 
-    public JPlotterCanvas getCanvas() {
-        return canvas;
-    }
-
-    public CoordSysRenderer getCoordsys() {
-        return coordsys;
-    }
-
-    public CompleteRenderer getContent() {
-        return content;
-    }
-    
     public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Rectangle2D area){
     	ArrayList<Pair<Integer, TreeSet<Integer>>> pointLocators = new ArrayList<>();
     	for(int junkIdx=0; junkIdx<dataModel.numChunks(); junkIdx++) {
@@ -572,7 +572,7 @@ public class ScatterPlot {
 			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
 			notifyPointSetSelectionChangeOngoing(list, selectionRectMemory[0]);
 		});
-		selectedPointsOngoing.addSelectionListener(s->{
+		selectedPoints.addSelectionListener(s->{
 			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
 			notifyPointSetSelectionChange(list, selectionRectMemory[1]);
 		});
