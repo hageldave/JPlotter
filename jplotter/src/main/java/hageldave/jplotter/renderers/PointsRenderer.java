@@ -396,14 +396,14 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						contentStream.transform(new Matrix((float) Math.cos(-point.rot.getAsDouble()),(float) -Math.sin(-point.rot.getAsDouble()),
 								(float) Math.sin(-point.rot.getAsDouble()),(float) Math.cos(-point.rot.getAsDouble()), 0, 0));
 					}
-					if(glyphScaling*point.scale.getAsDouble() != 1) {
-						// scale
-						contentStream.transform(new Matrix((float) (glyphScaling*point.scale.getAsDouble()), 0, 0,
-								(float) (glyphScaling*point.scale.getAsDouble()), 0, 0));
-					}
+
+					// scale
+					contentStream.transform(new Matrix((float) (points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0,
+						(float) (points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0));
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					graphicsState.setStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
+					graphicsState.setNonStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
 					contentStream.setGraphicsStateParameters(graphicsState);
 
 					glyph.createPDFElement(contentStream);
@@ -411,6 +411,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						contentStream.setNonStrokingColor(new Color(point.color.getAsInt()));
 						contentStream.fill();
 					} else {
+						contentStream.setLineWidth((float) (1/(points.getGlobalScaling()*point.scale.getAsDouble())));
 						contentStream.setStrokingColor(new Color(point.color.getAsInt()));
 						contentStream.stroke();
 					}
