@@ -210,12 +210,82 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
             + NL + "   pick_color = gpick;"
             + NL + "}"
             + NL;
-
+    private final int[] strokePattern = new int[16];
     protected boolean viewHasChanged = true;
     protected int preVpW = 0;
     protected int preVpH = 0;
-    private final int[] strokePattern = new int[16];
 
+    protected static String pathSVGCoordinates(ArrayList<CurveDetails> curveStrip, double tx, double ty, double sx, double sy) {
+        double[] coordsX = new double[( 1 + curveStrip.size() * 3 )];
+        double[] coordsY = coordsX.clone();
+        // extract path coordinates
+        coordsX[0] = curveStrip.get(0).p0.getX();
+        coordsY[0] = curveStrip.get(0).p0.getY();
+        for (int i = 0; i < curveStrip.size(); i++) {
+            CurveDetails c = curveStrip.get(i);
+            coordsX[i * 3 + 1] = c.pc0.getX();
+            coordsY[i * 3 + 1] = c.pc0.getY();
+            coordsX[i * 3 + 2] = c.pc1.getX();
+            coordsY[i * 3 + 2] = c.pc1.getY();
+            coordsX[i * 3 + 3] = c.p1.getX();
+            coordsY[i * 3 + 3] = c.p1.getY();
+        }
+        // view transformation
+        for (int i = 0; i < coordsX.length; i++) {
+            double x = coordsX[i];
+            double y = coordsY[i];
+            x -= tx;
+            y -= ty;
+            x *= sx;
+            y *= sy;
+            coordsX[i] = x;
+            coordsY[i] = y;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append('M');
+        sb.append(SVGUtils.svgNumber(coordsX[0]));
+        sb.append(' ');
+        sb.append(SVGUtils.svgNumber(coordsY[0]));
+        sb.append(" C ");
+        for (int i = 1; i < coordsX.length; i++) {
+            sb.append(SVGUtils.svgNumber(coordsX[i]));
+            sb.append(' ');
+            sb.append(SVGUtils.svgNumber(coordsY[i]));
+            if (i < coordsX.length - 1)
+                sb.append(',');
+        }
+        return sb.toString();
+    }
+
+    protected static String strokePattern2dashArray(short pattern, double len) {
+        int[] onoff = transferBits(pattern, new int[16]);
+        LinkedList<Integer> dashes = new LinkedList<>();
+        int curr = onoff[0];
+        int l = 0;
+        for (int i = 0; i < onoff.length; i++) {
+            if (onoff[i] == curr) {
+                l++;
+            } else {
+                dashes.add(l);
+                curr = onoff[i];
+                l = 1;
+            }
+        }
+        dashes.add(l);
+        if (onoff[0] == 0)
+            dashes.add(0, 0);
+        if (dashes.size() % 2 == 1)
+            dashes.add(0);
+        double scaling = len / 16;
+        return dashes.stream().map(i -> SVGUtils.svgNumber(i * scaling)).reduce((a, b) -> a + " " + b).get();
+    }
+
+    protected static int[] transferBits(short bits, int[] target) {
+        for (int i = 0; i < 16; i++) {
+            target[15 - i] = ( bits >> i ) & 0b1;
+        }
+        return target;
+    }
 
     /**
      * Creates the shader if not already created and
@@ -275,7 +345,6 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         preVpW = w;
         preVpH = h;
     }
-
 
     /**
      * Disables {@link GL11#GL_DEPTH_TEST},
@@ -425,7 +494,6 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         }
     }
 
-
     @Override
     public void renderSVG(Document doc, Element parent, int w, int h) {
         if (!isEnabled()) {
@@ -499,12 +567,13 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         double translateY = Objects.isNull(view) ? 0 : view.getY();
         double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
         double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
-
         // todo exc mit runtime exc abfangen
 
         try {
             PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
             for (Curves curves : getItemsToRender()) {
+
+
                 if (curves.isHidden() || curves.getStrokePattern() == 0 || curves.numCurves() == 0) {
                     // line is invisible
                     continue;
@@ -549,10 +618,18 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                         graphicsState.setStrokingAlphaConstant(curves.getGlobalAlphaMultiplier());
                         cs.setGraphicsStateParameters(graphicsState);
 
+                        String[] splited = (strokePattern2dashArray(curves.getStrokePattern(), curves.getStrokeLength()).split("\\s+"));
+
+                        float[] real = new float[splited.length];
+                        for (int i = 0; i < splited.length; i++) {
+                            real[i] = Float.parseFloat(splited[i]);
+                        }
+
                         PDFUtils.createPDFCurve(cs, new Point2D.Double(x1 + x, y1 + y),
                                 new Point2D.Double(cp0x + x, cp0y + y),
                                 new Point2D.Double(cp1x + x, cp1y + y),
                                 new Point2D.Double(x2 + x, y2 + y));
+                        cs.setLineDashPattern(real, 0);
                         cs.setStrokingColor(new Color(details.color.getAsInt()));
                         cs.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
                         cs.stroke();
@@ -568,78 +645,6 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    protected static String pathSVGCoordinates(ArrayList<CurveDetails> curveStrip, double tx, double ty, double sx, double sy) {
-        double[] coordsX = new double[( 1 + curveStrip.size() * 3 )];
-        double[] coordsY = coordsX.clone();
-        // extract path coordinates
-        coordsX[0] = curveStrip.get(0).p0.getX();
-        coordsY[0] = curveStrip.get(0).p0.getY();
-        for (int i = 0; i < curveStrip.size(); i++) {
-            CurveDetails c = curveStrip.get(i);
-            coordsX[i * 3 + 1] = c.pc0.getX();
-            coordsY[i * 3 + 1] = c.pc0.getY();
-            coordsX[i * 3 + 2] = c.pc1.getX();
-            coordsY[i * 3 + 2] = c.pc1.getY();
-            coordsX[i * 3 + 3] = c.p1.getX();
-            coordsY[i * 3 + 3] = c.p1.getY();
-        }
-        // view transformation
-        for (int i = 0; i < coordsX.length; i++) {
-            double x = coordsX[i];
-            double y = coordsY[i];
-            x -= tx;
-            y -= ty;
-            x *= sx;
-            y *= sy;
-            coordsX[i] = x;
-            coordsY[i] = y;
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append('M');
-        sb.append(SVGUtils.svgNumber(coordsX[0]));
-        sb.append(' ');
-        sb.append(SVGUtils.svgNumber(coordsY[0]));
-        sb.append(" C ");
-        for (int i = 1; i < coordsX.length; i++) {
-            sb.append(SVGUtils.svgNumber(coordsX[i]));
-            sb.append(' ');
-            sb.append(SVGUtils.svgNumber(coordsY[i]));
-            if (i < coordsX.length - 1)
-                sb.append(',');
-        }
-        return sb.toString();
-    }
-
-    protected static String strokePattern2dashArray(short pattern, double len) {
-        int[] onoff = transferBits(pattern, new int[16]);
-        LinkedList<Integer> dashes = new LinkedList<>();
-        int curr = onoff[0];
-        int l = 0;
-        for (int i = 0; i < onoff.length; i++) {
-            if (onoff[i] == curr) {
-                l++;
-            } else {
-                dashes.add(l);
-                curr = onoff[i];
-                l = 1;
-            }
-        }
-        dashes.add(l);
-        if (onoff[0] == 0)
-            dashes.add(0, 0);
-        if (dashes.size() % 2 == 1)
-            dashes.add(0);
-        double scaling = len / 16;
-        return dashes.stream().map(i -> SVGUtils.svgNumber(i * scaling)).reduce((a, b) -> a + " " + b).get();
-    }
-
-    protected static int[] transferBits(short bits, int[] target) {
-        for (int i = 0; i < 16; i++) {
-            target[15 - i] = ( bits >> i ) & 0b1;
-        }
-        return target;
     }
 
 //	public static void main(String[] args) {
