@@ -554,7 +554,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                                 new Point2D.Double(cp1x + x, cp1y + y),
                                 new Point2D.Double(x2 + x, y2 + y));
                         cs.setStrokingColor(new Color(details.color.getAsInt()));
-                        cs.setLineWidth((float) details.thickness.getAsDouble());
+                        cs.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
                         cs.stroke();
 
                         // restore graphics

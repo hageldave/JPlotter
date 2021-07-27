@@ -816,33 +816,40 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                     double normalize = 1 / len;
                     double miterX = dy * normalize * 0.5;
                     double miterY = -dx * normalize * 0.5;
+
                     double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
                     double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
 
+                    // clipping area
+                    contentStream.saveGraphicsState();
+                    contentStream.addRect(x, y, w, h);
+                    contentStream.closePath();
+                    contentStream.clip();
 
-                    if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
                         if (!lines.hasStrokePattern()) {
                             // create invisible rectangle so that elements outside w, h won't be rendered
 
-                            // clipping area
-                            contentStream.saveGraphicsState();
-                            contentStream.addRect(x, y, w, h);
-                            contentStream.closePath();
-                            contentStream.clip();
-
                             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                            graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                            graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
                             contentStream.setGraphicsStateParameters(graphicsState);
 
+                            if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
+                                contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
+                            } else {
+                                PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+                                        new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+                                PDShadingPattern pattern = new PDShadingPattern();
+                                pattern.setShading(shading);
+                                COSName name = page.getResources().add(pattern);
+                                PDColor color = new PDColor(name, new PDPattern(null));
+                                contentStream.setNonStrokingColor(color);
+                            }
                             // create segments
-                            PDFUtils.createPDFSegment(contentStream, new Point2D.Double(x1 + x, y1 + y),
-                                    new Point2D.Double(x2 + x, y2 + y));
-                            contentStream.setStrokingColor(new Color(seg.color0.getAsInt()));
-                            contentStream.setLineWidth((float) seg.thickness0.getAsDouble());
-                            contentStream.stroke();
+                            PDFUtils.createPDFPolygon(contentStream, new double[]{(x1 + miterX * t1) + x, (x2 + miterX * t2) + x,
+                                    (x2 - miterX * t2) + x, (x1 - miterX * t1) + x}, new double[]{(y1 + miterY * t1) + y, (y2 + miterY * t2) + y,
+                                    (y2 - miterY * t2) + y, (y1 - miterY * t1) + y});
 
-                            // restore graphics
-                            contentStream.restoreGraphicsState();
+                            contentStream.fill();
 
                         } else {
                             double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
@@ -861,53 +868,33 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                 double y1_ = y1 + dy * m1;
                                 double y2_ = y1 + dy * m2;
 
-                                // TODO: verschiedene Breiten probieren
                                 strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 
-                                // clipping area
-                                contentStream.saveGraphicsState();
-                                contentStream.addRect(x, y, w, h);
-                                contentStream.closePath();
-                                contentStream.clip();
 
                                 PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                                 graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
                                 contentStream.setGraphicsStateParameters(graphicsState);
 
+                                if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
+                                    contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
+                                } else {
+                                    PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+                                            new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+                                    graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                                    contentStream.setGraphicsStateParameters(graphicsState);
+                                    PDShadingPattern pattern = new PDShadingPattern();
+                                    pattern.setShading(shading);
+                                    COSName name = page.getResources().add(pattern);
+                                    PDColor color = new PDColor(name, new PDPattern(null));
+                                    contentStream.setNonStrokingColor(color);
+                                }
                                 PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,
                                         (x2_ - miterX * t2_) + x, (x1_ - miterX * t1_) + x}, new double[]{(y1_ + miterY * t1_) + y, (y2_ + miterY * t2_) + y,
                                         (y2_ - miterY * t2_) + y, (y1_ - miterY * t1_) + y});
-                                contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
-                                contentStream.setLineWidth((float) seg.thickness0.getAsDouble());
                                 contentStream.fill();
-                                // restore graphics
-                                contentStream.restoreGraphicsState();
                             }
                         }
-                    } else {
-                        // clipping area
-                        contentStream.saveGraphicsState();
-                        contentStream.addRect(x, y, w, h);
-                        contentStream.closePath();
-                        contentStream.clip();
-
-                        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                        graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-                        contentStream.setGraphicsStateParameters(graphicsState);
-
-                        PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(x1+x, y1+y), new Point2D.Double(x2+x, y2+y));
-                        PDShadingPattern pattern = new PDShadingPattern();
-                        pattern.setShading(shading);
-                        COSName name = page.getResources().add(pattern);
-                        PDColor color = new PDColor(name, new PDPattern(null));
-                        PDFUtils.createPDFSegment(contentStream, new Point2D.Double(x1+x, y1+y), new Point2D.Double(x2+x, y2+y));
-                        contentStream.setStrokingColor(color);
-                        contentStream.setLineWidth((float) seg.thickness0.getAsDouble());
-                        contentStream.stroke();
-
-                        // restore graphics
-                        contentStream.restoreGraphicsState();
-                    }
+                    contentStream.restoreGraphicsState();
                 }
             }
             contentStream.close();
@@ -916,7 +903,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         }
     }
 
-    public static PDShadingType2 createGradientColor(int color1, int color2, Point2D startPoint, Point2D endPoint) throws IOException {
+    public static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
         Color startColor = new Color(color1);
         Color endColor = new Color(color2);
 
@@ -937,6 +924,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         c1.add(new COSFloat(endColor.getGreen() / 255f));
         c1.add(new COSFloat(endColor.getBlue() / 255f));
 
+
         fdict.setItem(COSName.DOMAIN, domain);
         fdict.setItem(COSName.C0, c0);
         fdict.setItem(COSName.C1, c1);
@@ -950,10 +938,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         axialShading.setShadingType(PDShading.SHADING_TYPE2);
 
         COSArray coords1 = new COSArray();
-        coords1.add(new COSFloat((float) startPoint.getX()));
-        coords1.add(new COSFloat((float) startPoint.getY()));
-        coords1.add(new COSFloat((float) endPoint.getX()));
-        coords1.add(new COSFloat((float) endPoint.getY()));
+        coords1.add(new COSFloat((float) p0.getX()));
+        coords1.add(new COSFloat((float) p0.getY()));
+        coords1.add(new COSFloat((float) p1.getX()));
+        coords1.add(new COSFloat((float) p1.getY()));
 
         axialShading.setCoords(coords1);
         axialShading.setFunction(func);

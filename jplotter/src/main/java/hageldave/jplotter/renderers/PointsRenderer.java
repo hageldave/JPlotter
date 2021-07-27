@@ -396,10 +396,10 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						contentStream.transform(new Matrix((float) Math.cos(-point.rot.getAsDouble()),(float) -Math.sin(-point.rot.getAsDouble()),
 								(float) Math.sin(-point.rot.getAsDouble()),(float) Math.cos(-point.rot.getAsDouble()), 0, 0));
 					}
-					if(glyphScaling*point.scale.getAsDouble() != 1){
+					if(glyphScaling*point.scale.getAsDouble() != 1) {
 						// scale
-						contentStream.transform(new Matrix((float) point.scale.getAsDouble(), 0, 0, (float) point.scale.getAsDouble(),
-								0, 0));
+						contentStream.transform(new Matrix((float) (glyphScaling*point.scale.getAsDouble()), 0, 0,
+								(float) (glyphScaling*point.scale.getAsDouble()), 0, 0));
 					}
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
