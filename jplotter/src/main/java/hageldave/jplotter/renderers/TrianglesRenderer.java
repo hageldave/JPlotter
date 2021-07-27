@@ -15,6 +15,7 @@ import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
@@ -294,8 +295,14 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					contentStream.addRect(x, y, w, h);
 					contentStream.closePath();
 					contentStream.clip();
+
+					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+					graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+					contentStream.setGraphicsStateParameters(graphicsState);
+
 					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2), new Color(tri.c0.getAsInt()), new Color(tri.c1.getAsInt()), new Color(tri.c2.getAsInt()));
+
 					contentStream.restoreGraphicsState();
 				}
 			}

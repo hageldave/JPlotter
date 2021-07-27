@@ -15,6 +15,7 @@ import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -443,6 +444,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.transform(new Matrix((float) Math.cos(-txt.getAngle()),(float) -Math.sin(-txt.getAngle()),
 								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), (float) txt.getBounds().getX(), (float) txt.getBounds().getY()));
 
+						PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+						graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha())/255);
+						contentStream.setGraphicsStateParameters(graphicsState);
+
 						PDFUtils.createPDFPolygon(contentStream,
 								new double[]{-1.5, txt.getBounds().getWidth(), txt.getBounds().getWidth(), -1.5},
 								new double[]{0, 0, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
@@ -457,6 +462,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 					contentStream.addRect(x, y, w, h);
 					contentStream.closePath();
 					contentStream.clip();
+
+					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+					graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
+					contentStream.setGraphicsStateParameters(graphicsState);
 
 					if (txt.getAngle()==0) {
 						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),

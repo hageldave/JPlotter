@@ -13,6 +13,7 @@ import hageldave.jplotter.util.ShaderRegistry;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -400,6 +401,10 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						contentStream.transform(new Matrix((float) point.scale.getAsDouble(), 0, 0, (float) point.scale.getAsDouble(),
 								0, 0));
 					}
+
+					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+					graphicsState.setStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
+					contentStream.setGraphicsStateParameters(graphicsState);
 
 					glyph.createPDFElement(contentStream);
 					if(glyph.isFilled()){

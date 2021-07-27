@@ -12,9 +12,18 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
 import org.apache.batik.ext.awt.geom.Polygon2D;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.color.PDPattern;
+import org.apache.pdfbox.pdmodel.graphics.pattern.PDShadingPattern;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
@@ -791,6 +800,13 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                     prevX = x2;
                     prevY = y2;
 
+                    if (lines.isVertexRoundingEnabled()) {
+                        x1 = (int) ( x1 + 0.5 );
+                        x2 = (int) ( x2 + 0.5 );
+                        y1 = (int) ( y1 + 0.5 );
+                        y2 = (int) ( y2 + 0.5 );
+                    }
+
                     // visibility check
                     if (!viewportRect.intersectsLine(x1, y1, x2, y2)) {
                         continue;
@@ -805,7 +821,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 
                     if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-
                         if (!lines.hasStrokePattern()) {
                             // create invisible rectangle so that elements outside w, h won't be rendered
 
@@ -814,6 +829,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                             contentStream.addRect(x, y, w, h);
                             contentStream.closePath();
                             contentStream.clip();
+
+                            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                            graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                            contentStream.setGraphicsStateParameters(graphicsState);
 
                             // create segments
                             PDFUtils.createPDFSegment(contentStream, new Point2D.Double(x1 + x, y1 + y),
@@ -845,22 +864,49 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                 // TODO: verschiedene Breiten probieren
                                 strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 
+                                // clipping area
+                                contentStream.saveGraphicsState();
+                                contentStream.addRect(x, y, w, h);
+                                contentStream.closePath();
+                                contentStream.clip();
+
+                                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                                graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                                contentStream.setGraphicsStateParameters(graphicsState);
+
                                 PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,
                                         (x2_ - miterX * t2_) + x, (x1_ - miterX * t1_) + x}, new double[]{(y1_ + miterY * t1_) + y, (y2_ + miterY * t2_) + y,
                                         (y2_ - miterY * t2_) + y, (y1_ - miterY * t1_) + y});
                                 contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
                                 contentStream.setLineWidth((float) seg.thickness0.getAsDouble());
                                 contentStream.fill();
+                                // restore graphics
+                                contentStream.restoreGraphicsState();
                             }
                         }
                     } else {
+                        // clipping area
+                        contentStream.saveGraphicsState();
+                        contentStream.addRect(x, y, w, h);
+                        contentStream.closePath();
+                        contentStream.clip();
 
+                        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                        graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                        contentStream.setGraphicsStateParameters(graphicsState);
 
-                        // TODO Implement shaded lines with different start/end points
-                        PDFUtils.createPDFSegment(contentStream, new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
-                        contentStream.setStrokingColor(new Color(seg.color0.getAsInt()));
+                        PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(x1+x, y1+y), new Point2D.Double(x2+x, y2+y));
+                        PDShadingPattern pattern = new PDShadingPattern();
+                        pattern.setShading(shading);
+                        COSName name = page.getResources().add(pattern);
+                        PDColor color = new PDColor(name, new PDPattern(null));
+                        PDFUtils.createPDFSegment(contentStream, new Point2D.Double(x1+x, y1+y), new Point2D.Double(x2+x, y2+y));
+                        contentStream.setStrokingColor(color);
                         contentStream.setLineWidth((float) seg.thickness0.getAsDouble());
                         contentStream.stroke();
+
+                        // restore graphics
+                        contentStream.restoreGraphicsState();
                     }
                 }
             }
@@ -868,6 +914,51 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static PDShadingType2 createGradientColor(int color1, int color2, Point2D startPoint, Point2D endPoint) throws IOException {
+        Color startColor = new Color(color1);
+        Color endColor = new Color(color2);
+
+        COSDictionary fdict = new COSDictionary();
+        fdict.setInt(COSName.FUNCTION_TYPE, 2);
+
+        COSArray domain = new COSArray();
+        domain.add(COSInteger.get(0));
+        domain.add(COSInteger.get(1));
+
+        COSArray c0 = new COSArray();
+        c0.add(new COSFloat(startColor.getRed() / 255f));
+        c0.add(new COSFloat(startColor.getGreen() / 255f));
+        c0.add(new COSFloat(startColor.getBlue() / 255f));
+
+        COSArray c1 = new COSArray();
+        c1.add(new COSFloat(endColor.getRed() / 255f));
+        c1.add(new COSFloat(endColor.getGreen() / 255f));
+        c1.add(new COSFloat(endColor.getBlue() / 255f));
+
+        fdict.setItem(COSName.DOMAIN, domain);
+        fdict.setItem(COSName.C0, c0);
+        fdict.setItem(COSName.C1, c1);
+        fdict.setInt(COSName.N, 1);
+
+        PDFunctionType2 func = new PDFunctionType2(fdict);
+
+        PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
+
+        axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+        axialShading.setShadingType(PDShading.SHADING_TYPE2);
+
+        COSArray coords1 = new COSArray();
+        coords1.add(new COSFloat((float) startPoint.getX()));
+        coords1.add(new COSFloat((float) startPoint.getY()));
+        coords1.add(new COSFloat((float) endPoint.getX()));
+        coords1.add(new COSFloat((float) endPoint.getY()));
+
+        axialShading.setCoords(coords1);
+        axialShading.setFunction(func);
+
+        return axialShading;
     }
 
     protected static double[] findStrokeInterval(double current, double strokeLen, short pattern) {

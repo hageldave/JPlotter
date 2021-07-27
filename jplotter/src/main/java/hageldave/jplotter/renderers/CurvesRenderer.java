@@ -15,6 +15,7 @@ import hageldave.jplotter.util.ShaderRegistry;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.w3c.dom.Document;
@@ -543,6 +544,10 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                         cs.addRect(x, y, w, h);
                         cs.closePath();
                         cs.clip();
+
+                        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                        graphicsState.setStrokingAlphaConstant(curves.getGlobalAlphaMultiplier());
+                        cs.setGraphicsStateParameters(graphicsState);
 
                         PDFUtils.createPDFCurve(cs, new Point2D.Double(x1 + x, y1 + y),
                                 new Point2D.Double(cp0x + x, cp0y + y),
