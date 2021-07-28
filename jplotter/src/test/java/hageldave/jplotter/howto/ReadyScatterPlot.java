@@ -3,18 +3,21 @@ package hageldave.jplotter.howto;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.charts.ScatterPlot;
+import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderables.Points.PointDetails;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
@@ -105,100 +108,129 @@ public class ReadyScatterPlot {
             int index = 0;
             // parse list to array so that scatterplot class can read data
             for (LinkedList<double[]> list : data) {
-                Object[] array = list.toArray();
-                double[][] addData = new double[list.size()][list.getFirst().length];
-                for (int j = 0; j < array.length; j++) {
-                    addData[j] = (double[]) array[j];
-                }
+                double[][] array = list.toArray(new double[0][]);
                 // adds data to scatter plot
-                plot.addData(index, addData, 6, 7, glyphclasses[index],
-                        new Color(classcolors.getColor(index)), classLabels[index]);
-                index++;
+                plot.getDataModel().addData(array, 6, 7, classLabels[index++]);
             }
         }
 
         plot.alignCoordsys(140);
         plot.addPanning().setKeyListenerMask(new KeyMaskListener(VK_W));
-        plot.addRectangleZoom();
+        plot.addRectangleSelectionZoom();
         plot.addScrollZoom();
-        plot.addLegendBottom(50);
+        plot.placeLegendOnBottom();
 
-        plot.new PointClickedInterface(new KeyMaskListener(VK_ALT)) {
-            Points points = null;
-            @Override
-            public void pointClicked(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
-                selectedSelectedPointInfo.setVisible(true);
-                selectedPoint.setText(pointLocation.getX() + " " + pointLocation.getY());
-                selectedSelectedPointInfo.setxPos(pointLocation.getX());
-                selectedSelectedPointInfo.setyPos(pointLocation.getY());
-                selectedSelectedPointInfo.setArrayIndex((int) pointDetails.arrayIndex);
-                selectedSelectedPointInfo.setArray(pointDetails.arrayInformation.array);
-                selectedSelectedPointInfo.setArrayText(pointDetails.description);
-                selectedSelectedPointInfo.setCategory(String.valueOf(pointDetails.glyph));
-                selectedSelectedPointInfo.setButtonVisible(true);
-            }
+        KeyMaskListener mousePointInteractionKeyMask = new KeyMaskListener(VK_ALT);
+        plot.getCanvas().asComponent().addKeyListener(mousePointInteractionKeyMask);
+        plot.addScatterPlotMouseEventListener(new ScatterPlotMouseEventListener() {
+        	
+        	Points highlight = null;
+        	
+        	@Override
+        	public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+        		if(!mousePointInteractionKeyMask.isKeysPressed())
+        			return;
+        		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
+        			double[] datapoint = plot.getDataModel().getDataChunk(chunkIdx)[pointIdx];
+        			selectedSelectedPointInfo.setVisible(true);
+        			selectedPoint.setText(coordsysPoint.getX() + " " + coordsysPoint.getY());
+        			selectedSelectedPointInfo.setxPos(coordsysPoint.getX());
+        			selectedSelectedPointInfo.setyPos(coordsysPoint.getY());
+        			selectedSelectedPointInfo.setArrayIndex(pointIdx);
+        			selectedSelectedPointInfo.setArray(plot.getDataModel().getDataChunk(chunkIdx));
+        			selectedSelectedPointInfo.setArrayText(plot.getDataModel().getChunkDescription(chunkIdx));
+        			selectedSelectedPointInfo.setCategory("");
+        			selectedSelectedPointInfo.setButtonVisible(true);
+        		}
+        		
+        		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
+        			PointDetails visiblePoint = plot.getPointsForChunk(chunkIdx).getPointDetails().get(pointIdx);
+        			if (highlight == null) {
+        				highlight = new Points(DefaultGlyph.CIRCLE_F);
+        				plot.getContent().points.addItemToRender(highlight);
+        			}
+        			highlight.removeAllPoints();
+        			Points.PointDetails pointDetail = highlight.addPoint(visiblePoint.location);
+        			pointDetail.setColor(visiblePoint.color);
+        			pointDetail.setScaling(1.5);
+        			plot.getCanvas().scheduleRepaint();
+        		}
+        	}
+        	
+        	@Override
+        	public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+        		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED)
+        			selectedSelectedPointInfo.clearAll();
+        		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
+        			if(highlight != null) {
+        				highlight.removeAllPoints();
+        				plot.getCanvas().scheduleRepaint();
+        			}
+        		}
+        	}
+        	
+        	@Override
+        	public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
+        		System.out.println(mouseEventType);
+        		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED)
+        			return;
+        		// TODO: desaturate everything except corresponding chunk, for the time being we change alpha instead
+        		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
+        			double alpha = 0.1;
+        			if(chunk==chunkIdx)
+        				alpha = 1.0;
+        			plot.getPointsForChunk(chunk).setGlobalAlphaMultiplier(alpha);
+        		}
+        		plot.getCanvas().scheduleRepaint();
+        	}
+        	
+        	@Override
+        	public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+        		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED)
+        			return;
+        		// TODO: resaturate everything, for the time being we change alpha instead
+        		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
+        			plot.getPointsForChunk(chunk).setGlobalAlphaMultiplier(1.0);
+        		}
+        		plot.getCanvas().scheduleRepaint();
+        	}
+		});
 
-            @Override
-            public void pointReleased(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
-                selectedSelectedPointInfo.clearAll();
-            }
+//        plot.new LegendSelectedInterface() {
+//            final HashSet<ScatterPlot.RenderedPoints> desaturatedPoints = new HashSet<>();
+//            @Override
+//            public void legendItemSelected(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
+//                for (ScatterPlot.RenderedPoints renderedPoints: plot.getPointsInRenderer().values()) {
+//                    if (renderedPoints.points.glyph != glyphLabel.glyph) {
+//                        toggleLegendItems(desaturatedPoints, renderedPoints, 5);
+//                    }
+//                }
+//                plot.getCanvas().scheduleRepaint();
+//            }
+//
+//            @Override
+//            public void legendItemReleased(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
+//                for (ScatterPlot.RenderedPoints renderedPoints: plot.getPointsInRenderer().values()) {
+//                    toggleLegendItems(desaturatedPoints, renderedPoints, 255);
+//                }
+//                plot.getCanvas().scheduleRepaint();
+//            }
+//
+//            @Override
+//            public void legendItemHovered(Point mouseLocation, Legend.GlyphLabel glyphLabel) { }
+//
+//            @Override
+//            public void legendItemLeft(Point mouseLocation, Legend.GlyphLabel glyphLabel) { }
+//        }.register();
 
-            @Override
-            public void mouseOverPoint(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
-                if (points == null) {
-                    points = new Points(pointDetails.pointSet.glyph);
-                    Points.PointDetails pointDetail = points.addPoint(pointLocation.getX(), pointLocation.getY());
-                    pointDetail.setColor(pointDetails.point.color);
-                    pointDetail.setScaling(1.5);
-                    plot.getContent().addItemToRender(points);
-                    plot.getCanvas().scheduleRepaint();
-                }
-            }
-
-            @Override
-            public void mouseLeftPoint(Point mouseLocation, Point2D pointLocation, ScatterPlot.ExtendedPointDetails pointDetails) {
-                plot.getContent().points.removeItemToRender(points);
-                plot.getCanvas().scheduleRepaint();
-                points = null;
-            }
-        }.register();
-
-
-        plot.new LegendSelectedInterface() {
-            final HashSet<ScatterPlot.RenderedPoints> desaturatedPoints = new HashSet<>();
-            @Override
-            public void legendItemSelected(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
-                for (ScatterPlot.RenderedPoints renderedPoints: plot.getPointsInRenderer().values()) {
-                    if (renderedPoints.points.glyph != glyphLabel.glyph) {
-                        toggleLegendItems(desaturatedPoints, renderedPoints, 5);
-                    }
-                }
-                plot.getCanvas().scheduleRepaint();
-            }
-
-            @Override
-            public void legendItemReleased(Point mouseLocation, Legend.GlyphLabel glyphLabel) {
-                for (ScatterPlot.RenderedPoints renderedPoints: plot.getPointsInRenderer().values()) {
-                    toggleLegendItems(desaturatedPoints, renderedPoints, 255);
-                }
-                plot.getCanvas().scheduleRepaint();
-            }
-
-            @Override
-            public void legendItemHovered(Point mouseLocation, Legend.GlyphLabel glyphLabel) { }
-
-            @Override
-            public void legendItemLeft(Point mouseLocation, Legend.GlyphLabel glyphLabel) { }
-        }.register();
-
-        plot.new PointsSelectedInterface(new KeyMaskListener(VK_TAB)) {
-            @Override
-            public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ScatterPlot.ExtendedPointDetails> points) {
-                System.out.println(data);
-                System.out.println(dataIndices);
-                System.out.println(points);
-            }
-        };
+//        plot.new PointsSelectedInterface(new KeyMaskListener(VK_TAB)) {
+//            @Override
+//            public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Double> dataIndices, ArrayList<ScatterPlot.ExtendedPointDetails> points) {
+//                System.out.println(data);
+//                System.out.println(dataIndices);
+//                System.out.println(points);
+//            }
+//        };
 
 
 
@@ -235,15 +267,15 @@ public class ReadyScatterPlot {
             });
     }
 
-    public static void toggleLegendItems(final HashSet<ScatterPlot.RenderedPoints> desaturatedPoints, final ScatterPlot.RenderedPoints renderedPoints, final int saturation) {
-        desaturatedPoints.add(renderedPoints);
-        ArrayList<Points.PointDetails> tempPointDetails = renderedPoints.points.getPointDetails();
-        for (Points.PointDetails pointDetails: tempPointDetails) {
-            IntSupplier detailColor = pointDetails.color;
-            Color tempColor = new Color(detailColor.getAsInt());
-            pointDetails.setColor(new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), saturation));
-        }
-    }
+//    public static void toggleLegendItems(final HashSet<ScatterPlot.RenderedPoints> desaturatedPoints, final ScatterPlot.RenderedPoints renderedPoints, final int saturation) {
+//        desaturatedPoints.add(renderedPoints);
+//        ArrayList<Points.PointDetails> tempPointDetails = renderedPoints.points.getPointDetails();
+//        for (Points.PointDetails pointDetails: tempPointDetails) {
+//            IntSupplier detailColor = pointDetails.color;
+//            Color tempColor = new Color(detailColor.getAsInt());
+//            pointDetails.setColor(new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), saturation));
+//        }
+//    }
 
     protected static Container setupCurrentPoint() {
         Container selectedPointWrapper = new Container();

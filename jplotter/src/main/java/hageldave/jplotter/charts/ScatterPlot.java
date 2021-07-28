@@ -250,12 +250,12 @@ public class ScatterPlot {
     		return descriptionPerChunk.get(chunkIdx);
     	}
     	
-    	public TreeSet<Integer> getIndicesOfPointsInArea(int junkIdx, Rectangle2D area){
+    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area){
     		// naive search for contained points
-    		// TODO: quadtree supported search (quadtrees per junk have to be kept up to date)
-    		int xIdx = getXIdx(junkIdx);
-    		int yIdx = getYIdx(junkIdx);
-    		double[][] data = getDataChunk(junkIdx);
+    		// TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
+    		int xIdx = getXIdx(chunkIdx);
+    		int yIdx = getYIdx(chunkIdx);
+    		double[][] data = getDataChunk(chunkIdx);
     		TreeSet<Integer> containedPointIndices = new TreeSet<>();
     		for(int i=0; i<data.length; i++) {
     			if(area.contains(data[i][xIdx], data[i][yIdx]))
@@ -440,9 +440,9 @@ public class ScatterPlot {
     				} else {
     					Object pointLocalizer = pickingRegistry.lookup(pixel);
     					if(pointLocalizer instanceof int[]) {
-    						int junkIdx = ((int[])pointLocalizer)[0];
+    						int chunkIdx = ((int[])pointLocalizer)[0];
     						int pointIdx = ((int[])pointLocalizer)[1];
-    						notifyInsideMouseEventPoint(eventType, e, coordsysPoint, junkIdx, pointIdx);
+    						notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, pointIdx);
     					}
     				}
     			} else {
@@ -454,8 +454,8 @@ public class ScatterPlot {
     				} else {
     					Object miscLocalizer = pickingRegistry.lookup(pixel);
     					if(miscLocalizer instanceof Integer) {
-    						int junkIdx = (int)miscLocalizer;
-    						notifyOutsideMouseEventElement(eventType, e, junkIdx);
+    						int chunkIdx = (int)miscLocalizer;
+    						notifyOutsideMouseEventElement(eventType, e, chunkIdx);
     					}
     				}
     			}
@@ -471,9 +471,9 @@ public class ScatterPlot {
     		l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
     
-    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int junkIdx, int pointIdx) {
+    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
     	for(ScatterPlotMouseEventListener l:mouseEventListeners)
-    		l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, junkIdx, pointIdx);
+    		l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
     }
     
     protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
@@ -481,9 +481,9 @@ public class ScatterPlot {
     		l.onOutsideMouseEventeNone(mouseEventType, e);
     }
     
-    protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, int junkIdx) {
+    protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
     	for(ScatterPlotMouseEventListener l:mouseEventListeners)
-    		l.onOutsideMouseEventElement(mouseEventType, e, junkIdx);
+    		l.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
     }
     
     public static interface ScatterPlotMouseEventListener {
@@ -495,11 +495,11 @@ public class ScatterPlot {
     	
     	public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
         
-        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int junkIdx, int pointIdx) {}
+        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {}
         
         public default void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
         
-        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int junkIdx) {}
+        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {}
     }
     
     public synchronized ScatterPlotMouseEventListener addScatterPlotMouseEventListener(ScatterPlotMouseEventListener l) {
@@ -513,10 +513,10 @@ public class ScatterPlot {
 
     public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Rectangle2D area){
     	ArrayList<Pair<Integer, TreeSet<Integer>>> pointLocators = new ArrayList<>();
-    	for(int junkIdx=0; junkIdx<dataModel.numChunks(); junkIdx++) {
-    		TreeSet<Integer> containedPointIndices = getDataModel().getIndicesOfPointsInArea(junkIdx, area);
+    	for(int chunkIdx=0; chunkIdx<dataModel.numChunks(); chunkIdx++) {
+    		TreeSet<Integer> containedPointIndices = getDataModel().getIndicesOfPointsInArea(chunkIdx, area);
     		if(!containedPointIndices.isEmpty())
-    			pointLocators.add(Pair.of(junkIdx, containedPointIndices));
+    			pointLocators.add(Pair.of(chunkIdx, containedPointIndices));
     	}
     	return pointLocators;
     }
@@ -525,9 +525,9 @@ public class ScatterPlot {
     	Comparator<Pair<Integer, TreeSet<Integer>>> comparator = new Comparator<Pair<Integer, TreeSet<Integer>>>() {
 			@Override
 			public int compare(Pair<Integer, TreeSet<Integer>> o1, Pair<Integer, TreeSet<Integer>> o2) {
-				int junkIdxComp = o1.first.compareTo(o2.first);
-				if(junkIdxComp != 0)
-					return junkIdxComp;
+				int chunkIdxComp = o1.first.compareTo(o2.first);
+				if(chunkIdxComp != 0)
+					return chunkIdxComp;
 				int setSizeComp = Integer.compare(o1.second.size(),o2.second.size());
 				if(setSizeComp != 0)
 					return setSizeComp;
@@ -601,6 +601,10 @@ public class ScatterPlot {
     public synchronized void addPointSetSelectionOngoingListener(PointSetSelectionListener l) {
     	this.pointSetSelectionOngoingListeners.add(l);
     }
+
+	public Points getPointsForChunk(int chunkIdx) {
+		return this.pointsPerDataChunk.get(chunkIdx);
+	}
     
     
 }
