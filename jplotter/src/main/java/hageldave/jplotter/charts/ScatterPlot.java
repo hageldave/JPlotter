@@ -199,6 +199,8 @@ public class ScatterPlot {
     		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
     		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
     	}
+    	
+    	this.canvas.scheduleRepaint();
     }
     
     public static class ScatterPlotDataModel {
