@@ -171,7 +171,6 @@ public class ReadyScatterPlot {
         	
         	@Override
         	public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
-        		System.out.println(mouseEventType);
         		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED)
         			return;
         		// TODO: desaturate everything except corresponding chunk, for the time being we change alpha instead

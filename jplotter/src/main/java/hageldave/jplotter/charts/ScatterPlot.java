@@ -432,7 +432,7 @@ public class ScatterPlot {
     			 * to figure out if the mouse event is being handled by them. If not handled by any of them
     			 * then go on with the following.
     			 */
-    			if(coordsys.getCoordSysArea().contains(e.getPoint())) {
+    			if(Utils.swapYAxis(coordsys.getCoordSysArea(),canvas.asComponent().getHeight()).contains(e.getPoint())) {
     				/* mouse inside coordinate area */
     				Point2D coordsysPoint = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
     				// get pick color under cursor
