@@ -643,7 +643,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
             }
             cs.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error occurred!");
         }
     }
 

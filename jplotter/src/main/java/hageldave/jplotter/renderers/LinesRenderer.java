@@ -311,9 +311,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
             return;
         }
 
-        System.out.println("before?");
-
-
         double translateX = Objects.isNull(view) ? 0 : view.getX();
         double translateY = Objects.isNull(view) ? 0 : view.getY();
         double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
@@ -327,8 +324,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                 // line is invisible
                 continue;
             }
-
-            System.out.println(lines.getBounds());
 
             boolean hasVaryingThickness = false;
             double thick = lines.getSegments().get(0).thickness0.getAsDouble();
@@ -850,7 +845,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                     (y2 - miterY * t2) + y, (y1 - miterY * t1) + y});
 
                             contentStream.fill();
-
                         } else {
                             double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
                             while (strokeInterval[0] < l2) {
@@ -869,7 +863,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                 double y2_ = y1 + dy * m2;
 
                                 strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-
 
                                 PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                                 graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
@@ -899,7 +892,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
             }
             contentStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error occurred!");
         }
     }
 

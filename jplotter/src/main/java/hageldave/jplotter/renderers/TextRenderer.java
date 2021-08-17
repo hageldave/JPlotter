@@ -480,7 +480,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 			}
 			contentStream.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException("Error occurred!");
 		}
 	}
 }

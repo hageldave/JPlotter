@@ -1,15 +1,15 @@
 package hageldave.jplotter.pdf;
 
 import hageldave.jplotter.util.Utils;
-import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSInteger;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
-import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
 
 import javax.imageio.stream.MemoryCacheImageOutputStream;
@@ -47,71 +47,6 @@ public class PDFUtils {
                                                        Point2D p1) throws IOException {
         cs.moveTo((float) p0.getX(), (float) p0.getY());
         cs.lineTo((float) p1.getX(), (float) p1.getY());
-        return cs;
-    }
-
-    public static PDPageContentStream createShadedPDFSegment(PDDocument doc, PDPage page, Point2D p0,
-                                                       Point2D p1, double thickness, Color c0, Color c1) throws IOException {
-        PDPageContentStream cs = new PDPageContentStream(doc, page,
-                PDPageContentStream.AppendMode.APPEND, false);
-        cs.saveGraphicsState();
-
-        /*cs.moveTo((float) p0.getX(), (float) p0.getY());
-        cs.lineTo((float) p1.getX(), (float) p1.getY());*/
-
-        /*double width = p1.getX() - p0.getX();
-        double height = p1.getY() - p0.getY();
-
-        final double sqrt = Math.sqrt(width * width + height * height);
-        double xS = (thickness * height / sqrt ) / 2;
-        double yS = (thickness * width / sqrt ) / 2;*/
-
-        cs.addRect((float) p0.getX(), (float) p0.getY(), (float) p1.getX(), (float) p1.getY());
-        cs.closePath();
-        cs.clip();
-
-        COSDictionary fdict = new COSDictionary();
-        fdict.setInt(COSName.FUNCTION_TYPE, 2);
-        COSArray domain = new COSArray();
-        domain.add(COSInteger.get(0));
-        domain.add(COSInteger.get(1));
-        // color 1
-        COSArray ca0 = new COSArray();
-        /*ca0.add(COSFloat.get(String.valueOf(c0.getRed())));
-        ca0.add(COSFloat.get(String.valueOf(c0.getGreen())));
-        ca0.add(COSFloat.get(String.valueOf(c0.getBlue())));*/
-        ca0.add(COSFloat.get("0"));
-        ca0.add(COSFloat.get("0"));
-        ca0.add(COSFloat.get("1"));
-        // color 2
-        COSArray ca1 = new COSArray();
-        /*ca1.add(COSFloat.get(String.valueOf(c1.getRed())));
-        ca1.add(COSFloat.get(String.valueOf(c1.getGreen())));
-        ca1.add(COSFloat.get(String.valueOf(c1.getBlue())));*/
-        ca1.add(COSFloat.get("1"));
-        ca1.add(COSFloat.get("0"));
-        ca1.add(COSFloat.get("0"));
-        fdict.setItem(COSName.DOMAIN, domain);
-        fdict.setItem(COSName.C0, ca0);
-        fdict.setItem(COSName.C1, ca1);
-        fdict.setInt(COSName.N, 1);
-        PDFunctionType2 func = new PDFunctionType2(fdict);
-        PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
-        axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
-        axialShading.setShadingType(PDShading.SHADING_TYPE2);
-        COSArray coords1 = new COSArray();
-        coords1.add(COSInteger.get((long) p0.getY()));
-        coords1.add(COSInteger.get((long) p0.getX()));
-        coords1.add(COSInteger.get((long) p1.getY())); // size of my page
-        coords1.add(COSInteger.get((long) p1.getX()));
-
-        axialShading.setCoords(coords1); // so this sets the bounds of my gradient
-        axialShading.setFunction(func); // and this determines all the curves etc?
-        cs.shadingFill(axialShading); // where CStr is a ContentStream for my PDDocument*/
-
-
-
-        cs.restoreGraphicsState();
         return cs;
     }
 

@@ -179,6 +179,7 @@ public enum DefaultGlyph implements Glyph {
 		return Arrays.asList(element);
 	}
 
+	// todo effizienz testen
 	static PDPageContentStream mkCirclePDF(PDPageContentStream contentStream, Integer pixelSize) {
 		double[][] verts = new double[2][numCircVerts];
 		for(int i=0; i<numCircVerts;i++){
@@ -378,7 +379,7 @@ public enum DefaultGlyph implements Glyph {
 	static PDPageContentStream mkTrianglePDF(PDPageContentStream contentStream, Integer pixelSize) {
 		float size = pixelSize*.5f;
 		try {
-			PDFUtils.createPDFPolygon(contentStream, new double[] {-size, size, 0   },
+			PDFUtils.createPDFPolygon(contentStream, new double[] {-size, size, 0},
 					new double[] {-size,-size, size});
 		} catch (IOException e) {
 			e.printStackTrace();

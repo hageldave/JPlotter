@@ -421,7 +421,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			}
 			contentStream.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException("Error occurred!");
 		}
 	}
 }
