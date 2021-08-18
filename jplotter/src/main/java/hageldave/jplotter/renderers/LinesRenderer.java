@@ -49,14 +49,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	
 	/*************************************** DOUBLE PRECISION ***********************************/
 	
-	protected static final String vertexShaderSrcD = ""  // SFM
+	protected static final String vertexShaderSrcD = ""
 			+ "" + "#version 410"
-			+ NL + "layout(location = 0) in dvec2 in_position;"  /////
+			+ NL + "layout(location = 0) in dvec2 in_position;"
 			+ NL + "layout(location = 1) in uint in_color;"
 			+ NL + "layout(location = 2) in uint in_pick;"
 			+ NL + "layout(location = 3) in float in_thickness;"
 			+ NL + "layout(location = 4) in float in_pathlen;"
-			+ NL + "uniform dvec4 viewTransform;"	/////
+			+ NL + "uniform dvec4 viewTransform;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
 			+ NL + "out float vthickness;"
@@ -68,9 +68,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "}"
 
 			+ NL + "void main() {"
-			+ NL + "   dvec3 pos = dvec3(in_position,1);"   //////
-			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"   /////
-			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"  /////
+			+ NL + "   dvec3 pos = dvec3(in_position,1);"
+			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = vec4(pos,1);"
 			+ NL + "   vcolor = unpackARGB(in_color);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
@@ -214,9 +214,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@Override
 	@GLContextRequired
 	public void glInit() {
-		if(Objects.isNull(shader)){
-			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(GLUtils.USE_GL_DOUBLE_PRECISION ? vertexShaderSrcD: vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
+		if(Objects.isNull(shaderF)){
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#F",()->new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
+		}
+		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled) {
+			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#D",()->new Shader(vertexShaderSrcD, geometryShaderSrc, fragmentShaderSrc));
 		}
 	}
 
@@ -226,6 +229,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		if(!isEnabled()){
 			return;
 		}
+		Shader shader = getShader();
+		boolean useDoublePrecision = shader == shaderD;
 		boolean vpHasChanged = w != preVpW || h != preVpH;
 		if(Objects.nonNull(shader) && w>0 && h>0 && !itemsToRender.isEmpty()){
 			// initialize all objects first
@@ -236,19 +241,22 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			shader.bind();
 			// prepare for rendering (e.g. en/disable depth or blending and such)
 			orthoMX = GLUtils.orthoMX(orthoMX, 0, w, 0, h);
-			renderStart(w,h);
+			renderStart(w,h, shader);
 			// render every item
 			double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 			double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 			boolean viewHasChanged_ = this.viewHasChanged;
 			this.viewHasChanged = false;
 			for(Lines item: itemsToRender){
-				if(item.isDirty() || ((viewHasChanged_ || vpHasChanged) && item.hasStrokePattern() )){
+				if(	item.isDirty() 
+					|| item.isGLDoublePrecision()!=useDoublePrecision 
+					||((viewHasChanged_ || vpHasChanged) && item.hasStrokePattern() )
+				){
 					// update items gl state if necessary
-					item.updateGL(scaleX,scaleY);
+					item.updateGL(useDoublePrecision, scaleX,scaleY);
 				}
 				if(!item.isHidden()){
-					renderItem(item);
+					renderItem(item, shader);
 				}
 			}
 			// clean up after renering (e.g. en/disable depth or blending and such)
@@ -268,7 +276,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	 */
 	@Override
 	@GLContextRequired
-	protected void renderStart(int w, int h) {
+	protected void renderStart(int w, int h, Shader shader) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -278,7 +286,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
 
-		if (GLUtils.USE_GL_DOUBLE_PRECISION) // SFM
+		if (shader == shaderD /* double precision shader */)
 		{
 			GL40.glUniform4d(loc, translateX, translateY, scaleX, scaleY);
 		}
@@ -293,7 +301,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Lines lines) {
+	protected void renderItem(Lines lines, Shader shader) {
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidthMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalThicknessMultiplier());
@@ -338,9 +346,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@Override
 	@GLContextRequired
 	public void close() {
-		if(Objects.nonNull(shader))
-			ShaderRegistry.handbackShader(shader);
-		shader = null;
+		if(Objects.nonNull(shaderF))
+			ShaderRegistry.handbackShader(shaderF);
+		shaderF = null;
+		if(Objects.nonNull(shaderD))
+			ShaderRegistry.handbackShader(shaderD);
+		shaderD = null;
 		closeAllItems();
 	}
 

@@ -24,7 +24,6 @@ import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.GLUtils;
 
 /**
  * The PointsRenderer is an implementation of the {@link GenericRenderer}
@@ -181,9 +180,12 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	@Override
 	@GLContextRequired
 	public void glInit() {
-		if(Objects.isNull(shader)){
-			this.shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(GLUtils.USE_GL_DOUBLE_PRECISION ? vertexShaderSrcD: vertexShaderSrc, fragmentShaderSrc));
+		if(Objects.isNull(shaderF)){
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#F",()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);;
+		}
+		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled) {
+			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#D",()->new Shader(vertexShaderSrcD, fragmentShaderSrc));
 		}
 	}
 
@@ -195,10 +197,12 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	@Override
 	@GLContextRequired
 	public void close() {
-		if(Objects.nonNull(shader)){
-			ShaderRegistry.handbackShader(shader);
-			shader = null;
-		}
+		if(Objects.nonNull(shaderF))
+			ShaderRegistry.handbackShader(shaderF);
+		shaderF = null;
+		if(Objects.nonNull(shaderD))
+			ShaderRegistry.handbackShader(shaderD);
+		shaderD = null;
 		closeAllItems();
 	}
 
@@ -210,7 +214,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	 */
 	@Override
 	@GLContextRequired
-	protected void renderStart(int w, int h) {
+	protected void renderStart(int w, int h, Shader shader) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -220,7 +224,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 		
 		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");	
-		if(GLUtils.USE_GL_DOUBLE_PRECISION) // SFM
+		if(shader == shaderD /* double precision shader */)
 		{
 			GL40.glUniform4d(loc, translateX, translateY, scaleX, scaleY);
 		}
@@ -238,7 +242,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Points item) {
+	protected void renderItem(Points item, Shader shader) {
 		if(item.numPoints() < 1){
 			return;
 		}

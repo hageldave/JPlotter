@@ -15,7 +15,6 @@ import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
 
 /**
@@ -61,6 +60,8 @@ public class Lines implements Renderable {
 	protected float strokeLength = 16;
 	
 	protected boolean hidden = false;
+	
+	boolean isGLDoublePrecision = false;
 
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
@@ -607,7 +608,7 @@ public class Lines implements Renderable {
 	public void initGL(){
 		if(Objects.isNull(va)){
 			va = new VertexArray(5);
-			updateGL();
+			updateGL(false);
 		}
 	}
 
@@ -619,16 +620,15 @@ public class Lines implements Renderable {
 	 */
 	@Override
 	@GLContextRequired
-	@Deprecated(/* use updateGL(scaleX,scaleY) instead */)
-	public void updateGL(){
-		updateGL(1, 1);	
+	@Deprecated(/* use updateGL(usedouble,scaleX,scaleY) instead */)
+	public void updateGL(boolean useGLDoublePrecision){
+		updateGL(useGLDoublePrecision, 1, 1);
 	}
 	
 
 	@GLContextRequired
-	@Deprecated(/* use updateGLDouble(scaleX,scaleY) or updateGLFloat(scaleX,scaleY) instead */)
-	public void updateGL(double scaleX, double scaleY){
-		if (GLUtils.USE_GL_DOUBLE_PRECISION) // SFM
+	public void updateGL(boolean useGLDoublePrecision, double scaleX, double scaleY){
+		if (useGLDoublePrecision) // SFM
 		{
 			updateGLDouble(scaleX, scaleY);	
 		}
@@ -695,6 +695,7 @@ public class Lines implements Renderable {
 			va.setBuffer(3, 1, thicknessBuffer);
 			va.setBuffer(4, 1, pathLengthBuffer);
 			isDirty = false;
+			isGLDoublePrecision = false;
 		}
 	}
 
@@ -743,6 +744,7 @@ public class Lines implements Renderable {
 			va.setBuffer(3, 1, thicknessBuffer);
 			va.setBuffer(4, 1, pathLengthBuffer);
 			isDirty = false;
+			isGLDoublePrecision = true;
 		}
 	}
 
@@ -778,6 +780,11 @@ public class Lines implements Renderable {
 	@GLContextRequired
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1,2,3,4);
+	}
+
+	@Override
+	public boolean isGLDoublePrecision() {
+		return isGLDoublePrecision;
 	}
 
 }

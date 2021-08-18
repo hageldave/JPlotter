@@ -225,8 +225,8 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	@Override
 	@GLContextRequired
 	public void glInit() {
-		if(Objects.isNull(shader)){
-			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
+		if(Objects.isNull(shaderF)){
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
 		}
 	}
@@ -237,6 +237,8 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 		if(!isEnabled()){
 			return;
 		}
+		Shader shader = getShader();
+		boolean useDoublePrecision = shader == shaderD;
 		boolean vpHasChanged = w != preVpW || h != preVpH;
 		if(Objects.nonNull(shader) && w>0 && h>0 && !itemsToRender.isEmpty()){
 			// initialize all objects first
@@ -247,7 +249,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			shader.bind();
 			// prepare for rendering (e.g. en/disable depth or blending and such)
 			orthoMX = GLUtils.orthoMX(orthoMX, 0, w, 0, h);
-			renderStart(w,h);
+			renderStart(w,h, shader);
 			// render every item
 			double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 			double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
@@ -259,12 +261,12 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			boolean viewHasChanged_ = this.viewHasChanged;
 			this.viewHasChanged = false;
 			for(Curves item: itemsToRender){
-				if(item.isDirty() || viewHasChanged_ || vpHasChanged){
+				if(item.isDirty() || viewHasChanged_ || vpHasChanged || item.isGLDoublePrecision()!=useDoublePrecision){
 					// update items gl state if necessary
-					item.updateGL(scaleX, scaleY, xmin, xmax, ymin, ymax);
+					item.updateGL(useDoublePrecision, scaleX, scaleY, xmin, xmax, ymin, ymax);
 				}
 				if(!item.isHidden()){
-					renderItem(item);
+					renderItem(item, shader);
 				}
 			}
 			// clean up after renering (e.g. en/disable depth or blending and such)
@@ -284,7 +286,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	 */
 	@Override
 	@GLContextRequired
-	protected void renderStart(int w, int h) {
+	protected void renderStart(int w, int h, Shader shader) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -300,7 +302,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Curves lines) {
+	protected void renderItem(Curves lines, Shader shader) {
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidthMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalThicknessMultiplier());
@@ -343,9 +345,12 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	@Override
 	@GLContextRequired
 	public void close() {
-		if(Objects.nonNull(shader))
-			ShaderRegistry.handbackShader(shader);
-		shader = null;
+		if(Objects.nonNull(shaderF))
+			ShaderRegistry.handbackShader(shaderF);
+		shaderF = null;
+		if(Objects.nonNull(shaderD))
+			ShaderRegistry.handbackShader(shaderD);
+		shaderD = null;
 		closeAllItems();
 	}
 	

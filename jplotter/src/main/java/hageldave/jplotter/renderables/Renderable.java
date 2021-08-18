@@ -35,10 +35,20 @@ public interface Renderable extends AutoCloseable {
 	public boolean isDirty();
 	
 	/**
-	 * updates GL resources to match this objects state.
+	 * updates GL resources to match this objects state. 
+	 * If requested precision differs from currently used, GL resources will
+	 * be updated as well to use the requested precision.
+	 * @param useGLDoublePrecision true when rendering with double precision
 	 */
 	@GLContextRequired
-	public void updateGL();
+	public void updateGL(boolean useGLDoublePrecision);
+	
+	/**
+	 * Reports on the Renderable's currently used precision of its GL resources.
+	 * This may depend on the parameter used in the latest call to {@link #updateGL(boolean)}.
+	 * @return true if current GL resources (e.g vertex arrays) are using double precision
+	 */
+	public boolean isGLDoublePrecision();
 	
 	/**
 	 * disposes of any GL resources belonging to this object.

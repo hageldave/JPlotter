@@ -26,10 +26,12 @@ import hageldave.jplotter.util.Utils;
 public abstract class GenericRenderer<T extends Renderable> implements Renderer, AdaptableView {
 	
 	protected LinkedList<T> itemsToRender = new LinkedList<>();
-	protected Shader shader;
+	protected Shader shaderF;
+	protected Shader shaderD;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	protected Rectangle2D view = null;
 	protected boolean isEnabled = true;
+	protected boolean isGLDoublePrecisionEnabled = false;
 	
 	/**
 	 * Executes the rendering procedure IF this {@link Renderer}s shader 
@@ -54,6 +56,8 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 		if(!isEnabled()){
 			return;
 		}
+		Shader shader = getShader();
+		boolean useDoublePrecision = shader == shaderD;
 		if(Objects.nonNull(shader) && w>0 && h>0 && !itemsToRender.isEmpty()){
 			// initialize all objects first
 			for(T item: itemsToRender){
@@ -63,21 +67,25 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 			shader.bind();
 			// prepare for rendering (e.g. en/disable depth or blending and such)
 			orthoMX = GLUtils.orthoMX(orthoMX, 0, w, 0, h);
-			renderStart(w,h);
+			renderStart(w,h, shader);
 			// render every item
 			for(T item: itemsToRender){
 				if(item.isHidden())
 					continue;
-				if(item.isDirty()){
+				if(item.isDirty() || item.isGLDoublePrecision()!=useDoublePrecision){
 					// update items gl state if necessary
-					item.updateGL();
+					item.updateGL(useDoublePrecision);
 				}
-				renderItem(item);
+				renderItem(item, shader);
 			}
 			// clean up after renering (e.g. en/disable depth or blending and such)
 			renderEnd();
 			shader.release();
 		}
+	}
+	
+	protected Shader getShader() {
+		return (isGLDoublePrecisionEnabled && Objects.nonNull(shaderD)) ? shaderD:shaderF; 
 	}
 	
 	/**
@@ -92,9 +100,10 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	 * 
 	 * @param w view port width in pixels
 	 * @param h view port height in pixels
+	 * @param shader shader in use
 	 */
 	@GLContextRequired
-	protected abstract void renderStart(int w, int h);
+	protected abstract void renderStart(int w, int h, Shader shader);
 
 	/**
 	 * Is called during the {@link #render(int, int, int, int)} routine after
@@ -105,9 +114,10 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	 * will draw the item.
 	 * 
 	 * @param item to render
+	 * @param shader in use (float or double precision shader)
 	 */
 	@GLContextRequired
-	protected abstract void renderItem(T item);
+	protected abstract void renderItem(T item, Shader shader);
 	
 	/**
 	 * Is called during the {@link #render(int, int, int, int)} routine after

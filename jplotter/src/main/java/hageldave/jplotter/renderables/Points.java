@@ -16,7 +16,6 @@ import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderers.PointsRenderer;
-import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
@@ -51,6 +50,7 @@ public class Points implements Renderable {
 	protected ArrayList<PointDetails> points = new ArrayList<>();
 	protected boolean hidden=false;
 	protected boolean useVertexRounding=false;
+	boolean isGLDoublePrecision = false;
 
 	/**
 	 * Creates a new {@link Points} object which uses the specified {@link Glyph} for displaying its points.
@@ -83,15 +83,14 @@ public class Points implements Renderable {
 		if(Objects.isNull(va)){
 			va = new VertexArray(4);
 			glyph.fillVertexArray(va);
-			updateGL();		
+			updateGL(false);		
 		}
 	}
 
 	@Override
-	@Deprecated(/* use updateGLDouble() or updateGLFloat() instead */)
-	public void updateGL()
+	public void updateGL(boolean useGLDoublePrecision)
 	{
-		if (GLUtils.USE_GL_DOUBLE_PRECISION) // SFM
+		if (useGLDoublePrecision)
 		{
 			updateGLDouble();	
 		}
@@ -126,6 +125,7 @@ public class Points implements Renderable {
 			va.setBuffer(2, 2, rotAndScale);
 			va.setBuffer(3, 2, false, colors);
 			isDirty = false;
+			isGLDoublePrecision = false;
 		}
 	}
 
@@ -154,6 +154,7 @@ public class Points implements Renderable {
 			va.setBuffer(2, 2, rotAndScale);
 			va.setBuffer(3, 2, false, colors);
 			isDirty = false;
+			isGLDoublePrecision = true;
 		}
 	}
 	
@@ -533,7 +534,10 @@ public class Points implements Renderable {
 		this.useVertexRounding = useVertexRounding;
 		return this;
 	}
-	
-	
+
+	@Override
+	public boolean isGLDoublePrecision() {
+		return isGLDoublePrecision;
+	}
 
 }

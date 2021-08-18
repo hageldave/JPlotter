@@ -45,6 +45,7 @@ public class Curves implements Renderable {
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 	protected int numEffectiveSegments = 0;
+	boolean isGLDoublePrecision = false;
 	
 	
 	public int getNumEffectiveSegments() {
@@ -70,7 +71,7 @@ public class Curves implements Renderable {
 	public void initGL() {
 		if(Objects.isNull(va)){
 			va = new VertexArray(6);
-			updateGL();
+			updateGL(false);
 		}
 	}
 
@@ -82,17 +83,19 @@ public class Curves implements Renderable {
 	 */
 	@Override
 	@GLContextRequired
-	@Deprecated(/* use updateGL(scaleX,scaleY) instead */)
-	public void updateGL(){
-		updateGL(1, 1, 0,3000, 0,3000);
+	@Deprecated(/* use updateGL(usedouble, scaleX,scaleY, xmin,xmax,ymin,ymax) instead */)
+	public void updateGL(boolean useGLDoublePrecision){
+		updateGL(useGLDoublePrecision, 1, 1, 0,3000, 0,3000);
 	}
 	
+	
+	
 	/**
-	 * Updates the vertex array to be in sync with this lines object.
+	 * Updates the vertex array to be in sync with this curves object.
 	 * This sets the {@link #isDirty()} state to false.
-	 * For calculating the path length of line segments in screen space
+	 * For creating enough subdivision levels in screen space
 	 * the scaling parameters of the respective view transformation need
-	 * to be specified in order to realize view invariant stroke patterns.
+	 * to be specified in order to render sufficiently smooth looking curves.
 	 * <p>
 	 * If {@link #initGL()} has not been called yet or this object has
 	 * already been closed, nothing happens.
@@ -100,7 +103,12 @@ public class Curves implements Renderable {
 	 * @param scaleY scaling of the y coordinate of the current view transform
 	 */
 	@GLContextRequired
-	public void updateGL(double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){
+	public void updateGL(boolean useGLDoublePrecision, double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){
+		updateGLFloat(scaleX, scaleY, xmin, xmax, ymin, ymax);
+	}
+		
+	@GLContextRequired
+	protected void updateGLFloat(double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){
 		if(Objects.nonNull(va)){
 			final double sx=scaleX, sy=scaleY;
 			double[] clip = new double[]{xmin,xmax,ymin,ymax};
@@ -198,6 +206,7 @@ public class Curves implements Renderable {
 			va.setBuffer(4, 1, pathLengthBuffer);
 			va.setBuffer(5, 1, paramBuffer);
 			isDirty = false;
+			isGLDoublePrecision = false;
 		}
 	}
 	
@@ -315,6 +324,11 @@ public class Curves implements Renderable {
 	@GLContextRequired
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1,2,3,4);
+	}
+	
+	@Override
+	public boolean isGLDoublePrecision() {
+		return isGLDoublePrecision;
 	}
 
 
