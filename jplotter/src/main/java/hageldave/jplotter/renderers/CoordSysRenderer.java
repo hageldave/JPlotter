@@ -100,7 +100,7 @@ public class CoordSysRenderer implements Renderer {
 	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
 	protected Lines guides = new Lines().setVertexRoundingEnabled(true);
 	protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
-	protected Text xAxisLabelText = new Text("", 13, 1|2);
+	protected Text xAxisLabelText = new Text("", 13, Font.PLAIN);
 	protected Text yAxisLabelText = new Text("", 13, Font.PLAIN);
 
 	protected double[] xticks;
@@ -531,7 +531,7 @@ public class CoordSysRenderer implements Renderer {
 		xAxisLabelText.setTextString(getxAxisLabel());
 		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
 		yAxisLabelText.setTextString(getyAxisLabel());
-		yAxisLabelText.setAngle(-(float)Math.PI/3);
+		yAxisLabelText.setAngle(-(float)Math.PI/2);
 		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 + yAxisLabelText.getTextSize().width/2));
 
 		// setup legend areas
