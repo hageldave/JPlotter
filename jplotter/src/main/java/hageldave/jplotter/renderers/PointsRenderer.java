@@ -431,6 +431,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						(float) (points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0));
 
 					contentStream.drawForm(glyphForm);
+					//glyph.createPDFElement(contentStream);
 
 					if(glyph.isFilled()){
 						contentStream.setNonStrokingColor(new Color(point.color.getAsInt()));

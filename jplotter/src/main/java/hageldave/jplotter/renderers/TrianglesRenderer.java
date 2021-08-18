@@ -298,6 +298,12 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
 				glyphDoc.close();
 
+				// clipping area
+				contentStream.saveGraphicsState();
+				contentStream.drawForm(rectForm);
+				contentStream.closePath();
+				contentStream.clip();
+
 				for(TriangleDetails tri : tris.getTriangleDetails()){
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
@@ -307,17 +313,11 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					y0*=scaleY; y1*=scaleY; y2*=scaleY;
 					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
 
-					// clipping area
-					contentStream.saveGraphicsState();
-					contentStream.drawForm(rectForm);
-					contentStream.closePath();
-					contentStream.clip();
-
 					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2), new Color(tri.c0.getAsInt()), new Color(tri.c1.getAsInt()), new Color(tri.c2.getAsInt()));
 
-					contentStream.restoreGraphicsState();
 				}
+				contentStream.restoreGraphicsState();
 			}
 			contentStream.close();
 		} catch (IOException e) {

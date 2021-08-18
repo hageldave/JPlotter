@@ -594,6 +594,11 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                 PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
                 glyphDoc.close();
 
+                cs.saveGraphicsState();
+                cs.drawForm(rectForm);
+                cs.closePath();
+                cs.clip();
+
                 for (CurveDetails details : curves.getCurveDetails()) {
                     double x1, y1, x2, y2, cp0x, cp0y, cp1x, cp1y;
                     x1 = details.p0.getX();
@@ -625,12 +630,6 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                     cp1y *= scaleY;
 
                     try {
-                        cs.saveGraphicsState();
-                        cs.drawForm(rectForm);
-                        cs.closePath();
-                        cs.clip();
-
-
 
                         String[] splited = (strokePattern2dashArray(curves.getStrokePattern(), curves.getStrokeLength()).split("\\s+"));
 
@@ -648,12 +647,12 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                         cs.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
                         cs.stroke();
 
-                        // restore graphics
-                        cs.restoreGraphicsState();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
+                // restore graphics
+                cs.restoreGraphicsState();
             }
             cs.close();
         } catch (IOException e) {

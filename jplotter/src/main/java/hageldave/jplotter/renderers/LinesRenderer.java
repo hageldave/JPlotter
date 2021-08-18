@@ -776,6 +776,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                 PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
                 glyphDoc.close();
 
+                // clipping area
+                contentStream.saveGraphicsState();
+                contentStream.drawForm(rectForm);
+                contentStream.closePath();
+                contentStream.clip();
+
                 for (SegmentDetails seg : lines.getSegments()) {
                     double x1, y1, x2, y2;
                     x1 = seg.p0.getX();
@@ -830,11 +836,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                     double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
                     double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
 
-                    // clipping area
-                    contentStream.saveGraphicsState();
-                    contentStream.drawForm(rectForm);
-                    contentStream.closePath();
-                    contentStream.clip();
+
 
                         if (!lines.hasStrokePattern()) {
                             // create invisible rectangle so that elements outside w, h won't be rendered
@@ -895,8 +897,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                 contentStream.fill();
                             }
                         }
-                    contentStream.restoreGraphicsState();
+
                 }
+                contentStream.restoreGraphicsState();
             }
             contentStream.close();
         } catch (IOException e) {
