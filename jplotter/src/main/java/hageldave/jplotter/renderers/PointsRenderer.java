@@ -10,9 +10,11 @@ import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.ShaderRegistry;
+import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
@@ -360,11 +362,38 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		try {
 			PDPageContentStream contentStream = new PDPageContentStream(doc, page,
 					PDPageContentStream.AppendMode.APPEND, false);
+
 			for (Points points : getItemsToRender()) {
 				if (points.isHidden()) {
 					continue;
 				}
 				Glyph glyph = points.glyph;
+
+				// testing
+				PDDocument glyphDoc = new PDDocument();
+				PDPage glyphPage = new PDPage();
+				PDPage rectPage = new PDPage();
+				glyphDoc.addPage(glyphPage);
+				glyphDoc.addPage(rectPage);
+				PDPageContentStream glyphCont = new PDPageContentStream(glyphDoc, glyphPage);
+				PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+
+				glyph.createPDFElement(glyphCont);
+				rectCont.addRect(x, y, w, h);
+
+				LayerUtility layerUtility = new LayerUtility(doc);
+				rectCont.close();
+				glyphCont.close();
+				PDFormXObject glyphForm = layerUtility.importPageAsForm(glyphDoc, 0);
+				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 1);
+				glyphDoc.close();
+				// end testing
+
+				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+				graphicsState.setStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
+				graphicsState.setNonStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
+				contentStream.setGraphicsStateParameters(graphicsState);
+
 				for (PointDetails point : points.getPointDetails()) {
 					double x1, y1;
 					x1 = point.location.getX();
@@ -385,7 +414,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 
 					// clipping area
 					contentStream.saveGraphicsState();
-					contentStream.addRect(x, y, w, h);
+					contentStream.drawForm(rectForm);
 					contentStream.closePath();
 					contentStream.clip();
 
@@ -401,12 +430,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					contentStream.transform(new Matrix((float) (points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0,
 						(float) (points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0));
 
-					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-					graphicsState.setStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
-					graphicsState.setNonStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
-					contentStream.setGraphicsStateParameters(graphicsState);
+					contentStream.drawForm(glyphForm);
 
-					glyph.createPDFElement(contentStream);
 					if(glyph.isFilled()){
 						contentStream.setNonStrokingColor(new Color(point.color.getAsInt()));
 						contentStream.fill();

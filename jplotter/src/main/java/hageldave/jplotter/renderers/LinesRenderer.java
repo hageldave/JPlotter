@@ -13,6 +13,7 @@ import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
 import org.apache.batik.ext.awt.geom.Polygon2D;
 import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -20,6 +21,7 @@ import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.color.PDPattern;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDShadingPattern;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
@@ -760,6 +762,19 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                 double prevX = 0;
                 double prevY = 0;
 
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                contentStream.setGraphicsStateParameters(graphicsState);
+
+                PDDocument glyphDoc = new PDDocument();
+                PDPage rectPage = new PDPage();
+                glyphDoc.addPage(rectPage);
+                PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+                rectCont.addRect(x, y, w, h);
+                LayerUtility layerUtility = new LayerUtility(doc);
+                rectCont.close();
+                PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
+                glyphDoc.close();
 
                 for (SegmentDetails seg : lines.getSegments()) {
                     double x1, y1, x2, y2;
@@ -817,17 +832,12 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
                     // clipping area
                     contentStream.saveGraphicsState();
-                    contentStream.addRect(x, y, w, h);
+                    contentStream.drawForm(rectForm);
                     contentStream.closePath();
                     contentStream.clip();
 
                         if (!lines.hasStrokePattern()) {
                             // create invisible rectangle so that elements outside w, h won't be rendered
-
-                            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                            graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-                            contentStream.setGraphicsStateParameters(graphicsState);
-
                             if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
                                 contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
                             } else {
@@ -864,9 +874,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
                                 strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 
-                                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                                graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-                                contentStream.setGraphicsStateParameters(graphicsState);
+
 
                                 if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
                                     contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));

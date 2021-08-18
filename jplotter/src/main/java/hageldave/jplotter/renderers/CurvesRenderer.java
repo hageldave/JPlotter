@@ -12,9 +12,11 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
+import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -567,7 +569,6 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         double translateY = Objects.isNull(view) ? 0 : view.getY();
         double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
         double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
-        // todo exc mit runtime exc abfangen
 
         try {
             PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
@@ -578,6 +579,21 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                     // line is invisible
                     continue;
                 }
+
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setStrokingAlphaConstant(curves.getGlobalAlphaMultiplier());
+                cs.setGraphicsStateParameters(graphicsState);
+
+                PDDocument glyphDoc = new PDDocument();
+                PDPage rectPage = new PDPage();
+                glyphDoc.addPage(rectPage);
+                PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+                rectCont.addRect(x, y, w, h);
+                LayerUtility layerUtility = new LayerUtility(doc);
+                rectCont.close();
+                PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
+                glyphDoc.close();
+
                 for (CurveDetails details : curves.getCurveDetails()) {
                     double x1, y1, x2, y2, cp0x, cp0y, cp1x, cp1y;
                     x1 = details.p0.getX();
@@ -610,13 +626,11 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 
                     try {
                         cs.saveGraphicsState();
-                        cs.addRect(x, y, w, h);
+                        cs.drawForm(rectForm);
                         cs.closePath();
                         cs.clip();
 
-                        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                        graphicsState.setStrokingAlphaConstant(curves.getGlobalAlphaMultiplier());
-                        cs.setGraphicsStateParameters(graphicsState);
+
 
                         String[] splited = (strokePattern2dashArray(curves.getStrokePattern(), curves.getStrokeLength()).split("\\s+"));
 

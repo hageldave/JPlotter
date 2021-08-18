@@ -12,9 +12,11 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.BarycentricGradientPaint;
 import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -281,6 +283,21 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					continue;
 				}
 
+				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+				contentStream.setGraphicsStateParameters(graphicsState);
+
+				PDDocument glyphDoc = new PDDocument();
+				PDPage rectPage = new PDPage();
+				glyphDoc.addPage(rectPage);
+				PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+				rectCont.addRect(x, y, w, h);
+				LayerUtility layerUtility = new LayerUtility(doc);
+				rectCont.close();
+				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
+				glyphDoc.close();
+
 				for(TriangleDetails tri : tris.getTriangleDetails()){
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
@@ -292,13 +309,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 					// clipping area
 					contentStream.saveGraphicsState();
-					contentStream.addRect(x, y, w, h);
+					contentStream.drawForm(rectForm);
 					contentStream.closePath();
 					contentStream.clip();
-
-					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-					graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
-					contentStream.setGraphicsStateParameters(graphicsState);
 
 					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2), new Color(tri.c0.getAsInt()), new Color(tri.c1.getAsInt()), new Color(tri.c2.getAsInt()));
