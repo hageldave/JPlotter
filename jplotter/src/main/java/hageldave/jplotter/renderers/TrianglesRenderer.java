@@ -84,9 +84,12 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	@Override
 	@GLContextRequired
 	public void glInit() {
-		if(Objects.isNull(shader)){
-			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
+		if(Objects.isNull(shaderF)){
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
+		}
+		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled){
+//			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 		}
 	}
 
@@ -98,9 +101,13 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	@Override
 	@GLContextRequired
 	public void close() {
-		if(Objects.nonNull(shader)){
-			ShaderRegistry.handbackShader(shader);
-			shader = null;
+		if(Objects.nonNull(shaderF)){
+			ShaderRegistry.handbackShader(shaderF);
+			shaderF = null;
+		}
+		if(Objects.nonNull(shaderD)){
+			ShaderRegistry.handbackShader(shaderD);
+			shaderD = null;
 		}
 		closeAllItems();
 	}
@@ -113,7 +120,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	 */
 	@Override
 	@GLContextRequired
-	protected void renderStart(int w, int h) {
+	protected void renderStart(int w, int h, Shader shader) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -129,7 +136,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Triangles item) {
+	protected void renderItem(Triangles item, Shader shader) {
 		if(item.numTriangles() < 1){
 			return;
 		}

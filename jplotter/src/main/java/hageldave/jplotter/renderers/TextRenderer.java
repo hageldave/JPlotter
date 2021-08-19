@@ -41,6 +41,34 @@ import hageldave.jplotter.util.Utils;
 public class TextRenderer extends GenericRenderer<Text> {
 
 	protected static final char NL = '\n';
+	
+//	protected static final String vertexShaderSrcD = ""
+//			+ "" + "#version 410"
+//			+ NL + "layout(location = 0) in dvec2 in_position;"
+//			+ NL + "layout(location = 1) in vec2 in_texcoords;"
+//			+ NL + "uniform mat4 projMX;"
+//			+ NL + "uniform dvec4 viewTransform;"
+//			+ NL + "uniform dvec2 modelScaling;"
+//			+ NL + "uniform dvec2 origin;"
+//			+ NL + "uniform float rot;"
+//			+ NL + "out vec2 tex_Coords;"
+//			
+//			+ NL + "mat2 rotationMatrix(float angle){"
+//			+ NL + "   float s = sin(angle), c = cos(angle);"
+//			+ NL + "   return mat2(c,s,-s,c);"
+//			+ NL + "}"
+//			
+//			+ NL + "void main() {"
+//			+ NL + "   mat2 rotMX = rotationMatrix(rot);"
+//			+ NL + "   vec3 pos = vec3((rotMX*in_position)*modelScaling+origin, 1);"
+//			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
+//			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
+//			+ NL + "   gl_Position = projMX*vec4(pos.x, pos.y, pos.z, 1);"
+//			+ NL + "   tex_Coords = in_texcoords;"
+//			+ NL + "}"
+//			+ NL
+//			;
+	
 	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
@@ -117,9 +145,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@Override
 	@GLContextRequired
 	public void glInit() {
-		if(Objects.isNull(shader)){
-			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
+		if(Objects.isNull(shaderF)){
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#F",()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
+		}
+		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled) {
+//			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#D",()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 		}
 		if(Objects.isNull(vaTextBackground)){
 			vaTextBackground = new VertexArray(2);
@@ -138,7 +169,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 	 */
 	@Override
 	@GLContextRequired
-	protected void renderStart(int w, int h) {
+	protected void renderStart(int w, int h, Shader shader) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -157,7 +188,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Text txt) {
+	protected void renderItem(Text txt, Shader shader) {
 		int loc;
 		
 		// draw background if bg color is not 0
@@ -230,9 +261,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@Override
 	@GLContextRequired
 	public void close() {
-		if(Objects.nonNull(shader))
-			ShaderRegistry.handbackShader(shader);
-		shader = null;
+		if(Objects.nonNull(shaderF))
+			ShaderRegistry.handbackShader(shaderF);
+		shaderF = null;
+		if(Objects.nonNull(shaderD))
+			ShaderRegistry.handbackShader(shaderD);
+		shaderD = null;
 		if(Objects.nonNull(vaTextBackground))
 			vaTextBackground.close();
 		vaTextBackground = null;

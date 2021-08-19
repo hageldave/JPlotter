@@ -40,12 +40,12 @@ public class Curves implements Renderable {
 	protected ArrayList<CurveDetails> curves = new ArrayList<>();
 	protected short strokePattern = (short)0xffff;
 	protected float strokeLength = 16;
-	protected boolean isDirty;
+	protected boolean isDirty = true;
 	protected boolean hidden = false;
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 	protected int numEffectiveSegments = 0;
-	boolean isGLDoublePrecision = false;
+	protected boolean isGLDoublePrecision = false;
 	
 	
 	public int getNumEffectiveSegments() {

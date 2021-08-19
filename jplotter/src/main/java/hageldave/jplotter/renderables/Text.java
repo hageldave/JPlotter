@@ -294,7 +294,7 @@ public class Text implements Renderable {
 	public void initGL(){
 		if(Objects.isNull(va)){
 			va = new VertexArray(2);
-			updateGL();
+			updateGL(false);
 		}
 	}
 	
@@ -306,8 +306,11 @@ public class Text implements Renderable {
 	 */
 	@Override
 	@GLContextRequired
-	public void updateGL() {
-		if(Objects.nonNull(va)){
+	public void updateGL(boolean useGLDoublePrecision) {
+		/* We never use double precision for text vertex arrays.
+		 * So we only need to update when isDirty, but not on change of requested precision.
+		 */
+		if(Objects.nonNull(va) && isDirty){
 			CharacterAtlas.get(fontsize, style).createVAforString(txtStr, va);
 			isDirty = false;
 		}
@@ -418,6 +421,11 @@ public class Text implements Renderable {
 	@GLContextRequired
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1);
+	}
+
+	@Override
+	public boolean isGLDoublePrecision() {
+		return false;
 	}
 	
 	

@@ -44,13 +44,13 @@ public class Points implements Renderable {
 
 	public final Glyph glyph;
 	protected VertexArray va;
-	protected boolean isDirty;
+	protected boolean isDirty = true;
 	protected float globalScaling = 1f;
 	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<PointDetails> points = new ArrayList<>();
 	protected boolean hidden=false;
 	protected boolean useVertexRounding=false;
-	boolean isGLDoublePrecision = false;
+	protected boolean isGLDoublePrecision = false;
 
 	/**
 	 * Creates a new {@link Points} object which uses the specified {@link Glyph} for displaying its points.

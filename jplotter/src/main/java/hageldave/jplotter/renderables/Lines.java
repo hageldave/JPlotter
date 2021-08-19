@@ -49,7 +49,7 @@ public class Lines implements Renderable {
 
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 
-	protected boolean isDirty;
+	protected boolean isDirty = true;
 
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 
@@ -61,7 +61,7 @@ public class Lines implements Renderable {
 	
 	protected boolean hidden = false;
 	
-	boolean isGLDoublePrecision = false;
+	protected boolean isGLDoublePrecision = false;
 
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.

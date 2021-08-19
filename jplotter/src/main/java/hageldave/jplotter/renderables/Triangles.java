@@ -36,12 +36,13 @@ import hageldave.jplotter.util.Utils;
 public class Triangles implements Renderable {
 
 	protected VertexArray va;
-	protected boolean isDirty;
+	protected boolean isDirty = true;
 	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<TriangleDetails> triangles = new ArrayList<>();
 	protected boolean useCrispEdgesForSVG = true;
-	private boolean useAAinFallback = false;
+	protected boolean useAAinFallback = false;
 	protected boolean hidden=false;
+	protected boolean isGLDoublePrecision = false;
 	
 	/**
 	 * @return the number of triangles in this collection.
@@ -257,7 +258,7 @@ public class Triangles implements Renderable {
 	public void initGL() {
 		if(Objects.isNull(va)){
 			va = new VertexArray(2);
-			updateGL();
+			updateGL(false);
 		}
 	}
 
@@ -267,7 +268,13 @@ public class Triangles implements Renderable {
 	 * Sets the {@link #isDirty()} state to false.
 	 */
 	@Override
-	public void updateGL() {
+	public void updateGL(boolean useGLDoublePrecision) {
+		if(isDirty){
+			updateGLFloat();
+		}
+	}
+	
+	protected void updateGLFloat() {
 		if(Objects.nonNull(va)){
 			final int numTris = triangles.size();
 			float[] vertices = new float[numTris*2*3];
@@ -292,6 +299,7 @@ public class Triangles implements Renderable {
 			va.setBuffer(0, 2, vertices);
 			va.setBuffer(1, 2, false, vColors);
 			isDirty = false;
+			isGLDoublePrecision = false;
 		}
 	}
 
@@ -625,6 +633,11 @@ public class Triangles implements Renderable {
 	public Triangles enableAAinFallback(boolean enable) {
 		this.useAAinFallback = enable;
 		return this;
+	}
+
+	@Override
+	public boolean isGLDoublePrecision() {
+		return isGLDoublePrecision;
 	}
 	
 }
