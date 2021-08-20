@@ -31,7 +31,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	protected Rectangle2D view = null;
 	protected boolean isEnabled = true;
-	protected boolean isGLDoublePrecisionEnabled = false;
+	protected boolean isGLDoublePrecisionEnabled = true;
 	
 	/**
 	 * Executes the rendering procedure IF this {@link Renderer}s shader 
