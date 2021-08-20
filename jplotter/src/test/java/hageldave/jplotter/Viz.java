@@ -15,12 +15,14 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.misc.DefaultGlyph;
+import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.renderers.CurvesRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.renderers.TextRenderer;
@@ -66,9 +68,16 @@ public class Viz {
 		tris.addTriangle(-.5, 0, .5, .2, .4, .6).setColor0(0xff0000ff).setColor1(0xffff0000).setColor2(0xff00ff00);
 		trirender.addItemToRender(tris);
 		
+		Curves curves = new Curves();
+		curves.addCurve(-1, -1, 1, -1, -1, 1, 1, 1);
+		curves.setStrokePattern(0xf0f0);
+		
+		CurvesRenderer crvrenderer = new CurvesRenderer();
+		crvrenderer.addItemToRender(curves);
+		
 		
 		CoordSysRenderer csr = new CoordSysRenderer();
-		csr.setContent(render.withAppended(prender).withAppended(trirender));
+		csr.setContent(render.withAppended(prender).withAppended(trirender).withAppended(crvrenderer));
 		Legend legend = new Legend();
 		csr.setLegendBottom(legend);
 		legend.addLineLabel(2, 0xffff0055, "a pink line");

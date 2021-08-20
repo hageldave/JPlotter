@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL40;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -42,6 +43,38 @@ import hageldave.jplotter.util.ShaderRegistry;
 public class CurvesRenderer extends GenericRenderer<Curves> {
 
 	protected static final char NL = '\n';
+	
+	protected static final String vertexShaderSrcD = ""
+			+ "" + "#version 410"
+			+ NL + "layout(location = 0) in dvec4 in_position;"
+			+ NL + "layout(location = 1) in uint in_color;"
+			+ NL + "layout(location = 2) in uint in_pick;"
+			+ NL + "layout(location = 3) in float in_thickness;"
+			+ NL + "layout(location = 4) in float in_pathlen;"
+			+ NL + "layout(location = 5) in double in_param;"
+			+ NL + "out dvec4 vposition;"
+			+ NL + "out vec4 vcolor;"
+			+ NL + "out vec4 vpick;"
+			+ NL + "out float vthickness;"
+			+ NL + "out float vpathlen;"
+			+ NL + "out double vparam;"
+
+			+ NL + "vec4 unpackARGB(uint c) {"
+			+ NL + "   uint mask = uint(255);"
+			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
+			+ NL + "}"
+
+			+ NL + "void main() {"
+			/* we forward in_position to geometry shader since in_position contains two vec2 */
+			+ NL + "   vposition = in_position;"
+			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vpick =  unpackARGB(in_pick);"
+			+ NL + "   vthickness = in_thickness;"
+			+ NL + "   vpathlen = in_pathlen;"
+			+ NL + "   vparam = in_param;"
+			+ NL + "}"
+			+ NL
+			;
 	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec4 in_position;"
@@ -69,6 +102,113 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			+ NL + "   vthickness = in_thickness;"
 			+ NL + "   vpathlen = in_pathlen;"
 			+ NL + "   vparam = in_param;"
+			+ NL + "}"
+			+ NL
+			;
+	protected static final String geometryShaderSrcD = ""
+			+ "" + "#version 410"
+			+ NL + "layout(lines) in;"
+			+ NL + "/* maxcomps=1024, we write 4+4+4+1+1=14 per vertex, so we can output 1024/14=73 vertices */"
+			+ NL + "layout(triangle_strip,max_vertices=73) out;"
+			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "uniform mat4 projMX;"
+			+ NL + "uniform float linewidthMultiplier;"
+			+ NL + "in dvec4 vposition[];"
+			+ NL + "in vec4 vcolor[];"
+			+ NL + "in vec4 vpick[];"
+			+ NL + "in float vthickness[];"
+			+ NL + "in float vpathlen[];"
+			+ NL + "in double vparam[];"
+			+ NL + "out vec4 gcolor;"
+			+ NL + "out vec4 gpick;"
+			+ NL + "out float gpathlen;"
+			+ NL + ""
+			+ NL + "dvec2 transformToView(dvec2 v){"
+			+ NL + "   dvec3 pos = dvec3(v,1);"
+			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
+			+ NL + "   return pos.xy;"
+			+ NL + "}"
+			+ NL + "dvec4 bezier(dvec2 p1, dvec2 p2, dvec2 cp1, dvec2 cp2, double t){"
+			+ NL + "   double t_ = 1-t;"
+			+ NL + "   double t2 = t*t;"
+			+ NL + "   double t2_= t_*t_;"
+			+ NL + "   double t23 = 3*t2;"
+			+ NL + "   double t23_= 3*t2_;"
+			+ NL + "   dvec2 v1 = (t2_* t_) * p1;"
+			+ NL + "   dvec2 v2 = (t2 * t ) * p2;"
+			+ NL + "   dvec2 v3 = (t23_* t) * cp1;"
+			+ NL + "   dvec2 v4 = (t_* t23) * cp2;"
+			+ NL + "   dvec2 dv1 = (t23_) * (cp1-p1);"
+			+ NL + "   dvec2 dv2 = (t23 ) * (p2-cp2);"
+			+ NL + "   dvec2 dv3 = (6 * t_* t ) * (cp2-cp1);"
+			+ NL + "   return dvec4(v1+v2+v3+v4, dv1+dv2+dv3);"
+			+ NL + "}"
+			+ NL + ""
+			+ NL + "void main() {"
+			+ NL + "   dvec2 p1 = vposition[0].xy;"
+			+ NL + "   dvec2 p2 = vposition[0].zw;"
+			+ NL + "   dvec2 cp1 = vposition[1].xy;"
+			+ NL + "   dvec2 cp2 = vposition[1].zw;"
+			+ NL + "   p1 = transformToView(p1);"
+			+ NL + "   p2 = transformToView(p2);"
+			+ NL + "   cp1 = transformToView(cp1);"
+			+ NL + "   cp2 = transformToView(cp2);"
+			+ NL + "   "
+			+ NL + "   dvec4 start = bezier(p1,p2,cp1,cp2, vparam[0]);"
+			+ NL + "   dvec4 end   = bezier(p1,p2,cp1,cp2, vparam[1]);"
+			+ NL + "   p1 = start.xy; p2=end.xy;"
+			+ NL + "   float extend = 0.5*linewidthMultiplier;"
+			+ NL + "   "
+			+ NL + "   vec2 dir1 = vec2(normalize(start.zw));"
+			+ NL + "   vec2 dir2 = vec2(normalize(p2-p1));"
+			+ NL + "   vec2 q = vec2(p1);"
+			+ NL + "   "
+			+ NL + "   // curve normal will be used to form the joint,"
+			+ NL + "   // but has to be elongated to achieve target thickness"
+			+ NL + "   vec2 normal = vec2(dir1.y, -dir1.x);"
+			+ NL + "   vec2 miter = vec2(dir2.y, -dir2.x);"
+			+ NL + "   float extra = dot(normal,miter);"
+			+ NL + "   extra = abs(extra) < 0.4 ? 1.0:1.0/extra;"
+			+ NL + "   "
+			+ NL + "   vec2 p = q+extend*extra*normal;"
+			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
+			+ NL + "   gcolor = vcolor[0];"
+			+ NL + "   gpick = vpick[0];"
+			+ NL + "   gpathlen = vpathlen[0];"
+			+ NL + "   EmitVertex();"
+			+ NL + "   "
+			+ NL + "   p = q-extend*extra*normal;"
+			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
+			+ NL + "   gcolor = vcolor[0];"
+			+ NL + "   gpick = vpick[0];"
+			+ NL + "   gpathlen = vpathlen[0];"
+			+ NL + "   EmitVertex();"
+			+ NL + "   "
+			+ NL + "   dir1 = vec2(-normalize(end.zw));"
+			+ NL + "   q = vec2(p2);"
+			+ NL + "   "
+			+ NL + "   "
+			+ NL + "   normal = vec2(dir1.y, -dir1.x);"
+			+ NL + "   extra = dot(normal,miter);"
+			+ NL + "   extra = abs(extra) < 0.4 ? 1.0:1.0/extra;"
+			+ NL + "   "
+			+ NL + "   "
+			+ NL + "   p = q+extend*extra*normal;"
+			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
+			+ NL + "   gcolor = vcolor[1];"
+			+ NL + "   gpick = vpick[1];"
+			+ NL + "   gpathlen = vpathlen[1];"
+			+ NL + "   EmitVertex();"
+			+ NL + "   "
+			+ NL + "   p = q-extend*extra*normal;"
+			+ NL + "   gl_Position = projMX*vec4(p,0,1);"
+			+ NL + "   gcolor = vcolor[1];"
+			+ NL + "   gpick = vpick[1];"
+			+ NL + "   gpathlen = vpathlen[1];"
+			+ NL + "   EmitVertex();"
+			+ NL + "   "
+			+ NL + "   EndPrimitive();"
 			+ NL + "}"
 			+ NL
 			;
@@ -226,8 +366,11 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shaderF)){
-			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#F",()->new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
+		}
+		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled) {
+			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#D",()->new Shader(vertexShaderSrcD, geometryShaderSrcD, fragmentShaderSrc));
 		}
 	}
 
@@ -295,7 +438,14 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
-		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		if (shader == shaderD /* double precision shader */)
+		{
+			GL40.glUniform4d(loc, translateX, translateY, scaleX, scaleY);
+		}
+		else
+		{
+			GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		}
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}
