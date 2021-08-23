@@ -46,6 +46,7 @@ public interface Renderable extends AutoCloseable {
 	/**
 	 * Reports on the Renderable's currently used precision of its GL resources.
 	 * This may depend on the parameter used in the latest call to {@link #updateGL(boolean)}.
+	 * Precision is not decided by the Renderable but by the corresponding {@link Renderer}.
 	 * @return true if current GL resources (e.g vertex arrays) are using double precision
 	 */
 	public boolean isGLDoublePrecision();

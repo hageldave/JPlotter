@@ -269,7 +269,9 @@ public class Triangles implements Renderable {
 	 */
 	@Override
 	public void updateGL(boolean useGLDoublePrecision) {
-		if(isDirty){
+		if(useGLDoublePrecision){
+			updateGLDouble();
+		} else {
 			updateGLFloat();
 		}
 	}
@@ -302,10 +304,44 @@ public class Triangles implements Renderable {
 			isGLDoublePrecision = false;
 		}
 	}
+	
+	protected void updateGLDouble() {
+		if(Objects.nonNull(va)){
+			final int numTris = triangles.size();
+			double[] vertices = new double[numTris*2*3];
+			int[] vColors = new int[numTris*2*3];
+			for(int i=0; i<numTris; i++){
+				TriangleDetails tri = triangles.get(i);
+
+				vertices[i*6+0] = tri.p0.getX();
+				vertices[i*6+1] = tri.p0.getY();
+				vertices[i*6+2] = tri.p1.getX();
+				vertices[i*6+3] = tri.p1.getY();
+				vertices[i*6+4] = tri.p2.getX();
+				vertices[i*6+5] = tri.p2.getY();
+
+				vColors[i*6+0] = tri.c0.getAsInt();
+				vColors[i*6+1] = tri.pickColor;
+				vColors[i*6+2] = tri.c1.getAsInt();
+				vColors[i*6+3] = tri.pickColor;
+				vColors[i*6+4] = tri.c2.getAsInt();
+				vColors[i*6+5] = tri.pickColor;
+			}
+			va.setBuffer(0, 2, vertices);
+			va.setBuffer(1, 2, false, vColors);
+			isDirty = false;
+			isGLDoublePrecision = true;
+		}
+	}
 
 	@Override
 	public boolean isDirty() {
 		return isDirty;
+	}
+	
+	@Override
+	public boolean isGLDoublePrecision() {
+		return isGLDoublePrecision;
 	}
 	
 	/**
@@ -633,11 +669,6 @@ public class Triangles implements Renderable {
 	public Triangles enableAAinFallback(boolean enable) {
 		this.useAAinFallback = enable;
 		return this;
-	}
-
-	@Override
-	public boolean isGLDoublePrecision() {
-		return isGLDoublePrecision;
 	}
 	
 }

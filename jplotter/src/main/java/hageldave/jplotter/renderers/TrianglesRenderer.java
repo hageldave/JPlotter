@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL40;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -35,6 +36,30 @@ import hageldave.jplotter.util.Utils;
 public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	
 	protected static final char NL = '\n';
+	protected static final String vertexShaderSrcD = ""
+			+ "" + "#version 410"
+			+ NL + "layout(location = 0) in dvec2 in_position;"
+			+ NL + "layout(location = 1) in uvec2 in_colors;"
+			+ NL + "uniform mat4 projMX;"
+			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "out vec4 vColor;"
+			+ NL + "out vec4 vPickColor;"
+
+			+ NL + "vec4 unpackARGB(uint c) {"
+			+ NL + "   uint mask = uint(255);"
+			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
+			+ NL + "}"
+
+			+ NL + "void main() {"
+			+ NL + "   dvec3 pos = dvec3(in_position,1);"
+			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
+			+ NL + "   gl_Position = projMX*vec4(pos,1);"
+			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
+			+ NL + "}"
+			+ NL
+			;
 	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
@@ -85,11 +110,11 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	@GLContextRequired
 	public void glInit() {
 		if(Objects.isNull(shaderF)){
-			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#F",()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
 		}
 		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled){
-//			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
+			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#D",()->new Shader(vertexShaderSrcD, fragmentShaderSrc));
 		}
 	}
 
@@ -129,7 +154,14 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
-		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		if (shader == shaderD /* double precision shader */)
+		{
+			GL40.glUniform4d(loc, translateX, translateY, scaleX, scaleY);
+		}
+		else
+		{
+			GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		}
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}
