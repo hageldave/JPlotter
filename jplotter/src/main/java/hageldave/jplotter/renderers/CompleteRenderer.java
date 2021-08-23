@@ -40,7 +40,7 @@ import hageldave.jplotter.renderables.Triangles;
  * 
  * @author hageldave
  */
-public class CompleteRenderer implements Renderer, AdaptableView {
+public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecisionSupport {
 	
 	public final LinesRenderer lines = new LinesRenderer();
 	public final PointsRenderer points = new PointsRenderer();
@@ -151,6 +151,19 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	@Override
 	public boolean isEnabled() {
 		return isEnabled;
+	}
+	
+	/**
+	 * Convenience method for enabling/disabling GL double precision rendering.
+	 * This calls {@link GenericRenderer#setGLDoublePrecisionEnabled(boolean)}
+	 * for each base {@link Renderer} of this CompleteRenderer.
+	 */
+	@Override
+	public void setGLDoublePrecisionEnabled(boolean enable) {
+		for(Renderer r : rendererLUT) {
+			if(r instanceof GLDoublePrecisionSupport)
+				((GLDoublePrecisionSupport)r).setGLDoublePrecisionEnabled(enable);
+		}
 	}
 	
 	/**

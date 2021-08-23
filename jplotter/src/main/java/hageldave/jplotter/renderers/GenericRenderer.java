@@ -23,7 +23,7 @@ import hageldave.jplotter.util.Utils;
  * @author hageldave
  * @param <T> the kind of renderable this GenericRenderer handles
  */
-public abstract class GenericRenderer<T extends Renderable> implements Renderer, AdaptableView {
+public abstract class GenericRenderer<T extends Renderable> implements Renderer, AdaptableView, GLDoublePrecisionSupport {
 	
 	protected LinkedList<T> itemsToRender = new LinkedList<>();
 	protected Shader shaderF;
@@ -31,7 +31,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
 	protected Rectangle2D view = null;
 	protected boolean isEnabled = true;
-	protected boolean isGLDoublePrecisionEnabled = true;
+	protected boolean isGLDoublePrecisionEnabled = false;
 	
 	/**
 	 * Executes the rendering procedure IF this {@link Renderer}s shader 
@@ -171,6 +171,32 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	@Override
 	public boolean isEnabled() {
 		return isEnabled;
+	}
+	
+	/**
+	 * Enables/Disables GL rendering with double precision. Default is single precision.
+	 * This requires support for GLSL 4.10 and OpenGL 4.1.
+	 * <p>
+	 * <u>Implementation Note</u><br>
+	 * The GenericRenderer class provides two attributes of type {@link Shader}, where {@link #shaderF}
+	 * is the default shader using single precision, and {@link #shaderD} is the double precision shader.
+	 * An implementation of GenericRenderer has to support single precision but double precision is optional.
+	 * In case there is no double precision support, the {@link #shaderD} attribute is never set (stays null).
+	 * The method {@link #getShader()} returns shaderD iff it is non-null and {@link #isGLDoublePrecisionEnabled()}.
+	 *  
+	 * @param enable true when enabling
+	 */
+	@Override
+	public void setGLDoublePrecisionEnabled(boolean enable) {
+		this.isGLDoublePrecisionEnabled = enable;
+	}
+	
+	/**
+	 * @return true when GL double precision rendering is enabled.
+	 * @see #setGLDoublePrecisionEnabled(boolean)
+	 */
+	public boolean isGLDoublePrecisionEnabled() {
+		return isGLDoublePrecisionEnabled;
 	}
 	
 	/**
