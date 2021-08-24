@@ -1,12 +1,13 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import hageldave.jplotter.util.Annotations.GLContextRequired;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 /**
  * The chained renderer is used to realize the methods {@link Renderer#withAppended(Renderer)}
@@ -88,5 +89,12 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 		r2.renderSVG(doc, parent, w, h);
 	}
 
-
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		r1.renderPDF(doc, page, x, y, w, h);
+		r2.renderPDF(doc, page, x, y, w, h);
+	}
 }

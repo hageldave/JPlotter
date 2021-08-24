@@ -1,12 +1,13 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Graphics2D;
-
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.pdf.PDFRenderer;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGRenderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+
+import java.awt.*;
 
 /**
  * The Renderer interface defines methods to 
@@ -26,7 +27,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * 
  * @author hageldave
  */
-public interface Renderer extends AutoCloseable, SVGRenderer {
+public interface Renderer extends AutoCloseable, SVGRenderer, PDFRenderer {
 
 	/**
 	 * Initializes this renderer, i.e. allocates GL resources such as a 
@@ -98,5 +99,5 @@ public interface Renderer extends AutoCloseable, SVGRenderer {
 	public default ChainedRenderer withPrepended(Renderer r){
 		return new ChainedRenderer(r, this);
 	}
-	
+
 }
