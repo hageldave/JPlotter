@@ -179,15 +179,9 @@ public enum DefaultGlyph implements Glyph {
 		return Arrays.asList(element);
 	}
 
-	// todo effizienz testen
 	static PDPageContentStream mkCirclePDF(PDPageContentStream contentStream, Integer pixelSize) {
-		double[][] verts = new double[2][numCircVerts];
-		for(int i=0; i<numCircVerts;i++){
-			verts[0][i] = sincosLUT[1][i]*0.5f*pixelSize;
-			verts[1][i] = sincosLUT[0][i]*0.5f*pixelSize;
-		}
 		try {
-			PDFUtils.createPDFPolygon(contentStream, verts[0], verts[1]);
+			PDFUtils.createPDFPoint(contentStream, new Point2D.Double(0,0), pixelSize/2);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
