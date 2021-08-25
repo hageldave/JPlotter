@@ -1,6 +1,11 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -9,11 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The Triangles class is a collection of 2D triangles.
@@ -38,6 +38,7 @@ public class Triangles implements Renderable {
 	protected VertexArray va;
 	protected boolean isDirty;
 	protected float globalAlphaMultiplier = 1f;
+	protected float globalSaturationMultiplier = 1f;
 	protected ArrayList<TriangleDetails> triangles = new ArrayList<>();
 	protected boolean useCrispEdgesForSVG = true;
 	private boolean useAAinFallback = false;
@@ -219,7 +220,18 @@ public class Triangles implements Renderable {
 	public float getGlobalAlphaMultiplier() {
 		return globalAlphaMultiplier;
 	}
-	
+
+	// TODO
+	public Triangles setGlobalSaturationMultiplier(double globalSaturationMultiplier) {
+		this.globalSaturationMultiplier = (float)globalSaturationMultiplier;
+		return this;
+	}
+
+	// TODO
+	public float getGlobalSaturationMultiplier() {
+		return globalSaturationMultiplier;
+	}
+
 	@Override
 	public boolean isHidden() {
 		return hidden;

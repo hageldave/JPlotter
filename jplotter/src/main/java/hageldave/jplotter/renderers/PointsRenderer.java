@@ -263,7 +263,9 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					xform.rotate(point.rot.getAsDouble());
 				}
 				g_.transform(xform);
-				int color = ColorOperations.scaleColorAlpha(point.color.getAsInt(),points.getGlobalAlphaMultiplier());
+				int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+				color = ColorOperations.scaleColorAlpha(color,points.getGlobalAlphaMultiplier());
+
 				g_.setColor(new Color(color, true));
 				glyph.drawFallback(g_, (float)(glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble()));
 				
@@ -277,7 +279,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		}
 		
 	}
-	
+
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
@@ -318,18 +320,20 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				{
 					continue;
 				}
-				
+
+				int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+
 				Element pointElement = SVGUtils.createSVGElement(doc, "use");
 				pointsGroup.appendChild(pointElement);
 				pointElement.setAttributeNS(null, "xlink:href", "#"+symbolID);
 				if(glyph.isFilled()){
-					pointElement.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(point.color.getAsInt()));
+					pointElement.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(color));
 					pointElement.setAttributeNS(null, "fill-opacity", 
-							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color.getAsInt())));
+							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(color)));
 				} else {
-					pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(point.color.getAsInt()));
+					pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(color));
 					pointElement.setAttributeNS(null, "stroke-opacity", 
-							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color.getAsInt())));
+							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(color)));
 					pointElement.setAttributeNS(null, "fill-opacity", "0");
 				}
 				String transform = "";
@@ -429,12 +433,14 @@ public class PointsRenderer extends GenericRenderer<Points> {
 
 					contentStream.drawForm(glyphForm);
 
+					int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+
 					if(glyph.isFilled()){
-						contentStream.setNonStrokingColor(new Color(point.color.getAsInt()));
+						contentStream.setNonStrokingColor(new Color(color));
 						contentStream.fill();
 					} else {
 						contentStream.setLineWidth((float) (1/(glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble())));
-						contentStream.setStrokingColor(new Color(point.color.getAsInt()));
+						contentStream.setStrokingColor(new Color(color));
 						contentStream.stroke();
 					}
 					// restore graphics

@@ -304,6 +304,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         }
     }
 
+    // TODO implement saturation multiplier
     @Override
     @GLContextRequired
     public void render(int vpx, int vpy, int w, int h) {
@@ -473,7 +474,12 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                 }
                 g.setStroke(stroke);
                 p.setStroke(stroke);
-                g.setColor(new Color(ColorOperations.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
+
+                // new color
+                int color = ColorOperations.changeSaturation(curvestrip.get(0).color.getAsInt(), curves.getGlobalSaturationMultiplier());
+                color = ColorOperations.scaleColorAlpha(color,curves.getGlobalAlphaMultiplier());
+                //g.setColor(new Color(ColorOperations.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
+                g.setColor(new Color(color, true));
 
                 for (CurveDetails cd : curvestrip) {
                     float x1 = (float) ( scaleX * ( cd.p0.getX() - translateX ) );
@@ -549,7 +555,9 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                 path.setAttributeNS(null, "d", pathSVGCoordinates(curvestrip, translateX, translateY, scaleX, scaleY));
                 double strokew = curvestrip.get(0).thickness.getAsDouble() * curves.getGlobalThicknessMultiplier();
                 path.setAttributeNS(null, "stroke-width", SVGUtils.svgNumber(strokew));
-                int color = curvestrip.get(0).color.getAsInt();
+
+                int color = ColorOperations.changeSaturation(curvestrip.get(0).color.getAsInt(), curves.getGlobalSaturationMultiplier());
+
                 path.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(color));
                 double opacity = Pixel.a_normalized(color) * curves.getGlobalAlphaMultiplier();
                 if (opacity != 1.0) {
@@ -638,12 +646,15 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                             real[i] = Float.parseFloat(splited[i]);
                         }
 
+                        int color =
+                                ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());
+
                         PDFUtils.createPDFCurve(cs, new Point2D.Double(x1 + x, y1 + y),
                                 new Point2D.Double(cp0x + x, cp0y + y),
                                 new Point2D.Double(cp1x + x, cp1y + y),
                                 new Point2D.Double(x2 + x, y2 + y));
                         cs.setLineDashPattern(real, 0);
-                        cs.setStrokingColor(new Color(details.color.getAsInt()));
+                        cs.setStrokingColor(new Color(color));
                         cs.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
                         cs.stroke();
 

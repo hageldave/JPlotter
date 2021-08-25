@@ -170,12 +170,119 @@ public class LinesRenderer extends GenericRenderer<Lines> {
             + NL + "   pick_color = gpick;"
             + NL + "}"
             + NL;
-
+    private final int[] strokePattern = new int[16];
     protected boolean viewHasChanged = true;
     protected int preVpW = 0;
     protected int preVpH = 0;
-    private final int[] strokePattern = new int[16];
 
+    public static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
+        Color startColor = new Color(color1);
+        Color endColor = new Color(color2);
+
+        COSDictionary fdict = new COSDictionary();
+        fdict.setInt(COSName.FUNCTION_TYPE, 2);
+
+        COSArray domain = new COSArray();
+        domain.add(COSInteger.get(0));
+        domain.add(COSInteger.get(1));
+
+        COSArray c0 = new COSArray();
+        c0.add(new COSFloat(startColor.getRed() / 255f));
+        c0.add(new COSFloat(startColor.getGreen() / 255f));
+        c0.add(new COSFloat(startColor.getBlue() / 255f));
+
+        COSArray c1 = new COSArray();
+        c1.add(new COSFloat(endColor.getRed() / 255f));
+        c1.add(new COSFloat(endColor.getGreen() / 255f));
+        c1.add(new COSFloat(endColor.getBlue() / 255f));
+
+
+        fdict.setItem(COSName.DOMAIN, domain);
+        fdict.setItem(COSName.C0, c0);
+        fdict.setItem(COSName.C1, c1);
+        fdict.setInt(COSName.N, 1);
+
+        PDFunctionType2 func = new PDFunctionType2(fdict);
+
+        PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
+
+        axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+        axialShading.setShadingType(PDShading.SHADING_TYPE2);
+
+        COSArray coords1 = new COSArray();
+        coords1.add(new COSFloat((float) p0.getX()));
+        coords1.add(new COSFloat((float) p0.getY()));
+        coords1.add(new COSFloat((float) p1.getX()));
+        coords1.add(new COSFloat((float) p1.getY()));
+
+        axialShading.setCoords(coords1);
+        axialShading.setFunction(func);
+
+        return axialShading;
+    }
+
+    protected static double[] findStrokeInterval(double current, double strokeLen, short pattern) {
+        double patternStart = current - ( current % strokeLen );
+        double patternPos = ( current % strokeLen ) * ( 16 / strokeLen );
+        int bit = (int) patternPos;
+        int steps = bit;
+        int[] pat = transferBits(pattern, new int[16]);
+        // find next part of stroke pattern that is solid
+        while (pat[bit] != 1) {
+            bit = ( bit + 1 ) & 0xf;//%16;
+            steps++;
+        }
+        double intervalStart = steps == 0 ? current : patternStart + steps * ( strokeLen / 16 );
+        // find next part of stroke pattern that is empty
+        while (pat[bit] == 1) {
+            bit = ( bit + 1 ) & 0xf;//%16;
+            steps++;
+        }
+        double intervalEnd = patternStart + steps * ( strokeLen / 16 );
+        // find next solid again
+        while (pat[bit] != 1) {
+            bit = ( bit + 1 ) & 0xf;//%16;
+            steps++;
+        }
+        double nextIntervalStart = patternStart + steps * ( strokeLen / 16 );
+        return new double[]{intervalStart, intervalEnd, nextIntervalStart};
+    }
+
+    protected static int[] transferBits(short bits, int[] target) {
+        for (int i = 0; i < 16; i++) {
+            target[15 - i] = ( bits >> i ) & 0b1;
+        }
+        return target;
+    }
+
+    protected static float[] strokePattern2dashPattern(short pattern, float strokeLen) {
+        int[] bits = transferBits(pattern, new int[16]);
+        // shift pattern to a valid start
+        while (bits[0] != 1 && bits[15] != 0) {
+            int b0 = bits[0];
+            for (int i = 0; i < 15; i++)
+                bits[i] = bits[i + 1];
+            bits[15] = b0;
+        }
+
+        float unit = strokeLen / 16f;
+        int currentBit = bits[0];
+        int currentLen = 1;
+        int iDash = 0;
+        float[] dash = new float[16];
+        for (int i = 1; i < 16; i++) {
+            if (currentBit == bits[i]) {
+                currentLen++;
+            } else {
+                dash[iDash++] = currentLen * unit;
+                currentLen = 1;
+                currentBit = bits[i];
+            }
+            if (i == 15)
+                dash[iDash] = currentLen * unit;
+        }
+        return Arrays.copyOf(dash, iDash + 1);
+    }
 
     /**
      * Creates the shader if not already created and
@@ -192,6 +299,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         }
     }
 
+    // TODO implement saturation multiplier
     @Override
     @GLContextRequired
     public void render(int vpx, int vpy, int w, int h) {
@@ -230,7 +338,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         preVpW = w;
         preVpH = h;
     }
-
 
     /**
      * Disables {@link GL11#GL_DEPTH_TEST},
@@ -412,9 +519,15 @@ public class LinesRenderer extends GenericRenderer<Lines> {
             }
 
             Paint paint;
-            int c1, c2;
-            c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
-            c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
+
+            //int c1, c2;
+            int c1 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+            c1 = ColorOperations.scaleColorAlpha(c1, lines.getGlobalAlphaMultiplier());
+            //c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
+
+            int c2 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
+            c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
+
             if (c1 != c2) {
                 paint = new GradientPaint((float) x1, (float) y1, new Color(c1, true), (float) x2, (float) y2, new Color(c2, true));
             } else paint = new Color(c1, true);
@@ -500,9 +613,17 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 
             Paint paint;
-            int c1, c2;
+            /*int c1, c2;
             c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
-            c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
+            c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());*/
+
+            int c1 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+            c1 = ColorOperations.scaleColorAlpha(c1, lines.getGlobalAlphaMultiplier());
+            //c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
+
+            int c2 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
+            c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
+
             if (c1 != c2) {
                 paint = new GradientPaint((float) x1, (float) y1, new Color(c1, true), (float) x2, (float) y2, new Color(c2, true));
             } else paint = new Color(c1, true);
@@ -576,7 +697,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
             }
         }
     }
-
 
     @Override
     public void renderSVG(Document doc, Element parent, int w, int h) {
@@ -657,6 +777,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                 double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
                 double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
 
+                int c0 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+                int c1 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
 
                 String defID = "";
                 if (seg.color0.getAsInt() != seg.color1.getAsInt()) {
@@ -675,14 +797,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                     gradient.appendChild(stop1);
                     stop1.setAttributeNS(null, "offset", "0%");
                     stop1.setAttributeNS(null, "style",
-                            "stop-color:" + SVGUtils.svgRGBhex(seg.color0.getAsInt()) + ";" +
-                                    "stop-opacity:" + SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(seg.color0.getAsInt())));
+                            "stop-color:" + SVGUtils.svgRGBhex(c0) + ";" +
+                                    "stop-opacity:" + SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(c0)));
                     Element stop2 = SVGUtils.createSVGElement(doc, "stop");
                     gradient.appendChild(stop2);
                     stop2.setAttributeNS(null, "offset", "100%");
                     stop2.setAttributeNS(null, "style",
-                            "stop-color:" + SVGUtils.svgRGBhex(seg.color1.getAsInt()) + ";" +
-                                    "stop-opacity:" + SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(seg.color1.getAsInt())));
+                            "stop-color:" + SVGUtils.svgRGBhex(c1) + ";" +
+                                    "stop-opacity:" + SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(c1)));
                 }
 
                 if (!lines.hasStrokePattern()) {
@@ -692,8 +814,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                             x1 + miterX * t1, y1 + miterY * t1, x2 + miterX * t2, y2 + miterY * t2,
                             x2 - miterX * t2, y2 - miterY * t2, x1 - miterX * t1, y1 - miterY * t1));
                     if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                        segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-                        segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(seg.color0.getAsInt())));
+                        segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(c0));
+                        segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(c0)));
                     } else {
                         // use gradient for line stroke
                         segment.setAttributeNS(null, "fill", "url(#" + defID + ")");
@@ -724,8 +846,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                         strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 
                         if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                            segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-                            segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(seg.color0.getAsInt())));
+                            segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(c0));
+                            segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(c0)));
                         } else {
                             // use gradient for line stroke
                             segment.setAttributeNS(null, "fill", "url(#" + defID + ")");
@@ -836,67 +958,70 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                     double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
                     double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
 
+                    int c1 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+                    c1 = ColorOperations.scaleColorAlpha(c1, lines.getGlobalAlphaMultiplier());
+
+                    int c2 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
+                    c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
+
+                    if (!lines.hasStrokePattern()) {
+                        // create invisible rectangle so that elements outside w, h won't be rendered
+                        if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
+                            contentStream.setNonStrokingColor(new Color(c1));
+                        } else {
+                            PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+                                    new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+                            PDShadingPattern pattern = new PDShadingPattern();
+                            pattern.setShading(shading);
+                            COSName name = page.getResources().add(pattern);
+                            PDColor color = new PDColor(name, new PDPattern(null));
+                            contentStream.setNonStrokingColor(color);
+                        }
+                        // create segments
+                        PDFUtils.createPDFPolygon(contentStream, new double[]{( x1 + miterX * t1 ) + x, ( x2 + miterX * t2 ) + x,
+                                ( x2 - miterX * t2 ) + x, ( x1 - miterX * t1 ) + x}, new double[]{( y1 + miterY * t1 ) + y, ( y2 + miterY * t2 ) + y,
+                                ( y2 - miterY * t2 ) + y, ( y1 - miterY * t1 ) + y});
+
+                        contentStream.fill();
+                    } else {
+                        double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+                        while (strokeInterval[0] < l2) {
+                            double start = strokeInterval[0];
+                            double end = Math.min(strokeInterval[1], l2);
+                            // interpolation factors
+                            double m1 = Math.max(( start - l1 ) / ( l2 - l1 ), 0);
+                            double m2 = ( end - l1 ) / ( l2 - l1 );
+                            // interpolate miters
+                            double t1_ = t1 * ( 1 - m1 ) + t2 * m1;
+                            double t2_ = t1 * ( 1 - m2 ) + t2 * m2;
+                            // interpolate segment
+                            double x1_ = x1 + dx * m1;
+                            double x2_ = x1 + dx * m2;
+                            double y1_ = y1 + dy * m1;
+                            double y2_ = y1 + dy * m2;
+
+                            strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 
 
-                        if (!lines.hasStrokePattern()) {
-                            // create invisible rectangle so that elements outside w, h won't be rendered
                             if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                                contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
+                                contentStream.setNonStrokingColor(new Color(c1));
                             } else {
-                                PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+                                PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
                                         new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+                                graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                                contentStream.setGraphicsStateParameters(graphicsState);
                                 PDShadingPattern pattern = new PDShadingPattern();
                                 pattern.setShading(shading);
                                 COSName name = page.getResources().add(pattern);
                                 PDColor color = new PDColor(name, new PDPattern(null));
                                 contentStream.setNonStrokingColor(color);
                             }
-                            // create segments
-                            PDFUtils.createPDFPolygon(contentStream, new double[]{(x1 + miterX * t1) + x, (x2 + miterX * t2) + x,
-                                    (x2 - miterX * t2) + x, (x1 - miterX * t1) + x}, new double[]{(y1 + miterY * t1) + y, (y2 + miterY * t2) + y,
-                                    (y2 - miterY * t2) + y, (y1 - miterY * t1) + y});
-
+                            PDFUtils.createPDFPolygon(contentStream, new double[]{( x1_ + miterX * t1_ ) + x, ( x2_ + miterX * t2_ ) + x,
+                                    ( x2_ - miterX * t2_ ) + x, ( x1_ - miterX * t1_ ) + x}, new double[]{( y1_ + miterY * t1_ ) + y, ( y2_ + miterY * t2_ ) + y,
+                                    ( y2_ - miterY * t2_ ) + y, ( y1_ - miterY * t1_ ) + y});
                             contentStream.fill();
-                        } else {
-                            double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
-                            while (strokeInterval[0] < l2) {
-                                double start = strokeInterval[0];
-                                double end = Math.min(strokeInterval[1], l2);
-                                // interpolation factors
-                                double m1 = Math.max(( start - l1 ) / ( l2 - l1 ), 0);
-                                double m2 = ( end - l1 ) / ( l2 - l1 );
-                                // interpolate miters
-                                double t1_ = t1 * ( 1 - m1 ) + t2 * m1;
-                                double t2_ = t1 * ( 1 - m2 ) + t2 * m2;
-                                // interpolate segment
-                                double x1_ = x1 + dx * m1;
-                                double x2_ = x1 + dx * m2;
-                                double y1_ = y1 + dy * m1;
-                                double y2_ = y1 + dy * m2;
-
-                                strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-
-
-
-                                if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                                    contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
-                                } else {
-                                    PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-                                            new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-                                    graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-                                    contentStream.setGraphicsStateParameters(graphicsState);
-                                    PDShadingPattern pattern = new PDShadingPattern();
-                                    pattern.setShading(shading);
-                                    COSName name = page.getResources().add(pattern);
-                                    PDColor color = new PDColor(name, new PDPattern(null));
-                                    contentStream.setNonStrokingColor(color);
-                                }
-                                PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,
-                                        (x2_ - miterX * t2_) + x, (x1_ - miterX * t1_) + x}, new double[]{(y1_ + miterY * t1_) + y, (y2_ + miterY * t2_) + y,
-                                        (y2_ - miterY * t2_) + y, (y1_ - miterY * t1_) + y});
-                                contentStream.fill();
-                            }
                         }
+                    }
 
                 }
                 contentStream.restoreGraphicsState();
@@ -905,114 +1030,5 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         } catch (IOException e) {
             throw new RuntimeException("Error occurred!");
         }
-    }
-
-    public static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
-        Color startColor = new Color(color1);
-        Color endColor = new Color(color2);
-
-        COSDictionary fdict = new COSDictionary();
-        fdict.setInt(COSName.FUNCTION_TYPE, 2);
-
-        COSArray domain = new COSArray();
-        domain.add(COSInteger.get(0));
-        domain.add(COSInteger.get(1));
-
-        COSArray c0 = new COSArray();
-        c0.add(new COSFloat(startColor.getRed() / 255f));
-        c0.add(new COSFloat(startColor.getGreen() / 255f));
-        c0.add(new COSFloat(startColor.getBlue() / 255f));
-
-        COSArray c1 = new COSArray();
-        c1.add(new COSFloat(endColor.getRed() / 255f));
-        c1.add(new COSFloat(endColor.getGreen() / 255f));
-        c1.add(new COSFloat(endColor.getBlue() / 255f));
-
-
-        fdict.setItem(COSName.DOMAIN, domain);
-        fdict.setItem(COSName.C0, c0);
-        fdict.setItem(COSName.C1, c1);
-        fdict.setInt(COSName.N, 1);
-
-        PDFunctionType2 func = new PDFunctionType2(fdict);
-
-        PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
-
-        axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
-        axialShading.setShadingType(PDShading.SHADING_TYPE2);
-
-        COSArray coords1 = new COSArray();
-        coords1.add(new COSFloat((float) p0.getX()));
-        coords1.add(new COSFloat((float) p0.getY()));
-        coords1.add(new COSFloat((float) p1.getX()));
-        coords1.add(new COSFloat((float) p1.getY()));
-
-        axialShading.setCoords(coords1);
-        axialShading.setFunction(func);
-
-        return axialShading;
-    }
-
-    protected static double[] findStrokeInterval(double current, double strokeLen, short pattern) {
-        double patternStart = current - ( current % strokeLen );
-        double patternPos = ( current % strokeLen ) * ( 16 / strokeLen );
-        int bit = (int) patternPos;
-        int steps = bit;
-        int[] pat = transferBits(pattern, new int[16]);
-        // find next part of stroke pattern that is solid
-        while (pat[bit] != 1) {
-            bit = ( bit + 1 ) & 0xf;//%16;
-            steps++;
-        }
-        double intervalStart = steps == 0 ? current : patternStart + steps * ( strokeLen / 16 );
-        // find next part of stroke pattern that is empty
-        while (pat[bit] == 1) {
-            bit = ( bit + 1 ) & 0xf;//%16;
-            steps++;
-        }
-        double intervalEnd = patternStart + steps * ( strokeLen / 16 );
-        // find next solid again
-        while (pat[bit] != 1) {
-            bit = ( bit + 1 ) & 0xf;//%16;
-            steps++;
-        }
-        double nextIntervalStart = patternStart + steps * ( strokeLen / 16 );
-        return new double[]{intervalStart, intervalEnd, nextIntervalStart};
-    }
-
-    protected static int[] transferBits(short bits, int[] target) {
-        for (int i = 0; i < 16; i++) {
-            target[15 - i] = ( bits >> i ) & 0b1;
-        }
-        return target;
-    }
-
-    protected static float[] strokePattern2dashPattern(short pattern, float strokeLen) {
-        int[] bits = transferBits(pattern, new int[16]);
-        // shift pattern to a valid start
-        while (bits[0] != 1 && bits[15] != 0) {
-            int b0 = bits[0];
-            for (int i = 0; i < 15; i++)
-                bits[i] = bits[i + 1];
-            bits[15] = b0;
-        }
-
-        float unit = strokeLen / 16f;
-        int currentBit = bits[0];
-        int currentLen = 1;
-        int iDash = 0;
-        float[] dash = new float[16];
-        for (int i = 1; i < 16; i++) {
-            if (currentBit == bits[i]) {
-                currentLen++;
-            } else {
-                dash[iDash++] = currentLen * unit;
-                currentLen = 1;
-                currentBit = bits[i];
-            }
-            if (i == 15)
-                dash[iDash] = currentLen * unit;
-        }
-        return Arrays.copyOf(dash, iDash + 1);
     }
 }

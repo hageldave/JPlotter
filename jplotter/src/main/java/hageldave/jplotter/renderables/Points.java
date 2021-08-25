@@ -1,6 +1,14 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.misc.Glyph;
+import hageldave.jplotter.renderers.PointsRenderer;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+import org.lwjgl.opengl.GL33;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -9,15 +17,6 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
-
-import org.lwjgl.opengl.GL33;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.misc.Glyph;
-import hageldave.jplotter.renderers.PointsRenderer;
-import hageldave.jplotter.util.Utils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
  * The Points class is a collection of 2D points that are to be represented
@@ -45,6 +44,7 @@ public class Points implements Renderable {
 	public final Glyph glyph;
 	protected VertexArray va;
 	protected boolean isDirty;
+	protected float globalSaturationMultiplier = 1f;
 	protected float globalScaling = 1f;
 	protected float globalAlphaMultiplier = 1f;
 	protected ArrayList<PointDetails> points = new ArrayList<>();
@@ -214,6 +214,23 @@ public class Points implements Renderable {
 	 */
 	public float getGlobalAlphaMultiplier() {
 		return globalAlphaMultiplier;
+	}
+
+	/**
+	 * TODO
+	 * @return
+	 */
+	public float getGlobalSaturationMultiplier() {
+		return globalSaturationMultiplier;
+	}
+
+	/**
+	 * TODO
+	 * @param globalSaturationMultiplier
+	 */
+	public Points setGlobalSaturationMultiplier(double globalSaturationMultiplier) {
+		this.globalSaturationMultiplier = (float)globalSaturationMultiplier;
+		return this;
 	}
 	
 	/**

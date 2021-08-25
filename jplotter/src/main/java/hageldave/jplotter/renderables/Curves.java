@@ -1,6 +1,11 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -8,11 +13,6 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The Curves class is a collection of cubic Bezier curves.
@@ -42,6 +42,7 @@ public class Curves implements Renderable {
 	protected float strokeLength = 16;
 	protected boolean isDirty;
 	protected boolean hidden = false;
+	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 	protected int numEffectiveSegments = 0;
@@ -400,7 +401,24 @@ public class Curves implements Renderable {
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
-	
+
+
+	// TODO
+	public Curves setGlobalSaturationMultiplier(DoubleSupplier globalSaturationMultiplier) {
+		this.globalSaturationMultiplier = globalSaturationMultiplier;
+		return this;
+	}
+
+	// TODO
+	public Curves setGlobalSaturationMultiplier(double globalSaturationMultiplier) {
+		return setGlobalSaturationMultiplier(() -> globalSaturationMultiplier);
+	}
+
+	// TODO
+	public float getGlobalSaturationMultiplier() {
+		return (float)globalSaturationMultiplier.getAsDouble();
+	}
+
 	/**
 	 * Sets this Curves object's stroke pattern.
 	 * The stroke pattern is a 16bit number that defines a sequence of solid and empty parts of a stroke.

@@ -1,8 +1,10 @@
 package hageldave.jplotter.color;
 
-import static hageldave.imagingkit.core.Pixel.*;
-
 import hageldave.imagingkit.core.Pixel;
+
+import java.awt.*;
+
+import static hageldave.imagingkit.core.Pixel.*;
 
 /**
  * The ColorOperations class contains methods for manipulating
@@ -11,6 +13,21 @@ import hageldave.imagingkit.core.Pixel;
  * @author hageldave
  */
 public class ColorOperations {
+
+	/**
+	 *
+	 * @param argb
+	 * @param saturation
+	 * @return
+	 */
+	public static int changeSaturation(int argb, float saturation) {
+		Color color = new Color(argb);
+		float[] hsv = new float[3];
+		Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsv);
+		saturation *= hsv[1];
+		hsv[1] = saturation;
+		return Color.HSBtoRGB(hsv[0], hsv[1], hsv[2]);
+	}
 
 	/**
 	 * Mixes the specified colors equally using mean channel values.
