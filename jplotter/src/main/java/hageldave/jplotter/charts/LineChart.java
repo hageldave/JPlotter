@@ -3,23 +3,25 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
-import hageldave.jplotter.misc.DefaultGlyph;
+import hageldave.jplotter.interaction.SimpleSelectionModel;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
-import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
+import hageldave.jplotter.util.Utils;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 
 public class LineChart {
     protected JPlotterCanvas canvas;
@@ -27,23 +29,32 @@ public class LineChart {
     protected CompleteRenderer content;
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
     final protected HashMap<Integer, Lines> linesAdded = new HashMap<>();
-    final protected PickingRegistry<Lines.SegmentDetails> lineRegistry = new PickingRegistry<>();
-    final protected PickingRegistry<Points.PointDetails> pointRegistry = new PickingRegistry<>();
+
+    final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
+
+    final protected LineChartDataModel dataModel = new LineChartDataModel();
+    final protected ArrayList<Lines> linesPerDataChunk = new ArrayList<>();
+    final protected ArrayList<Integer> legendElementPickIds = new ArrayList<>();
+    final protected TreeSet<Integer> freedPickIds = new TreeSet<>();
+    final protected Legend legend = new Legend();
+    protected LineChartVisualMapping visualMapping = new LineChartVisualMapping(){};
+    final protected LinkedList<LineChartMouseEventListener> mouseEventListeners = new LinkedList<>();
+    final protected LinkedList<PointSetSelectionListener> pointSetSelectionListeners = new LinkedList<>();
+    final protected LinkedList<PointSetSelectionListener> pointSetSelectionOngoingListeners = new LinkedList<>();
+    private int legendRightWidth = 100;
+    private int legendBottomHeight = 60;
+
 
     public LineChart(final boolean useOpenGL) {
-        this.canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
-        setupLineChart();
+        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
     }
 
-    public LineChart(final boolean useOpenGL, final JPlotterCanvas canvas) {
+    public LineChart(final boolean useOpenGL, final String xLabel, final String yLabel) {
+        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), xLabel, yLabel);
+    }
+
+    public LineChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
         this.canvas = canvas;
-        setupLineChart();
-    }
-
-    /**
-     * Helper method to set the initial scatter plot.
-     */
-    protected void setupLineChart() {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.coordsys = new CoordSysRenderer();
@@ -51,112 +62,257 @@ public class LineChart {
         this.coordsys.setCoordinateView(-1, -1, 1, 1);
         this.coordsys.setContent(content);
         this.canvas.setRenderer(coordsys);
+        this.coordsys.setxAxisLabel(xLabel);
+        this.coordsys.setyAxisLabel(yLabel);
 
+        this.dataModel.addListener(new LineChartDataModel.LineChartDataModelListener() {
+            @Override
+            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx, Integer startEndInterval) {
+                onDataAdded(chunkIdx, chunkData, chunkDescription, xIdx, yIdx, startEndInterval);
+            }
+
+            @Override
+            public void dataChanged(int chunkIdx, double[][] chunkData) {
+                onDataChanged(chunkIdx, chunkData);
+            }
+        });
+
+        createMouseEventHandler();
+        createRectangularPointSetSelectionCapabilities();
     }
 
-    private class Dataset {
-        protected Points.PointDetails point;
-        protected double[][] array;
-        protected double startIndex;
-        protected double endIndex;
-
-        Dataset(final Points.PointDetails point, final double[][] array, final double startIndex, final double endIndex) {
-            this.point = point;
-            this.array = array;
-            this.startIndex = startIndex;
-            this.endIndex = endIndex;
-        }
+    public LineChartVisualMapping getVisualMapping() {
+        return visualMapping;
     }
 
-    /**
-     * adds a set of points to the scatter plot.
-     *
-     */
-    public Lines addLineSegment(final Integer ID, final double[][] data, final Color color) {
-        int biggestX = 0; int smallestX = Integer.MAX_VALUE; int biggestY = 0; int smallestY = Integer.MAX_VALUE;
-        Lines tempLine = new Lines();
-        for (int i = 0; i < data.length-1; i++) {
-            double x1 = data[i][0], x2 = data[i+1][0];
-            double y1 = data[i][1], y2 = data[i+1][1];
-            Lines.SegmentDetails segment = tempLine.addSegment(x1, y1, x2, y2);
-            segment.setColor(color);
-            addSegmentToRegistry(segment);
-        }
-        this.getCoordsys().setCoordinateView(smallestX, smallestY, biggestX, biggestY);
-        this.dataAdded.add(data);
-        this.content.addItemToRender(tempLine);
-        this.linesAdded.put(ID, tempLine);
-        return tempLine;
+    public void setVisualMapping(LineChartVisualMapping visualMapping) {
+        this.visualMapping = visualMapping;
+        for(Lines p:linesPerDataChunk)
+            p.setDirty();
+        this.canvas.scheduleRepaint();
     }
 
-    public Points addPoints(final double[][] data, final DefaultGlyph glyph, final Color color) {
-        Points tempPoints = new Points(glyph);
-        for (double[] entry : data) {
-            double x = entry[0], y = entry[1];
-            Points.PointDetails point = tempPoints.addPoint(x, y);
-            point.setColor(color);
-            addPointToRegistry(point);
-        }
-        this.content.addItemToRender(tempPoints);
-        return tempPoints;
+    public LineChartDataModel getDataModel() {
+        return dataModel;
     }
 
-    public Points highlightDatapoints(final DefaultGlyph glyph, final Color color) {
-        Points tempPoints = new Points(glyph);
-        for (double[][] data : dataAdded) {
-            for (double[] entry: data) {
-                double x = entry[0], y = entry[1];
-                Points.PointDetails point = tempPoints.addPoint(x, y);
-                point.setColor(color);
-                addPointToRegistry(point);
-            }
-        }
-        this.content.addItemToRender(tempPoints);
-        return tempPoints;
+    protected synchronized int registerInPickingRegistry(Object obj) {
+        int id = freedPickIds.isEmpty() ? pickingRegistry.getNewID() : freedPickIds.pollFirst();
+        pickingRegistry.register(obj, id);
+        return id;
     }
 
-    public LineChart alignCoordsys() {
-        LineChart old = this;
-        double minX = Integer.MAX_VALUE; double maxX = 0; double minY = Integer.MAX_VALUE; double maxY = 0;
-        for (Lines line: linesAdded.values()) {
-            if (minX > line.getBounds().getMinX()) {
-                minX = line.getBounds().getMinX();
-            }
-            if (maxX < line.getBounds().getMaxX()) {
-                maxX = line.getBounds().getMaxX();
-            }
-            if (minY > line.getBounds().getMinY()) {
-                minY = line.getBounds().getMinY();
-            }
-            if (maxY < line.getBounds().getMaxY()) {
-                maxY = line.getBounds().getMaxY();
-            }
-        }
-        this.coordsys.setCoordinateView(minX, minY, maxX, maxY);
+    protected synchronized Object deregisterFromPickingRegistry(int id) {
+        Object old = pickingRegistry.lookup(id);
+        pickingRegistry.register(null, id);
+        freedPickIds.add(id);
         return old;
     }
 
-    /**
-     * Adds point to picking registry
-     *
-     * @param line to be added
-     */
-    protected void addSegmentToRegistry(Lines.SegmentDetails line) {
-        int tempID = this.lineRegistry.getNewID();
-        line.setPickColor(tempID);
-        this.lineRegistry.register(line, tempID);
+    protected synchronized void onDataAdded(int chunkIdx, double[][] dataChunk, String chunkDescription, int xIdx, int yIdx, int startEndInterval) {
+        Lines lines = new Lines();
+        linesPerDataChunk.add(lines);
+        content.addItemToRender(lines);
+        lines.setStrokePattern(getVisualMapping().getStrokePatternForChunk(chunkIdx, chunkDescription));
+        for(int i=0; i<dataChunk.length-startEndInterval; i++) {
+            int i_=i;
+            double[] datapoint = dataChunk[i];
+            double[] scndDatapoint = dataChunk[i+startEndInterval];
+            Lines.SegmentDetails linesDetails = lines.addSegment(
+                    new Point2D.Double(datapoint[xIdx], datapoint[yIdx]), new Point2D.Double(scndDatapoint[xIdx], scndDatapoint[yIdx]));
+            linesDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, chunkDescription, dataChunk, i_));
+            linesDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+        }
+        // create a picking ID for use in legend for this data chunk
+        this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
+        visualMapping.createLegendElementForChunk(legend, chunkIdx, chunkDescription, legendElementPickIds.get(chunkIdx));
+
+        this.canvas.scheduleRepaint();
     }
 
-    /**
-     * Adds point to picking registry
-     *
-     * @param point to be added
-     */
-    protected void addPointToRegistry(Points.PointDetails point) {
-        int tempID = this.pointRegistry.getNewID();
-        point.setPickColor(tempID);
-        this.pointRegistry.register(point, tempID);
+    protected synchronized void onDataChanged(int chunkIdx, double[][] dataChunk) {
+        Lines lines = linesPerDataChunk.get(chunkIdx);
+
+        // collect pick id's from current points for later reuse
+        for(Lines.SegmentDetails sd:lines.getSegments()) {
+            int pickId = sd.pickColor;
+            if(pickId != 0) {
+                deregisterFromPickingRegistry(pickId);
+            }
+        }
+        lines.removeAllSegments();
+
+        int interval = this.getDataModel().startEndInterval.get(chunkIdx);
+
+        // add changed data
+        for(int i=0; i<dataChunk.length-interval; i++) {
+            int i_=i;
+            double[] datapoint = dataChunk[i];
+            double[] scndDatapoint = dataChunk[i+interval];
+            Lines.SegmentDetails segmentDetails = lines.addSegment(
+                    new Point2D.Double(datapoint[dataModel.getXIdx(chunkIdx)], datapoint[dataModel.getYIdx(chunkIdx)]),
+                    new Point2D.Double(scndDatapoint[dataModel.getXIdx(chunkIdx)], scndDatapoint[dataModel.getYIdx(chunkIdx)]));
+            segmentDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
+            segmentDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+        }
+
+        this.canvas.scheduleRepaint();
     }
+
+
+    public static class LineChartDataModel {
+        protected ArrayList<double[][]> dataChunks = new ArrayList<>();
+        protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();
+        protected ArrayList<Integer> startEndInterval = new ArrayList<>();
+        protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
+
+        protected LinkedList<LineChartDataModelListener> listeners = new LinkedList<>();
+
+        public static interface LineChartDataModelListener {
+            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx, Integer startEndInterval);
+
+            public void dataChanged(int chunkIdx, double[][] chunkData);
+        }
+
+        public synchronized void addData(double[][] dataChunk, int xIdx, int yIdx, int startEndInterval, String chunkDescription) {
+            int chunkIdx = this.dataChunks.size();
+            this.dataChunks.add(dataChunk);
+            this.xyIndicesPerChunk.add(Pair.of(xIdx, yIdx));
+            this.startEndInterval.add(startEndInterval);
+            this.descriptionPerChunk.add(chunkDescription);
+            notifyDataAdded(chunkIdx);
+        }
+
+        public int numChunks() {
+            return dataChunks.size();
+        }
+
+        public double[][] getDataChunk(int chunkIdx){
+            return dataChunks.get(chunkIdx);
+        }
+
+        public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
+            if(chunkIdx >= numChunks())
+                throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
+            this.dataChunks.set(chunkIdx, dataChunk);
+            this.notifyDataChanged(chunkIdx);
+        }
+
+        public int getXIdx(int chunkIdx) {
+            return xyIndicesPerChunk.get(chunkIdx).first;
+        }
+
+        public int getYIdx(int chunkIdx) {
+            return xyIndicesPerChunk.get(chunkIdx).second;
+        }
+
+        public Integer getStartEndInterval(int chunkIdx) {
+            return startEndInterval.get(chunkIdx);
+        }
+
+        public String getChunkDescription(int chunkIdx) {
+            return descriptionPerChunk.get(chunkIdx);
+        }
+
+        public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area){
+            // naive search for contained points
+            // TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
+            int xIdx = getXIdx(chunkIdx);
+            int yIdx = getYIdx(chunkIdx);
+            double[][] data = getDataChunk(chunkIdx);
+            TreeSet<Integer> containedPointIndices = new TreeSet<>();
+            for(int i=0; i<data.length; i++) {
+                if(area.contains(data[i][xIdx], data[i][yIdx]))
+                    containedPointIndices.add(i);
+            }
+            return containedPointIndices;
+        }
+
+        public synchronized void addListener(LineChartDataModelListener l) {
+            listeners.add(l);
+        }
+
+        protected synchronized void notifyDataAdded(int chunkIdx) {
+            for(LineChartDataModelListener l:listeners)
+                l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx), getStartEndInterval(chunkIdx));
+        }
+
+        public synchronized void notifyDataChanged(int chunkIdx) {
+            for(LineChartDataModelListener l:listeners)
+                l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
+        }
+
+    }
+
+    public static interface LineChartVisualMapping {
+
+        public default int getStrokePatternForChunk(int chunkIdx, String chunkDescr) {
+            int[] usualLineChartStrokePatterns = {0xffff, 0xff00, 0x0f0f, 0xaaaa};
+            return usualLineChartStrokePatterns[chunkIdx%usualLineChartStrokePatterns.length];
+        }
+
+        public default int getColorForDataPoint(int chunkIdx, String chunkDescr, double[][] dataChunk, int pointIdx) {
+            DefaultColorMap colorMap = DefaultColorMap.Q_8_SET2;
+            return colorMap.getColor(chunkIdx%colorMap.numColors());
+        }
+
+        public default void createLegendElementForChunk(Legend legend, int chunkIdx, String chunkDescr, int pickColor) {
+            int strokepattern = getStrokePatternForChunk(chunkIdx, chunkDescr);
+            int color = getColorForDataPoint(chunkIdx, chunkDescr, null, -1);
+            legend.addLineLabel(1, color, strokepattern, chunkDescr, pickColor);
+        }
+
+        public default void createGeneralLegendElements(Legend legend) {};
+    }
+
+
+    public LineChart alignCoordsys(final double scaling) {
+        Rectangle2D union = null;
+        for (Lines lines: linesPerDataChunk) {
+            if(union==null)
+                union = lines.getBounds();
+            else
+                Rectangle2D.union(lines.getBounds(), union, union);
+        }
+        if(union != null)
+            this.coordsys.setCoordinateView(Utils.scaleRect(union, scaling));
+        this.canvas.scheduleRepaint();
+        return this;
+    }
+
+    public LineChart alignCoordsys() {
+        return alignCoordsys(1);
+    }
+
+    public void placeLegendOnRight() {
+        if(coordsys.getLegendBottom() == legend) {
+            coordsys.setLegendBottom(null);
+            coordsys.setLegendBottomHeight(0);
+        }
+        coordsys.setLegendRight(legend);
+        coordsys.setLegendRightWidth(this.legendRightWidth);
+    }
+
+    public void placeLegendOnBottom() {
+        if(coordsys.getLegendRight() == legend) {
+            coordsys.setLegendRight(null);
+            coordsys.setLegendRightWidth(0);
+        }
+        coordsys.setLegendBottom(legend);
+        coordsys.setLegendBottomHeight(this.legendBottomHeight);
+    }
+
+    public void placeLegendNowhere() {
+        if(coordsys.getLegendRight() == legend) {
+            coordsys.setLegendRight(null);
+            coordsys.setLegendRightWidth(0);
+        }
+        if(coordsys.getLegendBottom() == legend) {
+            coordsys.setLegendBottom(null);
+            coordsys.setLegendBottomHeight(0);
+        }
+    }
+
 
     /**
      * Adds a scroll zoom to the Scatterplot
@@ -204,167 +360,202 @@ public class LineChart {
         return content;
     }
 
+    protected void createMouseEventHandler() {
+        MouseAdapter mouseEventHandler = new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) { mouseAction(LineChartMouseEventListener.MOUSE_EVENT_TYPE_MOVED, e); }
 
-    protected abstract class InteractionInterface extends MouseAdapter implements KeyListener {
-        protected int startIndex = 0;
-        protected int endIndex = 0;
-        protected double[][] dataSet;
-        protected int extModifierMask = 0;
-        protected boolean keyTyped = false;
+            @Override
+            public void mouseClicked(MouseEvent e) { mouseAction(LineChartMouseEventListener.MOUSE_EVENT_TYPE_CLICKED, e); }
 
-        protected boolean findSegment(final MouseEvent e) {
-            Lines.SegmentDetails details = lineRegistry.lookup(canvas.getPixel(e.getX(), e.getY(), true, 5));
-            if (details != null) {
-                this.dataSet = setListAndIndices(details.p0, details.p1);
-                if (this.dataSet != null) {
-                    triggerInterfaceMethod(e.getPoint(), details, this.dataSet, this.startIndex, this.endIndex);
-                    return true;
-                }
-            }
-            return false;
-        }
+            @Override
+            public void mousePressed(MouseEvent e) { mouseAction(LineChartMouseEventListener.MOUSE_EVENT_TYPE_PRESSED, e); }
 
-        protected double[][] setListAndIndices(final Point2D start, final Point2D end) {
-            double[][] tempList;
-            for (final double[][] pointList : dataAdded) {
-                tempList = pointList;
-                for (int i = 0; i < pointList.length; i++) {
-                    double x = pointList[i][0], y = pointList[i][1];
-                    if (pointList[i][0] == start.getX() && pointList[i][1] == start.getY()) {
-                        if (pointList[i+1][0] == end.getX() && pointList[i+1][1] == end.getY()) {
-                            this.endIndex++;
-                            return tempList;
+            @Override
+            public void mouseReleased(MouseEvent e) { mouseAction(LineChartMouseEventListener.MOUSE_EVENT_TYPE_RELEASED, e); }
+
+            @Override
+            public void mouseDragged(MouseEvent e) { mouseAction(LineChartMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED, e); }
+
+
+            private void mouseAction(String eventType, MouseEvent e) {
+                /* TODO: check key mask listeners of panning, zooming, and rectangular point selection
+                 * to figure out if the mouse event is being handled by them. If not handled by any of them
+                 * then go on with the following.
+                 */
+                if(Utils.swapYAxis(coordsys.getCoordSysArea(),canvas.asComponent().getHeight()).contains(e.getPoint())) {
+                    /* mouse inside coordinate area */
+                    Point2D coordsysPoint = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
+                    // get pick color under cursor
+                    int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+                    if((pixel & 0x00ffffff) == 0) {
+                        notifyInsideMouseEventNone(eventType, e, coordsysPoint);
+                    } else {
+                        Object pointLocalizer = pickingRegistry.lookup(pixel);
+                        if(pointLocalizer instanceof int[]) {
+                            int chunkIdx = ((int[])pointLocalizer)[0];
+                            int pointIdx = ((int[])pointLocalizer)[1];
+                            notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, pointIdx);
                         }
                     }
-                    this.endIndex++; this.startIndex++;
-                }
-                this.startIndex = 0; this.endIndex = 0;
-            }
-            return null;
-        }
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            if (e.getKeyCode() == extModifierMask && !keyTyped) {
-                keyTyped = true;
-            }
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-            keyTyped = false;
-        }
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-
-        }
-
-        /**
-         * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
-         * {@link MouseMotionListener} to the associated canvas.
-         *
-         * @return this for chaining
-         */
-        public InteractionInterface register() {
-            if (!Arrays.asList(canvas.asComponent().getMouseListeners()).contains(this))
-                canvas.asComponent().addMouseListener(this);
-            if (!Arrays.asList(canvas.asComponent().getMouseMotionListeners()).contains(this))
-                canvas.asComponent().addMouseMotionListener(this);
-            if (!Arrays.asList(canvas.asComponent().getKeyListeners()).contains(this))
-                canvas.asComponent().addKeyListener(this);
-            return this;
-        }
-
-        /**
-         * Removes this {@link CoordSysViewSelector} from the associated canvas'
-         * mouse and mouse motion listeners.
-         *
-         * @return this for chaining
-         */
-        public InteractionInterface deRegister() {
-            canvas.asComponent().removeMouseListener(this);
-            canvas.asComponent().removeMouseMotionListener(this);
-            canvas.asComponent().removeKeyListener(this);
-            return this;
-        }
-
-
-        protected abstract void triggerInterfaceMethod(final Point mouseLocation, final Lines.SegmentDetails line,
-                                                       final double[][] data, final int startIndex, final int endIndex);
-
-    }
-
-    public abstract class LineClickedInterface extends InteractionInterface {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (keyTyped || extModifierMask == 0) {
-                if (!findSegment(e)) {
-                    System.out.println("No data point found in your dataset");
-                }
-                this.startIndex = 0;
-                this.endIndex = 0;
-            }
-        }
-
-        @Override
-        protected void triggerInterfaceMethod(Point mouseLocation, Lines.SegmentDetails line, double[][] data, int startIndex, int endIndex) {
-            segmentClicked(mouseLocation, line, data, startIndex, endIndex);
-        }
-
-        public abstract void segmentClicked(final Point mouseLocation, final Lines.SegmentDetails line,
-                                            final double[][] data, final int startIndex, final int endIndex);
-    }
-
-    public abstract class LineHoveredInterface extends InteractionInterface {
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            super.mouseMoved(e);
-            findSegment(e);
-            this.startIndex = 0;
-            this.endIndex = 0;
-        }
-
-        @Override
-        protected void triggerInterfaceMethod(Point mouseLocation, Lines.SegmentDetails line, double[][] data, int startIndex, int endIndex) {
-            segmentHovered(mouseLocation, line, data, startIndex, endIndex);
-        }
-
-        public abstract void segmentHovered(final Point mouseLocation, final Lines.SegmentDetails line,
-                                            final double[][] data, final int startIndex, final int endIndex);
-    }
-
-    public abstract class PointsSelectedInterface {
-        protected ArrayList<double[][]> data = new ArrayList<>();
-        protected ArrayList<Integer> dataIndices = new ArrayList<>();
-
-        public PointsSelectedInterface() {
-            new CoordSysViewSelector(canvas, coordsys) {
-                {extModifierMask= InputEvent.ALT_DOWN_MASK;}
-                @Override
-                public void areaSelected(double minX, double minY, double maxX, double maxY) {
-                    calcSegments(minX, minY, maxX, maxY);
-                    pointsSelected(new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY), data, dataIndices);
-                    data.clear(); dataIndices.clear();
-                }
-            }.register();
-        }
-
-        protected void calcSegments(final double minX, final double minY, final double maxX, final double maxY) {
-            int index = 0;
-            for (final double[][] pointList : dataAdded) {
-                for (double[] entry : pointList) {
-                    double x = entry[0], y = entry[1];
-                    if (x > minX && x < maxX && y > minY && y < maxY) {
-                        this.dataIndices.add(index);
-                        this.data.add(pointList);
+                } else {
+                    /* mouse outside coordinate area */
+                    // get pick color under cursor
+                    int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+                    if((pixel & 0x00ffffff) == 0) {
+                        notifyOutsideMouseEventeNone(eventType, e);
+                    } else {
+                        Object miscLocalizer = pickingRegistry.lookup(pixel);
+                        if(miscLocalizer instanceof Integer) {
+                            int chunkIdx = (int)miscLocalizer;
+                            notifyOutsideMouseEventElement(eventType, e, chunkIdx);
+                        }
                     }
-                    index++;
                 }
-                index = 0;
             }
-        }
 
-        public abstract void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices);
+        };
+        this.canvas.asComponent().addMouseListener(mouseEventHandler);
+        this.canvas.asComponent().addMouseMotionListener(mouseEventHandler);
+    }
+
+    protected synchronized void notifyInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+        for(LineChartMouseEventListener l:mouseEventListeners)
+            l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
+    }
+
+    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+        for(LineChartMouseEventListener l:mouseEventListeners)
+            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+    }
+
+    protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+        for(LineChartMouseEventListener l:mouseEventListeners)
+            l.onOutsideMouseEventeNone(mouseEventType, e);
+    }
+
+    protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
+        for(LineChartMouseEventListener l:mouseEventListeners)
+            l.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
+    }
+
+    public static interface LineChartMouseEventListener {
+        static final String MOUSE_EVENT_TYPE_MOVED="moved";
+        static final String MOUSE_EVENT_TYPE_CLICKED="clicked";
+        static final String MOUSE_EVENT_TYPE_PRESSED="pressed";
+        static final String MOUSE_EVENT_TYPE_RELEASED="released";
+        static final String MOUSE_EVENT_TYPE_DRAGGED="dragged";
+
+        public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
+
+        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {}
+
+        public default void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
+
+        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {}
+    }
+
+    public synchronized LineChartMouseEventListener addLineChartMouseEventListener(LineChartMouseEventListener l) {
+        this.mouseEventListeners.add(l);
+        return l;
+    }
+
+    public synchronized boolean removeScatterPlotMouseEventListener(LineChartMouseEventListener l) {
+        return this.mouseEventListeners.remove(l);
+    }
+
+    public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Rectangle2D area){
+        ArrayList<Pair<Integer, TreeSet<Integer>>> pointLocators = new ArrayList<>();
+        for(int chunkIdx=0; chunkIdx<dataModel.numChunks(); chunkIdx++) {
+            TreeSet<Integer> containedPointIndices = getDataModel().getIndicesOfPointsInArea(chunkIdx, area);
+            if(!containedPointIndices.isEmpty())
+                pointLocators.add(Pair.of(chunkIdx, containedPointIndices));
+        }
+        return pointLocators;
+    }
+
+    protected void createRectangularPointSetSelectionCapabilities() {
+        Comparator<Pair<Integer, TreeSet<Integer>>> comparator = new Comparator<Pair<Integer, TreeSet<Integer>>>() {
+            @Override
+            public int compare(Pair<Integer, TreeSet<Integer>> o1, Pair<Integer, TreeSet<Integer>> o2) {
+                int chunkIdxComp = o1.first.compareTo(o2.first);
+                if(chunkIdxComp != 0)
+                    return chunkIdxComp;
+                int setSizeComp = Integer.compare(o1.second.size(),o2.second.size());
+                if(setSizeComp != 0)
+                    return setSizeComp;
+                // compare elements of both sets in ascending order until mismatch
+                Iterator<Integer> it1 = o1.second.iterator();
+                Iterator<Integer> it2 = o2.second.iterator();
+                int elementComp=0;
+                while(it1.hasNext() && elementComp==0) {
+                    elementComp=it1.next().compareTo(it2.next());
+                }
+                return elementComp;
+            }
+        };
+        SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = new SimpleSelectionModel<>(comparator);
+        SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = new SimpleSelectionModel<>(comparator);
+
+        Rectangle2D[] selectionRectMemory = {null,null};
+
+        //KeyMaskListener keyMask = new KeyMaskListener(KeyEvent.VK_S);
+        CoordSysViewSelector selector = new CoordSysViewSelector(this.canvas, this.coordsys) {
+            @Override
+            public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
+                if(pointSetSelectionOngoingListeners.isEmpty())
+                    return;
+                Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+                selectionRectMemory[0] = area;
+                selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(area));
+            }
+
+            @Override
+            public void areaSelected(double minX, double minY, double maxX, double maxY) {
+                if(pointSetSelectionListeners.isEmpty())
+                    return;
+                Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+                selectionRectMemory[1] = area;
+                selectedPoints.setSelection(getIndicesOfPointsInArea(area));
+            }
+        };
+        selector.register();
+
+        selectedPointsOngoing.addSelectionListener(s->{
+            ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+            notifyPointSetSelectionChangeOngoing(list, selectionRectMemory[0]);
+        });
+        selectedPoints.addSelectionListener(s->{
+            ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+            notifyPointSetSelectionChange(list, selectionRectMemory[1]);
+        });
+    }
+
+    public static interface PointSetSelectionListener {
+        public void onPointSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Rectangle2D selectionArea);
+    }
+
+    protected synchronized void notifyPointSetSelectionChangeOngoing(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
+        for(PointSetSelectionListener l:pointSetSelectionOngoingListeners) {
+            l.onPointSetSelectionChanged(list, rect);
+        }
+    }
+
+    protected synchronized void notifyPointSetSelectionChange(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
+        for(PointSetSelectionListener l:pointSetSelectionListeners) {
+            l.onPointSetSelectionChanged(list, rect);
+        }
+    }
+
+    public synchronized void addPointSetSelectionListener(PointSetSelectionListener l) {
+        this.pointSetSelectionListeners.add(l);
+    }
+
+    public synchronized void addPointSetSelectionOngoingListener(PointSetSelectionListener l) {
+        this.pointSetSelectionOngoingListeners.add(l);
+    }
+
+    public Lines getPointsForChunk(int chunkIdx) {
+        return this.linesPerDataChunk.get(chunkIdx);
     }
 }

@@ -1,25 +1,19 @@
 package hageldave.jplotter.util;
 
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.DirectColorModel;
-import java.awt.image.ImageObserver;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.stream.Stream;
-
-import javax.swing.SwingUtilities;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.renderables.Triangles;
+
+import javax.swing.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
+import java.awt.image.*;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.stream.Stream;
 
 /**
  * Class containing utility methods
@@ -83,7 +77,18 @@ public class Utils {
 		r.setRect(r.getX()+dx, r.getY()+dy, r.getWidth(), r.getHeight());
 		return r;
 	}
-	
+
+	public static Rectangle2D scaleRect(Rectangle2D r, double s) {
+		r = copy(r);
+		r.setRect(
+				r.getCenterX()-r.getWidth() *0.5*s,
+				r.getCenterY()-r.getHeight()*0.5*s,
+				r.getWidth()*s,
+				r.getHeight()*s
+		);
+		return r;
+	}
+
 	/**
 	 * Swaps between GL and AWT coordinates, AWT coordinate system
 	 * has its origin in the top left corner of a component and downwards pointing

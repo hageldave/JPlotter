@@ -2,14 +2,11 @@ package hageldave.jplotter.howto;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
-import hageldave.jplotter.misc.DefaultGlyph;
-import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.charts.LineChart;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 
 // TODO echter Datensatz
 public class ReadyLineChart {
@@ -28,12 +25,46 @@ public class ReadyLineChart {
         // obtain data series
         double[][] seriesA = randomData(30);
         double[][] seriesB = randomData(30);
+        double[][] seriesC = randomData(2);
 
         // display within a JFrame
         JFrame frame = new JFrame();
 
         hageldave.jplotter.charts.LineChart chart = new hageldave.jplotter.charts.LineChart(false);
-        chart.addLineSegment(1, seriesA, Color.RED);
+
+        chart.getDataModel().addData(seriesA, 0, 1, 1, "test");
+        chart.getDataModel().addData(seriesB, 0, 1, 1, "test2");
+
+        /*double[][] dm = *///chart.getDataModel().getDataChunk(0)[0][0] = 0;
+        chart.getDataModel().setDataChunk(0, seriesC);
+
+        chart.getCoordsys().setCoordinateView(-10,-10,200,200);
+        chart.placeLegendOnBottom();
+
+        chart.addLineChartMouseEventListener(new LineChart.LineChartMouseEventListener() {
+            @Override
+            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+                LineChart.LineChartMouseEventListener.super.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
+            }
+
+            @Override
+            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+                LineChart.LineChartMouseEventListener.super.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+
+            }
+
+            @Override
+            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+                LineChart.LineChartMouseEventListener.super.onOutsideMouseEventeNone(mouseEventType, e);
+            }
+
+            @Override
+            public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
+                LineChart.LineChartMouseEventListener.super.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
+            }
+        });
+
+        /*chart.addLineSegment(1, seriesA, Color.RED);
         chart.addLineSegment(2, seriesB, Color.BLUE).setStrokePattern(0xf0f0);
 
         chart.highlightDatapoints(DefaultGlyph.CIRCLE, Color.green);
@@ -54,7 +85,7 @@ public class ReadyLineChart {
             public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices) {
 
             }
-        };
+        };*/
 
         frame.getContentPane().add(chart.getCanvas().asComponent());
         frame.setTitle("linechart");
