@@ -695,7 +695,7 @@ public class Curves implements Renderable {
 		int nPoints = points.length;
 		int nControl = (nPoints-1)*2;
 		Point2D[] curves = new Point2D[nPoints+nControl];
-		final double eps=1e-6;
+		final double eps=1e-16;
 		for(int i=0; i<nPoints; i++) {
 			int i_prev = i-1;
 			int i_next = i+1;
