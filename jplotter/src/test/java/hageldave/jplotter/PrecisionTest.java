@@ -1,5 +1,6 @@
 package hageldave.jplotter;
 
+import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
@@ -7,16 +8,17 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.BlankCanvas;
-import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
+import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.util.Utils;
 
 public class PrecisionTest {
 
@@ -39,10 +41,14 @@ public class PrecisionTest {
 		Curves c = new Curves();
 		Triangles t = new Triangles();
 		
-		content.addItemToRender(t).addItemToRender(c).addItemToRender(l).addItemToRender(p);
+		content
+		.addItemToRender(t)
+		.addItemToRender(c)
+		.addItemToRender(l)
+		.addItemToRender(p);
 		
 		// create spiral going inwards
-		final double cx=1,cy=1;
+		final double cx=1e-4,cy=1e-4;
 		double radius = 1;
 		double rad = 0;
 		final double pi2 = Math.PI*2;
@@ -73,6 +79,16 @@ public class PrecisionTest {
 			x -= 0.5*dy;
 			y += 0.5*dx;
 			t.addTriangle(p1, p2, new Point2D.Double(x, y));
+		}
+		for(int i=0; i < pointarray.length; i+=1) {
+			Point2D point = pointarray[i];
+			double dx = point.getX()-cx;
+			double dy = point.getY()-cy;
+			double atan2 = Math.atan2(dy, dx);
+			if(atan2 < 1.3 && atan2 > 0.5) {
+				content.addItemToRender(new Text(String.format("r=%e", Utils.hypot(dx, dy)), 10, Font.PLAIN)
+						.setOrigin(new Point2D.Double(cx+1.1*dx,cy+1.1*dy)));
+			}
 		}
 		
 		csr.setCoordinateView(cx-1, cy-1, cx+1, cy+1);

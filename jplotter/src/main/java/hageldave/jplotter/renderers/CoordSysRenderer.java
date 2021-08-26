@@ -766,7 +766,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 	
 	protected CoordSysRenderer setCoordinateViewRect(double x, double y, double w, double h) {
-		if(w < 1e-16 || h < 1e-16){
+		if(w < 1e-14 || h < 1e-14){
 			System.err.printf("hitting coordinate area precision limit, x-range:%e, y-range:%e%n", w, h);
 			return this;
 		}
