@@ -44,6 +44,7 @@ public class Points implements Renderable {
 	public final Glyph glyph;
 	protected VertexArray va;
 	protected boolean isDirty;
+	// TODO zu doublesupp.
 	protected float globalSaturationMultiplier = 1f;
 	protected float globalScaling = 1f;
 	protected float globalAlphaMultiplier = 1f;
