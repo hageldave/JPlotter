@@ -88,6 +88,7 @@ public class VertexArray implements AutoCloseable {
 	
 	/**
 	 * Sets the GL_ARRAY_BUFFER of the ith vertex attribute.
+	 * This requires OpenGL 4.1 (double precision support)
 	 * @param i index of attribute
 	 * @param dim dimension of a single vertex
 	 * @param buffercontent the values of the vertices
@@ -104,9 +105,7 @@ public class VertexArray implements AutoCloseable {
 			{
 				// put vertices into vbo
 				glBufferData(GL_ARRAY_BUFFER, buffercontent, GL_STATIC_DRAW);
-				// put vbo into va
-				
-				// Special call needed for doubles SFM
+				// put vbo into va. Special call needed for doubles
 				GL41.glVertexAttribLPointer(i, dim, GL_DOUBLE, 0, 0);
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
