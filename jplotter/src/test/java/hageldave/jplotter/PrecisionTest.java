@@ -1,9 +1,11 @@
 package hageldave.jplotter;
 
+import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
@@ -24,7 +26,7 @@ public class PrecisionTest {
 
 	public static void main(String[] args) {
 		JFrame frame = Boilerplate.createJFrameWithBoilerPlate("Precision Test");
-		JPlotterCanvas canvas = new BlankCanvas();
+		BlankCanvas canvas = new BlankCanvas();
 		frame.getContentPane().add(canvas.asComponent());
 		canvas.addCleanupOnWindowClosingListener(frame);
 		
@@ -32,9 +34,15 @@ public class PrecisionTest {
 		canvas.setRenderer(csr);
 		CompleteRenderer content = new CompleteRenderer();
 		csr.setContent(content);
-		content.setGLDoublePrecisionEnabled(true);
-		
 		new CoordSysScrollZoom(canvas, csr).register();
+		
+		JCheckBox cbxDoublePrecision = new JCheckBox("GL double precision");
+		cbxDoublePrecision.addChangeListener(e->{
+			content.setGLDoublePrecisionEnabled(cbxDoublePrecision.isSelected());
+			canvas.scheduleRepaint();
+		});
+		content.setGLDoublePrecisionEnabled(cbxDoublePrecision.isSelected());
+		frame.getContentPane().add(cbxDoublePrecision, BorderLayout.NORTH);
 		
 		Points p = new Points(DefaultGlyph.CIRCLE);
 		Lines l = new Lines();
