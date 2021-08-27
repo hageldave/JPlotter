@@ -1,13 +1,22 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
-import java.util.Objects;
-
+import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.font.CharacterAtlas;
+import hageldave.jplotter.font.FontProvider;
+import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.pdf.PDFUtils;
+import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.renderables.Text;
+import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.ShaderRegistry;
+import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -15,17 +24,12 @@ import org.lwjgl.opengl.GL40;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import hageldave.imagingkit.core.Pixel;
-import hageldave.jplotter.font.CharacterAtlas;
-import hageldave.jplotter.font.FontProvider;
-import hageldave.jplotter.gl.Shader;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.renderables.Renderable;
-import hageldave.jplotter.renderables.Text;
-import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.ShaderRegistry;
-import hageldave.jplotter.util.Utils;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.util.Objects;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -456,4 +460,83 @@ public class TextRenderer extends GenericRenderer<Text> {
 		}
 	}
 
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+		try {
+			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+			for(Text txt: getItemsToRender()){
+				if(txt.isHidden()){
+					continue;
+				}
+				{
+					double x1, y1;
+					x1 = txt.getOrigin().getX();
+					y1 = txt.getOrigin().getY();
+					x1 -= translateX;
+					y1 -= translateY;
+					x1 *= scaleX;
+					y1 *= scaleY;
+					y1 += 2;
+					x1 += 1;
+
+					// test if inside of view port
+					if (x1 + txt.getTextSize().width < 0 || x1 - txt.getTextSize().width > w) {
+						continue;
+					}
+					if (y1 + txt.getTextSize().width < 0 || y1 - txt.getTextSize().width > h) {
+						continue;
+					}
+
+					if(txt.getBackground().getRGB() != 0){
+						contentStream.saveGraphicsState();
+						contentStream.transform(new Matrix((float) Math.cos(-txt.getAngle()),(float) -Math.sin(-txt.getAngle()),
+								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), (float) txt.getBounds().getX(), (float) txt.getBounds().getY()));
+
+						PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+						graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha())/255);
+						contentStream.setGraphicsStateParameters(graphicsState);
+
+						PDFUtils.createPDFPolygon(contentStream,
+								new double[]{-1.5, txt.getBounds().getWidth(), txt.getBounds().getWidth(), -1.5},
+								new double[]{0, 0, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
+
+						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
+						contentStream.fill();
+						contentStream.restoreGraphicsState();
+					}
+
+					// clipping area
+					contentStream.saveGraphicsState();
+					contentStream.addRect(x, y, w, h);
+					contentStream.closePath();
+					contentStream.clip();
+
+					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+					graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
+					contentStream.setGraphicsStateParameters(graphicsState);
+
+					if (txt.getAngle()==0) {
+						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
+								txt.getColor(), txt.getTextSize(), txt.fontsize, txt.style);
+					} else {
+						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
+								txt.getColor(), txt.fontsize, txt.style, txt.getAngle());
+					}
+					// restore graphics
+					contentStream.restoreGraphicsState();
+				}
+			}
+			contentStream.close();
+		} catch (IOException e) {
+			throw new RuntimeException("Error occurred!");
+		}
+	}
 }

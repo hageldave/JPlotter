@@ -1,19 +1,5 @@
 package hageldave.jplotter;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.MenuItem;
-import java.awt.PopupMenu;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.util.function.DoubleUnaryOperator;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
@@ -28,6 +14,14 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import org.w3c.dom.Document;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.function.DoubleUnaryOperator;
 
 public class Example {
 

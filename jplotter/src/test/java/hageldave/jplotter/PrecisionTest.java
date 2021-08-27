@@ -10,7 +10,6 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.BlankCanvas;
-import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Curves;
@@ -94,8 +93,9 @@ public class PrecisionTest {
 			double dy = point.getY()-cy;
 			double atan2 = Math.atan2(dy, dx);
 			if(atan2 < 1.3 && atan2 > 0.5) {
-				content.addItemToRender(new Text(String.format("r=%e", Utils.hypot(dx, dy)), 10, Font.PLAIN)
-						.setOrigin(new Point2D.Double(cx+1.1*dx,cy+1.1*dy)));
+				Text label = new Text(String.format("r=%e", Utils.hypot(dx, dy)), 10, Font.PLAIN);
+				label.setOrigin(new Point2D.Double(cx+1.1*dx,cy+1.1*dy));
+				content.addItemToRender(label);
 			}
 		}
 		

@@ -120,7 +120,10 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 				Math.max(p1.getX(), p2.getX()),
 				Math.max(p1.getY(), p2.getY())
 		);
-		canvas.repaint();
+		if(canvas instanceof JPlotterCanvas)
+			((JPlotterCanvas) canvas).scheduleRepaint();
+		else
+			canvas.repaint();
 	}
 	
 	protected void createSelectionAreaBorder() {
@@ -130,10 +133,11 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		start_.setLocation(start_.getX()-vp.x, start_.getY()-vp.y);
 		end_.setLocation(end_.getX()-vp.x, end_.getY()-vp.y);
 		areaBorder.removeAllSegments();
-		areaBorder.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY()).setColor(0xff222222);
-		areaBorder.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
-		areaBorder.addSegment(start_.getX(), start_.getY(), end_.getX(), start_.getY()).setColor(0xff222222);
-		areaBorder.addSegment(start_.getX(), end_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);
+		int color = coordsys.getColorScheme().getColor2();
+		areaBorder.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY()).setColor(color);
+		areaBorder.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY()).setColor(color);
+		areaBorder.addSegment(start_.getX(), start_.getY(), end_.getX(), start_.getY()).setColor(color);
+		areaBorder.addSegment(start_.getX(), end_.getY(), end_.getX(), end_.getY()).setColor(color);
 	}
 	
 	@Override

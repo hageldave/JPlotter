@@ -1,23 +1,7 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.AWTEventMulticaster;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.LinkedList;
-import java.util.Objects;
-
-import org.lwjgl.opengl.GL11;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
+import hageldave.jplotter.color.ColorScheme;
+import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
@@ -33,6 +17,21 @@ import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
 import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.lwjgl.opengl.GL11;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.function.IntSupplier;
 
 /**
  * The CoordSysRenderer is a {@link Renderer} that displays a coordinate system.
@@ -73,7 +72,6 @@ import hageldave.jplotter.util.Utils;
  * @author hageldave
  */
 public class CoordSysRenderer implements Renderer {
-
 	protected LinesRenderer preContentLinesR = new LinesRenderer();
 	protected TextRenderer preContentTextR = new TextRenderer();
 	protected LinesRenderer postContentLinesR = new LinesRenderer();
@@ -112,8 +110,9 @@ public class CoordSysRenderer implements Renderer {
 	protected int viewportheight=0;
 	protected boolean isDirty = true;
 
-	protected Color tickColor = Color.DARK_GRAY;
-	protected Color guideColor = new Color(0xdddddd);
+	protected IntSupplier tickColor;
+	protected IntSupplier guideColor;
+	protected IntSupplier textColor;
 
 	protected int paddingLeft = 10;
 	protected int paddingRight = 10;
@@ -134,13 +133,37 @@ public class CoordSysRenderer implements Renderer {
 	
 	protected ActionListener coordviewListener;
 	protected boolean isEnabled=true;
-	
+
+	protected ColorScheme colorScheme;
+
+	/**
+	 * Sets up a CoordSysRenderer with the default color scheme
+	 */
 	public CoordSysRenderer() {
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(Color.BLACK);
-		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(Color.BLACK);
-		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(Color.GRAY);
-		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT).setColor(Color.GRAY);
+		this.colorScheme = DefaultColorScheme.LIGHT.get();
+		setupCoordSysRenderer();
+	}
+
+	/**
+	 * Sets up a CoordSysRenderer with a custom color scheme
+	 *
+	 * @param colorScheme the custom color scheme
+	 */
+	public CoordSysRenderer(final ColorScheme colorScheme) {
+		this.colorScheme = colorScheme;
+		setupCoordSysRenderer();
+	}
+
+	/**
+	 * Helper method to setup the CoordSysRenderer
+	 */
+	protected void setupCoordSysRenderer() {
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaRB).setColor(()->getColorScheme().getColor1());
+		this.axes.addSegment(coordsysAreaLB, coordsysAreaLT).setColor(()->getColorScheme().getColor1());
+		this.axes.addSegment(coordsysAreaLT, coordsysAreaRT).setColor(()->getColorScheme().getColor2());
+		this.axes.addSegment(coordsysAreaRB, coordsysAreaRT).setColor(()->getColorScheme().getColor2());
 		this.axes.setGlobalThicknessMultiplier(2);
+		
 		this.preContentLinesR
 		.addItemToRender(guides)
 		.addItemToRender(ticks);
@@ -148,8 +171,31 @@ public class CoordSysRenderer implements Renderer {
 		.addItemToRender(xAxisLabelText)
 		.addItemToRender(yAxisLabelText);
 		this.postContentLinesR.addItemToRender(axes);
+		
+		this.guideColor = ()->getColorScheme().getColor4();
+		this.tickColor = ()->getColorScheme().getColor3();
+		this.textColor = ()->getColorScheme().getColorText();
+
+		updateColors();
 	}
-	
+
+	/**
+	 * Helper method to update the colors if the color scheme is changed.
+	 */
+	protected CoordSysRenderer updateColors() {
+		// axes already use a pointer to color scheme and need only to be set dirty
+		this.axes.setDirty();
+		
+		this.xAxisLabelText.setColor(this.textColor.getAsInt());
+		this.yAxisLabelText.setColor(this.textColor.getAsInt());
+		
+		updateLegendColorScheme(legendBottom);
+		updateLegendColorScheme(legendRight);
+		
+		setDirty();
+		return this;
+	}
+
 	/**
 	 * Sets the {@link #isDirty} state of this CoordSysRenderer to true.
 	 * This indicates that axis locations, tick marks, labels and guides
@@ -183,7 +229,10 @@ public class CoordSysRenderer implements Renderer {
 	 */
 	public Renderer setLegendRight(Renderer legend) {
 		Renderer old = this.legendRight;
-		this.legendRight= legend;
+		this.legendRight = legend;
+
+		// if the legend is of type Legend, a color scheme is automatically set
+		updateLegendColorScheme(legend);
 		return old;
 	}
 
@@ -198,7 +247,19 @@ public class CoordSysRenderer implements Renderer {
 	public Renderer setLegendBottom(Renderer legend) {
 		Renderer old = this.legendBottom;
 		this.legendBottom = legend;
+
+		// if the legend is of type Legend, a color scheme is automatically set
+		updateLegendColorScheme(legend);
 		return old;
+	}
+
+	/**
+	 * @param legend color scheme of the legend will be updated if it is from type {@link Legend}
+	 */
+	protected void updateLegendColorScheme(final Renderer legend) {
+		if (legend instanceof Legend) {
+			((Legend) legend).setColorScheme(getColorScheme());
+		}
 	}
 
 	/**
@@ -213,7 +274,26 @@ public class CoordSysRenderer implements Renderer {
 		this.overlay = overlayRenderer;
 		return old;
 	}
-	
+
+	/**
+	 * @return the {@link ColorScheme} of the CoordSysRenderer.
+	 */
+	public ColorScheme getColorScheme() {
+		return colorScheme;
+	}
+
+	/**
+	 * Sets a new color scheme on the CoordSysRenderer.
+	 *
+	 * @param colorScheme new {@link ColorScheme} used by the CoordSysRenderer.
+	 * @return new CoordSysRenderer
+	 */
+	public CoordSysRenderer setColorScheme(final ColorScheme colorScheme) {
+		this.colorScheme = colorScheme;
+		updateColors();
+		return this;
+	}
+
 	/**
 	 * @return overlay. see {@link #setOverlay(Renderer)}
 	 */
@@ -351,7 +431,7 @@ public class CoordSysRenderer implements Renderer {
 	public int getLegendBottomHeight() {
 		return legendBottomHeight;
 	}
-	
+
 	/**
 	 * Sets up pretty much everything.
 	 * <ul>
@@ -420,7 +500,7 @@ public class CoordSysRenderer implements Renderer {
 			Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
 			// label
-			Text label = new Text(xticklabels[i], tickfontSize, style);
+			Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor.getAsInt());
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(new Point2D.Double(
 					(int)(onaxis.getX()-textSize.getWidth()/2.0), 
@@ -437,12 +517,12 @@ public class CoordSysRenderer implements Renderer {
 			Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, Math.round(y));
 			ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
 			// label
-			Text label = new Text(yticklabels[i], tickfontSize, style);
+			Text label = new Text(yticklabels[i], tickfontSize, style, this.textColor.getAsInt());
 			Dimension textSize = label.getTextSize();
 			label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -Math.round(textSize.getHeight()/2.0)+0.5));
 			tickMarkLabels.add(label);
 			// guide
-			guides.addSegment(onaxis, new TranslatedPoint2D(coordsysAreaRB, 0, m*yAxisHeight)).setColor(guideColor);
+			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, xAxisWidth, 0)).setColor(guideColor);
 		}
 		for(Text txt: tickMarkLabels){
 			preContentTextR.addItemToRender(txt);
@@ -724,7 +804,35 @@ public class CoordSysRenderer implements Renderer {
 			legendBottom.renderSVG(doc, legendGroup, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
 	}
-	
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		preContentLinesR.renderPDF(doc, page, 0, 0, w, h);
+		preContentTextR.renderPDF(doc, page, 0,0, w, h);
+		if(content != null){
+			int viewPortX = (int)coordsysAreaLB.getX();
+			int viewPortY = (int)coordsysAreaLB.getY();
+			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
+			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
+			if(content instanceof AdaptableView){
+				((AdaptableView) content).setView(coordinateView);
+			}
+			// render the content into the group
+			content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
+		}
+		postContentLinesR.renderPDF(doc, page, 0, 0, w, h);
+		postContentTextR.renderPDF(doc, page, 0, 0, w, h);
+		if(Objects.nonNull(legendRight)){
+			legendRight.renderPDF(doc, page, legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+		}
+		if(Objects.nonNull(legendBottom)){
+			legendBottom.renderPDF(doc, page, legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+		}
+	}
+
 	/**
 	 * Sets the coordinate view. This is the range of x and y coordinates that is displayed by this
 	 * {@link CoordSysRenderer}. It is not the rectangular area in which the content appears on screen

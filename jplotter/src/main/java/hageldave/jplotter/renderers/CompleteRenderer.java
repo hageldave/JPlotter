@@ -1,17 +1,13 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-
+import hageldave.jplotter.renderables.*;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import hageldave.jplotter.renderables.Curves;
-import hageldave.jplotter.renderables.Lines;
-import hageldave.jplotter.renderables.Points;
-import hageldave.jplotter.renderables.Renderable;
-import hageldave.jplotter.renderables.Text;
-import hageldave.jplotter.renderables.Triangles;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 /**
  * The {@link CompleteRenderer} comprises a {@link LinesRenderer},
@@ -211,4 +207,15 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		rendererLUT[renderOrder[4]].renderSVG(doc, parent, w, h);
 	}
 
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		rendererLUT[renderOrder[0]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[1]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[2]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[3]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[4]].renderPDF(doc, page, x, y, w, h);
+	}
 }

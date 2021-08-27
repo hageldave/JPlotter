@@ -1,15 +1,15 @@
 package hageldave.jplotter.misc;
 
-import java.awt.Graphics2D;
-import java.util.List;
-
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.renderers.PointsRenderer;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.renderers.PointsRenderer;
+import java.awt.*;
+import java.util.List;
 
 /**
  * The Glyph interface has to be implemented by a class that realizes
@@ -73,7 +73,9 @@ public interface Glyph {
 	 * @return list of SVG elements.
 	 */
 	public List<Element> createSVGElements(Document doc);
-	
+
+	public PDPageContentStream createPDFElement(PDPageContentStream contentStream);
+
 	/**
 	 * Fallback rendering path when OpenGL is not available.
 	 * Draws this glyph to the specified {@link Graphics2D} object

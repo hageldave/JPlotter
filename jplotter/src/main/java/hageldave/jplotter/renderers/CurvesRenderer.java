@@ -4,7 +4,9 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.CubicCurve2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Objects;
@@ -19,6 +21,7 @@ import org.w3c.dom.Element;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Curves.CurveDetails;
 import hageldave.jplotter.renderables.Lines;
@@ -27,6 +30,13 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
+
+import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 
 /**
  * The CurvesRenderer is an implementation of the {@link GenericRenderer}
@@ -37,7 +47,7 @@ import hageldave.jplotter.util.ShaderRegistry;
  * <br>
  * Its fragment shader draws the picking color into the second render buffer
  * alongside the 'visible' color that is drawn into the first render buffer.
- * 
+ *
  * @author hageldave
  */
 public class CurvesRenderer extends GenericRenderer<Curves> {
@@ -355,10 +365,9 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	protected int preVpH = 0;
 	private final int[] strokePattern = new int[16];
 
-
-	/**
-	 * Creates the shader if not already created and 
-	 * calls {@link Renderable#initGL()} for all items 
+    /**
+	 * Creates the shader if not already created and
+	 * calls {@link Renderable#initGL()} for all items
 	 * already contained in this renderer.
 	 * Items that are added later on will be initialized during rendering.
 	 */
@@ -420,7 +429,6 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 		preVpH = h;
 	}
 
-
 	/**
 	 * Disables {@link GL11#GL_DEPTH_TEST},
 	 * enables {@link GL11#GL_BLEND}
@@ -476,16 +484,16 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	@Override
 	@GLContextRequired
 	protected void renderEnd() {
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
+	    GL11.glDisable(GL11.GL_BLEND);
+	    GL11.glEnable(GL11.GL_DEPTH_TEST);
 	}
 
 	@Override
-	public void setView(Rectangle2D view) {
-		boolean sameView = Objects.equals(view, this.view);
-		super.setView(view);
-		this.viewHasChanged = !sameView;
-	}
+    public void setView(Rectangle2D view) {
+        boolean sameView = Objects.equals(view, this.view);
+        super.setView(view);
+        this.viewHasChanged = !sameView;
+    }
 
 	/**
 	 * Disposes of GL resources, i.e. closes the shader.
@@ -504,220 +512,320 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 		closeAllItems();
 	}
 	
+
+    @Override
+    public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+        if (!isEnabled()) {
+            return;
+        }
+
+        double translateX = Objects.isNull(view) ? 0 : view.getX();
+        double translateY = Objects.isNull(view) ? 0 : view.getY();
+        double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
+        double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
+
+        Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+
+        for (Curves curves : getItemsToRender()) {
+            if (curves.isHidden() || curves.getStrokePattern() == 0 || curves.numCurves() == 0) {
+                // line is invisible
+                continue;
+            }
+
+            // find connected curves
+            ArrayList<CurveDetails> currentStrip = new ArrayList<>(1);
+            LinkedList<ArrayList<CurveDetails>> allStrips = new LinkedList<>();
+            ArrayList<CurveDetails> allCurves = curves.streamIntersecting(Objects.isNull(view) ? viewportRect : view)
+                    .collect(Collectors.toCollection(ArrayList::new));
+            if (!allCurves.isEmpty())
+                currentStrip.add(allCurves.get(0));
+            if (!currentStrip.isEmpty())
+                allStrips.add(currentStrip);
+            for (int i = 1; i < allCurves.size(); i++) {
+                CurveDetails curr = allCurves.get(i);
+                CurveDetails prev = currentStrip.get(currentStrip.size() - 1);
+                if (!( prev.p1.equals(curr.p0) ) ||
+                        !( prev.thickness.getAsDouble() == curr.thickness.getAsDouble() ) ||
+                        !( prev.color.getAsInt() == curr.color.getAsInt() )
+                ) {
+                    currentStrip = new ArrayList<>(1);
+                    allStrips.add(currentStrip);
+                }
+                currentStrip.add(curr);
+            }
+
+            for (ArrayList<CurveDetails> curvestrip : allStrips) {
+                double strokew = curvestrip.get(0).thickness.getAsDouble() * curves.getGlobalThicknessMultiplier();
+                BasicStroke stroke;
+                if (!curves.hasStrokePattern()) {
+                    stroke = new BasicStroke((float) strokew, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f);
+                } else {
+                    stroke = new BasicStroke((float) strokew, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f,
+                            LinesRenderer.strokePattern2dashPattern(curves.getStrokePattern(), (float) curves.getStrokeLength()), 0f);
+                }
+                g.setStroke(stroke);
+                p.setStroke(stroke);
+                g.setColor(new Color(ColorOperations.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
+
+                for (CurveDetails cd : curvestrip) {
+                    float x1 = (float) ( scaleX * ( cd.p0.getX() - translateX ) );
+                    float y1 = (float) ( scaleY * ( cd.p0.getY() - translateY ) );
+                    float x2 = (float) ( scaleX * ( cd.p1.getX() - translateX ) );
+                    float y2 = (float) ( scaleY * ( cd.p1.getY() - translateY ) );
+                    float ctrlx1 = (float) ( scaleX * ( cd.pc0.getX() - translateX ) );
+                    float ctrly1 = (float) ( scaleY * ( cd.pc0.getY() - translateY ) );
+                    float ctrlx2 = (float) ( scaleX * ( cd.pc1.getX() - translateX ) );
+                    float ctrly2 = (float) ( scaleY * ( cd.pc1.getY() - translateY ) );
+
+                    CubicCurve2D cc2d = new CubicCurve2D.Float(x1, y1, ctrlx1, ctrly1, ctrlx2, ctrly2, x2, y2);
+                    g.draw(cc2d);
+                    if (cd.pickColor != 0) {
+                        p.setColor(new Color(cd.pickColor));
+                        p.draw(cc2d);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void renderSVG(Document doc, Element parent, int w, int h) {
+        if (!isEnabled()) {
+            return;
+        }
+        Element mainGroup = SVGUtils.createSVGElement(doc, "g");
+        parent.appendChild(mainGroup);
+
+        double translateX = Objects.isNull(view) ? 0 : view.getX();
+        double translateY = Objects.isNull(view) ? 0 : view.getY();
+        double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
+        double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
+
+        Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+
+        for (Curves curves : getItemsToRender()) {
+            if (curves.isHidden() || curves.getStrokePattern() == 0 || curves.numCurves() == 0) {
+                // line is invisible
+                continue;
+            }
+            // find connected curves
+            ArrayList<CurveDetails> currentStrip = new ArrayList<>(1);
+            LinkedList<ArrayList<CurveDetails>> allStrips = new LinkedList<>();
+            ArrayList<CurveDetails> allCurves = curves.streamIntersecting(Objects.isNull(view) ? viewportRect : view)
+                    .collect(Collectors.toCollection(ArrayList::new));
+            currentStrip.add(allCurves.get(0));
+            allStrips.add(currentStrip);
+            for (int i = 1; i < allCurves.size(); i++) {
+                CurveDetails curr = allCurves.get(i);
+                CurveDetails prev = currentStrip.get(currentStrip.size() - 1);
+                if (!( prev.p1.equals(curr.p0) ) ||
+                        !( prev.thickness.getAsDouble() == curr.thickness.getAsDouble() ) ||
+                        !( prev.color.getAsInt() == curr.color.getAsInt() )
+                ) {
+                    currentStrip = new ArrayList<>(1);
+                    allStrips.add(currentStrip);
+                }
+                currentStrip.add(curr);
+            }
+
+
+            Element linesGroup = SVGUtils.createSVGElement(doc, "g");
+            linesGroup.setAttributeNS(null, "fill", "transparent");
+            if (curves.hasStrokePattern()) {
+                linesGroup.setAttributeNS(null, "stroke-dasharray", strokePattern2dashArray(curves.getStrokePattern(), curves.getStrokeLength()));
+            }
+            mainGroup.appendChild(linesGroup);
+
+            for (ArrayList<CurveDetails> curvestrip : allStrips) {
+                Element path = SVGUtils.createSVGElement(doc, "path");
+                path.setAttributeNS(null, "d", pathSVGCoordinates(curvestrip, translateX, translateY, scaleX, scaleY));
+                double strokew = curvestrip.get(0).thickness.getAsDouble() * curves.getGlobalThicknessMultiplier();
+                path.setAttributeNS(null, "stroke-width", SVGUtils.svgNumber(strokew));
+                int color = curvestrip.get(0).color.getAsInt();
+                path.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(color));
+                double opacity = Pixel.a_normalized(color) * curves.getGlobalAlphaMultiplier();
+                if (opacity != 1.0) {
+                    path.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(opacity));
+                }
+                linesGroup.appendChild(path);
+            }
+        }
+    }
+
+    protected static String pathSVGCoordinates(ArrayList<CurveDetails> curveStrip, double tx, double ty, double sx, double sy) {
+	    double[] coordsX = new double[( 1 + curveStrip.size() * 3 )];
+	    double[] coordsY = coordsX.clone();
+	    // extract path coordinates
+	    coordsX[0] = curveStrip.get(0).p0.getX();
+	    coordsY[0] = curveStrip.get(0).p0.getY();
+	    for (int i = 0; i < curveStrip.size(); i++) {
+	        CurveDetails c = curveStrip.get(i);
+	        coordsX[i * 3 + 1] = c.pc0.getX();
+	        coordsY[i * 3 + 1] = c.pc0.getY();
+	        coordsX[i * 3 + 2] = c.pc1.getX();
+	        coordsY[i * 3 + 2] = c.pc1.getY();
+	        coordsX[i * 3 + 3] = c.p1.getX();
+	        coordsY[i * 3 + 3] = c.p1.getY();
+	    }
+	    // view transformation
+	    for (int i = 0; i < coordsX.length; i++) {
+	        double x = coordsX[i];
+	        double y = coordsY[i];
+	        x -= tx;
+	        y -= ty;
+	        x *= sx;
+	        y *= sy;
+	        coordsX[i] = x;
+	        coordsY[i] = y;
+	    }
+	    StringBuilder sb = new StringBuilder();
+	    sb.append('M');
+	    sb.append(SVGUtils.svgNumber(coordsX[0]));
+	    sb.append(' ');
+	    sb.append(SVGUtils.svgNumber(coordsY[0]));
+	    sb.append(" C ");
+	    for (int i = 1; i < coordsX.length; i++) {
+	        sb.append(SVGUtils.svgNumber(coordsX[i]));
+	        sb.append(' ');
+	        sb.append(SVGUtils.svgNumber(coordsY[i]));
+	        if (i < coordsX.length - 1)
+	            sb.append(',');
+	    }
+	    return sb.toString();
+	}
+
+	protected static String strokePattern2dashArray(short pattern, double len) {
+	    int[] onoff = transferBits(pattern, new int[16]);
+	    LinkedList<Integer> dashes = new LinkedList<>();
+	    int curr = onoff[0];
+	    int l = 0;
+	    for (int i = 0; i < onoff.length; i++) {
+	        if (onoff[i] == curr) {
+	            l++;
+	        } else {
+	            dashes.add(l);
+	            curr = onoff[i];
+	            l = 1;
+	        }
+	    }
+	    dashes.add(l);
+	    if (onoff[0] == 0)
+	        dashes.add(0, 0);
+	    if (dashes.size() % 2 == 1)
+	        dashes.add(0);
+	    double scaling = len / 16;
+	    return dashes.stream().map(i -> SVGUtils.svgNumber(i * scaling)).reduce((a, b) -> a + " " + b).get();
+	}
+
+	protected static int[] transferBits(short bits, int[] target) {
+	    for (int i = 0; i < 16; i++) {
+	        target[15 - i] = ( bits >> i ) & 0b1;
+	    }
+	    return target;
+	}
+
 	@Override
-	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
-		if(!isEnabled()){
-			return;
-		}
+    public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+        if (!isEnabled()) {
+            return;
+        }
+        double translateX = Objects.isNull(view) ? 0 : view.getX();
+        double translateY = Objects.isNull(view) ? 0 : view.getY();
+        double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
+        double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
 
-		double translateX = Objects.isNull(view) ? 0:view.getX();
-		double translateY = Objects.isNull(view) ? 0:view.getY();
-		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
-		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
-
-		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
-
-		for(Curves curves : getItemsToRender()){
-			if(curves.isHidden() || curves.getStrokePattern()==0 || curves.numCurves() == 0){
-				// line is invisible
-				continue;
-			}
-			
-			// find connected curves
-			ArrayList<CurveDetails> currentStrip = new ArrayList<>(1);
-			LinkedList<ArrayList<CurveDetails>> allStrips = new LinkedList<>();
-			ArrayList<CurveDetails> allCurves = curves.streamIntersecting(Objects.isNull(view) ? viewportRect : view)
-					.collect(Collectors.toCollection(ArrayList::new));
-			if(!allCurves.isEmpty())
-				currentStrip.add(allCurves.get(0));
-			if(!currentStrip.isEmpty())
-				allStrips.add(currentStrip);
-			for(int i=1; i<allCurves.size(); i++){
-				CurveDetails curr = allCurves.get(i);
-				CurveDetails prev = currentStrip.get(currentStrip.size()-1);
-				if(	!(prev.p1.equals(curr.p0)) || 
-					!(prev.thickness.getAsDouble()==curr.thickness.getAsDouble()) ||
-					!(prev.color.getAsInt()==curr.color.getAsInt())
-				){
-					currentStrip = new ArrayList<>(1);
-					allStrips.add(currentStrip);
-				}
-				currentStrip.add(curr);
-			}			
-			
-			for(ArrayList<CurveDetails> curvestrip : allStrips){
-				double strokew = curvestrip.get(0).thickness.getAsDouble() * curves.getGlobalThicknessMultiplier();
-				BasicStroke stroke;
-				if(!curves.hasStrokePattern()) {
-					stroke = new BasicStroke((float)strokew, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f);
-				} else {
-					stroke = new BasicStroke((float)strokew, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, 
-							LinesRenderer.strokePattern2dashPattern(curves.getStrokePattern(), (float)curves.getStrokeLength()), 0f); 
-				}
-				g.setStroke(stroke);
-				p.setStroke(stroke);
-				g.setColor(new Color(ColorOperations.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
-				
-				for(CurveDetails cd : curvestrip) {
-					float x1 = (float)(scaleX*(cd.p0.getX()-translateX));
-					float y1 = (float)(scaleY*(cd.p0.getY()-translateY));
-					float x2 = (float)(scaleX*(cd.p1.getX()-translateX));
-					float y2 = (float)(scaleY*(cd.p1.getY()-translateY));
-					float ctrlx1 = (float)(scaleX*(cd.pc0.getX()-translateX));
-					float ctrly1 = (float)(scaleY*(cd.pc0.getY()-translateY));
-					float ctrlx2 = (float)(scaleX*(cd.pc1.getX()-translateX));
-					float ctrly2 = (float)(scaleY*(cd.pc1.getY()-translateY));
-					
-					CubicCurve2D cc2d = new CubicCurve2D.Float(x1, y1, ctrlx1, ctrly1, ctrlx2, ctrly2, x2, y2);
-					g.draw(cc2d);
-					if(cd.pickColor != 0) {
-						p.setColor(new Color(cd.pickColor));
-						p.draw(cc2d);
-					}
-				}
-			}
-		}
-	}
+        try {
+            PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+            for (Curves curves : getItemsToRender()) {
 
 
-	@Override
-	public void renderSVG(Document doc, Element parent, int w, int h) {
-		if(!isEnabled()){
-			return;
-		}
-		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
-		parent.appendChild(mainGroup);
+                if (curves.isHidden() || curves.getStrokePattern() == 0 || curves.numCurves() == 0) {
+                    // line is invisible
+                    continue;
+                }
 
-		double translateX = Objects.isNull(view) ? 0:view.getX();
-		double translateY = Objects.isNull(view) ? 0:view.getY();
-		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
-		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setStrokingAlphaConstant(curves.getGlobalAlphaMultiplier());
+                cs.setGraphicsStateParameters(graphicsState);
 
-		Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+                PDDocument glyphDoc = new PDDocument();
+                PDPage rectPage = new PDPage();
+                glyphDoc.addPage(rectPage);
+                PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+                rectCont.addRect(x, y, w, h);
+                LayerUtility layerUtility = new LayerUtility(doc);
+                rectCont.close();
+                PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
+                glyphDoc.close();
 
-		for(Curves curves : getItemsToRender()){
-			if(curves.isHidden() || curves.getStrokePattern()==0 || curves.numCurves() == 0){
-				// line is invisible
-				continue;
-			}
-			// find connected curves
-			ArrayList<CurveDetails> currentStrip = new ArrayList<>(1);
-			LinkedList<ArrayList<CurveDetails>> allStrips = new LinkedList<>();
-			ArrayList<CurveDetails> allCurves = curves.streamIntersecting(Objects.isNull(view) ? viewportRect : view)
-					.collect(Collectors.toCollection(ArrayList::new));
-			currentStrip.add(allCurves.get(0));
-			allStrips.add(currentStrip);
-			for(int i=1; i<allCurves.size(); i++){
-				CurveDetails curr = allCurves.get(i);
-				CurveDetails prev = currentStrip.get(currentStrip.size()-1);
-				if(	!(prev.p1.equals(curr.p0)) || 
-					!(prev.thickness.getAsDouble()==curr.thickness.getAsDouble()) ||
-					!(prev.color.getAsInt()==curr.color.getAsInt())
-				){
-					currentStrip = new ArrayList<>(1);
-					allStrips.add(currentStrip);
-				}
-				currentStrip.add(curr);
-			}
-			
-			
-			Element linesGroup = SVGUtils.createSVGElement(doc, "g");
-			linesGroup.setAttributeNS(null, "fill", "transparent");
-			if(curves.hasStrokePattern()){
-				linesGroup.setAttributeNS(null, "stroke-dasharray", strokePattern2dashArray(curves.getStrokePattern(), curves.getStrokeLength()));
-			}
-			mainGroup.appendChild(linesGroup);
-			
-			for(ArrayList<CurveDetails> curvestrip : allStrips){
-				Element path = SVGUtils.createSVGElement(doc, "path");
-				path.setAttributeNS(null, "d", pathSVGCoordinates(curvestrip, translateX, translateY, scaleX, scaleY));
-				double strokew = curvestrip.get(0).thickness.getAsDouble() * curves.getGlobalThicknessMultiplier();
-				path.setAttributeNS(null, "stroke-width", SVGUtils.svgNumber(strokew));
-				int color = curvestrip.get(0).color.getAsInt();
-				path.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(color));
-				double opacity = Pixel.a_normalized(color)*curves.getGlobalAlphaMultiplier();
-				if(opacity != 1.0){
-					path.setAttributeNS(null, "stroke-opacity", SVGUtils.svgNumber(opacity));
-				}
-				linesGroup.appendChild(path);
-			}
-		}
-	}
-	
-	protected static String pathSVGCoordinates(ArrayList<CurveDetails> curveStrip, double tx, double ty, double sx, double sy){
-		double[] coordsX = new double[(1+curveStrip.size()*3)];
-		double[] coordsY = coordsX.clone();
-		// extract path coordinates
-		coordsX[0]=curveStrip.get(0).p0.getX();
-		coordsY[0]=curveStrip.get(0).p0.getY();
-		for(int i=0; i<curveStrip.size(); i++){
-			CurveDetails c = curveStrip.get(i);
-			coordsX[i*3+1] = c.pc0.getX();
-			coordsY[i*3+1] = c.pc0.getY();
-			coordsX[i*3+2] = c.pc1.getX();
-			coordsY[i*3+2] = c.pc1.getY();
-			coordsX[i*3+3] = c.p1.getX();
-			coordsY[i*3+3] = c.p1.getY();
-		}
-		// view transformation
-		for(int i=0; i<coordsX.length; i++){
-			double x = coordsX[i];
-			double y = coordsY[i];
-			x-=tx;
-			y-=ty;
-			x*=sx;
-			y*=sy;
-			coordsX[i] = x;
-			coordsY[i] = y;
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append('M');
-		sb.append(SVGUtils.svgNumber(coordsX[0]));
-		sb.append(' ');
-		sb.append(SVGUtils.svgNumber(coordsY[0]));
-		sb.append(" C ");
-		for(int i=1; i<coordsX.length; i++){
-			sb.append(SVGUtils.svgNumber(coordsX[i]));
-			sb.append(' ');
-			sb.append(SVGUtils.svgNumber(coordsY[i]));
-			if(i < coordsX.length-1)
-				sb.append(',');
-		}
-		return sb.toString();
-	}
+                cs.saveGraphicsState();
+                cs.drawForm(rectForm);
+                cs.closePath();
+                cs.clip();
 
-	protected static String strokePattern2dashArray(short pattern, double len){
-		int[] onoff = transferBits(pattern, new int[16]);
-		LinkedList<Integer> dashes = new LinkedList<>();
-		int curr = onoff[0];
-		int l=0;
-		for(int i=0; i<onoff.length; i++){
-			if(onoff[i]==curr){
-				l++;
-			} else {
-				dashes.add(l);
-				curr=onoff[i];
-				l=1;
-			}
-		}
-		dashes.add(l);
-		if(onoff[0]==0)
-			dashes.add(0, 0);
-		if(dashes.size()%2==1)
-			dashes.add(0);
-		double scaling = len/16;
-		return dashes.stream().map(i->SVGUtils.svgNumber(i*scaling)).reduce((a,b)->a+" "+b).get();
-	}
+                for (CurveDetails details : curves.getCurveDetails()) {
+                    double x1, y1, x2, y2, cp0x, cp0y, cp1x, cp1y;
+                    x1 = details.p0.getX();
+                    y1 = details.p0.getY();
+                    x2 = details.p1.getX();
+                    y2 = details.p1.getY();
 
-	protected static int[] transferBits(short bits, int[] target){
-		for(int i = 0; i < 16; i++){
-			target[15-i] = (bits >> i) & 0b1;
-		}
-		return target;
-	}
-	
+                    cp0x = details.pc0.getX();
+                    cp0y = details.pc0.getY();
+                    cp1x = details.pc1.getX();
+                    cp1y = details.pc1.getY();
+
+                    x1 -= translateX;
+                    x2 -= translateX;
+                    y1 -= translateY;
+                    y2 -= translateY;
+                    x1 *= scaleX;
+                    x2 *= scaleX;
+                    y1 *= scaleY;
+                    y2 *= scaleY;
+
+                    cp0x -= translateX;
+                    cp1x -= translateX;
+                    cp0y -= translateY;
+                    cp1y -= translateY;
+                    cp0x *= scaleX;
+                    cp1x *= scaleX;
+                    cp0y *= scaleY;
+                    cp1y *= scaleY;
+
+                    try {
+
+                        String[] splited = (strokePattern2dashArray(curves.getStrokePattern(), curves.getStrokeLength()).split("\\s+"));
+
+                        float[] real = new float[splited.length];
+                        for (int i = 0; i < splited.length; i++) {
+                            real[i] = Float.parseFloat(splited[i]);
+                        }
+
+                        PDFUtils.createPDFCurve(cs, new Point2D.Double(x1 + x, y1 + y),
+                                new Point2D.Double(cp0x + x, cp0y + y),
+                                new Point2D.Double(cp1x + x, cp1y + y),
+                                new Point2D.Double(x2 + x, y2 + y));
+                        cs.setLineDashPattern(real, 0);
+                        cs.setStrokingColor(new Color(details.color.getAsInt()));
+                        cs.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
+                        cs.stroke();
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                // restore graphics
+                cs.restoreGraphicsState();
+            }
+            cs.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Error occurred!");
+        }
+    }
+
 //	public static void main(String[] args) {
 //		System.out.println(strokePattern2dashArray((short)0x0f0f, 16));
 //	}
-	
+
 }

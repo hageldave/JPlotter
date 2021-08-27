@@ -1,25 +1,9 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.ColorScheme;
+import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
@@ -28,6 +12,17 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.List;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 /**
  * The Legend class is {@link Renderable} and its own {@link Renderer} at once.
@@ -71,6 +66,22 @@ public class Legend implements Renderable, Renderer {
 	protected int viewPortHeight = 0;
 
 	protected boolean isEnabled=true;
+
+	protected ColorScheme colorScheme;
+
+	public Legend() {
+		this.colorScheme = DefaultColorScheme.LIGHT.get();
+	}
+
+	/**
+	 * To synchronize the text colors with other components,
+	 * a {@link ColorScheme} can be hand over. The text color in the legend are defined by the ColorProvider.
+	 *
+	 * @param colorScheme defines the colors for the legend text
+	 */
+	public Legend(final ColorScheme colorScheme) {
+		this.colorScheme = colorScheme;
+	}
 
 	protected static class GlyphLabel {
 		public String labelText;
@@ -139,6 +150,11 @@ public class Legend implements Renderable, Renderer {
 		public Rectangle2D getSize();
 	}
 
+	public void setColorScheme(final ColorScheme colorScheme) {
+		this.colorScheme = colorScheme;
+		setDirty();
+	}
+
 	/**
 	 * Sets the {@link #isDirty()} state of this legend to true.
 	 * This indicates that a call to {@link #updateGL()} is necessary
@@ -171,6 +187,9 @@ public class Legend implements Renderable, Renderer {
 	 * @return this for chaining
 	 */
 	public Legend addGlyphLabel(Glyph glyph, int color, String labeltxt){
+		if (this.colorScheme != null) {
+			return addGlyphLabel(glyph, color, labeltxt, this.colorScheme.getColorText());
+		}
 		return addGlyphLabel(glyph, color, labeltxt, 0);
 	}
 
@@ -314,6 +333,8 @@ public class Legend implements Renderable, Renderer {
 
 	/**
 	 * creates the legend elements and computes the layout
+	 *
+	 *
 	 */
 	protected void setup() {
 		// do layout
@@ -322,6 +343,8 @@ public class Legend implements Renderable, Renderer {
 		final int elementHSpace = 6;
 		final int fontStyle = Font.PLAIN;
 		final int fontSize = 11;
+		final int textColor = this.colorScheme.getColorText();
+
 		final int fontHeight = CharacterAtlas.boundsForText(1, fontSize, fontStyle).getBounds().height;
 		final int itemWidth = 16;
 		final int itemTextSpacing = 4;
@@ -363,7 +386,7 @@ public class Legend implements Renderable, Renderer {
 				PointDetails pd;
 				Rectangle2D rect;
 				{
-					lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle)
+					lbltxt = new Text(glyphLabel.labelText, fontSize, fontStyle, textColor)
 							.setPickColor(glyphLabel.pickColor)
 							.setOrigin(itemWidth+itemTextSpacing,0);
 					texts.add(lbltxt);
@@ -418,7 +441,7 @@ public class Legend implements Renderable, Renderer {
 				SegmentDetails seg;
 				Rectangle2D rect;
 				{
-					lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle)
+					lbltxt = new Text(lineLabel.labelText, fontSize, fontStyle, textColor)
 							.setPickColor(lineLabel.pickColor)
 							.setOrigin(itemWidth+itemTextSpacing, 0);
 					;
@@ -720,6 +743,14 @@ public class Legend implements Renderable, Renderer {
 			return;
 		}
 		delegate.renderSVG(doc, parent, w, h);
+	}
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		delegate.renderPDF(doc, page, x, y, w, h);
 	}
 
 	@Override
