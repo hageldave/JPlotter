@@ -265,66 +265,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		}
 	}
 
-	@Override
-	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
-		if(!isEnabled()){
-			return;
-		}
-
-		double translateX = Objects.isNull(view) ? 0:view.getX();
-		double translateY = Objects.isNull(view) ? 0:view.getY();
-		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
-		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
-
-		try {
-			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
-			for(Triangles tris : getItemsToRender()){
-				if(tris.isHidden()){
-					continue;
-				}
-
-				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
-				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
-				contentStream.setGraphicsStateParameters(graphicsState);
-
-				PDDocument glyphDoc = new PDDocument();
-				PDPage rectPage = new PDPage();
-				glyphDoc.addPage(rectPage);
-				PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
-				rectCont.addRect(x, y, w, h);
-				LayerUtility layerUtility = new LayerUtility(doc);
-				rectCont.close();
-				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
-				glyphDoc.close();
-
-				// clipping area
-				contentStream.saveGraphicsState();
-				contentStream.drawForm(rectForm);
-				contentStream.closePath();
-				contentStream.clip();
-
-				for(TriangleDetails tri : tris.getTriangleDetails()){
-					double x0,y0, x1,y1, x2,y2;
-					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
-					x0-=translateX; x1-=translateX; x2-=translateX;
-					y0-=translateY; y1-=translateY; y2-=translateY;
-					x0*=scaleX; x1*=scaleX; x2*=scaleX;
-					y0*=scaleY; y1*=scaleY; y2*=scaleY;
-					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
-
-					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
-							new Point2D.Double(x2, y2), new Color(tri.c0.getAsInt()), new Color(tri.c1.getAsInt()), new Color(tri.c2.getAsInt()));
-
-				}
-				contentStream.restoreGraphicsState();
-			}
-			contentStream.close();
-		} catch (IOException e) {
-			throw new RuntimeException("Error occurred!");
-		}
-	}
-
 	protected String getSvgTriangleStrategy() {
 		String strategy = this.svgTriangleStrategy;
 		if(Objects.isNull(strategy)){
@@ -359,6 +299,66 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	 */
 	public void setSvgTriangleStrategy(String svgTriangleStrategy) {
 		this.svgTriangleStrategy = svgTriangleStrategy;
+	}
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+	
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+	
+		try {
+			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+			for(Triangles tris : getItemsToRender()){
+				if(tris.isHidden()){
+					continue;
+				}
+	
+				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+				contentStream.setGraphicsStateParameters(graphicsState);
+	
+				PDDocument glyphDoc = new PDDocument();
+				PDPage rectPage = new PDPage();
+				glyphDoc.addPage(rectPage);
+				PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+				rectCont.addRect(x, y, w, h);
+				LayerUtility layerUtility = new LayerUtility(doc);
+				rectCont.close();
+				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
+				glyphDoc.close();
+	
+				// clipping area
+				contentStream.saveGraphicsState();
+				contentStream.drawForm(rectForm);
+				contentStream.closePath();
+				contentStream.clip();
+	
+				for(TriangleDetails tri : tris.getTriangleDetails()){
+					double x0,y0, x1,y1, x2,y2;
+					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
+					x0-=translateX; x1-=translateX; x2-=translateX;
+					y0-=translateY; y1-=translateY; y2-=translateY;
+					x0*=scaleX; x1*=scaleX; x2*=scaleX;
+					y0*=scaleY; y1*=scaleY; y2*=scaleY;
+					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
+	
+					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
+							new Point2D.Double(x2, y2), new Color(tri.c0.getAsInt()), new Color(tri.c1.getAsInt()), new Color(tri.c2.getAsInt()));
+	
+				}
+				contentStream.restoreGraphicsState();
+			}
+			contentStream.close();
+		} catch (IOException e) {
+			throw new RuntimeException("Error occurred!");
+		}
 	}
 
 }

@@ -737,222 +737,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         }
     }
 
-    @Override
-    public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
-        if (!isEnabled()) {
-            return;
-        }
-        double translateX = Objects.isNull(view) ? 0 : view.getX();
-        double translateY = Objects.isNull(view) ? 0 : view.getY();
-        double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
-        double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
-
-        Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
-
-        try {
-            PDPageContentStream contentStream = new PDPageContentStream(doc, page,
-                    PDPageContentStream.AppendMode.APPEND, false);
-            for (Lines lines : getItemsToRender()) {
-                if (lines.isHidden() || lines.getStrokePattern() == 0 || lines.numSegments() == 0) {
-                    // line is invisible
-                    continue;
-                }
-
-                double dist = 0;
-                double prevX = 0;
-                double prevY = 0;
-
-                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-                contentStream.setGraphicsStateParameters(graphicsState);
-
-                PDDocument glyphDoc = new PDDocument();
-                PDPage rectPage = new PDPage();
-                glyphDoc.addPage(rectPage);
-                PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
-                rectCont.addRect(x, y, w, h);
-                LayerUtility layerUtility = new LayerUtility(doc);
-                rectCont.close();
-                PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
-                glyphDoc.close();
-
-                // clipping area
-                contentStream.saveGraphicsState();
-                contentStream.drawForm(rectForm);
-                contentStream.closePath();
-                contentStream.clip();
-
-                for (SegmentDetails seg : lines.getSegments()) {
-                    double x1, y1, x2, y2;
-                    x1 = seg.p0.getX();
-                    y1 = seg.p0.getY();
-                    x2 = seg.p1.getX();
-                    y2 = seg.p1.getY();
-
-                    x1 -= translateX;
-                    x2 -= translateX;
-                    y1 -= translateY;
-                    y2 -= translateY;
-                    x1 *= scaleX;
-                    x2 *= scaleX;
-                    y1 *= scaleY;
-                    y2 *= scaleY;
-
-                    // path length calculations
-                    double dx = x2 - x1;
-                    double dy = y2 - y1;
-                    double len = hypot(dx, dy);
-                    double l1, l2;
-                    if (prevX == x1 && prevY == y1) {
-                        l1 = dist;
-                        l2 = dist + len;
-                        dist += len;
-                        dist = dist % lines.getStrokeLength();
-                    } else {
-                        l1 = 0;
-                        l2 = len;
-                        dist = len;
-                    }
-                    prevX = x2;
-                    prevY = y2;
-
-                    if (lines.isVertexRoundingEnabled()) {
-                        x1 = (int) ( x1 + 0.5 );
-                        x2 = (int) ( x2 + 0.5 );
-                        y1 = (int) ( y1 + 0.5 );
-                        y2 = (int) ( y2 + 0.5 );
-                    }
-
-                    // visibility check
-                    if (!viewportRect.intersectsLine(x1, y1, x2, y2)) {
-                        continue;
-                    }
-
-                    // miter vector stuff
-                    double normalize = 1 / len;
-                    double miterX = dy * normalize * 0.5;
-                    double miterY = -dx * normalize * 0.5;
-
-                    double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
-                    double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
-
-
-
-                        if (!lines.hasStrokePattern()) {
-                            // create invisible rectangle so that elements outside w, h won't be rendered
-                            if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                                contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
-                            } else {
-                                PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-                                        new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-                                PDShadingPattern pattern = new PDShadingPattern();
-                                pattern.setShading(shading);
-                                COSName name = page.getResources().add(pattern);
-                                PDColor color = new PDColor(name, new PDPattern(null));
-                                contentStream.setNonStrokingColor(color);
-                            }
-                            // create segments
-                            PDFUtils.createPDFPolygon(contentStream, new double[]{(x1 + miterX * t1) + x, (x2 + miterX * t2) + x,
-                                    (x2 - miterX * t2) + x, (x1 - miterX * t1) + x}, new double[]{(y1 + miterY * t1) + y, (y2 + miterY * t2) + y,
-                                    (y2 - miterY * t2) + y, (y1 - miterY * t1) + y});
-
-                            contentStream.fill();
-                        } else {
-                            double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
-                            while (strokeInterval[0] < l2) {
-                                double start = strokeInterval[0];
-                                double end = Math.min(strokeInterval[1], l2);
-                                // interpolation factors
-                                double m1 = Math.max(( start - l1 ) / ( l2 - l1 ), 0);
-                                double m2 = ( end - l1 ) / ( l2 - l1 );
-                                // interpolate miters
-                                double t1_ = t1 * ( 1 - m1 ) + t2 * m1;
-                                double t2_ = t1 * ( 1 - m2 ) + t2 * m2;
-                                // interpolate segment
-                                double x1_ = x1 + dx * m1;
-                                double x2_ = x1 + dx * m2;
-                                double y1_ = y1 + dy * m1;
-                                double y2_ = y1 + dy * m2;
-
-                                strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-
-
-
-                                if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                                    contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
-                                } else {
-                                    PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-                                            new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-                                    graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-                                    contentStream.setGraphicsStateParameters(graphicsState);
-                                    PDShadingPattern pattern = new PDShadingPattern();
-                                    pattern.setShading(shading);
-                                    COSName name = page.getResources().add(pattern);
-                                    PDColor color = new PDColor(name, new PDPattern(null));
-                                    contentStream.setNonStrokingColor(color);
-                                }
-                                PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,
-                                        (x2_ - miterX * t2_) + x, (x1_ - miterX * t1_) + x}, new double[]{(y1_ + miterY * t1_) + y, (y2_ + miterY * t2_) + y,
-                                        (y2_ - miterY * t2_) + y, (y1_ - miterY * t1_) + y});
-                                contentStream.fill();
-                            }
-                        }
-
-                }
-                contentStream.restoreGraphicsState();
-            }
-            contentStream.close();
-        } catch (IOException e) {
-            throw new RuntimeException("Error occurred!");
-        }
-    }
-
-    public static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
-        Color startColor = new Color(color1);
-        Color endColor = new Color(color2);
-
-        COSDictionary fdict = new COSDictionary();
-        fdict.setInt(COSName.FUNCTION_TYPE, 2);
-
-        COSArray domain = new COSArray();
-        domain.add(COSInteger.get(0));
-        domain.add(COSInteger.get(1));
-
-        COSArray c0 = new COSArray();
-        c0.add(new COSFloat(startColor.getRed() / 255f));
-        c0.add(new COSFloat(startColor.getGreen() / 255f));
-        c0.add(new COSFloat(startColor.getBlue() / 255f));
-
-        COSArray c1 = new COSArray();
-        c1.add(new COSFloat(endColor.getRed() / 255f));
-        c1.add(new COSFloat(endColor.getGreen() / 255f));
-        c1.add(new COSFloat(endColor.getBlue() / 255f));
-
-
-        fdict.setItem(COSName.DOMAIN, domain);
-        fdict.setItem(COSName.C0, c0);
-        fdict.setItem(COSName.C1, c1);
-        fdict.setInt(COSName.N, 1);
-
-        PDFunctionType2 func = new PDFunctionType2(fdict);
-
-        PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
-
-        axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
-        axialShading.setShadingType(PDShading.SHADING_TYPE2);
-
-        COSArray coords1 = new COSArray();
-        coords1.add(new COSFloat((float) p0.getX()));
-        coords1.add(new COSFloat((float) p0.getY()));
-        coords1.add(new COSFloat((float) p1.getX()));
-        coords1.add(new COSFloat((float) p1.getY()));
-
-        axialShading.setCoords(coords1);
-        axialShading.setFunction(func);
-
-        return axialShading;
-    }
-
     protected static double[] findStrokeInterval(double current, double strokeLen, short pattern) {
         double patternStart = current - ( current % strokeLen );
         double patternPos = ( current % strokeLen ) * ( 16 / strokeLen );
@@ -1015,4 +799,220 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         }
         return Arrays.copyOf(dash, iDash + 1);
     }
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+	    if (!isEnabled()) {
+	        return;
+	    }
+	    double translateX = Objects.isNull(view) ? 0 : view.getX();
+	    double translateY = Objects.isNull(view) ? 0 : view.getY();
+	    double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
+	    double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
+	
+	    Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+	
+	    try {
+	        PDPageContentStream contentStream = new PDPageContentStream(doc, page,
+	                PDPageContentStream.AppendMode.APPEND, false);
+	        for (Lines lines : getItemsToRender()) {
+	            if (lines.isHidden() || lines.getStrokePattern() == 0 || lines.numSegments() == 0) {
+	                // line is invisible
+	                continue;
+	            }
+	
+	            double dist = 0;
+	            double prevX = 0;
+	            double prevY = 0;
+	
+	            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+	            graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+	            contentStream.setGraphicsStateParameters(graphicsState);
+	
+	            PDDocument glyphDoc = new PDDocument();
+	            PDPage rectPage = new PDPage();
+	            glyphDoc.addPage(rectPage);
+	            PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+	            rectCont.addRect(x, y, w, h);
+	            LayerUtility layerUtility = new LayerUtility(doc);
+	            rectCont.close();
+	            PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
+	            glyphDoc.close();
+	
+	            // clipping area
+	            contentStream.saveGraphicsState();
+	            contentStream.drawForm(rectForm);
+	            contentStream.closePath();
+	            contentStream.clip();
+	
+	            for (SegmentDetails seg : lines.getSegments()) {
+	                double x1, y1, x2, y2;
+	                x1 = seg.p0.getX();
+	                y1 = seg.p0.getY();
+	                x2 = seg.p1.getX();
+	                y2 = seg.p1.getY();
+	
+	                x1 -= translateX;
+	                x2 -= translateX;
+	                y1 -= translateY;
+	                y2 -= translateY;
+	                x1 *= scaleX;
+	                x2 *= scaleX;
+	                y1 *= scaleY;
+	                y2 *= scaleY;
+	
+	                // path length calculations
+	                double dx = x2 - x1;
+	                double dy = y2 - y1;
+	                double len = hypot(dx, dy);
+	                double l1, l2;
+	                if (prevX == x1 && prevY == y1) {
+	                    l1 = dist;
+	                    l2 = dist + len;
+	                    dist += len;
+	                    dist = dist % lines.getStrokeLength();
+	                } else {
+	                    l1 = 0;
+	                    l2 = len;
+	                    dist = len;
+	                }
+	                prevX = x2;
+	                prevY = y2;
+	
+	                if (lines.isVertexRoundingEnabled()) {
+	                    x1 = (int) ( x1 + 0.5 );
+	                    x2 = (int) ( x2 + 0.5 );
+	                    y1 = (int) ( y1 + 0.5 );
+	                    y2 = (int) ( y2 + 0.5 );
+	                }
+	
+	                // visibility check
+	                if (!viewportRect.intersectsLine(x1, y1, x2, y2)) {
+	                    continue;
+	                }
+	
+	                // miter vector stuff
+	                double normalize = 1 / len;
+	                double miterX = dy * normalize * 0.5;
+	                double miterY = -dx * normalize * 0.5;
+	
+	                double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
+	                double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
+	
+	
+	
+	                    if (!lines.hasStrokePattern()) {
+	                        // create invisible rectangle so that elements outside w, h won't be rendered
+	                        if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
+	                            contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
+	                        } else {
+	                            PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+	                                    new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+	                            PDShadingPattern pattern = new PDShadingPattern();
+	                            pattern.setShading(shading);
+	                            COSName name = page.getResources().add(pattern);
+	                            PDColor color = new PDColor(name, new PDPattern(null));
+	                            contentStream.setNonStrokingColor(color);
+	                        }
+	                        // create segments
+	                        PDFUtils.createPDFPolygon(contentStream, new double[]{(x1 + miterX * t1) + x, (x2 + miterX * t2) + x,
+	                                (x2 - miterX * t2) + x, (x1 - miterX * t1) + x}, new double[]{(y1 + miterY * t1) + y, (y2 + miterY * t2) + y,
+	                                (y2 - miterY * t2) + y, (y1 - miterY * t1) + y});
+	
+	                        contentStream.fill();
+	                    } else {
+	                        double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+	                        while (strokeInterval[0] < l2) {
+	                            double start = strokeInterval[0];
+	                            double end = Math.min(strokeInterval[1], l2);
+	                            // interpolation factors
+	                            double m1 = Math.max(( start - l1 ) / ( l2 - l1 ), 0);
+	                            double m2 = ( end - l1 ) / ( l2 - l1 );
+	                            // interpolate miters
+	                            double t1_ = t1 * ( 1 - m1 ) + t2 * m1;
+	                            double t2_ = t1 * ( 1 - m2 ) + t2 * m2;
+	                            // interpolate segment
+	                            double x1_ = x1 + dx * m1;
+	                            double x2_ = x1 + dx * m2;
+	                            double y1_ = y1 + dy * m1;
+	                            double y2_ = y1 + dy * m2;
+	
+	                            strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
+	
+	
+	
+	                            if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
+	                                contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
+	                            } else {
+	                                PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+	                                        new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+	                                graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+	                                contentStream.setGraphicsStateParameters(graphicsState);
+	                                PDShadingPattern pattern = new PDShadingPattern();
+	                                pattern.setShading(shading);
+	                                COSName name = page.getResources().add(pattern);
+	                                PDColor color = new PDColor(name, new PDPattern(null));
+	                                contentStream.setNonStrokingColor(color);
+	                            }
+	                            PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,
+	                                    (x2_ - miterX * t2_) + x, (x1_ - miterX * t1_) + x}, new double[]{(y1_ + miterY * t1_) + y, (y2_ + miterY * t2_) + y,
+	                                    (y2_ - miterY * t2_) + y, (y1_ - miterY * t1_) + y});
+	                            contentStream.fill();
+	                        }
+	                    }
+	
+	            }
+	            contentStream.restoreGraphicsState();
+	        }
+	        contentStream.close();
+	    } catch (IOException e) {
+	        throw new RuntimeException("Error occurred!");
+	    }
+	}
+
+	protected static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
+	    Color startColor = new Color(color1);
+	    Color endColor = new Color(color2);
+	
+	    COSDictionary fdict = new COSDictionary();
+	    fdict.setInt(COSName.FUNCTION_TYPE, 2);
+	
+	    COSArray domain = new COSArray();
+	    domain.add(COSInteger.get(0));
+	    domain.add(COSInteger.get(1));
+	
+	    COSArray c0 = new COSArray();
+	    c0.add(new COSFloat(startColor.getRed() / 255f));
+	    c0.add(new COSFloat(startColor.getGreen() / 255f));
+	    c0.add(new COSFloat(startColor.getBlue() / 255f));
+	
+	    COSArray c1 = new COSArray();
+	    c1.add(new COSFloat(endColor.getRed() / 255f));
+	    c1.add(new COSFloat(endColor.getGreen() / 255f));
+	    c1.add(new COSFloat(endColor.getBlue() / 255f));
+	
+	
+	    fdict.setItem(COSName.DOMAIN, domain);
+	    fdict.setItem(COSName.C0, c0);
+	    fdict.setItem(COSName.C1, c1);
+	    fdict.setInt(COSName.N, 1);
+	
+	    PDFunctionType2 func = new PDFunctionType2(fdict);
+	
+	    PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
+	
+	    axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+	    axialShading.setShadingType(PDShading.SHADING_TYPE2);
+	
+	    COSArray coords1 = new COSArray();
+	    coords1.add(new COSFloat((float) p0.getX()));
+	    coords1.add(new COSFloat((float) p0.getY()));
+	    coords1.add(new COSFloat((float) p1.getX()));
+	    coords1.add(new COSFloat((float) p1.getY()));
+	
+	    axialShading.setCoords(coords1);
+	    axialShading.setFunction(func);
+	
+	    return axialShading;
+	}
 }

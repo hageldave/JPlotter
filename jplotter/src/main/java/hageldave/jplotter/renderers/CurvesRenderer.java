@@ -217,190 +217,118 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
     protected int preVpW = 0;
     protected int preVpH = 0;
 
-    protected static String pathSVGCoordinates(ArrayList<CurveDetails> curveStrip, double tx, double ty, double sx, double sy) {
-        double[] coordsX = new double[( 1 + curveStrip.size() * 3 )];
-        double[] coordsY = coordsX.clone();
-        // extract path coordinates
-        coordsX[0] = curveStrip.get(0).p0.getX();
-        coordsY[0] = curveStrip.get(0).p0.getY();
-        for (int i = 0; i < curveStrip.size(); i++) {
-            CurveDetails c = curveStrip.get(i);
-            coordsX[i * 3 + 1] = c.pc0.getX();
-            coordsY[i * 3 + 1] = c.pc0.getY();
-            coordsX[i * 3 + 2] = c.pc1.getX();
-            coordsY[i * 3 + 2] = c.pc1.getY();
-            coordsX[i * 3 + 3] = c.p1.getX();
-            coordsY[i * 3 + 3] = c.p1.getY();
-        }
-        // view transformation
-        for (int i = 0; i < coordsX.length; i++) {
-            double x = coordsX[i];
-            double y = coordsY[i];
-            x -= tx;
-            y -= ty;
-            x *= sx;
-            y *= sy;
-            coordsX[i] = x;
-            coordsY[i] = y;
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append('M');
-        sb.append(SVGUtils.svgNumber(coordsX[0]));
-        sb.append(' ');
-        sb.append(SVGUtils.svgNumber(coordsY[0]));
-        sb.append(" C ");
-        for (int i = 1; i < coordsX.length; i++) {
-            sb.append(SVGUtils.svgNumber(coordsX[i]));
-            sb.append(' ');
-            sb.append(SVGUtils.svgNumber(coordsY[i]));
-            if (i < coordsX.length - 1)
-                sb.append(',');
-        }
-        return sb.toString();
-    }
-
-    protected static String strokePattern2dashArray(short pattern, double len) {
-        int[] onoff = transferBits(pattern, new int[16]);
-        LinkedList<Integer> dashes = new LinkedList<>();
-        int curr = onoff[0];
-        int l = 0;
-        for (int i = 0; i < onoff.length; i++) {
-            if (onoff[i] == curr) {
-                l++;
-            } else {
-                dashes.add(l);
-                curr = onoff[i];
-                l = 1;
-            }
-        }
-        dashes.add(l);
-        if (onoff[0] == 0)
-            dashes.add(0, 0);
-        if (dashes.size() % 2 == 1)
-            dashes.add(0);
-        double scaling = len / 16;
-        return dashes.stream().map(i -> SVGUtils.svgNumber(i * scaling)).reduce((a, b) -> a + " " + b).get();
-    }
-
-    protected static int[] transferBits(short bits, int[] target) {
-        for (int i = 0; i < 16; i++) {
-            target[15 - i] = ( bits >> i ) & 0b1;
-        }
-        return target;
-    }
-
     /**
-     * Creates the shader if not already created and
-     * calls {@link Renderable#initGL()} for all items
-     * already contained in this renderer.
-     * Items that are added later on will be initialized during rendering.
-     */
-    @Override
-    @GLContextRequired
-    public void glInit() {
-        if (Objects.isNull(shader)) {
-            shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(), () -> new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
-            itemsToRender.forEach(Renderable::initGL);
-        }
-    }
+	 * Creates the shader if not already created and
+	 * calls {@link Renderable#initGL()} for all items
+	 * already contained in this renderer.
+	 * Items that are added later on will be initialized during rendering.
+	 */
+	@Override
+	@GLContextRequired
+	public void glInit() {
+	    if (Objects.isNull(shader)) {
+	        shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(), () -> new Shader(vertexShaderSrc, geometryShaderSrc, fragmentShaderSrc));
+	        itemsToRender.forEach(Renderable::initGL);
+	    }
+	}
 
-    @Override
-    @GLContextRequired
-    public void render(int vpx, int vpy, int w, int h) {
-        if (!isEnabled()) {
-            return;
-        }
-        boolean vpHasChanged = w != preVpW || h != preVpH;
-        if (Objects.nonNull(shader) && w > 0 && h > 0 && !itemsToRender.isEmpty()) {
-            // initialize all objects first
-            for (Curves item : itemsToRender) {
-                item.initGL();
-            }
-            // bind shader
-            shader.bind();
-            // prepare for rendering (e.g. en/disable depth or blending and such)
-            orthoMX = GLUtils.orthoMX(orthoMX, 0, w, 0, h);
-            renderStart(w, h);
-            // render every item
-            double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
-            double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
-            // screen space clip coordinates
-            double xmin = Objects.isNull(view) ? 0 : view.getMinX() * scaleX;
-            double xmax = Objects.isNull(view) ? w : view.getMaxX() * scaleX;
-            double ymin = Objects.isNull(view) ? 0 : view.getMinY() * scaleY;
-            double ymax = Objects.isNull(view) ? h : view.getMaxY() * scaleY;
-            boolean viewHasChanged_ = this.viewHasChanged;
-            this.viewHasChanged = false;
-            for (Curves item : itemsToRender) {
-                if (item.isDirty() || viewHasChanged_ || vpHasChanged) {
-                    // update items gl state if necessary
-                    item.updateGL(scaleX, scaleY, xmin, xmax, ymin, ymax);
-                }
-                if (!item.isHidden()) {
-                    renderItem(item);
-                }
-            }
-            // clean up after renering (e.g. en/disable depth or blending and such)
-            renderEnd();
-            shader.release();
-        }
-        preVpW = w;
-        preVpH = h;
-    }
+	@Override
+	@GLContextRequired
+	public void render(int vpx, int vpy, int w, int h) {
+	    if (!isEnabled()) {
+	        return;
+	    }
+	    boolean vpHasChanged = w != preVpW || h != preVpH;
+	    if (Objects.nonNull(shader) && w > 0 && h > 0 && !itemsToRender.isEmpty()) {
+	        // initialize all objects first
+	        for (Curves item : itemsToRender) {
+	            item.initGL();
+	        }
+	        // bind shader
+	        shader.bind();
+	        // prepare for rendering (e.g. en/disable depth or blending and such)
+	        orthoMX = GLUtils.orthoMX(orthoMX, 0, w, 0, h);
+	        renderStart(w, h);
+	        // render every item
+	        double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
+	        double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
+	        // screen space clip coordinates
+	        double xmin = Objects.isNull(view) ? 0 : view.getMinX() * scaleX;
+	        double xmax = Objects.isNull(view) ? w : view.getMaxX() * scaleX;
+	        double ymin = Objects.isNull(view) ? 0 : view.getMinY() * scaleY;
+	        double ymax = Objects.isNull(view) ? h : view.getMaxY() * scaleY;
+	        boolean viewHasChanged_ = this.viewHasChanged;
+	        this.viewHasChanged = false;
+	        for (Curves item : itemsToRender) {
+	            if (item.isDirty() || viewHasChanged_ || vpHasChanged) {
+	                // update items gl state if necessary
+	                item.updateGL(scaleX, scaleY, xmin, xmax, ymin, ymax);
+	            }
+	            if (!item.isHidden()) {
+	                renderItem(item);
+	            }
+	        }
+	        // clean up after renering (e.g. en/disable depth or blending and such)
+	        renderEnd();
+	        shader.release();
+	    }
+	    preVpW = w;
+	    preVpH = h;
+	}
 
-    /**
-     * Disables {@link GL11#GL_DEPTH_TEST},
-     * enables {@link GL11#GL_BLEND}
-     * and sets {@link GL11#GL_SRC_ALPHA}, {@link GL11#GL_ONE_MINUS_SRC_ALPHA}
-     * as blend function.
-     */
-    @Override
-    @GLContextRequired
-    protected void renderStart(int w, int h) {
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        double translateX = Objects.isNull(view) ? 0 : view.getX();
-        double translateY = Objects.isNull(view) ? 0 : view.getY();
-        double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
-        double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
-        int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
-        GL20.glUniform4f(loc, (float) translateX, (float) translateY, (float) scaleX, (float) scaleY);
-        loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
-        GL20.glUniformMatrix4fv(loc, false, orthoMX);
-    }
+	/**
+	 * Disables {@link GL11#GL_DEPTH_TEST},
+	 * enables {@link GL11#GL_BLEND}
+	 * and sets {@link GL11#GL_SRC_ALPHA}, {@link GL11#GL_ONE_MINUS_SRC_ALPHA}
+	 * as blend function.
+	 */
+	@Override
+	@GLContextRequired
+	protected void renderStart(int w, int h) {
+	    GL11.glDisable(GL11.GL_DEPTH_TEST);
+	    GL11.glEnable(GL11.GL_BLEND);
+	    GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+	    double translateX = Objects.isNull(view) ? 0 : view.getX();
+	    double translateY = Objects.isNull(view) ? 0 : view.getY();
+	    double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
+	    double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
+	    int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
+	    GL20.glUniform4f(loc, (float) translateX, (float) translateY, (float) scaleX, (float) scaleY);
+	    loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+	    GL20.glUniformMatrix4fv(loc, false, orthoMX);
+	}
 
-    @Override
-    @GLContextRequired
-    protected void renderItem(Curves lines) {
-        int loc;
-        loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidthMultiplier");
-        GL20.glUniform1f(loc, lines.getGlobalThicknessMultiplier());
-        // set projection matrix in shader
-        loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
-        GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
-        loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokePattern");
-        GL20.glUniform1iv(loc, transferBits(lines.getStrokePattern(), strokePattern));
-        loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokeLength");
-        GL20.glUniform1f(loc, lines.hasStrokePattern() ? lines.getStrokeLength() : 0);
-        // draw things
-        lines.bindVertexArray();
-        GL11.glDrawArrays(GL11.GL_LINES, 0, lines.getNumEffectiveSegments() * 2);
-        lines.releaseVertexArray();
-    }
+	@Override
+	@GLContextRequired
+	protected void renderItem(Curves lines) {
+	    int loc;
+	    loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidthMultiplier");
+	    GL20.glUniform1f(loc, lines.getGlobalThicknessMultiplier());
+	    // set projection matrix in shader
+	    loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
+	    GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
+	    loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokePattern");
+	    GL20.glUniform1iv(loc, transferBits(lines.getStrokePattern(), strokePattern));
+	    loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokeLength");
+	    GL20.glUniform1f(loc, lines.hasStrokePattern() ? lines.getStrokeLength() : 0);
+	    // draw things
+	    lines.bindVertexArray();
+	    GL11.glDrawArrays(GL11.GL_LINES, 0, lines.getNumEffectiveSegments() * 2);
+	    lines.releaseVertexArray();
+	}
 
-    /**
-     * disables {@link GL11#GL_BLEND},
-     * enables {@link GL11#GL_DEPTH_TEST}
-     */
-    @Override
-    @GLContextRequired
-    protected void renderEnd() {
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-    }
+	/**
+	 * disables {@link GL11#GL_BLEND},
+	 * enables {@link GL11#GL_DEPTH_TEST}
+	 */
+	@Override
+	@GLContextRequired
+	protected void renderEnd() {
+	    GL11.glDisable(GL11.GL_BLEND);
+	    GL11.glEnable(GL11.GL_DEPTH_TEST);
+	}
 
-    @Override
+	@Override
     public void setView(Rectangle2D view) {
         boolean sameView = Objects.equals(view, this.view);
         super.setView(view);
@@ -560,7 +488,79 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         }
     }
 
-    @Override
+    protected static String pathSVGCoordinates(ArrayList<CurveDetails> curveStrip, double tx, double ty, double sx, double sy) {
+	    double[] coordsX = new double[( 1 + curveStrip.size() * 3 )];
+	    double[] coordsY = coordsX.clone();
+	    // extract path coordinates
+	    coordsX[0] = curveStrip.get(0).p0.getX();
+	    coordsY[0] = curveStrip.get(0).p0.getY();
+	    for (int i = 0; i < curveStrip.size(); i++) {
+	        CurveDetails c = curveStrip.get(i);
+	        coordsX[i * 3 + 1] = c.pc0.getX();
+	        coordsY[i * 3 + 1] = c.pc0.getY();
+	        coordsX[i * 3 + 2] = c.pc1.getX();
+	        coordsY[i * 3 + 2] = c.pc1.getY();
+	        coordsX[i * 3 + 3] = c.p1.getX();
+	        coordsY[i * 3 + 3] = c.p1.getY();
+	    }
+	    // view transformation
+	    for (int i = 0; i < coordsX.length; i++) {
+	        double x = coordsX[i];
+	        double y = coordsY[i];
+	        x -= tx;
+	        y -= ty;
+	        x *= sx;
+	        y *= sy;
+	        coordsX[i] = x;
+	        coordsY[i] = y;
+	    }
+	    StringBuilder sb = new StringBuilder();
+	    sb.append('M');
+	    sb.append(SVGUtils.svgNumber(coordsX[0]));
+	    sb.append(' ');
+	    sb.append(SVGUtils.svgNumber(coordsY[0]));
+	    sb.append(" C ");
+	    for (int i = 1; i < coordsX.length; i++) {
+	        sb.append(SVGUtils.svgNumber(coordsX[i]));
+	        sb.append(' ');
+	        sb.append(SVGUtils.svgNumber(coordsY[i]));
+	        if (i < coordsX.length - 1)
+	            sb.append(',');
+	    }
+	    return sb.toString();
+	}
+
+	protected static String strokePattern2dashArray(short pattern, double len) {
+	    int[] onoff = transferBits(pattern, new int[16]);
+	    LinkedList<Integer> dashes = new LinkedList<>();
+	    int curr = onoff[0];
+	    int l = 0;
+	    for (int i = 0; i < onoff.length; i++) {
+	        if (onoff[i] == curr) {
+	            l++;
+	        } else {
+	            dashes.add(l);
+	            curr = onoff[i];
+	            l = 1;
+	        }
+	    }
+	    dashes.add(l);
+	    if (onoff[0] == 0)
+	        dashes.add(0, 0);
+	    if (dashes.size() % 2 == 1)
+	        dashes.add(0);
+	    double scaling = len / 16;
+	    return dashes.stream().map(i -> SVGUtils.svgNumber(i * scaling)).reduce((a, b) -> a + " " + b).get();
+	}
+
+	protected static int[] transferBits(short bits, int[] target) {
+	    for (int i = 0; i < 16; i++) {
+	        target[15 - i] = ( bits >> i ) & 0b1;
+	    }
+	    return target;
+	}
+
+	@Override
     public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
         if (!isEnabled()) {
             return;
