@@ -40,12 +40,13 @@ public class Curves implements Renderable {
 	protected ArrayList<CurveDetails> curves = new ArrayList<>();
 	protected short strokePattern = (short)0xffff;
 	protected float strokeLength = 16;
-	protected boolean isDirty;
+	protected boolean isDirty = true;
 	protected boolean hidden = false;
 	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 	protected int numEffectiveSegments = 0;
+	protected boolean isGLDoublePrecision = false;
 	
 	
 	public int getNumEffectiveSegments() {
@@ -71,7 +72,7 @@ public class Curves implements Renderable {
 	public void initGL() {
 		if(Objects.isNull(va)){
 			va = new VertexArray(6);
-			updateGL();
+			updateGL(false);
 		}
 	}
 
@@ -83,17 +84,19 @@ public class Curves implements Renderable {
 	 */
 	@Override
 	@GLContextRequired
-	@Deprecated(/* use updateGL(scaleX,scaleY) instead */)
-	public void updateGL(){
-		updateGL(1, 1, 0,3000, 0,3000);
+	@Deprecated(/* use updateGL(usedouble, scaleX,scaleY, xmin,xmax,ymin,ymax) instead */)
+	public void updateGL(boolean useGLDoublePrecision){
+		updateGL(useGLDoublePrecision, 1, 1, 0,3000, 0,3000);
 	}
 	
+	
+	
 	/**
-	 * Updates the vertex array to be in sync with this lines object.
+	 * Updates the vertex array to be in sync with this curves object.
 	 * This sets the {@link #isDirty()} state to false.
-	 * For calculating the path length of line segments in screen space
+	 * For creating enough subdivision levels in screen space
 	 * the scaling parameters of the respective view transformation need
-	 * to be specified in order to realize view invariant stroke patterns.
+	 * to be specified in order to render sufficiently smooth looking curves.
 	 * <p>
 	 * If {@link #initGL()} has not been called yet or this object has
 	 * already been closed, nothing happens.
@@ -101,7 +104,16 @@ public class Curves implements Renderable {
 	 * @param scaleY scaling of the y coordinate of the current view transform
 	 */
 	@GLContextRequired
-	public void updateGL(double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){
+	public void updateGL(boolean useGLDoublePrecision, double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){
+		if(useGLDoublePrecision) {
+			updateGLDouble(scaleX, scaleY, xmin, xmax, ymin, ymax);
+		} else {
+			updateGLFloat(scaleX, scaleY, xmin, xmax, ymin, ymax);
+		}
+	}
+		
+	@GLContextRequired
+	protected void updateGLFloat(double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){
 		if(Objects.nonNull(va)){
 			final double sx=scaleX, sy=scaleY;
 			double[] clip = new double[]{xmin,xmax,ymin,ymax};
@@ -199,6 +211,110 @@ public class Curves implements Renderable {
 			va.setBuffer(4, 1, pathLengthBuffer);
 			va.setBuffer(5, 1, paramBuffer);
 			isDirty = false;
+			isGLDoublePrecision = false;
+		}
+	}
+	
+	@GLContextRequired
+	protected void updateGLDouble(double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){
+		if(Objects.nonNull(va)){
+			final double sx=scaleX, sy=scaleY;
+			double[] clip = new double[]{xmin,xmax,ymin,ymax};
+			//final double isx=1.0/scaleX, isy=1.0/scaleY;
+			// subdivide bezier curves
+			ArrayList<Double> segments = new ArrayList<>(curves.size()*6*32);
+			int[] numSegs = new int[curves.size()];
+			int n = 0;
+			for(int i=0; i<curves.size(); i++){
+				CurveDetails seg = curves.get(i);
+				double x0 = seg.p0.getX();
+				double y0 = seg.p0.getY();
+				double x1 = seg.p1.getX();
+				double y1 = seg.p1.getY();
+				double xc0 = seg.pc0.getX();
+				double yc0 = seg.pc0.getY();
+				double xc1 = seg.pc1.getX();
+				double yc1 = seg.pc1.getY();
+				subdivideCubicBezier(x0*sx, y0*sy, xc0*sx, yc0*sy, xc1*sx, yc1*sy, x1*sx, y1*sy, 0,1, segments, clip);
+				int segs = (segments.size()/6)-n;
+				numSegs[i] = segs;
+				n += segs;
+			}
+			this.numEffectiveSegments = n;
+			
+			// create buffers for vertex array
+			double[] segmentCoordBuffer = new double[n*8];
+			int[] colorBuffer = new int[n*2];
+			int[] pickBuffer = new int[n*2];
+			float[] thicknessBuffer = new float[n*2];
+			float[] pathLengthBuffer = new float[n*2];
+			double[] paramBuffer = new double[n*2];
+			
+			double xprev = 0, yprev=0, pathLen = 0;
+			int i=0;
+			for(int j=0; j<curves.size(); j++){
+				CurveDetails curv = curves.get(j);
+				double x0_ = curv.p0.getX();
+				double y0_ = curv.p0.getY();
+				double x1_ = curv.p1.getX();
+				double y1_ = curv.p1.getY();
+				double xc0_ = curv.pc0.getX();
+				double yc0_ = curv.pc0.getY();
+				double xc1_ = curv.pc1.getX();
+				double yc1_ = curv.pc1.getY();
+				for(int k=0; k<numSegs[j]; k++){
+					// segment from subdivision (aspect ratio scaled)
+					double x0 = segments.get(i*6+0);
+					double y0 = segments.get(i*6+1);
+					double x1 = segments.get(i*6+2);
+					double y1 = segments.get(i*6+3);
+					double tS = segments.get(i*6+4);
+					double tE = segments.get(i*6+5);
+
+					// start & end point
+					segmentCoordBuffer[i*8+0] =  (x0_);
+					segmentCoordBuffer[i*8+1] =  (y0_);
+					segmentCoordBuffer[i*8+2] =  (x1_);
+					segmentCoordBuffer[i*8+3] =  (y1_);
+					// control point
+					segmentCoordBuffer[i*8+4] =  (xc0_);
+					segmentCoordBuffer[i*8+5] =  (yc0_);
+					segmentCoordBuffer[i*8+6] =  (xc1_);
+					segmentCoordBuffer[i*8+7] =  (yc1_);
+					// parameters
+					paramBuffer[i*2+0] = tS;
+					paramBuffer[i*2+1] = tE;
+							
+					int color = curv.color.getAsInt();
+					colorBuffer[i*2+0] = color;
+					colorBuffer[i*2+1] = color;
+
+					pickBuffer[i*2+0] = pickBuffer[i*2+1] = curv.pickColor;
+
+					float thickness = (float)curv.thickness.getAsDouble();
+					thicknessBuffer[i*2+0] = thickness;
+					thicknessBuffer[i*2+1] = thickness;
+
+					if(xprev != x0 || yprev != y0){
+						pathLen = 0;
+					}
+					double segLen = Utils.hypot((x1-x0), (y1-y0));
+					pathLengthBuffer[i*2+0] = (float)pathLen;
+					pathLengthBuffer[i*2+1] = (float)(pathLen += segLen);
+					pathLen = pathLen % strokeLength;
+					xprev = x1; yprev = y1;
+					
+					i++;
+				}
+			}
+			va.setBuffer(0, 4, segmentCoordBuffer);
+			va.setBuffer(1, 1, false, colorBuffer);
+			va.setBuffer(2, 1, false, pickBuffer);
+			va.setBuffer(3, 1, thicknessBuffer);
+			va.setBuffer(4, 1, pathLengthBuffer);
+			va.setBuffer(5, 1, paramBuffer);
+			isDirty = false;
+			isGLDoublePrecision = true;
 		}
 	}
 	
@@ -316,6 +432,11 @@ public class Curves implements Renderable {
 	@GLContextRequired
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1,2,3,4);
+	}
+	
+	@Override
+	public boolean isGLDoublePrecision() {
+		return isGLDoublePrecision;
 	}
 
 
@@ -592,7 +713,7 @@ public class Curves implements Renderable {
 		int nPoints = points.length;
 		int nControl = (nPoints-1)*2;
 		Point2D[] curves = new Point2D[nPoints+nControl];
-		final double eps=1e-6;
+		final double eps=1e-16;
 		for(int i=0; i<nPoints; i++) {
 			int i_prev = i-1;
 			int i_next = i+1;

@@ -20,6 +20,7 @@ import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL40;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -45,6 +46,35 @@ import java.util.Objects;
 public class TextRenderer extends GenericRenderer<Text> {
 
 	protected static final char NL = '\n';
+	
+	protected static final String vertexShaderSrcD = ""
+			+ "" + "#version 410"
+			+ NL + "layout(location = 0) in vec2 in_position;"
+			+ NL + "layout(location = 1) in vec2 in_texcoords;"
+			+ NL + "uniform mat4 projMX;"
+			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "uniform dvec2 modelScaling;"
+			+ NL + "uniform dvec2 origin;"
+			+ NL + "uniform float rot;"
+			+ NL + "out vec2 tex_Coords;"
+			
+			+ NL + "mat2 rotationMatrix(float angle){"
+			+ NL + "   float s = sin(angle), c = cos(angle);"
+			+ NL + "   return mat2(c,s,-s,c);"
+			+ NL + "}"
+			
+			+ NL + "void main() {"
+			+ NL + "   mat2 rotMX = rotationMatrix(rot);"
+			+ NL + "   dvec2 rotatedPos = rotMX*in_position;"
+			+ NL + "   dvec3 pos = dvec3(rotatedPos*modelScaling+origin, 1);"
+			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
+			+ NL + "   gl_Position = projMX*vec4(float(pos.x), float(pos.y), float(pos.z), 1);"
+			+ NL + "   tex_Coords = in_texcoords;"
+			+ NL + "}"
+			+ NL
+			;
+	
 	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
@@ -121,9 +151,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@Override
 	@GLContextRequired
 	public void glInit() {
-		if(Objects.isNull(shader)){
-			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
+		if(Objects.isNull(shaderF)){
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#F",()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
+		}
+		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled) {
+			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#D",()->new Shader(vertexShaderSrcD, fragmentShaderSrc));
 		}
 		if(Objects.isNull(vaTextBackground)){
 			vaTextBackground = new VertexArray(2);
@@ -142,28 +175,41 @@ public class TextRenderer extends GenericRenderer<Text> {
 	 */
 	@Override
 	@GLContextRequired
-	protected void renderStart(int w, int h) {
+	protected void renderStart(int w, int h, Shader shader) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
-		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
-		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelScaling");
-		GL20.glUniform2f(loc, (float)(1/scaleX), (float)(1/scaleY));
-		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
+		
+		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
+		if (shader == shaderD /* double precision shader */)
+		{
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
+			GL40.glUniform4d(loc, translateX, translateY, scaleX, scaleY);
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelScaling");
+			GL40.glUniform2d(loc, (1/scaleX), (1/scaleY));
+		}
+		else
+		{
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
+			GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelScaling");
+			GL20.glUniform2f(loc, (float)(1/scaleX), (float)(1/scaleY));
+		}
 	}
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Text txt) {
+	protected void renderItem(Text txt, Shader shader) {
 		int loc;
 		
+		boolean useDoublePrecision = shader == shaderD;
 		// draw background if bg color is not 0
 		if(txt.getBackground().getRGB() !=0){
 			Rectangle2D bounds = txt.getBounds();
@@ -175,7 +221,11 @@ public class TextRenderer extends GenericRenderer<Text> {
 					(float)bounds.getWidth()+rightpadding, 0f);
 			vaTextBackground.bindAndEnableAttributes(0,1);
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "origin");
-			GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
+			if(useDoublePrecision) 
+				GL40.glUniform2d(loc, txt.getOrigin().getX(), txt.getOrigin().getY());
+			else 
+				GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
+			
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "rot");
 			GL20.glUniform1f(loc, txt.getAngle());
 			loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
@@ -195,7 +245,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "tex");
 		GL20.glUniform1i(loc, 0);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "origin");
-		GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
+		if(useDoublePrecision) 
+			GL40.glUniform2d(loc, txt.getOrigin().getX(), txt.getOrigin().getY());
+		else 
+			GL20.glUniform2f(loc, (float)txt.getOrigin().getX(), (float)txt.getOrigin().getY());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "rot");
 		GL20.glUniform1f(loc, txt.getAngle());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "fragColorToUse");
@@ -234,9 +287,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@Override
 	@GLContextRequired
 	public void close() {
-		if(Objects.nonNull(shader))
-			ShaderRegistry.handbackShader(shader);
-		shader = null;
+		if(Objects.nonNull(shaderF))
+			ShaderRegistry.handbackShader(shaderF);
+		shaderF = null;
+		if(Objects.nonNull(shaderD))
+			ShaderRegistry.handbackShader(shaderD);
+		shaderD = null;
 		if(Objects.nonNull(vaTextBackground))
 			vaTextBackground.close();
 		vaTextBackground = null;
