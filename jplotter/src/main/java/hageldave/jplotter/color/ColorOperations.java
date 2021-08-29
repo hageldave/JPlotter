@@ -21,12 +21,10 @@ public class ColorOperations {
 	 * @return
 	 */
 	public static int changeSaturation(int argb, float saturation) {
-		Color color = new Color(argb);
 		float[] hsv = new float[3];
-		Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsv);
-		saturation *= hsv[1];
-		hsv[1] = saturation;
-		return Color.HSBtoRGB(hsv[0], hsv[1], hsv[2]);
+		Color.RGBtoHSB(Pixel.r(argb), Pixel.g(argb), Pixel.b(argb), hsv);
+		int rgb = Color.HSBtoRGB(hsv[0], hsv[1]*saturation, hsv[2]);
+		return (argb&0xff000000)|(rgb&0x00ffffff); // preserve alpha value
 	}
 
 	/**

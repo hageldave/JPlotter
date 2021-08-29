@@ -17,7 +17,7 @@ import java.awt.geom.Rectangle2D;
  * 
  * @author hageldave
  */
-public class ChainedRenderer implements Renderer, AdaptableView {
+public class ChainedRenderer implements Renderer, AdaptableView, GLDoublePrecisionSupport {
 
 	protected Renderer r1,r2;
 	protected boolean isEnabled=true;
@@ -78,6 +78,18 @@ public class ChainedRenderer implements Renderer, AdaptableView {
 	@Override
 	public boolean isEnabled() {
 		return isEnabled;
+	}
+	
+	/**
+	 * Forwards {@link GLDoublePrecisionSupport#setGLDoublePrecisionEnabled(boolean)}
+	 * calls to nested {@link Renderer}s.
+	 */
+	@Override
+	public void setGLDoublePrecisionEnabled(boolean enable) {
+		if(r1 instanceof GLDoublePrecisionSupport)
+			((GLDoublePrecisionSupport) r1).setGLDoublePrecisionEnabled(enable);
+		if(r2 instanceof GLDoublePrecisionSupport)
+			((GLDoublePrecisionSupport) r2).setGLDoublePrecisionEnabled(enable);
 	}
 
 	@Override

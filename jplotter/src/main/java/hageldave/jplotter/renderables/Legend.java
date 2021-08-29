@@ -326,7 +326,7 @@ public class Legend implements Renderable, Renderer {
 	 */
 	@Override
 	@GLContextRequired
-	public void updateGL() {
+	public void updateGL(boolean useGLDoublePrecision) {
 		clearGL();
 		setup();
 	}
@@ -716,7 +716,7 @@ public class Legend implements Renderable, Renderer {
 		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
 			viewPortWidth = w;
 			viewPortHeight = h;
-			updateGL();
+			updateGL(false);
 		}
 		delegate.render(vpx, vpy, w, h);
 	}
@@ -732,7 +732,7 @@ public class Legend implements Renderable, Renderer {
 		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
 			viewPortWidth = w;
 			viewPortHeight = h;
-			updateGL(); // only clearGL requires GL context, but all GL resources are null, so no prob.
+			updateGL(false); // only clearGL requires GL context, but all GL resources are null, so no prob.
 		}
 		delegate.renderFallback(g, p, w, h);
 	}
@@ -858,6 +858,11 @@ public class Legend implements Renderable, Renderer {
 			return this;
 		}
 		
+	}
+
+	@Override
+	public boolean isGLDoublePrecision() {
+		return false;
 	}
 	
 }
