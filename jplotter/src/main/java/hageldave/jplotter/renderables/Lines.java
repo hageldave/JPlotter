@@ -49,7 +49,7 @@ public class Lines implements Renderable {
 
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 
-	protected boolean isDirty;
+	protected boolean isDirty = true;
 
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 
@@ -60,6 +60,8 @@ public class Lines implements Renderable {
 	protected float strokeLength = 16;
 	
 	protected boolean hidden = false;
+	
+	protected boolean isGLDoublePrecision = false;
 
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
@@ -606,7 +608,7 @@ public class Lines implements Renderable {
 	public void initGL(){
 		if(Objects.isNull(va)){
 			va = new VertexArray(5);
-			updateGL();
+			updateGL(false);
 		}
 	}
 
@@ -618,11 +620,24 @@ public class Lines implements Renderable {
 	 */
 	@Override
 	@GLContextRequired
-	@Deprecated(/* use updateGL(scaleX,scaleY) instead */)
-	public void updateGL(){
-		updateGL(1, 1);
+	@Deprecated(/* use updateGL(usedouble,scaleX,scaleY) instead */)
+	public void updateGL(boolean useGLDoublePrecision){
+		updateGL(useGLDoublePrecision, 1, 1);
 	}
 	
+
+	@GLContextRequired
+	public void updateGL(boolean useGLDoublePrecision, double scaleX, double scaleY){
+		if (useGLDoublePrecision) // SFM
+		{
+			updateGLDouble(scaleX, scaleY);	
+		}
+		else
+		{
+			updateGLFloat(scaleX, scaleY);
+		}
+	}
+
 	/**
 	 * Updates the vertex array to be in sync with this lines object.
 	 * This sets the {@link #isDirty()} state to false.
@@ -636,9 +651,58 @@ public class Lines implements Renderable {
 	 * @param scaleY scaling of the y coordinate of the current view transform
 	 */
 	@GLContextRequired
-	public void updateGL(double scaleX, double scaleY){
+	public void updateGLFloat(double scaleX, double scaleY){
 		if(Objects.nonNull(va)){
 			float[] segmentCoordBuffer = new float[segments.size()*2*2];
+			int[] colorBuffer = new int[segments.size()*2];
+			int[] pickBuffer = new int[segments.size()*2];
+			float[] thicknessBuffer = new float[segments.size()*2];
+			float[] pathLengthBuffer = new float[segments.size()*2];
+	
+			double xprev = 0, yprev=0, pathLen = 0;
+			for(int i=0; i<segments.size(); i++){
+				SegmentDetails seg = segments.get(i);
+				double x0 = seg.p0.getX();
+				double y0 = seg.p0.getY();
+				double x1 = seg.p1.getX();
+				double y1 = seg.p1.getY();
+	
+				segmentCoordBuffer[i*4+0] = (float) x0;
+				segmentCoordBuffer[i*4+1] = (float) y0;
+				segmentCoordBuffer[i*4+2] = (float) x1;
+				segmentCoordBuffer[i*4+3] = (float) y1;
+	
+				colorBuffer[i*2+0] = seg.color0.getAsInt();
+				colorBuffer[i*2+1] = seg.color1.getAsInt();
+	
+				pickBuffer[i*2+0] = pickBuffer[i*2+1] = seg.pickColor;
+	
+				thicknessBuffer[i*2+0] = (float)seg.thickness0.getAsDouble();
+				thicknessBuffer[i*2+1] = (float)seg.thickness1.getAsDouble();
+	
+				if(xprev != x0 || yprev != y0){
+					pathLen = 0;
+				}
+				double segLen = Utils.hypot((x1-x0)*scaleX, (y1-y0)*scaleY);
+				pathLengthBuffer[i*2+0] = (float)pathLen;
+				pathLengthBuffer[i*2+1] = (float)(pathLen += segLen);
+				pathLen = pathLen % strokeLength;
+				xprev = x1; yprev = y1;
+			}
+			va.setBuffer(0, 2, segmentCoordBuffer);
+			va.setBuffer(1, 1, false, colorBuffer);
+			va.setBuffer(2, 1, false, pickBuffer);
+			va.setBuffer(3, 1, thicknessBuffer);
+			va.setBuffer(4, 1, pathLengthBuffer);
+			isDirty = false;
+			isGLDoublePrecision = false;
+		}
+	}
+
+	@GLContextRequired
+	public void updateGLDouble(double scaleX, double scaleY){
+		if(Objects.nonNull(va)){
+			double[] segmentCoordBuffer = new double[segments.size()*2*2];  // SFM key line
 			int[] colorBuffer = new int[segments.size()*2];
 			int[] pickBuffer = new int[segments.size()*2];
 			float[] thicknessBuffer = new float[segments.size()*2];
@@ -652,10 +716,10 @@ public class Lines implements Renderable {
 				double x1 = seg.p1.getX();
 				double y1 = seg.p1.getY();
 				
-				segmentCoordBuffer[i*4+0] = (float) x0;
-				segmentCoordBuffer[i*4+1] = (float) y0;
-				segmentCoordBuffer[i*4+2] = (float) x1;
-				segmentCoordBuffer[i*4+3] = (float) y1;
+				segmentCoordBuffer[i*4+0] = x0;
+				segmentCoordBuffer[i*4+1] = y0;
+				segmentCoordBuffer[i*4+2] = x1;
+				segmentCoordBuffer[i*4+3] = y1;
 
 				colorBuffer[i*2+0] = seg.color0.getAsInt();
 				colorBuffer[i*2+1] = seg.color1.getAsInt();
@@ -680,6 +744,7 @@ public class Lines implements Renderable {
 			va.setBuffer(3, 1, thicknessBuffer);
 			va.setBuffer(4, 1, pathLengthBuffer);
 			isDirty = false;
+			isGLDoublePrecision = true;
 		}
 	}
 
@@ -715,6 +780,11 @@ public class Lines implements Renderable {
 	@GLContextRequired
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1,2,3,4);
+	}
+
+	@Override
+	public boolean isGLDoublePrecision() {
+		return isGLDoublePrecision;
 	}
 
 }

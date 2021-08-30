@@ -20,6 +20,7 @@ import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL40;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -47,6 +48,53 @@ import java.util.Objects;
 public class PointsRenderer extends GenericRenderer<Points> {
 
 	protected static final char NL = '\n';
+	protected static final String vertexShaderSrcD = ""
+			+ "" + "#version 410"
+			+ NL + "layout(location = 0) in vec2 in_position;"
+			+ NL + "layout(location = 1) in dvec2 in_pointpos;"
+			+ NL + "layout(location = 2) in vec2 in_rotAndScale;"
+			+ NL + "layout(location = 3) in uvec2 in_colors;"
+			+ NL + "uniform mat4 projMX;"
+			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "uniform vec2 modelScaling;"
+			+ NL + "uniform float globalScaling;"
+			+ NL + "uniform bool roundposition;"
+			+ NL + "out vec4 vColor;"
+			+ NL + "out vec4 vPickColor;"
+
+			+ NL + "vec4 unpackARGB(uint c) {"
+			+ NL + "   uint mask = uint(255);"
+			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
+			+ NL + "}"
+
+			+ NL + "mat2 rotationMatrix(float angle){"
+			+ NL + "   float s = sin(angle), c = cos(angle);"
+			+ NL + "   return mat2(c,s,-s,c);"
+			+ NL + "}"
+
+			+ NL + "mat2 scalingMatrix(float s){"
+			+ NL + "   return mat2(s,0,0,s);"
+			+ NL + "}"
+			
+			+ NL + "float rnd(float f){return float(int(f+0.5));}"
+
+			+ NL + "vec2 roundToIntegerValuedVec(vec2 v){"
+			+ NL + "   return vec2(rnd(v.x),rnd(v.y));"
+			+ NL + "}"
+
+			+ NL + "void main() {"
+			+ NL + "   mat2 rotMX = rotationMatrix(in_rotAndScale.x);"
+			+ NL + "   mat2 scaleMX = scalingMatrix(in_rotAndScale.y);"
+			+ NL + "   dvec3 pos = dvec3(globalScaling*(scaleMX*rotMX*in_position)*modelScaling+in_pointpos, 1);"
+			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
+			+ NL + "   if(roundposition){pos = dvec3(roundToIntegerValuedVec(vec2(pos.xy)),pos.z);}"
+			+ NL + "   gl_Position = projMX*vec4(pos,1);"
+			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
+			+ NL + "}"
+			+ NL
+			;	
 	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
@@ -137,9 +185,12 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	@Override
 	@GLContextRequired
 	public void glInit() {
-		if(Objects.isNull(shader)){
-			this.shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
+		if(Objects.isNull(shaderF)){
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#F",()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);;
+		}
+		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled) {
+			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#D",()->new Shader(vertexShaderSrcD, fragmentShaderSrc));
 		}
 	}
 
@@ -151,10 +202,12 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	@Override
 	@GLContextRequired
 	public void close() {
-		if(Objects.nonNull(shader)){
-			ShaderRegistry.handbackShader(shader);
-			shader = null;
-		}
+		if(Objects.nonNull(shaderF))
+			ShaderRegistry.handbackShader(shaderF);
+		shaderF = null;
+		if(Objects.nonNull(shaderD))
+			ShaderRegistry.handbackShader(shaderD);
+		shaderD = null;
 		closeAllItems();
 	}
 
@@ -166,7 +219,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	 */
 	@Override
 	@GLContextRequired
-	protected void renderStart(int w, int h) {
+	protected void renderStart(int w, int h, Shader shader) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -174,17 +227,27 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		double translateY = Objects.isNull(view) ? 0:view.getY();
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
-		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
-		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		
+		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");	
+		if(shader == shaderD /* double precision shader */)
+		{
+			GL40.glUniform4d(loc, translateX, translateY, scaleX, scaleY);
+		}
+		else
+		{
+			GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);		  
+		}		
+
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "modelScaling");
 		GL20.glUniform2f(loc, (float)(1/scaleX), (float)(1/scaleY));
+	   
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Points item) {
+	protected void renderItem(Points item, Shader shader) {
 		if(item.numPoints() < 1){
 			return;
 		}
