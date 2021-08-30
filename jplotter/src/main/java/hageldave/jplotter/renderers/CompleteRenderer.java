@@ -1,17 +1,13 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-
+import hageldave.jplotter.renderables.*;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import hageldave.jplotter.renderables.Curves;
-import hageldave.jplotter.renderables.Lines;
-import hageldave.jplotter.renderables.Points;
-import hageldave.jplotter.renderables.Renderable;
-import hageldave.jplotter.renderables.Text;
-import hageldave.jplotter.renderables.Triangles;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 /**
  * The {@link CompleteRenderer} comprises a {@link LinesRenderer},
@@ -40,7 +36,7 @@ import hageldave.jplotter.renderables.Triangles;
  * 
  * @author hageldave
  */
-public class CompleteRenderer implements Renderer, AdaptableView {
+public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecisionSupport {
 	
 	public final LinesRenderer lines = new LinesRenderer();
 	public final PointsRenderer points = new PointsRenderer();
@@ -154,6 +150,19 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 	}
 	
 	/**
+	 * Convenience method for enabling/disabling GL double precision rendering.
+	 * This calls {@link GenericRenderer#setGLDoublePrecisionEnabled(boolean)}
+	 * for each base {@link Renderer} of this CompleteRenderer.
+	 */
+	@Override
+	public void setGLDoublePrecisionEnabled(boolean enable) {
+		for(Renderer r : rendererLUT) {
+			if(r instanceof GLDoublePrecisionSupport)
+				((GLDoublePrecisionSupport)r).setGLDoublePrecisionEnabled(enable);
+		}
+	}
+	
+	/**
 	 * Adds the specified item to the corresponding renderer.
 	 * Only instances of {@link Triangles}, {@link Lines}, {@link Points} and {@link Text}
 	 * are accepted, other item types result in an {@link IllegalArgumentException}. 
@@ -198,4 +207,15 @@ public class CompleteRenderer implements Renderer, AdaptableView {
 		rendererLUT[renderOrder[4]].renderSVG(doc, parent, w, h);
 	}
 
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+		rendererLUT[renderOrder[0]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[1]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[2]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[3]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[4]].renderPDF(doc, page, x, y, w, h);
+	}
 }

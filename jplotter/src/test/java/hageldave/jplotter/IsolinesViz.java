@@ -103,7 +103,6 @@ public class IsolinesViz {
 		
 		Lines userContour = new Lines();
 		Text userIsoLabel = new Text("", 10, Font.ITALIC);
-		coordsys.setContent(content);
 		content.addItemToRender(userContour);
 		content.addItemToRender(userIsoLabel);
 		MouseAdapter contourPlacer = new MouseAdapter() {

@@ -1,21 +1,24 @@
 package hageldave.jplotter.misc;
 
-import java.awt.Graphics2D;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.pdf.PDFUtils;
+import hageldave.jplotter.svg.SVGUtils;
+import org.apache.batik.ext.awt.geom.Polygon2D;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.lwjgl.opengl.GL11;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import org.apache.batik.ext.awt.geom.Polygon2D;
-import org.lwjgl.opengl.GL11;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.svg.SVGUtils;
 
 /**
  * The default implementations of various {@link Glyph}s such as a
@@ -27,25 +30,25 @@ import hageldave.jplotter.svg.SVGUtils;
  */
 public enum DefaultGlyph implements Glyph {
 	/** a cross glyph, two diagonal lines */
-	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false, false, DefaultGlyph::mkCrossSVG, DefaultGlyph::drawCross),
+	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false, false, DefaultGlyph::mkCrossSVG, DefaultGlyph::mkCrossPDF, DefaultGlyph::drawCross),
 	/** a square glyph */
-	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false, false, DefaultGlyph::mkSquareSVG, DefaultGlyph::drawSquare),
+	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false, false, DefaultGlyph::mkSquareSVG, DefaultGlyph::mkSquarePDF, DefaultGlyph::drawSquare),
 	/** a filled square glyph */
-	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false, true, DefaultGlyph::mkSquareSVG, DefaultGlyph::drawSquareF),
+	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false, true, DefaultGlyph::mkSquareSVG, DefaultGlyph::mkSquarePDF, DefaultGlyph::drawSquareF),
 	/** a triangle glyph */
-	TRIANGLE(DefaultGlyph::mkTriangle, 3, GL11.GL_LINE_LOOP, 7, false, false, DefaultGlyph::mkTriangleSVG, DefaultGlyph::drawTriangle),
+	TRIANGLE(DefaultGlyph::mkTriangle, 3, GL11.GL_LINE_LOOP, 7, false, false, DefaultGlyph::mkTriangleSVG, DefaultGlyph::mkTrianglePDF, DefaultGlyph::drawTriangle),
 	/** a filled triangle glyph */
-	TRIANGLE_F(DefaultGlyph::mkTriangle, 3, GL11.GL_TRIANGLES, 7, false, true, DefaultGlyph::mkTriangleSVG, DefaultGlyph::drawTriangleF),
+	TRIANGLE_F(DefaultGlyph::mkTriangle, 3, GL11.GL_TRIANGLES, 7, false, true, DefaultGlyph::mkTriangleSVG, DefaultGlyph::mkTrianglePDF, DefaultGlyph::drawTriangleF),
 	/** a circle glyph  (20 line segments) */
-	CIRCLE(DefaultGlyph::mkCircle, 20, GL11.GL_LINE_LOOP, 8, true, false, DefaultGlyph::mkCircleSVG, DefaultGlyph::drawCircle),
+	CIRCLE(DefaultGlyph::mkCircle, 20, GL11.GL_LINE_LOOP, 8, true, false, DefaultGlyph::mkCircleSVG, DefaultGlyph::mkCirclePDF, DefaultGlyph::drawCircle),
 	/** a filled circle glyph (20 line segments) */
-	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true, true, DefaultGlyph::mkCircleSVG, DefaultGlyph::drawCircleF),
+	CIRCLE_F(DefaultGlyph::mkCircleWithCenter, 22, GL11.GL_TRIANGLE_FAN, 8, true, true, DefaultGlyph::mkCircleSVG, DefaultGlyph::mkCirclePDF, DefaultGlyph::drawCircleF),
 	/** an arrow glyph, pointing to the right */
-	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false, false, DefaultGlyph::mkArrowSVG, DefaultGlyph::drawArrow),
+	ARROW(DefaultGlyph::mkArrow, 6, GL11.GL_LINES, 12, false, false, DefaultGlyph::mkArrowSVG, DefaultGlyph::mkArrowPDF, DefaultGlyph::drawArrow),
 	/** an arrow head glyph, pointing to the right */
-	ARROWHEAD(DefaultGlyph::mkArrowHead, 4, GL11.GL_LINE_LOOP, 12, false, false, DefaultGlyph::mkArrowHeadSVG, DefaultGlyph::drawArrowHead),
+	ARROWHEAD(DefaultGlyph::mkArrowHead, 4, GL11.GL_LINE_LOOP, 12, false, false, DefaultGlyph::mkArrowHeadSVG, DefaultGlyph::mkArrowHeadPDF, DefaultGlyph::drawArrowHead),
 	/** a filled arrow head glyph, pointing to the right */
-	ARROWHEAD_F(DefaultGlyph::mkArrowHead, 4, GL11.GL_TRIANGLE_FAN, 12, false, true, DefaultGlyph::mkArrowHeadSVG, DefaultGlyph::drawArrowHeadF),
+	ARROWHEAD_F(DefaultGlyph::mkArrowHead, 4, GL11.GL_TRIANGLE_FAN, 12, false, true, DefaultGlyph::mkArrowHeadSVG, DefaultGlyph::mkArrowHeadPDF, DefaultGlyph::drawArrowHeadF),
 	;
 	
 	private Consumer<VertexArray> vertexGenerator;
@@ -55,9 +58,10 @@ public enum DefaultGlyph implements Glyph {
 	private boolean drawAsElements;
 	private boolean isFilled;
 	private BiFunction<Document,Integer,List<Element>> svgElementGenerator;
+	private BiFunction<PDPageContentStream,Integer,PDPageContentStream> pdfElementGenerator;
 	private Graphics2DDrawing fallbackDraw;
 	
-	private DefaultGlyph(Consumer<VertexArray> vertGen, int numVerts, int primType, int pixelSize, boolean elements, boolean isFilled, BiFunction<Document,Integer,List<Element>> svgGen, Graphics2DDrawing fallbackDraw) {
+	private DefaultGlyph(Consumer<VertexArray> vertGen, int numVerts, int primType, int pixelSize, boolean elements, boolean isFilled, BiFunction<Document,Integer,List<Element>> svgGen, BiFunction<PDPageContentStream,Integer,PDPageContentStream> pdfGen, Graphics2DDrawing fallbackDraw) {
 		this.vertexGenerator = vertGen;
 		this.numVertices = numVerts;
 		this.primitiveType = primType;
@@ -65,6 +69,7 @@ public enum DefaultGlyph implements Glyph {
 		this.drawAsElements = elements;
 		this.isFilled = isFilled;
 		this.svgElementGenerator = svgGen;
+		this.pdfElementGenerator = pdfGen;
 		this.fallbackDraw = fallbackDraw;
 	}
 
@@ -97,7 +102,13 @@ public enum DefaultGlyph implements Glyph {
 	public List<Element> createSVGElements(Document doc) {
 		return svgElementGenerator.apply(doc, pixelSize);
 	}
-	
+
+	@Override
+	public PDPageContentStream createPDFElement(PDPageContentStream contentStream) {
+		return pdfElementGenerator.apply(contentStream, pixelSize);
+	}
+
+
 	@Override
 	public boolean isFilled() {
 		return isFilled;
@@ -167,6 +178,15 @@ public enum DefaultGlyph implements Glyph {
 		element.setAttributeNS(null, "transform", "translate(-"+pixelSize+",-"+pixelSize+")");
 		return Arrays.asList(element);
 	}
+
+	static PDPageContentStream mkCirclePDF(PDPageContentStream contentStream, Integer pixelSize) {
+		try {
+			PDFUtils.createPDFPoint(contentStream, new Point2D.Double(0,0), pixelSize/2);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return contentStream;
+	}
 	
 	static void mkCircleWithCenter(VertexArray va){
 		final int numVerts = 22;
@@ -206,7 +226,16 @@ public enum DefaultGlyph implements Glyph {
 		return Arrays.asList(
 				SVGUtils.createSVGRect(doc, -.5*pixelSize, -.5*pixelSize, pixelSize, pixelSize));
 	}
-	
+
+	static PDPageContentStream mkSquarePDF(PDPageContentStream contentStream, Integer pixelSize) {
+		try {
+			return PDFUtils.createPDFRect(contentStream, (-.5*pixelSize), (-.5*pixelSize), pixelSize, pixelSize);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return contentStream;
+	}
+
 	static void mkSquareF(VertexArray va){
 		va.setBuffer(0, 2,   -.5f,-.5f,  .5f,-.5f,  -.5f,.5f, .5f,.5f);
 	}
@@ -233,6 +262,17 @@ public enum DefaultGlyph implements Glyph {
 		l1.setAttributeNS(null, "points", SVGUtils.svgPoints(-.5f*pixelSize,0,  .5f*pixelSize,0));
 		l2.setAttributeNS(null, "points", SVGUtils.svgPoints(.1f*pixelSize,.2f*pixelSize,  .5f*pixelSize,0, .1f*pixelSize,-.2f*pixelSize));
 		return Arrays.asList(l1,l2);
+	}
+
+	static PDPageContentStream mkArrowPDF(PDPageContentStream contentStream, Integer pixelSize) {
+		try {
+			PDFUtils.createPDFSegment(contentStream, new Point2D.Double(-.5f*pixelSize,0), new Point2D.Double(.5f*pixelSize,0));
+			PDFUtils.createPDFSegment(contentStream, new Point2D.Double(.1f*pixelSize,.2f*pixelSize), new Point2D.Double(.5f*pixelSize,0));
+			PDFUtils.createPDFSegment(contentStream, new Point2D.Double(.5f*pixelSize,0), new Point2D.Double(.1f*pixelSize,-.2f*pixelSize));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return contentStream;
 	}
 	
 	static void mkArrowHead(VertexArray va){
@@ -264,7 +304,17 @@ public enum DefaultGlyph implements Glyph {
 				-.5f*pixelSize, .3*pixelSize));
 		return Arrays.asList(line);
 	}
-	
+
+	static PDPageContentStream mkArrowHeadPDF(PDPageContentStream contentStream, Integer pixelSize) {
+		try {
+			PDFUtils.createPDFPolygon(contentStream, new double[]{-.2f*pixelSize, -.5f*pixelSize, .5f*pixelSize, -.5f*pixelSize},
+					new double[]{  0f*pixelSize, -.3f*pixelSize,  0f*pixelSize, .3f*pixelSize});
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return contentStream;
+	}
+
 	static void mkCross(VertexArray va){
 		va.setBuffer(0, 2,  -.5f,-.5f,  .5f,.5f,  .5f,-.5f,  -.5f,.5f);
 	}
@@ -281,6 +331,18 @@ public enum DefaultGlyph implements Glyph {
 		l1.setAttributeNS(null, "points", SVGUtils.svgPoints(-.5f*pixelSize,-.5f*pixelSize,  .5f*pixelSize,.5f*pixelSize));
 		l2.setAttributeNS(null, "points", SVGUtils.svgPoints(.5f*pixelSize,-.5f*pixelSize,  -.5f*pixelSize,.5f*pixelSize));
 		return Arrays.asList(l1,l2);
+	}
+
+	static PDPageContentStream mkCrossPDF(PDPageContentStream contentStream, Integer pixelSize) {
+		try {
+			PDFUtils.createPDFSegment(contentStream,
+					new Point2D.Double(-.5f*pixelSize,-.5f*pixelSize), new Point2D.Double(.5f*pixelSize,.5f*pixelSize));
+			PDFUtils.createPDFSegment(contentStream,
+					new Point2D.Double(.5f*pixelSize,-.5f*pixelSize), new Point2D.Double(-.5f*pixelSize,.5f*pixelSize));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return contentStream;
 	}
 	
 	static void mkTriangle(VertexArray va){
@@ -306,6 +368,17 @@ public enum DefaultGlyph implements Glyph {
 	static List<Element> mkTriangleSVG(Document doc, Integer pixelSize){
 		return Arrays.asList(
 				SVGUtils.createSVGTriangle(doc, -.5*pixelSize, -.5*pixelSize, .5*pixelSize, -.5*pixelSize, 0, .5*pixelSize));
+	}
+
+	static PDPageContentStream mkTrianglePDF(PDPageContentStream contentStream, Integer pixelSize) {
+		float size = pixelSize*.5f;
+		try {
+			PDFUtils.createPDFPolygon(contentStream, new double[] {-size, size, 0},
+					new double[] {-size,-size, size});
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return contentStream;
 	}
 	
 	private static interface Graphics2DDrawing {
