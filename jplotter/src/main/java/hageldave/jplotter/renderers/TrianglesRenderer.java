@@ -1,18 +1,8 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.geom.Rectangle2D;
-import java.util.Objects;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
+import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
@@ -22,6 +12,23 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.BarycentricGradientPaint;
 import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL40;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.util.Objects;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -35,6 +42,30 @@ import hageldave.jplotter.util.Utils;
 public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	
 	protected static final char NL = '\n';
+	protected static final String vertexShaderSrcD = ""
+			+ "" + "#version 410"
+			+ NL + "layout(location = 0) in dvec2 in_position;"
+			+ NL + "layout(location = 1) in uvec2 in_colors;"
+			+ NL + "uniform mat4 projMX;"
+			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "out vec4 vColor;"
+			+ NL + "out vec4 vPickColor;"
+
+			+ NL + "vec4 unpackARGB(uint c) {"
+			+ NL + "   uint mask = uint(255);"
+			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
+			+ NL + "}"
+
+			+ NL + "void main() {"
+			+ NL + "   dvec3 pos = dvec3(in_position,1);"
+			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
+			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
+			+ NL + "   gl_Position = projMX*vec4(pos,1);"
+			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
+			+ NL + "}"
+			+ NL
+			;
 	protected static final String vertexShaderSrc = ""
 			+ "" + "#version 330"
 			+ NL + "layout(location = 0) in vec2 in_position;"
@@ -84,9 +115,12 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	@Override
 	@GLContextRequired
 	public void glInit() {
-		if(Objects.isNull(shader)){
-			shader = ShaderRegistry.getOrCreateShader(this.getClass().getName(),()->new Shader(vertexShaderSrc, fragmentShaderSrc));
+		if(Objects.isNull(shaderF)){
+			shaderF = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#F",()->new Shader(vertexShaderSrc, fragmentShaderSrc));
 			itemsToRender.forEach(Renderable::initGL);
+		}
+		if(Objects.isNull(shaderD) && isGLDoublePrecisionEnabled){
+			shaderD = ShaderRegistry.getOrCreateShader(this.getClass().getName()+"#D",()->new Shader(vertexShaderSrcD, fragmentShaderSrc));
 		}
 	}
 
@@ -98,9 +132,13 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	@Override
 	@GLContextRequired
 	public void close() {
-		if(Objects.nonNull(shader)){
-			ShaderRegistry.handbackShader(shader);
-			shader = null;
+		if(Objects.nonNull(shaderF)){
+			ShaderRegistry.handbackShader(shaderF);
+			shaderF = null;
+		}
+		if(Objects.nonNull(shaderD)){
+			ShaderRegistry.handbackShader(shaderD);
+			shaderD = null;
 		}
 		closeAllItems();
 	}
@@ -113,7 +151,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	 */
 	@Override
 	@GLContextRequired
-	protected void renderStart(int w, int h) {
+	protected void renderStart(int w, int h, Shader shader) {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -122,14 +160,21 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 		int loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "viewTransform");
-		GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		if (shader == shaderD /* double precision shader */)
+		{
+			GL40.glUniform4d(loc, translateX, translateY, scaleX, scaleY);
+		}
+		else
+		{
+			GL20.glUniform4f(loc, (float)translateX, (float)translateY, (float)scaleX, (float)scaleY);
+		}
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "projMX");
 		GL20.glUniformMatrix4fv(loc, false, orthoMX);
 	}
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Triangles item) {
+	protected void renderItem(Triangles item, Shader shader) {
 		if(item.numTriangles() < 1){
 			return;
 		}
@@ -293,6 +338,66 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 	 */
 	public void setSvgTriangleStrategy(String svgTriangleStrategy) {
 		this.svgTriangleStrategy = svgTriangleStrategy;
+	}
+
+	@Override
+	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+		if(!isEnabled()){
+			return;
+		}
+	
+		double translateX = Objects.isNull(view) ? 0:view.getX();
+		double translateY = Objects.isNull(view) ? 0:view.getY();
+		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
+		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
+	
+		try {
+			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+			for(Triangles tris : getItemsToRender()){
+				if(tris.isHidden()){
+					continue;
+				}
+	
+				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+				contentStream.setGraphicsStateParameters(graphicsState);
+	
+				PDDocument glyphDoc = new PDDocument();
+				PDPage rectPage = new PDPage();
+				glyphDoc.addPage(rectPage);
+				PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+				rectCont.addRect(x, y, w, h);
+				LayerUtility layerUtility = new LayerUtility(doc);
+				rectCont.close();
+				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
+				glyphDoc.close();
+	
+				// clipping area
+				contentStream.saveGraphicsState();
+				contentStream.drawForm(rectForm);
+				contentStream.closePath();
+				contentStream.clip();
+	
+				for(TriangleDetails tri : tris.getTriangleDetails()){
+					double x0,y0, x1,y1, x2,y2;
+					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
+					x0-=translateX; x1-=translateX; x2-=translateX;
+					y0-=translateY; y1-=translateY; y2-=translateY;
+					x0*=scaleX; x1*=scaleX; x2*=scaleX;
+					y0*=scaleY; y1*=scaleY; y2*=scaleY;
+					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
+	
+					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
+							new Point2D.Double(x2, y2), new Color(tri.c0.getAsInt()), new Color(tri.c1.getAsInt()), new Color(tri.c2.getAsInt()));
+	
+				}
+				contentStream.restoreGraphicsState();
+			}
+			contentStream.close();
+		} catch (IOException e) {
+			throw new RuntimeException("Error occurred!");
+		}
 	}
 
 }

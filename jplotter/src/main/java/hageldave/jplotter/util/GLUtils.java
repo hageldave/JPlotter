@@ -16,7 +16,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * @author hageldave
  */
 public class GLUtils {
-
+	
 	/**
 	 * Creates an empty 2D texture. The texture has mipmap level 0.
 	 * @param width of texture

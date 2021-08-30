@@ -1,14 +1,5 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.Objects;
-
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.font.CharacterAtlas;
@@ -16,6 +7,12 @@ import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.TextRenderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
+
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.Objects;
 
 /**
  * Abstract class for {@link Renderable}s representing text that can be rendered using the
@@ -36,7 +33,6 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
  * @author hageldave
  */
 public class Text implements Renderable {
-
 	public final int fontsize; 
 	public final int style;
 	protected Dimension textSize;
@@ -57,13 +53,21 @@ public class Text implements Renderable {
 	 * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
 	 * or bitwise union BOLD|ITALIC.
 	 */
-	public Text(String textstr, int fontsize, int style) {
+	public Text(String textstr, int fontsize, int style, Color textcolor) {
 		this.txtStr = textstr;
 		this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style).getBounds().getSize();
 		this.fontsize = fontsize;
 		this.style = style;
-		this.color = new Color(96,96,96);
+		this.color = textcolor;
 		this.origin = new Point(0, 0);
+	}
+	
+	public Text(String textstr, int fontsize, int style, int textcolor) {
+		this(textstr,fontsize,style, new Color(textcolor, true));
+	}
+
+	public Text(String textstr, int fontsize, int style) {
+		this(textstr,fontsize,style, new Color(96, 96, 96));
 	}
 
 	/**
@@ -294,7 +298,7 @@ public class Text implements Renderable {
 	public void initGL(){
 		if(Objects.isNull(va)){
 			va = new VertexArray(2);
-			updateGL();
+			updateGL(false);
 		}
 	}
 	
@@ -306,8 +310,11 @@ public class Text implements Renderable {
 	 */
 	@Override
 	@GLContextRequired
-	public void updateGL() {
-		if(Objects.nonNull(va)){
+	public void updateGL(boolean useGLDoublePrecision) {
+		/* We never use double precision for text vertex arrays.
+		 * So we only need to update when isDirty, but not on change of requested precision.
+		 */
+		if(Objects.nonNull(va) && isDirty){
 			CharacterAtlas.get(fontsize, style).createVAforString(txtStr, va);
 			isDirty = false;
 		}
@@ -418,6 +425,11 @@ public class Text implements Renderable {
 	@GLContextRequired
 	public void releaseVertexArray() {
 		va.releaseAndDisableAttributes(0,1);
+	}
+
+	@Override
+	public boolean isGLDoublePrecision() {
+		return false;
 	}
 	
 	

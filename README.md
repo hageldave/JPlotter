@@ -1,6 +1,6 @@
 # JPlotter
-OpenGL based 2D Plotting Library for Java using AWT and [LWJGL](https://github.com/LWJGL/lwjgl3) through [lwjgl3-awt](https://github.com/LWJGLX/lwjgl3-awt). 
-An awt Graphics2D fallback solution was introduced to support systems lacking OpenGL-3.3 as well as MacOS. 
+OpenGL based 2D Plotting Library for Java using AWT/Swing and [LWJGL](https://github.com/LWJGL/lwjgl3) through [lwjgl3-awt](https://github.com/LWJGLX/lwjgl3-awt). 
+An AWT [Graphics2D](https://docs.oracle.com/en/java/javase/11/docs/api/java.desktop/java/awt/Graphics2D.html) fallback solution was introduced to support systems lacking OpenGL-3.3 as well as MacOS. 
 
 [![Build Status](https://travis-ci.org/hageldave/JPlotter.svg?branch=master)](https://travis-ci.org/hageldave/JPlotter)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.hageldave.jplotter/jplotter.svg)](https://search.maven.org/search?q=g:com.github.hageldave.jplotter)
