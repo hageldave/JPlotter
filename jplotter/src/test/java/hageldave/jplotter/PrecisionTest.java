@@ -67,7 +67,7 @@ public class PrecisionTest {
 			rad = (rad + 0.8)%pi2;
 			radius *= 0.8;
 		}
-		Point2D[] pointarray = points.toArray(Point2D[]::new);
+		Point2D[] pointarray = points.toArray(new Point2D[0]);
 		points=null;
 		System.gc();
 		
