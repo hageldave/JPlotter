@@ -524,18 +524,30 @@ public class Curves implements Renderable {
 	}
 
 
-	// TODO
-	public Curves setGlobalSaturationMultiplier(DoubleSupplier globalSaturationMultiplier) {
-		this.globalSaturationMultiplier = globalSaturationMultiplier;
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Curves setGlobalSaturationMultiplier(DoubleSupplier saturation) {
+		this.globalSaturationMultiplier = saturation;
 		return this;
 	}
 
-	// TODO
-	public Curves setGlobalSaturationMultiplier(double globalSaturationMultiplier) {
-		return setGlobalSaturationMultiplier(() -> globalSaturationMultiplier);
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Curves setGlobalSaturationMultiplier(double saturation) {
+		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
-	// TODO
+	/** @return the saturation multiplier of this renderable */
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}

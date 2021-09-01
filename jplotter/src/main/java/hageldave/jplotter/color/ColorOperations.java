@@ -22,8 +22,8 @@ public class ColorOperations {
 	 */
 	public static int changeSaturation(int argb, double saturation) {
 		float[] hsv = new float[3];
-		Color.RGBtoHSB(Pixel.r(argb), Pixel.g(argb), Pixel.b(argb), hsv);
-		int rgb = Color.HSBtoRGB(hsv[0], (float)(hsv[1]*saturation), hsv[2]);
+		Color.RGBtoHSB(r(argb), g(argb), b(argb), hsv);
+		int rgb = Color.HSBtoRGB(hsv[0], (float)Math.min(1.0, hsv[1]*saturation), hsv[2]);
 		return (argb&0xff000000)|(rgb&0x00ffffff); // preserve alpha value
 	}
 

@@ -264,18 +264,30 @@ public class Lines implements Renderable {
 		return (float)globalThicknessMultiplier.getAsDouble();
 	}
 
-	// TODO
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
 	public Lines setGlobalSaturationMultiplier(DoubleSupplier saturation) {
 		this.globalSaturationMultiplier = saturation;
 		return this;
 	}
 
-	// TODO
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
 	public Lines setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
-	// TODO
+	/** @return the saturation multiplier of this renderable */
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
