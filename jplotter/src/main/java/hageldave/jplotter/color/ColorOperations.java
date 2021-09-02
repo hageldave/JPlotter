@@ -1,9 +1,5 @@
 package hageldave.jplotter.color;
 
-import hageldave.imagingkit.core.Pixel;
-
-import java.awt.*;
-
 import static hageldave.imagingkit.core.Pixel.*;
 
 /**
@@ -13,18 +9,28 @@ import static hageldave.imagingkit.core.Pixel.*;
  * @author hageldave
  */
 public class ColorOperations {
-
+	
 	/**
-	 *
-	 * @param argb
-	 * @param saturation
-	 * @return
+	 * Changes the saturation of a color.
+	 * @param argb int packed argb color value
+	 * @param s saturation multilpier (1 is no change, 0 is greyscale)
+	 * @return saturation changed color
 	 */
-	public static int changeSaturation(int argb, double saturation) {
-		float[] hsv = new float[3];
-		Color.RGBtoHSB(r(argb), g(argb), b(argb), hsv);
-		int rgb = Color.HSBtoRGB(hsv[0], (float)Math.min(1.0, hsv[1]*saturation), hsv[2]);
-		return (argb&0xff000000)|(rgb&0x00ffffff); // preserve alpha value
+	public static int changeSaturation(int argb, double s) {
+		double tounit = 1/255.0;
+		double r=r(argb)*tounit, g=g(argb)*tounit, b=b(argb)*tounit;
+		double l = r*0.2126 + g*0.7152 + b*0.0722; // luminance
+		double dr=r-l, dg=g-l, db=b-l;
+		if(s > 1.0) {
+			// find maximal saturation that will keep channel values in range [0,1]
+			//s*dr+l=1 -> s*dr=1-l -> (1-l)/dr=s
+			//s*dr+l=0 -> s*dr=-l  -> (0-l)/dr=s
+			s = Math.min(s, dr<0 ? -l/dr:(1-l)/dr);
+			s = Math.min(s, dg<0 ? -l/dg:(1-l)/dg);
+			s = Math.min(s, db<0 ? -l/db:(1-l)/db);
+		}
+		r=l+s*dr; g=l+s*dg; b=l+s*db;
+		return (0xff000000 & argb) | (0x00ffffff & rgb_fromNormalized(r, g, b)); // bit operations are for alpha preservation
 	}
 
 	/**
@@ -61,17 +67,17 @@ public class ColorOperations {
 	 * @return interpolated color
 	 */
 	public static int interpolateColor(int c1, int c2, double m){
-		double r1 = Pixel.r_normalized(c1);
-		double g1 = Pixel.g_normalized(c1);
-		double b1 = Pixel.b_normalized(c1);
-		double a1 = Pixel.a_normalized(c1);
+		double r1 = r_normalized(c1);
+		double g1 = g_normalized(c1);
+		double b1 = b_normalized(c1);
+		double a1 = a_normalized(c1);
 		
-		double r2 = Pixel.r_normalized(c2);
-		double g2 = Pixel.g_normalized(c2);
-		double b2 = Pixel.b_normalized(c2);
-		double a2 = Pixel.a_normalized(c2);
+		double r2 = r_normalized(c2);
+		double g2 = g_normalized(c2);
+		double b2 = b_normalized(c2);
+		double a2 = a_normalized(c2);
 		
-		return Pixel.argb_fromNormalized(
+		return argb_fromNormalized(
 				a1*(1-m)+a2*m,
 				r1*(1-m)+r2*m,
 				g1*(1-m)+g2*m,
@@ -88,8 +94,8 @@ public class ColorOperations {
 	 * @return integer packed ARGB color with scaled alpha
 	 */
 	public static int scaleColorAlpha(int color, double m) {
-		double af = Pixel.a_normalized(color)*m;
-		int a = Pixel.argb_fromNormalized(af, 0,0,0);
+		double af = a_normalized(color)*m;
+		int a = argb_fromNormalized(af, 0,0,0);
 		return (color&0x00ffffff)|a;
 	}
 	
