@@ -69,6 +69,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 3) in float in_thickness;"
 			+ NL + "layout(location = 4) in float in_pathlen;"
 			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
 			+ NL + "out float vthickness;"
@@ -78,13 +79,26 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   dvec3 pos = dvec3(in_position,1);"
 			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = vec4(pos,1);"
-			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vcolor = scaleSaturation(unpackARGB(in_color), saturationScaling);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "   vthickness = in_thickness;"
 			+ NL + "   vpathlen = in_pathlen;"
@@ -102,6 +116,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 3) in float in_thickness;"
 			+ NL + "layout(location = 4) in float in_pathlen;"
 			+ NL + "uniform vec4 viewTransform;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
 			+ NL + "out float vthickness;"
@@ -111,13 +126,26 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   vec3 pos = vec3(in_position,1);"
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = vec4(pos,1);"
-			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vcolor = scaleSaturation(unpackARGB(in_color), saturationScaling);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "   vthickness = in_thickness;"
 			+ NL + "   vpathlen = in_pathlen;"
@@ -314,10 +342,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@Override
 	@GLContextRequired
 	protected void renderItem(Lines lines, Shader shader) {
+		if(lines.numSegments() < 1) {
+			return;
+		}
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidthMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalThicknessMultiplier());
-		// set projection matrix in shader
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "saturationScaling");
+		GL20.glUniform1f(loc, lines.getGlobalSaturationMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");

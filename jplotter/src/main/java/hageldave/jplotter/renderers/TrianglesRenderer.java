@@ -48,6 +48,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "layout(location = 1) in uvec2 in_colors;"
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
@@ -55,13 +56,26 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   dvec3 pos = dvec3(in_position,1);"
 			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = projMX*vec4(pos,1);"
-			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vColor = scaleSaturation(unpackARGB(in_colors.x), saturationScaling);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
 			+ NL
@@ -72,6 +86,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "layout(location = 1) in uvec2 in_colors;"
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform vec4 viewTransform;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
@@ -79,13 +94,26 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   vec3 pos = vec3(in_position,1);"
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = projMX*vec4(pos,1);"
-			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vColor = scaleSaturation(unpackARGB(in_colors.x), saturationScaling);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
 			+ NL
@@ -182,6 +210,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, item.getGlobalAlphaMultiplier());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "saturationScaling");
+		GL20.glUniform1f(loc, item.getGlobalSaturationMultiplier());
 		// draw things
 		item.bindVertexArray();
 		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, item.numTriangles()*3);
