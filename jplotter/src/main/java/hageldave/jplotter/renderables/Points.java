@@ -2,6 +2,7 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -52,12 +53,20 @@ public class Points implements Renderable {
 	protected boolean useVertexRounding=false;
 	protected boolean isGLDoublePrecision = false;
 
+	
+	/**
+	 * Creates a new {@link Points} object which uses {@link DefaultGlyph#CIRCLE_F} for displaying its points.
+	 */
+	public Points() {
+		this(DefaultGlyph.CIRCLE_F);
+	}
+	
 	/**
 	 * Creates a new {@link Points} object which uses the specified {@link Glyph} for displaying its points.
 	 * @param glyph to be used for rendering single points
 	 */
 	public Points(Glyph glyph) {
-		this.glyph = glyph;
+		setGlyph(glyph);
 	}
 
 	/**
@@ -589,5 +598,20 @@ public class Points implements Renderable {
 	public boolean isGLDoublePrecision() {
 		return isGLDoublePrecision;
 	}
+	
+	/**
+	 * Sets the glyph used to visually represent the points in this object.
+	 * @param glyph to use
+	 * @return this for chaining
+	 */
+	public Points setGlyph(Glyph glyph) {
+		this.glyph = glyph;
+		return this;
+	}
 
+	/** @return current glyph */
+	public Glyph getGlyph() {
+		return glyph;
+	}
+	
 }
