@@ -281,19 +281,21 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		}
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "globalScaling");
-		GL20.glUniform1f(loc, this.glyphScaling * item.glyph.pixelSize() * item.getGlobalScaling());
+		GL20.glUniform1f(loc, this.glyphScaling * item.getGlyph().pixelSize() * item.getGlobalScaling());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, item.getGlobalAlphaMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");
 		GL20.glUniform1i(loc, item.isVertexRoundingEnabled() ? 1:0);
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "saturationScaling");
 		GL20.glUniform1f(loc, item.getGlobalSaturationMultiplier());
+		// make sure vertex array contains current glyph
+		item.getGlyph().fillVertexArray(item.getVertexArray());
 		// draw things
 		item.bindVertexArray();
-		if(item.glyph.useElementsDrawCall()){
-			GL31.glDrawElementsInstanced(item.glyph.primitiveType(), item.glyph.numVertices(), GL11.GL_UNSIGNED_INT, 0, item.numPoints());
+		if(item.getGlyph().useElementsDrawCall()){
+			GL31.glDrawElementsInstanced(item.getGlyph().primitiveType(), item.getGlyph().numVertices(), GL11.GL_UNSIGNED_INT, 0, item.numPoints());
 		} else {
-			GL31.glDrawArraysInstanced(item.glyph.primitiveType(), 0, item.glyph.numVertices(), item.numPoints());
+			GL31.glDrawArraysInstanced(item.getGlyph().primitiveType(), 0, item.getGlyph().numVertices(), item.numPoints());
 		}
 		item.releaseVertexArray();
 	}
@@ -328,7 +330,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			if(points.isHidden()){
 				continue;
 			}
-			Glyph glyph = points.glyph;
+			Glyph glyph = points.getGlyph();
 			
 			for(PointDetails point : points.getPointDetails()){
 				double x1,y1;
@@ -394,7 +396,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			}
 			Element pointsGroup = SVGUtils.createSVGElement(doc, "g");
 			mainGroup.appendChild(pointsGroup);
-			Glyph glyph = points.glyph;
+			Glyph glyph = points.getGlyph();
 			String symbolID = SVGUtils.createGlyphSymbolDef(doc, glyph, "glyph_"+glyph.glyphName());
 			for(PointDetails point : points.getPointDetails()){
 				double x1,y1;
@@ -464,7 +466,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				if (points.isHidden()) {
 					continue;
 				}
-				Glyph glyph = points.glyph;
+				Glyph glyph = points.getGlyph();
 
 				PDDocument glyphDoc = new PDDocument();
 				PDPage glyphPage = new PDPage();
