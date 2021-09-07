@@ -48,6 +48,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "layout(location = 1) in uvec2 in_colors;"
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
@@ -55,13 +56,26 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   dvec3 pos = dvec3(in_position,1);"
 			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = projMX*vec4(pos,1);"
-			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vColor = scaleSaturation(unpackARGB(in_colors.x), saturationScaling);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
 			+ NL
@@ -72,6 +86,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "layout(location = 1) in uvec2 in_colors;"
 			+ NL + "uniform mat4 projMX;"
 			+ NL + "uniform vec4 viewTransform;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
@@ -79,13 +94,26 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   vec3 pos = vec3(in_position,1);"
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = projMX*vec4(pos,1);"
-			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vColor = scaleSaturation(unpackARGB(in_colors.x), saturationScaling);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
 			+ NL
@@ -143,6 +171,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		closeAllItems();
 	}
 
+	// TODO implement saturation multiplier
 	/**
 	 * Disables {@link GL11#GL_DEPTH_TEST},
 	 * enables {@link GL11#GL_BLEND}
@@ -181,6 +210,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, item.getGlobalAlphaMultiplier());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "saturationScaling");
+		GL20.glUniform1f(loc, item.getGlobalSaturationMultiplier());
 		// draw things
 		item.bindVertexArray();
 		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, item.numTriangles()*3);
@@ -197,7 +228,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 	}
-	
+
 	@Override
 	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
 		if(!isEnabled()){
@@ -232,15 +263,16 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				
 				tricoords[0][0]=(float)x0; tricoords[0][1]=(float)x1; tricoords[0][2]=(float)x2;
 				tricoords[1][0]=(float)y0; tricoords[1][1]=(float)y1; tricoords[1][2]=(float)y2;
+
+				int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
+				c0 = ColorOperations.scaleColorAlpha(c0, tris.getGlobalAlphaMultiplier());
+				int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
+				c1 = ColorOperations.scaleColorAlpha(c1, tris.getGlobalAlphaMultiplier());
+				int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
+				c2 = ColorOperations.scaleColorAlpha(c2, tris.getGlobalAlphaMultiplier());
 				
-				
-				Color c0 = new Color(ColorOperations.scaleColorAlpha(tri.c0.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
-				Color c1 = new Color(ColorOperations.scaleColorAlpha(tri.c1.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
-				Color c2 = new Color(ColorOperations.scaleColorAlpha(tri.c2.getAsInt(), tris.getGlobalAlphaMultiplier()),true);
-				
-				g.setPaint(new BarycentricGradientPaint(tricoords[0], tricoords[1], c0, c1, c2));
-				
-				
+				g.setPaint(new BarycentricGradientPaint(tricoords[0], tricoords[1], new Color(c0, true), new Color(c1, true), new Color(c2, true)));
+
 				int minx = (int)Utils.min3(x0, x1, x2);
 				int miny = (int)Utils.min3(y0, y1, y2);
 				double maxx = Utils.max3(x0, x1, x2);
@@ -256,7 +288,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	}
-	
+
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
@@ -291,12 +323,18 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				y0-=translateY; y1-=translateY; y2-=translateY;
 				x0*=scaleX; x1*=scaleX; x2*=scaleX;
 				y0*=scaleY; y1*=scaleY; y2*=scaleY;
-				
+
+				// TODO neeeds further testing
+				int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
+				// not needed: alpha multiplier is passed via SVGTriangleRendering - c0 = ColorOperations.scaleColorAlpha(c0, tris.getGlobalAlphaMultiplier());
+				int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
+				int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
+
 				SVGTriangleRendering.addSVGTriangle(
 						doc, 
 						trianglesGroup, 
 						new double[]{x0,y0,x1,y1,x2,y2}, 
-						new int[]{tri.c0.getAsInt(), tri.c1.getAsInt(), tri.c2.getAsInt()}, 
+						new int[]{c0, c1, c2},
 						tris.getGlobalAlphaMultiplier(), 
 						svgTriangleStrategy, 
 						viewportRect);
@@ -387,10 +425,15 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					x0*=scaleX; x1*=scaleX; x2*=scaleX;
 					y0*=scaleY; y1*=scaleY; y2*=scaleY;
 					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
-	
+					int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
+					c0 = ColorOperations.scaleColorAlpha(c0, tris.getGlobalAlphaMultiplier());
+					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
+					c1 = ColorOperations.scaleColorAlpha(c1, tris.getGlobalAlphaMultiplier());
+					int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
+					c2 = ColorOperations.scaleColorAlpha(c2, tris.getGlobalAlphaMultiplier());
+
 					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
-							new Point2D.Double(x2, y2), new Color(tri.c0.getAsInt()), new Color(tri.c1.getAsInt()), new Color(tri.c2.getAsInt()));
-	
+							new Point2D.Double(x2, y2), new Color(c0), new Color(c1), new Color(c2));
 				}
 				contentStream.restoreGraphicsState();
 			}

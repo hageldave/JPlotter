@@ -59,12 +59,26 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "uniform vec2 modelScaling;"
 			+ NL + "uniform float globalScaling;"
 			+ NL + "uniform bool roundposition;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
 			+ NL + "vec4 unpackARGB(uint c) {"
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
+			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
 			+ NL + "}"
 
 			+ NL + "mat2 rotationMatrix(float angle){"
@@ -90,7 +104,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
 			+ NL + "   if(roundposition){pos = dvec3(roundToIntegerValuedVec(vec2(pos.xy)),pos.z);}"
 			+ NL + "   gl_Position = projMX*vec4(pos,1);"
-			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vColor = scaleSaturation(unpackARGB(in_colors.x), saturationScaling);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
 			+ NL
@@ -106,12 +120,26 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "uniform vec2 modelScaling;"
 			+ NL + "uniform float globalScaling;"
 			+ NL + "uniform bool roundposition;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vColor;"
 			+ NL + "out vec4 vPickColor;"
 
 			+ NL + "vec4 unpackARGB(uint c) {"
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
+			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
 			+ NL + "}"
 
 			+ NL + "mat2 rotationMatrix(float angle){"
@@ -137,7 +165,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
 			+ NL + "   if(roundposition){pos = vec3(roundToIntegerValuedVec(pos.xy),pos.z);}"
 			+ NL + "   gl_Position = projMX*vec4(pos,1);"
-			+ NL + "   vColor = unpackARGB(in_colors.x);"
+			+ NL + "   vColor = scaleSaturation(unpackARGB(in_colors.x), saturationScaling);"
 			+ NL + "   vPickColor = unpackARGB(in_colors.y);"
 			+ NL + "}"
 			+ NL
@@ -258,6 +286,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		GL20.glUniform1f(loc, item.getGlobalAlphaMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");
 		GL20.glUniform1i(loc, item.isVertexRoundingEnabled() ? 1:0);
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "saturationScaling");
+		GL20.glUniform1f(loc, item.getGlobalSaturationMultiplier());
 		// draw things
 		item.bindVertexArray();
 		if(item.glyph.useElementsDrawCall()){
@@ -326,7 +356,9 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					xform.rotate(point.rot.getAsDouble());
 				}
 				g_.transform(xform);
-				int color = ColorOperations.scaleColorAlpha(point.color.getAsInt(),points.getGlobalAlphaMultiplier());
+				int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+				color = ColorOperations.scaleColorAlpha(color,points.getGlobalAlphaMultiplier());
+
 				g_.setColor(new Color(color, true));
 				glyph.drawFallback(g_, (float)(glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble()));
 				
@@ -340,7 +372,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 		}
 		
 	}
-	
+
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
@@ -381,18 +413,20 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				{
 					continue;
 				}
-				
+
+				int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+
 				Element pointElement = SVGUtils.createSVGElement(doc, "use");
 				pointsGroup.appendChild(pointElement);
 				pointElement.setAttributeNS(null, "xlink:href", "#"+symbolID);
 				if(glyph.isFilled()){
-					pointElement.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(point.color.getAsInt()));
+					pointElement.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(color));
 					pointElement.setAttributeNS(null, "fill-opacity", 
-							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color.getAsInt())));
+							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(color)));
 				} else {
-					pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(point.color.getAsInt()));
+					pointElement.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(color));
 					pointElement.setAttributeNS(null, "stroke-opacity", 
-							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(point.color.getAsInt())));
+							SVGUtils.svgNumber(points.getGlobalAlphaMultiplier()*Pixel.a_normalized(color)));
 					pointElement.setAttributeNS(null, "fill-opacity", "0");
 				}
 				String transform = "";
@@ -492,12 +526,14 @@ public class PointsRenderer extends GenericRenderer<Points> {
 
 					contentStream.drawForm(glyphForm);
 
+					int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+
 					if(glyph.isFilled()){
-						contentStream.setNonStrokingColor(new Color(point.color.getAsInt()));
+						contentStream.setNonStrokingColor(new Color(color));
 						contentStream.fill();
 					} else {
 						contentStream.setLineWidth((float) (1/(glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble())));
-						contentStream.setStrokingColor(new Color(point.color.getAsInt()));
+						contentStream.setStrokingColor(new Color(color));
 						contentStream.stroke();
 					}
 					// restore graphics
