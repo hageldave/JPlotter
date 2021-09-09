@@ -91,7 +91,6 @@ public class Points implements Renderable {
 	public void initGL() {
 		if(Objects.isNull(va)){
 			va = new VertexArray(4);
-			glyph.fillVertexArray(va);
 			updateGL(false);		
 		}
 	}

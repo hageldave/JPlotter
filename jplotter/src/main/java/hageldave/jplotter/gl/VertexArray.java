@@ -95,7 +95,7 @@ public class VertexArray implements AutoCloseable {
 	 * @return this for chaining
 	 */
 	@GLContextRequired
-	public VertexArray setBuffer(int i, int dim, double ... buffercontent){
+	public VertexArray setBuffer(int i, int dim, double[] buffercontent){
 		glBindVertexArray(va);
 		{
 			if(vbos[i] == 0){
