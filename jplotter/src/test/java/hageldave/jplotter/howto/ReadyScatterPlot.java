@@ -3,6 +3,8 @@ package hageldave.jplotter.howto;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.charts.ScatterPlot;
+import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel;
+import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel.ScatterPlotDataModelListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
@@ -11,9 +13,12 @@ import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
+import hageldave.jplotter.util.Pair;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
@@ -26,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -53,12 +59,8 @@ public class ReadyScatterPlot {
         Component canvas = plot.getCanvas().asComponent();
         SelectedPointInfo selectedSelectedPointInfo = new SelectedPointInfo(canvas);
 
-        double[][] dataA = randomData(50);
         LinkedList<LinkedList<double[]>> data = new LinkedList<>();
-        for (int i = 0; i < 7; i++)
-            data.add(new LinkedList());
 
-        ColorMap classcolors = DefaultColorMap.Q_12_PAIRED;
         String[] classLabels = new String[]{
                 "Rad Flow",
                 "Fpv Close",
@@ -94,6 +96,78 @@ public class ReadyScatterPlot {
                 plot.getDataModel().addData(array, 6, 7, classLabels[index++]);
             }
         }
+        
+        JTable table = new JTable(new TableModel() {
+			
+        	private ScatterPlotDataModel spdm = plot.getDataModel();
+        	private HashMap<TableModelListener, ScatterPlotDataModelListener> listenerLookup = new HashMap<>();
+        	
+			@Override
+			public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+				throw new UnsupportedOperationException();
+			}
+			
+			@Override
+			public void removeTableModelListener(TableModelListener l) {
+				ScatterPlotDataModelListener proxy = listenerLookup.remove(l);
+				if(proxy != null) 
+					spdm.removeListener(proxy);
+			}
+			
+			@Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
+				return false;
+			}
+			
+			@Override
+			public Object getValueAt(int rowIndex, int columnIndex) {
+				Pair<Integer, Integer> locator = spdm.locateGlobalIndex(rowIndex);
+				double[] dataPoint = spdm.getDataChunk(locator.first)[locator.second];
+				return dataPoint.length > columnIndex ? null:dataPoint[columnIndex];
+			}
+			
+			@Override
+			public int getRowCount() {
+				return spdm.numDataPoints();
+			}
+			
+			@Override
+			public String getColumnName(int columnIndex) {
+				return "feature " + columnIndex; 
+			}
+			
+			@Override
+			public int getColumnCount() {
+				int maxColCount = 0;
+				for(int i=0; i<spdm.numChunks(); i++)
+					if(spdm.getDataChunk(i).length > 0)
+						maxColCount = Math.max(maxColCount, spdm.getDataChunk(i)[0].length);
+				return maxColCount;
+			}
+			
+			@Override
+			public Class<?> getColumnClass(int columnIndex) {
+				return Double.class;
+			}
+			
+			@Override
+			public void addTableModelListener(TableModelListener l) {
+				TableModel self = this;
+				ScatterPlotDataModelListener proxyListener = new ScatterPlotDataModelListener() {
+					@Override
+					public void dataChanged(int chunkIdx, double[][] chunkData) {
+						l.tableChanged(new TableModelEvent(self));
+					}
+					@Override
+					public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
+						l.tableChanged(new TableModelEvent(self));
+					}
+				};
+				spdm.addListener(proxyListener);
+				listenerLookup.put(l, proxyListener);
+			}
+		});
+
 
         plot.alignCoordsys(140);
         plot.addPanning().setKeyListenerMask(new KeyMaskListener(VK_W));

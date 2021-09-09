@@ -233,6 +233,10 @@ public class ScatterPlot {
     		return dataChunks.get(chunkIdx);
     	}
     	
+    	public int chunkSize(int chunkIdx) {
+    		return getDataChunk(chunkIdx).length;
+    	}
+    	
     	public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
     		if(chunkIdx >= numChunks())
     			throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
@@ -266,11 +270,40 @@ public class ScatterPlot {
     		return containedPointIndices;
     	}
     	
-    	public synchronized void addListener(ScatterPlotDataModelListener l) {
-    		listeners.add(l);
+    	public int getGlobalIndex(int chunkIdx, int idx) {
+    		int globalIdx=0;
+    		for(int i=0; i<chunkIdx; i++) {
+    			globalIdx += chunkSize(i);
+    		}
+    		return globalIdx + idx;
     	}
     	
-    	protected synchronized void notifyDataAdded(int chunkIdx) {
+    	public Pair<Integer, Integer> locateGlobalIndex(int globalIdx){
+    		int chunkIdx=0;
+    		while(globalIdx >= chunkSize(chunkIdx)) {
+    			globalIdx -= chunkSize(chunkIdx);
+    			chunkIdx++;
+    		}
+    		return Pair.of(chunkIdx, globalIdx);
+    	}
+    	
+    	public int numDataPoints() {
+    		int n = 0;
+    		for(int i=0; i<numChunks(); i++)
+    			n+=chunkSize(i);
+    		return n;
+    	}
+     	
+    	public synchronized ScatterPlotDataModelListener addListener(ScatterPlotDataModelListener l) {
+    		listeners.add(l);
+    		return l;
+    	}
+    	
+    	public synchronized void removeListener(ScatterPlotDataModelListener l) {
+    		listeners.remove(l);
+    	}
+    	
+    	public synchronized void notifyDataAdded(int chunkIdx) {
     		for(ScatterPlotDataModelListener l:listeners)
     			l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
     	}
