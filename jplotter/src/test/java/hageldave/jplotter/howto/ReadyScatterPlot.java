@@ -49,33 +49,14 @@ public class ReadyScatterPlot {
         // generate or get data
         JFrame frame = new JFrame();
         JLabel selectedPoint = new JLabel();
-        ScatterPlot plot = new ScatterPlot(false);
+        ScatterPlot plot = new ScatterPlot(true);
         Component canvas = plot.getCanvas().asComponent();
         SelectedPointInfo selectedSelectedPointInfo = new SelectedPointInfo(canvas);
 
         double[][] dataA = randomData(50);
-        DefaultGlyph[] glyphclasses = new DefaultGlyph[]{
-                DefaultGlyph.CIRCLE,
-                DefaultGlyph.CIRCLE_F,
-                DefaultGlyph.SQUARE,
-                DefaultGlyph.SQUARE_F,
-                DefaultGlyph.TRIANGLE,
-                DefaultGlyph.TRIANGLE_F,
-                DefaultGlyph.CROSS
-        };
         LinkedList<LinkedList<double[]>> data = new LinkedList<>();
         for (int i = 0; i < 7; i++)
             data.add(new LinkedList());
-
-        Points[] pointclasses = new Points[]{
-                new Points(DefaultGlyph.CIRCLE),
-                new Points(DefaultGlyph.CIRCLE_F),
-                new Points(DefaultGlyph.SQUARE),
-                new Points(DefaultGlyph.SQUARE_F),
-                new Points(DefaultGlyph.TRIANGLE),
-                new Points(DefaultGlyph.TRIANGLE_F),
-                new Points(DefaultGlyph.CROSS)
-        };
 
         ColorMap classcolors = DefaultColorMap.Q_12_PAIRED;
         String[] classLabels = new String[]{
@@ -178,7 +159,7 @@ public class ReadyScatterPlot {
         			double alpha = 0.1;
         			if(chunk==chunkIdx)
         				alpha = 1.0;
-        			plot.getPointsForChunk(chunk).setGlobalAlphaMultiplier(alpha);
+        			plot.getPointsForChunk(chunk).setGlobalAlphaMultiplier(alpha).setGlobalSaturationMultiplier(alpha);
         		}
         		plot.getCanvas().scheduleRepaint();
         	}
@@ -189,7 +170,7 @@ public class ReadyScatterPlot {
         			return;
         		// TODO: resaturate everything, for the time being we change alpha instead
         		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
-        			plot.getPointsForChunk(chunk).setGlobalAlphaMultiplier(1.0);
+        			plot.getPointsForChunk(chunk).setGlobalAlphaMultiplier(1.0).setGlobalSaturationMultiplier(1.0);
         		}
         		plot.getCanvas().scheduleRepaint();
         	}
