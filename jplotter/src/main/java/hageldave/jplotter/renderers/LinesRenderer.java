@@ -932,10 +932,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                 double prevX = 0;
                 double prevY = 0;
 
-                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-                contentStream.setGraphicsStateParameters(graphicsState);
-
                 PDDocument glyphDoc = new PDDocument();
                 PDPage rectPage = new PDPage();
                 glyphDoc.addPage(rectPage);
@@ -1015,8 +1011,19 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                     if (!lines.hasStrokePattern()) {
                         // create invisible rectangle so that elements outside w, h won't be rendered
                         if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                            contentStream.setNonStrokingColor(new Color(c1));
+							PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+							int color = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+							Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, lines.getGlobalAlphaMultiplier()), true);
+							graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+							graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+							contentStream.setGraphicsStateParameters(graphicsState);
+
+                            contentStream.setNonStrokingColor(new Color(color));
                         } else {
+							PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+							graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+							contentStream.setGraphicsStateParameters(graphicsState);
+
                             PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
                                     new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
                             PDShadingPattern pattern = new PDShadingPattern();
@@ -1052,8 +1059,19 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 
                             if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                                contentStream.setNonStrokingColor(new Color(c1));
+								PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+								int color = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+								Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, lines.getGlobalAlphaMultiplier()), true);
+								graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+								graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+								contentStream.setGraphicsStateParameters(graphicsState);
+
+                                contentStream.setNonStrokingColor(new Color(color));
                             } else {
+								PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+								graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+								contentStream.setGraphicsStateParameters(graphicsState);
+
                                 PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
                                         new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
                                 graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
