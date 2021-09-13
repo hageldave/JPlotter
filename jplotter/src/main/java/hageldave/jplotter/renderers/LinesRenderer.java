@@ -1081,48 +1081,50 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	}
 
 	protected static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
-	    Color startColor = new Color(color1);
-	    Color endColor = new Color(color2);
-	
-	    COSDictionary fdict = new COSDictionary();
-	    fdict.setInt(COSName.FUNCTION_TYPE, 2);
-	
-	    COSArray domain = new COSArray();
-	    domain.add(COSInteger.get(0));
-	    domain.add(COSInteger.get(1));
-	
-	    COSArray c0 = new COSArray();
-	    c0.add(new COSFloat(startColor.getRed() / 255f));
-	    c0.add(new COSFloat(startColor.getGreen() / 255f));
-	    c0.add(new COSFloat(startColor.getBlue() / 255f));
-	
-	    COSArray c1 = new COSArray();
-	    c1.add(new COSFloat(endColor.getRed() / 255f));
-	    c1.add(new COSFloat(endColor.getGreen() / 255f));
-	    c1.add(new COSFloat(endColor.getBlue() / 255f));
-	
-	
-	    fdict.setItem(COSName.DOMAIN, domain);
-	    fdict.setItem(COSName.C0, c0);
-	    fdict.setItem(COSName.C1, c1);
-	    fdict.setInt(COSName.N, 1);
-	
-	    PDFunctionType2 func = new PDFunctionType2(fdict);
-	
-	    PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
-	
-	    axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
-	    axialShading.setShadingType(PDShading.SHADING_TYPE2);
-	
-	    COSArray coords1 = new COSArray();
-	    coords1.add(new COSFloat((float) p0.getX()));
-	    coords1.add(new COSFloat((float) p0.getY()));
-	    coords1.add(new COSFloat((float) p1.getX()));
-	    coords1.add(new COSFloat((float) p1.getY()));
-	
-	    axialShading.setCoords(coords1);
-	    axialShading.setFunction(func);
-	
-	    return axialShading;
+		Color startColor = new Color(color1, true);
+		Color endColor = new Color(color2, true);
+
+		COSDictionary fdict = new COSDictionary();
+		fdict.setInt(COSName.FUNCTION_TYPE, 2);
+
+		COSArray domain = new COSArray();
+		domain.add(COSInteger.get(0));
+		domain.add(COSInteger.get(1));
+
+		COSArray c0 = new COSArray();
+		c0.add(new COSFloat(startColor.getRed() / 255f));
+		c0.add(new COSFloat(startColor.getGreen() / 255f));
+		c0.add(new COSFloat(startColor.getBlue() / 255f));
+		c0.add(new COSFloat(startColor.getAlpha() / 255f));
+
+		COSArray c1 = new COSArray();
+		c1.add(new COSFloat(endColor.getRed() / 255f));
+		c1.add(new COSFloat(endColor.getGreen() / 255f));
+		c1.add(new COSFloat(endColor.getBlue() / 255f));
+		c1.add(new COSFloat(endColor.getAlpha() / 255f));
+
+		fdict.setItem(COSName.DOMAIN, domain);
+		fdict.setItem(COSName.C0, c0);
+		fdict.setItem(COSName.C1, c1);
+		fdict.setInt(COSName.N, 1);
+
+		PDFunctionType2 func = new PDFunctionType2(fdict);
+
+		PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
+
+		axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+		axialShading.setShadingType(PDShading.SHADING_TYPE2);
+
+		COSArray coords1 = new COSArray();
+		coords1.add(new COSFloat((float) p0.getX()));
+		coords1.add(new COSFloat((float) p0.getY()));
+		coords1.add(new COSFloat((float) p1.getX()));
+		coords1.add(new COSFloat((float) p1.getY()));
+
+		axialShading.setCoords(coords1);
+		axialShading.setFunction(func);
+
+		return axialShading;
+
 	}
 }
