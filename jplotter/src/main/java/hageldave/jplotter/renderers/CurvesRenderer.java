@@ -1,23 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.geom.CubicCurve2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL40;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
@@ -30,13 +12,27 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL40;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.geom.CubicCurve2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * The CurvesRenderer is an implementation of the {@link GenericRenderer}
@@ -783,9 +779,9 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                     continue;
                 }
 
-                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                /*PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                 graphicsState.setStrokingAlphaConstant(curves.getGlobalAlphaMultiplier());
-                cs.setGraphicsStateParameters(graphicsState);
+                cs.setGraphicsStateParameters(graphicsState);*/
 
                 PDDocument glyphDoc = new PDDocument();
                 PDPage rectPage = new PDPage();
@@ -841,8 +837,15 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                             real[i] = Float.parseFloat(splited[i]);
                         }
 
-                        int color =
-                                ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());
+                        /*int color =
+                                ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());*/
+						PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+						int color =
+								ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());
+						Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, curves.getGlobalAlphaMultiplier()), true);
+						graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+						graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+						cs.setGraphicsStateParameters(graphicsState);
 
                         PDFUtils.createPDFCurve(cs, new Point2D.Double(x1 + x, y1 + y),
                                 new Point2D.Double(cp0x + x, cp0y + y),

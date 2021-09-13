@@ -486,10 +486,10 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 1);
 				glyphDoc.close();
 
-				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+				/*PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 				graphicsState.setStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
 				graphicsState.setNonStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
-				contentStream.setGraphicsStateParameters(graphicsState);
+				contentStream.setGraphicsStateParameters(graphicsState);*/
 
 				for (PointDetails point : points.getPointDetails()) {
 					double x1, y1;
@@ -528,7 +528,14 @@ public class PointsRenderer extends GenericRenderer<Points> {
 
 					contentStream.drawForm(glyphForm);
 
+					//int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+					Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, points.getGlobalAlphaMultiplier()), true);
+					graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+					graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+					contentStream.setGraphicsStateParameters(graphicsState);
+
 
 					if(glyph.isFilled()){
 						contentStream.setNonStrokingColor(new Color(color));
