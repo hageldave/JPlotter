@@ -541,7 +541,10 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						contentStream.setNonStrokingColor(new Color(color));
 						contentStream.fill();
 					} else {
-						contentStream.setLineWidth((float) (1/(glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble())));
+						contentStream.setLineWidth(0);
+						if ((glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble()) != 0) {
+							contentStream.setLineWidth((float) (1/(glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble())));
+						}
 						contentStream.setStrokingColor(new Color(color));
 						contentStream.stroke();
 					}
