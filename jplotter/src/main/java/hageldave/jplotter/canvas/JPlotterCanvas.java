@@ -12,6 +12,7 @@ import org.w3c.dom.Element;
 
 import java.awt.*;
 import java.awt.event.WindowListener;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -185,6 +186,30 @@ public interface JPlotterCanvas {
 			contentStream.fill();
 			contentStream.close();
 			paintToPDF(document, page, w, h);
+		}
+	}
+
+	// todo implement
+	/**
+	 *
+	 * @param document
+	 * @param page
+	 * @param cs
+	 * @param loc - where to render
+	 * @throws IOException
+	 */
+	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream cs, Rectangle2D loc) throws IOException {
+		cs.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
+		cs.setNonStrokingColor(asComponent().getBackground());
+		cs.fill();
+		paintToPDF(document, page, loc);
+	}
+
+	// todo new
+	public default void paintToPDF(PDDocument document, PDPage page, Rectangle2D loc) {
+		Renderer renderer = getRenderer();
+		if(renderer != null) {
+			renderer.renderPDF(document, page, (int) loc.getX(), (int) (page.getMediaBox().getHeight()-loc.getMaxY()), (int) loc.getMaxX(), (int) (page.getMediaBox().getHeight()-loc.getY()));
 		}
 	}
 
