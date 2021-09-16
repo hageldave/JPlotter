@@ -40,7 +40,7 @@ public class VectorFieldViz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 500));
-		JPlotterCanvas canvas = mkCanvas(true);
+		JPlotterCanvas canvas = mkCanvas(useFallback(args));
 		CoordSysRenderer coordsys = new CoordSysRenderer();
 		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
@@ -140,27 +140,24 @@ public class VectorFieldViz {
 			SVGUtils.documentToXMLFile(svg, new File("vectorfield_export.svg"));
 			System.out.println("exported vectorfield_export.svg");
 		});
-		canvas.asComponent().addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isRightMouseButton(e))
-					menu.show(canvas.asComponent(), e.getX(), e.getY());
+		MenuItem pdfExport = new MenuItem("PDF export");
+		menu.add(pdfExport);
+		pdfExport.addActionListener(e->{
+			try {
+				PDDocument doc = canvas.paintPDF();
+				doc.save("pdf_vectorfield.pdf");
+				doc.close();
+				System.out.println("pdf exported.");
+			} catch (IOException ex) {
+				ex.printStackTrace();
 			}
 		});
 
 		canvas.asComponent().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isMiddleMouseButton(e)) {
-					try {
-						PDDocument doc = canvas.paintPDF();
-						doc.save("pdf_vectorfield.pdf");
-						doc.close();
-						System.out.println("pdf exported.");
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					}
-				}
+				if(SwingUtilities.isRightMouseButton(e))
+					menu.show(canvas.asComponent(), e.getX(), e.getY());
 			}
 		});
 
