@@ -138,30 +138,31 @@ public class PDFUtils {
 
     public static PDPageContentStream createPDFText(PDDocument document, PDPageContentStream cs, String txt,
                                                     Point2D point, Color color, int fontSize, int style, float angle) throws IOException {
-        cs.setNonStrokingColor(color);
-        cs.stroke();
-        // set correct font
-        if (style==1) {
-            PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-B.ttf"));
-            cs.setFont(font, fontSize);
-        } else if (style==2) {
-            PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-RI.ttf"));
-            cs.setFont(font, fontSize);
-        } else if (style==(1|2)) {
-            PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-BI.ttf"));
-            cs.setFont(font, fontSize);
-        } else {
-            PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-R.ttf"));
-            cs.setFont(font, fontSize);
+        if (txt.length() > 0) {
+            cs.setNonStrokingColor(color);
+            cs.stroke();
+            // set correct font
+            if (style==1) {
+                PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-B.ttf"));
+                cs.setFont(font, fontSize);
+            } else if (style==2) {
+                PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-RI.ttf"));
+                cs.setFont(font, fontSize);
+            } else if (style==(1|2)) {
+                PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-BI.ttf"));
+                cs.setFont(font, fontSize);
+            } else {
+                PDType0Font font = PDType0Font.load(document, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-R.ttf"));
+                cs.setFont(font, fontSize);
+            }
+            cs.beginText();
+            AffineTransform at = new AffineTransform(1, 0.0, 0.0,
+                    1, point.getX(), point.getY());
+            at.rotate(angle);
+            cs.setTextMatrix(at);
+            cs.showText(txt);
+            cs.endText();
         }
-
-        cs.beginText();
-        AffineTransform at = new AffineTransform(1, 0.0, 0.0,
-               1, point.getX(), point.getY());
-        at.rotate(angle);
-        cs.setTextMatrix(at);
-        cs.showText(txt);
-        cs.endText();
         return cs;
     }
 
