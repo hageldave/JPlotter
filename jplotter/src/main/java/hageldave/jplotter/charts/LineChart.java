@@ -245,14 +245,19 @@ public class LineChart {
     }
 
     public static interface LineChartVisualMapping {
+        DefaultColorMap colorMap = DefaultColorMap.Q_8_SET2;
+        int[] usualLineChartStrokePatterns = {0xffff, 0xff00, 0x0f0f, 0xaaaa};
 
         public default int getStrokePatternForChunk(int chunkIdx, String chunkDescr) {
-            int[] usualLineChartStrokePatterns = {0xffff, 0xff00, 0x0f0f, 0xaaaa};
-            return usualLineChartStrokePatterns[chunkIdx%usualLineChartStrokePatterns.length];
+            //int[] usualLineChartStrokePatterns = {0xffff, 0xff00, 0x0f0f, 0xaaaa};
+            if (chunkIdx > colorMap.numColors()) {
+                return usualLineChartStrokePatterns[chunkIdx%usualLineChartStrokePatterns.length];
+            }
+            return usualLineChartStrokePatterns[0];
         }
 
         public default int getColorForDataPoint(int chunkIdx, String chunkDescr, double[][] dataChunk, int pointIdx) {
-            DefaultColorMap colorMap = DefaultColorMap.Q_8_SET2;
+            //DefaultColorMap colorMap = DefaultColorMap.Q_8_SET2;
             return colorMap.getColor(chunkIdx%colorMap.numColors());
         }
 
