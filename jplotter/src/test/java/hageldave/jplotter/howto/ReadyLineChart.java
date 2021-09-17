@@ -23,9 +23,14 @@ public class ReadyLineChart {
     @SuppressWarnings("resource")
     public static void main(String[] args) {
         // obtain data series
-        double[][] seriesA = randomData(30);
-        double[][] seriesB = randomData(30);
+        double[][] seriesA = randomData(10);
+        double[][] seriesB = randomData(10);
         double[][] seriesC = randomData(2);
+        double[][] seriesD = randomData(10);
+        double[][] seriesE = randomData(10);
+        double[][] seriesF = randomData(10);
+        double[][] seriesG = randomData(10);
+        double[][] seriesZ = randomData(10);
 
         // display within a JFrame
         JFrame frame = new JFrame();
@@ -34,6 +39,15 @@ public class ReadyLineChart {
 
         chart.getDataModel().addData(seriesA, 0, 1, 1, "test");
         chart.getDataModel().addData(seriesB, 0, 1, 1, "test2");
+        chart.getDataModel().addData(seriesD, 0, 1, 1, "test3");
+        chart.getDataModel().addData(seriesE, 0, 1, 1, "test4");
+        chart.getDataModel().addData(seriesF, 0, 1, 1, "test5");
+        chart.getDataModel().addData(seriesG, 0, 1, 1, "test6");
+        chart.getDataModel().addData(seriesZ, 0, 1, 1, "test7");
+        chart.getDataModel().addData(seriesA, 0, 1, 1, "test88");
+        chart.getDataModel().addData(seriesB, 0, 1, 1, "test99");
+        chart.getDataModel().addData(seriesD, 0, 1, 1, "test999");
+        chart.getDataModel().addData(seriesE, 0, 1, 1, "test1111");
 
         /*double[][] dm = *///chart.getDataModel().getDataChunk(0)[0][0] = 0;
         chart.getDataModel().setDataChunk(0, seriesC);
