@@ -12,11 +12,9 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -771,32 +769,15 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 
         try {
             PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
-            for (Curves curves : getItemsToRender()) {
 
-
+			cs.saveGraphicsState();
+			cs.addRect(x, y, w, h);
+			cs.clip();
+			for (Curves curves : getItemsToRender()) {
                 if (curves.isHidden() || curves.getStrokePattern() == 0 || curves.numCurves() == 0) {
                     // line is invisible
                     continue;
                 }
-
-                /*PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                graphicsState.setStrokingAlphaConstant(curves.getGlobalAlphaMultiplier());
-                cs.setGraphicsStateParameters(graphicsState);*/
-
-                PDDocument glyphDoc = new PDDocument();
-                PDPage rectPage = new PDPage();
-                glyphDoc.addPage(rectPage);
-                PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
-                rectCont.addRect(x, y, w, h);
-                LayerUtility layerUtility = new LayerUtility(doc);
-                rectCont.close();
-                PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
-                glyphDoc.close();
-
-                cs.saveGraphicsState();
-                cs.drawForm(rectForm);
-                cs.closePath();
-                cs.clip();
 
                 for (CurveDetails details : curves.getCurveDetails()) {
                     double x1, y1, x2, y2, cp0x, cp0y, cp1x, cp1y;
@@ -837,11 +818,8 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                             real[i] = Float.parseFloat(splited[i]);
                         }
 
-                        /*int color =
-                                ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());*/
 						PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-						int color =
-								ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());
+						int color = ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());
 						Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, curves.getGlobalAlphaMultiplier()), true);
 						graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
 						graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
@@ -860,9 +838,9 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                         e.printStackTrace();
                     }
                 }
-                // restore graphics
-                cs.restoreGraphicsState();
             }
+			// restore graphics
+			cs.restoreGraphicsState();
             cs.close();
         } catch (IOException e) {
             throw new RuntimeException("Error occurred!");

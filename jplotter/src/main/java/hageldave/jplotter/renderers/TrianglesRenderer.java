@@ -394,6 +394,10 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 		try {
 			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+			contentStream.saveGraphicsState();
+			contentStream.addRect(x, y, w, h);
+			contentStream.clip();
+
 			for(Triangles tris : getItemsToRender()){
 				if(tris.isHidden()){
 					continue;
@@ -403,22 +407,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
 				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
 				contentStream.setGraphicsStateParameters(graphicsState);
-
-				PDDocument glyphDoc = new PDDocument();
-				PDPage rectPage = new PDPage();
-				glyphDoc.addPage(rectPage);
-				PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
-				rectCont.addRect(x, y, w, h);
-				LayerUtility layerUtility = new LayerUtility(doc);
-				rectCont.close();
-				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
-				glyphDoc.close();
-
-				// clipping area
-				contentStream.saveGraphicsState();
-				contentStream.drawForm(rectForm);
-				contentStream.closePath();
-				contentStream.clip();
 
 				for(TriangleDetails tri : tris.getTriangleDetails()){
 					double x0,y0, x1,y1, x2,y2;
@@ -478,8 +466,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 							new Point2D.Double(x2, y2), new Color(c0), new Color(c1), new Color(c2));
 					contentStream.restoreGraphicsState();
 				}
-				contentStream.restoreGraphicsState();
 			}
+			contentStream.restoreGraphicsState();
 			contentStream.close();
 		} catch (IOException e) {
 			System.out.println(e);
