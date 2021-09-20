@@ -923,13 +923,11 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         try {
             PDPageContentStream contentStream = new PDPageContentStream(doc, page,
                     PDPageContentStream.AppendMode.APPEND, false);
+			// clipping
 			contentStream.saveGraphicsState();
 			contentStream.addRect(x, y, w, h);
 			contentStream.clip();
 			for (Lines lines : getItemsToRender()) {
-
-
-
                 if (lines.isHidden() || lines.getStrokePattern() == 0 || lines.numSegments() == 0) {
                     // line is invisible
                     continue;
@@ -1009,7 +1007,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
 							graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
 							contentStream.setGraphicsStateParameters(graphicsState);
-
 							contentStream.setNonStrokingColor(new Color(color));
 						} else {
 							PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
@@ -1018,11 +1015,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 							PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
 									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-							PDShadingPattern pattern = new PDShadingPattern();
-							pattern.setShading(shading);
-							COSName name = page.getResources().add(pattern);
-							PDColor color = new PDColor(name, new PDPattern(null));
-							contentStream.setNonStrokingColor(color);
+							contentStream.setNonStrokingColor(createShadedColor(page, shading));
 						}
 
 						// soft masking for triangle transparency
@@ -1050,22 +1043,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 						LayerUtility maskLayer = new LayerUtility(doc);
 						PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
 						maskDoc.close();
-						PDTransparencyGroupAttributes transparencyGroupAttributes = new PDTransparencyGroupAttributes();
-						transparencyGroupAttributes.getCOSObject().setItem(COSName.CS, COSName.DEVICEGRAY);
-						PDTransparencyGroup transparencyGroup = new PDTransparencyGroup(doc);
-						transparencyGroup.setBBox(PDRectangle.A4);
-						transparencyGroup.setResources(new PDResources());
-						transparencyGroup.getCOSObject().setItem(COSName.GROUP, transparencyGroupAttributes);
-						try (PDFormContentStream canvas = new PDFormContentStream(transparencyGroup)) {
-							 canvas.drawForm(maskForm);
-						}
-						COSDictionary softMaskDictionary = new COSDictionary();
-						softMaskDictionary.setItem(COSName.S, COSName.LUMINOSITY);
-						softMaskDictionary.setItem(COSName.G, transparencyGroup);
 
 						// modify new graphics state with softmaskdict
 						PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
-						extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, softMaskDictionary);
+						extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, createCOSDict(doc, maskForm));
 						maskDoc.close();
 
 						// put line into content stream and add transparency via graphics state
@@ -1103,22 +1084,16 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 								graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
 								graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
 								contentStream.setGraphicsStateParameters(graphicsState);
-
                                 contentStream.setNonStrokingColor(new Color(color));
                             } else {
 								PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 								graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
 								contentStream.setGraphicsStateParameters(graphicsState);
-
                                 PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
                                         new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
                                 graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
                                 contentStream.setGraphicsStateParameters(graphicsState);
-                                PDShadingPattern pattern = new PDShadingPattern();
-                                pattern.setShading(shading);
-                                COSName name = page.getResources().add(pattern);
-                                PDColor color = new PDColor(name, new PDPattern(null));
-                                contentStream.setNonStrokingColor(color);
+                                contentStream.setNonStrokingColor(createShadedColor(page, shading));
                             }
 							// soft masking for triangle transparency
 							PDDocument maskDoc = new PDDocument();
@@ -1145,22 +1120,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							LayerUtility maskLayer = new LayerUtility(doc);
 							PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
 							maskDoc.close();
-							PDTransparencyGroupAttributes transparencyGroupAttributes = new PDTransparencyGroupAttributes();
-							transparencyGroupAttributes.getCOSObject().setItem(COSName.CS, COSName.DEVICEGRAY);
-							PDTransparencyGroup transparencyGroup = new PDTransparencyGroup(doc);
-							transparencyGroup.setBBox(PDRectangle.A4);
-							transparencyGroup.setResources(new PDResources());
-							transparencyGroup.getCOSObject().setItem(COSName.GROUP, transparencyGroupAttributes);
-							try (PDFormContentStream canvas = new PDFormContentStream(transparencyGroup)) {
-								canvas.drawForm(maskForm);
-							}
-							COSDictionary softMaskDictionary = new COSDictionary();
-							softMaskDictionary.setItem(COSName.S, COSName.LUMINOSITY);
-							softMaskDictionary.setItem(COSName.G, transparencyGroup);
 
 							// modify new graphics state with softmaskdict
 							PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
-							extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, softMaskDictionary);
+							extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, createCOSDict(doc, maskForm));
 							maskDoc.close();
 
 							// put line into content stream and add transparency via graphics state
@@ -1181,6 +1144,31 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         } catch (IOException e) {
             throw new RuntimeException("Error occurred!");
         }
+	}
+
+	protected static PDColor createShadedColor(final PDPage page, final PDShadingType2 shading) {
+		PDShadingPattern pattern = new PDShadingPattern();
+		pattern.setShading(shading);
+		COSName name = page.getResources().add(pattern);
+		return new PDColor(name, new PDPattern(null));
+	}
+
+	protected static COSDictionary createCOSDict(final PDDocument doc, final PDFormXObject maskForm) {
+		PDTransparencyGroupAttributes transparencyGroupAttributes = new PDTransparencyGroupAttributes();
+		transparencyGroupAttributes.getCOSObject().setItem(COSName.CS, COSName.DEVICEGRAY);
+		PDTransparencyGroup transparencyGroup = new PDTransparencyGroup(doc);
+		transparencyGroup.setBBox(PDRectangle.A4);
+		transparencyGroup.setResources(new PDResources());
+		transparencyGroup.getCOSObject().setItem(COSName.GROUP, transparencyGroupAttributes);
+		try (PDFormContentStream canvas = new PDFormContentStream(transparencyGroup)) {
+			canvas.drawForm(maskForm);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		COSDictionary softMaskDictionary = new COSDictionary();
+		softMaskDictionary.setItem(COSName.S, COSName.LUMINOSITY);
+		softMaskDictionary.setItem(COSName.G, transparencyGroup);
+		return softMaskDictionary;
 	}
 
 	protected static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
