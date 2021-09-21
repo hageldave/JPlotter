@@ -494,20 +494,20 @@ public class TextRenderer extends GenericRenderer<Text> {
 					if (y1 + txt.getTextSize().width < 0 || y1 - txt.getTextSize().width > h) {
 						continue;
 					}
-
+					float rightpadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
 					if(txt.getBackground().getRGB() != 0){
 						contentStream.saveGraphicsState();
-						contentStream.transform(new Matrix(1, 0, 0, 1, (float) x1+6, ((float) y1-(txt.getTextSize().height/2)+3)));
+						contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x-2), ((float) y1+y-2)));
 						contentStream.transform(new Matrix((float) Math.cos(-txt.getAngle()),(float) -Math.sin(-txt.getAngle()),
-								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), (float) txt.getBounds().getX(), (float) txt.getBounds().getY()));
+								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), 0, 0));
 
 						PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 						graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha())/255);
 						contentStream.setGraphicsStateParameters(graphicsState);
 
 						PDFUtils.createPDFPolygon(contentStream,
-								new double[]{-2, txt.getBounds().getWidth(), txt.getBounds().getWidth(), -2},
-								new double[]{0, 0, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
+								new double[]{-2, txt.getBounds().getWidth()+rightpadding, txt.getBounds().getWidth()+rightpadding, -2},
+								new double[]{-2, -2, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
 
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
