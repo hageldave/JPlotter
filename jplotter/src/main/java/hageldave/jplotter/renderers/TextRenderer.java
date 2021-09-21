@@ -497,6 +497,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 
 					if(txt.getBackground().getRGB() != 0){
 						contentStream.saveGraphicsState();
+						contentStream.transform(new Matrix(1, 0, 0, 1, (float) x1+6, ((float) y1-(txt.getTextSize().height/2)+3)));
 						contentStream.transform(new Matrix((float) Math.cos(-txt.getAngle()),(float) -Math.sin(-txt.getAngle()),
 								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), (float) txt.getBounds().getX(), (float) txt.getBounds().getY()));
 
@@ -505,7 +506,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.setGraphicsStateParameters(graphicsState);
 
 						PDFUtils.createPDFPolygon(contentStream,
-								new double[]{-1.5, txt.getBounds().getWidth(), txt.getBounds().getWidth(), -1.5},
+								new double[]{-2, txt.getBounds().getWidth(), txt.getBounds().getWidth(), -2},
 								new double[]{0, 0, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
 
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
