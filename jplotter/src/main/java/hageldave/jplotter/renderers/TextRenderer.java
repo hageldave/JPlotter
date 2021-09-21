@@ -494,10 +494,11 @@ public class TextRenderer extends GenericRenderer<Text> {
 					if (y1 + txt.getTextSize().width < 0 || y1 - txt.getTextSize().width > h) {
 						continue;
 					}
-					float rightpadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
+					float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
+					float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
 					if(txt.getBackground().getRGB() != 0){
 						contentStream.saveGraphicsState();
-						contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x-2), ((float) y1+y-2)));
+						contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x), ((float) y1+y)));
 						contentStream.transform(new Matrix((float) Math.cos(-txt.getAngle()),(float) -Math.sin(-txt.getAngle()),
 								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), 0, 0));
 
@@ -506,8 +507,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.setGraphicsStateParameters(graphicsState);
 
 						PDFUtils.createPDFPolygon(contentStream,
-								new double[]{-2, txt.getBounds().getWidth()+rightpadding, txt.getBounds().getWidth()+rightpadding, -2},
-								new double[]{-2, -2, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
+								new double[]{-rightPadding, txt.getBounds().getWidth()+rightPadding, txt.getBounds().getWidth()+rightPadding, -rightPadding},
+								new double[]{-topPadding, -topPadding, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
 
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
