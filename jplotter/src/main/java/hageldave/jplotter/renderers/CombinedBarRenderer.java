@@ -9,6 +9,8 @@ import hageldave.jplotter.interaction.CoordinateViewListener;
 import hageldave.jplotter.renderables.*;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.*;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.lwjgl.opengl.GL11;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -1063,9 +1065,29 @@ public class CombinedBarRenderer implements Renderer {
             // render the content into the group
             content.renderSVG(doc, contentGroup, viewPortW, viewPortH);
 
-            // TODO needs VERTICAL/HORIZONTAL impl., currently only vert
-            xyCondBoundsTextR.renderSVG(doc, contentGroup, viewPortW, viewPortH);
-            xyCondBoundsLinesR.renderSVG(doc, contentGroup, viewPortW, viewPortH);
+            // content group for conditional content
+            Element xyCondContentGroup = SVGUtils.createSVGElement(doc, "g");
+            parent.appendChild(xyCondContentGroup);
+            Node xyCondDefs = SVGUtils.getDefs(doc);
+            Element xyCondClip = SVGUtils.createSVGElement(doc, "clipPath");
+            String xyCondClipDefID = SVGUtils.newDefId();
+            xyCondClip.setAttributeNS(null, "id", xyCondClipDefID);
+            xyCondClip.appendChild(SVGUtils.createSVGRect(doc, 0, 0, viewPortW, viewPortH));
+            xyCondDefs.appendChild(xyCondClip);
+
+            if (this.alignment == AlignmentConstants.VERTICAL) {
+                // transform the group according to the viewport position and clip it
+                xyCondContentGroup.setAttributeNS(null, "transform", "translate(" + ( viewPortX ) + "," + ( 0 ) + ")");
+                xyCondContentGroup.setAttributeNS(null, "clip-path", "url(#" + xyCondClipDefID + ")");
+                xyCondBoundsTextR.renderSVG(doc, xyCondContentGroup, viewPortW, h);
+                xyCondBoundsLinesR.renderSVG(doc, xyCondContentGroup, viewPortW, h);
+            } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
+                // transform the group according to the viewport position and clip it
+                xyCondContentGroup.setAttributeNS(null, "transform", "translate(" + ( 0 ) + "," + ( viewPortY ) + ")");
+                xyCondContentGroup.setAttributeNS(null, "clip-path", "url(#" + xyCondClipDefID + ")");
+                xyCondBoundsTextR.renderSVG(doc, xyCondContentGroup, w, viewPortH);
+                xyCondBoundsLinesR.renderSVG(doc, xyCondContentGroup, w, viewPortH);
+            }
         }
         postContentLinesR.renderSVG(doc, parent, w, h);
         postContentTextR.renderSVG(doc, parent, w, h);
@@ -1103,6 +1125,47 @@ public class CombinedBarRenderer implements Renderer {
             legendGroup.setAttributeNS(null, "clip-path", "url(#" + clipDefID + ")");
             // render the content into the group
             legendBottom.renderSVG(doc, legendGroup, legendBottomViewPort.width, legendBottomViewPort.height);
+        }
+    }
+
+    @Override
+    public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+        if (!isEnabled()) {
+            return;
+        }
+        preContentLinesR.renderPDF(doc, page, x, y, w, h);
+        preContentTextR.renderPDF(doc, page, x, y, w, h);
+        if (content != null) {
+            int viewPortX = (int) coordsysAreaLB.getX();
+            int viewPortY = (int) coordsysAreaLB.getY();
+            int viewPortW = (int) coordsysAreaLB.distance(coordsysAreaRB);
+            int viewPortH = (int) coordsysAreaLB.distance(coordsysAreaLT);
+            if (content instanceof AdaptableView) {
+                ( (AdaptableView) content ).setView(coordinateView);
+            }
+            // render the content into the group
+            content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
+            // render conditional content: e.g. bar identifier
+            if (this.alignment == AlignmentConstants.VERTICAL) {
+                xyCondBoundsTextR.renderPDF(doc, page, viewPortX, 0, viewPortW, h);
+                xyCondBoundsLinesR.renderPDF(doc, page, viewPortX, 0, viewPortW, h);
+            } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
+                xyCondBoundsTextR.renderPDF(doc, page, 0, viewPortY, w, viewPortH);
+                xyCondBoundsLinesR.renderPDF(doc, page, 0, viewPortY, w, viewPortH);
+            }
+        }
+        postContentLinesR.renderPDF(doc, page, x, y, w, h);
+        postContentTextR.renderPDF(doc, page, x, y, w, h);
+        // draw legends
+        if (Objects.nonNull(legendRight)) {
+            legendRight.renderPDF(doc, page,
+                    legendRightViewPort.x, legendRightViewPort.y,
+                    legendRightViewPort.width, legendRightViewPort.height);
+        }
+        if (Objects.nonNull(legendBottom)) {
+            legendBottom.renderPDF(doc, page,
+                    legendRightViewPort.x, legendRightViewPort.y,
+                    legendRightViewPort.width, legendRightViewPort.height);
         }
     }
 
