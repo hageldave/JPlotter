@@ -51,11 +51,9 @@ public class ReadyCombinedBarChart {
         barChart.addData(group1);
         barChart.addData(group2);
         barChart.addData(group1);
-        //barChart.addData(group2);
-        barChart.addRightLegend(90,
-                new String[]{"hi", "ef"},
-                new int[]{Color.RED.getRGB(), Color.BLUE.getRGB()},
-                new int[]{5, 6});
+        barChart.placeLegendOnRight()
+                .addBarLabel(Color.RED.getRGB(), "test1", 5)
+                .addBarLabel(Color.BLUE.getRGB(), "test2", 6);
 
         group1.getGroupedBars().get(1).stacks.get(0).stackColor = Color.YELLOW;
 
