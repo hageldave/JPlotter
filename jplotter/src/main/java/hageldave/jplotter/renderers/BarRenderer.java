@@ -8,6 +8,8 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.*;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.lwjgl.opengl.GL11;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,7 +20,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Objects;
 
@@ -50,19 +51,16 @@ public class BarRenderer implements Renderer {
     protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
     protected TickMarkGenerator tickMarkGenerator = new ExtendedWilkinson();
-    //protected TickMarkGenerator dualTickMarkGenerator = new ExtendedWilkinson();
 
     protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
     protected Lines guides = new Lines().setVertexRoundingEnabled(true);
     protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
-    //protected LinkedList<Text> dualTickMarkLabels = new LinkedList<>();
+
     protected Text xAxisLabelText = new Text("", 13, Font.PLAIN);
     protected Text yAxisLabelText = new Text("", 13, Font.PLAIN);
 
     protected double[] xticks;
     protected double[] yticks;
-    /*protected double[] xDualticks;
-    protected double[] yDualticks;*/
 
     protected int viewportwidth=0;
     protected int viewportheight=0;
@@ -94,7 +92,6 @@ public class BarRenderer implements Renderer {
 
     protected ActionListener coordviewListener;
     protected boolean isEnabled=true;
-    //protected boolean dualTickmarksEnabled = false;
 
     public BarRenderer(final int alignment, final double barSize) {
         this.alignment = alignment;
@@ -335,28 +332,11 @@ public class BarRenderer implements Renderer {
                 coordinateView.getMaxY(),
                 5,
                 true);
-        /*Pair<double[],String[]> xDualticksAndLabels = dualTickMarkGenerator.genTicksAndLabels(
-                coordinateView.getMinX(),
-                coordinateView.getMaxX(),
-                5,
-                false);
-        Pair<double[],String[]> yDualticksAndLabels = dualTickMarkGenerator.genTicksAndLabels(
-                coordinateView.getMinY(),
-                coordinateView.getMaxY(),
-                5,
-                true);*/
+
         this.xticks = xticksAndLabels.first;
         this.yticks = yticksAndLabels.first;
         String[] xticklabels = xticksAndLabels.second;
         String[] yticklabels = yticksAndLabels.second;
-
-        System.out.println(Arrays.toString(yticklabels));
-        System.out.println(Arrays.toString(yticks));
-
-        /*this.xDualticks = xDualticksAndLabels.first;
-        this.yDualticks = yDualticksAndLabels.first;
-        String[] xDualticklabels = xDualticksAndLabels.second;
-        String[] yDualticklabels = yDualticksAndLabels.second;*/
 
         final int tickfontSize = 11;
         final int labelfontSize = 12;
@@ -369,12 +349,6 @@ public class BarRenderer implements Renderer {
         }
         // find maximum length of dual y axis label
         int maxYDualTickLabelWidth = 0;
-        /*if (dualTickmarksEnabled) {
-            for(String label:yDualticklabels){
-                int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
-                maxYDualTickLabelWidth = Math.max(maxYDualTickLabelWidth, labelW);
-            }
-        }*/
 
         int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
         int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style).getBounds().height;
@@ -396,12 +370,8 @@ public class BarRenderer implements Renderer {
             preContentTextR.removeItemToRender(txt);
             txt.close();
         }
-        /*for(Text txt:dualTickMarkLabels){
-            preContentTextR.removeItemToRender(txt);
-            txt.close();
-        }*/
+
         tickMarkLabels.clear();
-       //dualTickMarkLabels.clear();
 
         // create new stuff
         double xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
@@ -475,48 +445,17 @@ public class BarRenderer implements Renderer {
             }
         }
 
-        // dual tickmark labels
-        /*if (dualTickmarksEnabled) {
-            for(int i=0; i<xDualticks.length; i++) {
-                double m = (xDualticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
-                double x = coordsysAreaLB.getX()+m*xAxisWidth;
-                Point2D onTopaxis = new Point2D.Double(Math.round(x), coordsysAreaLT.getY());
-                ticks.addSegment(onTopaxis, new TranslatedPoint2D(onTopaxis, 0, -4)).setColor(tickColor);
-                Text dualLabel = new Text(xDualticklabels[i], tickfontSize, style);
-                Dimension textSize = dualLabel.getTextSize();
-                dualLabel.setOrigin(new Point2D.Double(
-                        (int) ( onTopaxis.getX() - textSize.getWidth() / 2.0 ),
-                        (int) ( onTopaxis.getY() - 9 + textSize.getHeight() ) - 1));
-                dualTickMarkLabels.add(dualLabel);
-            }
-
-            for(int i=0; i<yDualticks.length; i++) {
-                double m = (yDualticks[i]-coordinateView.getMinY())/coordinateView.getHeight();
-                double y = m*yAxisHeight;
-                Point2D onRightaxis = new TranslatedPoint2D(coordsysAreaRB, 0, Math.round(y));
-                ticks.addSegment(onRightaxis, new TranslatedPoint2D(onRightaxis, 4, 0)).setColor(tickColor);
-                Text dualLabel = new Text(yDualticklabels[i], tickfontSize, style);
-                Dimension textSize = dualLabel.getTextSize();
-                dualLabel.setOrigin(new TranslatedPoint2D(onRightaxis, 6, -Math.round(textSize.getHeight()/2.0)+0.5));
-                dualTickMarkLabels.add(dualLabel);
-            }
-        }*/
-
         for(Text txt: tickMarkLabels){
             preContentTextR.addItemToRender(txt);
         }
-        /*for(Text txt: dualTickMarkLabels){
-            preContentTextR.addItemToRender(txt);
-        }*/
 
         // axis labels
-        //if (!dualTickmarksEnabled) {
-            xAxisLabelText.setTextString(getxAxisLabel());
-            xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth / 2 - xAxisLabelText.getTextSize().width / 2, 4));
-            yAxisLabelText.setTextString(getyAxisLabel());
-            yAxisLabelText.setAngle(-(float) Math.PI / 2);
-            yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight / 2 + yAxisLabelText.getTextSize().width / 2));
-        //}
+        xAxisLabelText.setTextString(getxAxisLabel());
+        xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth / 2 - xAxisLabelText.getTextSize().width / 2, 4));
+        yAxisLabelText.setTextString(getyAxisLabel());
+        yAxisLabelText.setAngle(-(float) Math.PI / 2);
+        yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight / 2 + yAxisLabelText.getTextSize().width / 2));
+
 
         // setup legend areas
         if(Objects.nonNull(legendRight)){
@@ -789,6 +728,42 @@ public class BarRenderer implements Renderer {
             legendGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
             // render the content into the group
             legendBottom.renderSVG(doc, legendGroup, legendBottomViewPort.width, legendBottomViewPort.height);
+        }
+    }
+
+    @Override
+    public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+        if(!isEnabled()){
+            return;
+        }
+        preContentLinesR.renderPDF(doc, page, x, y, w, h);
+        preContentTextR.renderPDF(doc, page, x, y, w, h);
+        if(content != null){
+            int viewPortX = (int)coordsysAreaLB.getX();
+            int viewPortY = (int)coordsysAreaLB.getY();
+            int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
+            int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
+            if(content instanceof AdaptableView){
+                ((AdaptableView) content).setView(coordinateView);
+            }
+            // render the content into the group
+            content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
+        }
+        postContentLinesR.renderPDF(doc, page, x, y, w, h);
+        postContentTextR.renderPDF(doc, page, x, y, w, h);
+
+        // draw legends
+        if(Objects.nonNull(legendRight)){
+            // render the content into the group
+            legendRight.renderPDF(doc, page,
+                    legendRightViewPort.width, legendRightViewPort.height,
+                    legendRightViewPort.width, legendRightViewPort.height);
+        }
+        if(Objects.nonNull(legendBottom)){
+            // render the content into the group
+            legendBottom.renderPDF(doc, page,
+                    legendBottomViewPort.x, legendBottomViewPort.y,
+                    legendBottomViewPort.width, legendBottomViewPort.height);
         }
     }
 
