@@ -189,27 +189,22 @@ public interface JPlotterCanvas {
 		}
 	}
 
-	// todo implement
-	/**
-	 *
-	 * @param document
-	 * @param page
-	 * @param cs
-	 * @param loc - where to render
-	 * @throws IOException
-	 */
-	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream cs, Rectangle2D loc) throws IOException {
-		cs.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
-		cs.setNonStrokingColor(asComponent().getBackground());
-		cs.fill();
-		paintToPDF(document, page, loc);
+	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream contentStream, Rectangle2D renderLoc) throws IOException {
+		contentStream.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
+		contentStream.setNonStrokingColor(asComponent().getBackground());
+		contentStream.fill();
+		paintToPDF(document, page, renderLoc);
 	}
 
-	// todo new
-	public default void paintToPDF(PDDocument document, PDPage page, Rectangle2D loc) {
+
+	public default void paintToPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) {
 		Renderer renderer = getRenderer();
 		if(renderer != null) {
-			renderer.renderPDF(document, page, (int) loc.getX(), (int) (page.getMediaBox().getHeight()-loc.getMaxY()), (int) loc.getMaxX(), (int) (page.getMediaBox().getHeight()-loc.getY()));
+			renderer.renderPDF(document, page,
+					(int) renderLoc.getX(),
+					(int) (page.getMediaBox().getHeight()-renderLoc.getMaxY()),
+					(int) renderLoc.getMaxX(),
+					(int) (page.getMediaBox().getHeight()-renderLoc.getY()));
 		}
 	}
 
