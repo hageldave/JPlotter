@@ -26,9 +26,10 @@ public class CombinedBarChart {
 
     public CombinedBarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
         this.canvas = canvas;
+        this.canvas.asComponent().setBounds(new Rectangle(400, 400));
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.black);
-        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.VERTICAL, DefaultColorScheme.DARK.get());
+        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.HORIZONTAL, DefaultColorScheme.DARK.get());
         this.content = new TrianglesRenderer();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
         this.barRenderer.setContent(content);
@@ -98,7 +99,8 @@ public class CombinedBarChart {
     }
 
     public JPlotterCanvas getCanvas() {
-        return canvas;
+        System.out.println(this.canvas.asComponent().getWidth());
+        return this.canvas;
     }
 
     public CombinedBarRenderer getBarRenderer() {
