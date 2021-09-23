@@ -2,14 +2,19 @@ package hageldave.jplotter.howto;
 
 import hageldave.jplotter.charts.CombinedBarChart;
 import hageldave.jplotter.renderables.BarGroup;
+import hageldave.jplotter.svg.SVGUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.w3c.dom.Document;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
 public class ReadyCombinedBarChart {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         String[] cases = {"A","B","C","D1","D2*"};
         double[] scores = IntStream.range(0, cases.length)
                 .mapToDouble(i->Math.random()).toArray();
@@ -74,6 +79,16 @@ public class ReadyCombinedBarChart {
             frame.pack();
             frame.setVisible(true);
         });
+
+
+        // paint PDF to PDDocument
+        PDDocument doc = barChart.getCanvas().paintPDF();
+        // save file and choosing filename
+        doc.save("barchart_demo.pdf");
+        doc.close();
+
+        Document doc2 = barChart.getCanvas().paintSVG();
+        SVGUtils.documentToXMLFile(doc2, new File("barchart_demo.svg"));
     }
 
 }
