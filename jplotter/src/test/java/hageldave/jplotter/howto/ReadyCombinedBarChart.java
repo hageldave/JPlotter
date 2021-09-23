@@ -8,6 +8,8 @@ import org.w3c.dom.Document;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
@@ -57,6 +59,27 @@ public class ReadyCombinedBarChart {
 
         group1.getGroupedBars().get(1).stacks.get(0).stackColor = Color.YELLOW;
 
+        barChart.addBarChartMouseEventListener(new CombinedBarChart.BarChartMouseEventListener() {
+            @Override
+            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+                CombinedBarChart.BarChartMouseEventListener.super.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
+            }
+
+            @Override
+            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+                CombinedBarChart.BarChartMouseEventListener.super.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+            }
+
+            @Override
+            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+                CombinedBarChart.BarChartMouseEventListener.super.onOutsideMouseEventeNone(mouseEventType, e);
+            }
+
+            @Override
+            public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
+                CombinedBarChart.BarChartMouseEventListener.super.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
+            }
+        });
 
        barChart.getBarRenderer().setCoordinateView(
                 barChart.getBarRenderer().getBounds().getMinX(),
