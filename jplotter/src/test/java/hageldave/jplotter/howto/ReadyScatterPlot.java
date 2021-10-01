@@ -70,11 +70,13 @@ public class ReadyScatterPlot {
                 "Bpv Close",
                 "Bpv Open",
         };
+        
+        for (int i = 0; i < classLabels.length; i++)
+            data.add(new LinkedList<>());
 
         URL statlogsrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/shuttle/shuttle.tst");
         try (InputStream stream = statlogsrc.openStream();
              Scanner sc = new Scanner(stream)) {
-            int i = 1;
             while (sc.hasNextLine()) {
                 String nextLine = sc.nextLine();
                 String[] fields = nextLine.split(" ");
