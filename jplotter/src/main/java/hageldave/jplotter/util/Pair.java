@@ -11,7 +11,7 @@ import java.util.Objects;
  * @param <T1> type 1
  * @param <T2> type 2
  */
-public class Pair<T1,T2> {
+public class Pair<T1,T2> implements Comparable<Pair<T1,T2>> {
 
 	public final T1 first;
 	
@@ -58,6 +58,16 @@ public class Pair<T1,T2> {
 	@Override
 	public String toString() {
 		return String.format("{%s, %s}", first,second);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public int compareTo(Pair<T1, T2> o) {
+		/* this fails if T1 or T2 is not implementing comparable */
+		int comp1 = ((Comparable<T1>)this.first).compareTo(o.first);
+		if(comp1 != 0)
+			return comp1;
+		return ((Comparable<T2>)this.second).compareTo(o.second);
 	}
 	
 }
