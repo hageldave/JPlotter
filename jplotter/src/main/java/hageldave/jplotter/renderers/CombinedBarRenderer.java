@@ -759,10 +759,10 @@ public class CombinedBarRenderer implements Renderer {
                 // adds each stack to the triangle renderer
                 for (BarGroup.Stack stack : struct.stacks) {
                     if (stack.length >= 0) {
-                        this.content.addItemToRender(makeBar(stackEnd, structPos, stack.length, stack.stackColor));
+                        this.content.addItemToRender((makeBar(stackEnd, structPos, stack.length, stack.stackColor, stack.pickColor)));
                         stackEnd += stack.length;
                     } else {
-                        this.content.addItemToRender(makeBar(stackStart, structPos, stack.length, stack.stackColor));
+                        this.content.addItemToRender((makeBar(stackEnd, structPos, stack.length, stack.stackColor, stack.pickColor)));
                         stackStart += stack.length;
                     }
                 }
@@ -821,14 +821,14 @@ public class CombinedBarRenderer implements Renderer {
     }
 
     // creates quad (to be rendered) at pos start, in row row, with value and color
-    protected Triangles makeBar(final double start, final double row, final double val, final Color color) {
+    protected Triangles makeBar(final double start, final double row, final double val, final Color color, final int pickColor) {
         Triangles bar = new Triangles();
         if (this.alignment == AlignmentConstants.HORIZONTAL) {
             bar.addQuad(new Rectangle2D.Double(start, row - ( barSize / 2 ), val, barSize));
         } else if (this.alignment == AlignmentConstants.VERTICAL) {
             bar.addQuad(new Rectangle2D.Double(row - ( barSize / 2 ), start, barSize, val));
         }
-        bar.getTriangleDetails().forEach(tri -> tri.setColor(color));
+        bar.getTriangleDetails().forEach(tri -> tri.setColor(color).setPickColor(pickColor));
         return bar;
     }
 

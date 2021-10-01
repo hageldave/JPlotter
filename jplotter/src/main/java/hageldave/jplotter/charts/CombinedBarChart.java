@@ -43,8 +43,8 @@ public class CombinedBarChart {
         this.canvas = canvas;
         this.canvas.asComponent().setBounds(new Rectangle(400, 400));
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
-        this.canvas.asComponent().setBackground(Color.black);
-        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.HORIZONTAL, DefaultColorScheme.DARK.get());
+        this.canvas.asComponent().setBackground(Color.white);
+        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.HORIZONTAL, DefaultColorScheme.LIGHT.get());
         this.content = new TrianglesRenderer();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
         this.barRenderer.setContent(content);
@@ -56,13 +56,13 @@ public class CombinedBarChart {
     }
 
     public CombinedBarChart addData(BarGroup group) {
-        this.barsInRenderer.add(group);
-        this.barRenderer.addBarGroup(group);
         for (BarGroup.BarStruct struct : group.getGroupedBars().values()) {
             for (BarGroup.Stack stack : struct.stacks) {
                 stack.setPickColor(registerInPickingRegistry(stack));
             }
         }
+        this.barsInRenderer.add(group);
+        this.barRenderer.addBarGroup(group);
         return this;
     }
 
@@ -165,8 +165,7 @@ public class CombinedBarChart {
                     /* mouse inside coordinate area */
                     Point2D coordsysPoint = barRenderer.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
                     // get pick color under cursor
-                    int pixel = canvas.getPixel(e.getX(), e.getY(), true, 30);
-                    System.out.println(pixel);
+                    int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
                     if((pixel & 0x00ffffff) == 0) {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {
@@ -182,7 +181,6 @@ public class CombinedBarChart {
                     /* mouse outside coordinate area */
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
-                    System.out.println(pixel);
                     if((pixel & 0x00ffffff) == 0) {
                         notifyOutsideMouseEventeNone(eventType, e);
                     } else {
