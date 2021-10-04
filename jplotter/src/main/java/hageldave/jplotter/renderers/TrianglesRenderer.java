@@ -425,14 +425,19 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					PDPage maskPage = new PDPage();
 					maskDoc.addPage(maskPage);
 					PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
-							PDPageContentStream.AppendMode.APPEND, false);
+							PDPageContentStream.AppendMode.APPEND, true);
+
+					int c02 = new Color(tri.c0.getAsInt(), true).getAlpha();
+					int c12 = new Color(tri.c1.getAsInt(), true).getAlpha();
+					int c22 = new Color(tri.c2.getAsInt(), true).getAlpha();
+
 					PDFUtils.createPDFShadedTriangle(maskCS,
 							new Point2D.Double(x0, y0),
 							new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2),
-							new Color(new Color(tri.c0.getAsInt(), true).getAlpha(),new Color(tri.c0.getAsInt(), true).getAlpha(),new Color(tri.c0.getAsInt(), true).getAlpha()),
-							new Color(new Color(tri.c1.getAsInt(), true).getAlpha(),new Color(tri.c1.getAsInt(), true).getAlpha(),new Color(tri.c1.getAsInt(), true).getAlpha()),
-							new Color(new Color(tri.c2.getAsInt(), true).getAlpha(),new Color(tri.c2.getAsInt(), true).getAlpha(),new Color(tri.c2.getAsInt(), true).getAlpha()));
+							new Color(c02, c02, c02),
+							new Color(c12, c12, c12),
+							new Color(c22, c22, c22));
 					maskCS.close();
 
 					// import b/w triangle as a mask

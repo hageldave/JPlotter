@@ -1016,10 +1016,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 						PDPage maskPage = new PDPage();
 						maskDoc.addPage(maskPage);
 						PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
-								PDPageContentStream.AppendMode.APPEND, false);
+								PDPageContentStream.AppendMode.APPEND, true);
+
+						int c02 = new Color(seg.color0.getAsInt(), true).getAlpha();
+						int c12 = new Color(seg.color1.getAsInt(), true).getAlpha();
+
 						PDShadingType2 shading2 = createGradientColor(
-								new Color(new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha()).getRGB(),
-								new Color(new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha()).getRGB(),
+								new Color(c02, c02, c02).getRGB(),
+								new Color(c12, c12, c12).getRGB(),
 								new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
 								new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
 						maskCS.saveGraphicsState();
