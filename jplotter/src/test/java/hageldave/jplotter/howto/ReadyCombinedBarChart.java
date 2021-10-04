@@ -93,6 +93,7 @@ public class ReadyCombinedBarChart {
         JFrame frame = new JFrame();
         frame.getContentPane().add(barChart.getCanvas().asComponent());
         frame.setTitle("barchart");
+        frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         barChart.getCanvas().addCleanupOnWindowClosingListener(frame);
         // make visible on AWT event dispatch thread

@@ -41,7 +41,6 @@ public class CombinedBarChart {
 
     public CombinedBarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
         this.canvas = canvas;
-        this.canvas.asComponent().setBounds(new Rectangle(400, 400));
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.white);
         this.barRenderer = new CombinedBarRenderer(AlignmentConstants.HORIZONTAL, DefaultColorScheme.LIGHT.get());
