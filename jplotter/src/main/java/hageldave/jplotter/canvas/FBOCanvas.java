@@ -1,32 +1,6 @@
 package hageldave.jplotter.canvas;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.awt.image.BufferedImage;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.swing.SwingUtilities;
-
-import org.apache.batik.svggen.SVGGraphics2D;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL32;
-import org.lwjgl.opengl.awt.AWTGLCanvas;
-import org.lwjgl.opengl.awt.GLData;
-import org.lwjgl.opengl.awt.PlatformGLCanvas;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
+import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
@@ -36,6 +10,21 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
+import org.apache.batik.svggen.SVGGraphics2D;
+import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.awt.AWTGLCanvas;
+import org.lwjgl.opengl.awt.GLData;
+import org.lwjgl.opengl.awt.PlatformGLCanvas;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The FBOCanvas is an {@link AWTGLCanvas} which uses a FrameBufferObject ({@link FBO}) 
@@ -164,6 +153,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected AtomicBoolean repaintIsSheduled = new AtomicBoolean(false);
 	protected Img frontBufferBackup = new Img(0, 0);
 	protected boolean isRenderSvgAsImage = false;
+	protected boolean isRenderPDFAsImage = false;
 	protected boolean disposeOnRemove = true;
 
 	
@@ -628,12 +618,25 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	public boolean isSvgAsImageRenderingEnabled(){
 		return isRenderSvgAsImage;
 	}
+
+
+	public void enablePDFAsImageRendering(boolean enable) {
+		this.isRenderSvgAsImage = enable;
+	}
+
+
+	public boolean isPDFAsImageRenderingEnabled() {
+		return isRenderPDFAsImage;
+	}
 	
 	@Override
 	public void paint(Graphics g) {
 		if(Objects.nonNull(frontBufferBackup)){
 			// test if this is SVG painting
 			if(g instanceof SVGGraphics2D && !isSvgAsImageRenderingEnabled()){
+				return;
+			}
+			if (g instanceof PdfBoxGraphics2D && !isPDFAsImageRenderingEnabled()) {
 				return;
 			}
 			int w = frontBufferBackup.getWidth();

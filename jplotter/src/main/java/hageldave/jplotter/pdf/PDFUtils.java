@@ -1,5 +1,6 @@
 package hageldave.jplotter.pdf;
 
+import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.cos.COSArray;
@@ -11,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
 
@@ -191,23 +193,33 @@ public class PDFUtils {
             return cs;
     }
 
-    // TODO: awt to pdf nachschauen
     public static PDDocument containerToPDF(Container c) throws IOException {
         PDDocument doc = new PDDocument();
         PDPage page = new PDPage();
         doc.addPage(page);
         PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
         page.setMediaBox(new PDRectangle(c.getWidth(), c.getHeight()));
+
         containerToPDF(c, doc, page, cs);
+        { // render gui components through PdfBoxGraphics2D
+            PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, c.getWidth(), c.getHeight());
+            c.paintAll(g2d);
+            g2d.dispose();
+            PDFormXObject xform = g2d.getXFormObject();
+            cs.drawForm(xform);
+        }
+
         cs.close();
         return doc;
     }
+
 
     private static void containerToPDF(Container c, PDDocument doc, PDPage page, PDPageContentStream cs) throws IOException {
         for(Component comp:c.getComponents()) {
             if (comp instanceof JPlotterCanvas) {
                 JPlotterCanvas canvas = (JPlotterCanvas)comp;
-                System.out.println(comp.getClass() + " " + comp.getY());
+                if(canvas.isPDFAsImageRenderingEnabled())
+                    return; // was already rendered through PdfBoxGraphics2D
                 canvas.paintPDF(doc, page, cs, new Rectangle2D.Double(canvas.asComponent().getX(), canvas.asComponent().getY(),
                         canvas.asComponent().getWidth(), canvas.asComponent().getHeight()));
             } else {
