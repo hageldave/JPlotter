@@ -189,8 +189,6 @@ public interface JPlotterCanvas {
 			PDPageContentStream contentStream = new PDPageContentStream(document, page,
 					PDPageContentStream.AppendMode.APPEND, false);
 			contentStream.addRect(0, 0, w, h);
-
-			System.out.println(asComponent().getBackground());
 			contentStream.setNonStrokingColor(asComponent().getBackground());
 			contentStream.fill();
 			contentStream.close();
@@ -200,7 +198,6 @@ public interface JPlotterCanvas {
 
 	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream contentStream, Rectangle2D renderLoc) throws IOException {
 		contentStream.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
-		System.out.println(asComponent().getBackground());
 		contentStream.setNonStrokingColor(asComponent().getBackground());
 		contentStream.fill();
 		paintToPDF(document, page, renderLoc);
