@@ -158,7 +158,7 @@ public class BarGroup {
      *  -
      *
      */
-    public static class Stack implements Cloneable {
+    public static class Stack {
         public Color stackColor;
         public double length;
         public int pickColor;

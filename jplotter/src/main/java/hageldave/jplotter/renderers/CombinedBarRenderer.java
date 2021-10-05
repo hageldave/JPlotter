@@ -828,7 +828,7 @@ public class CombinedBarRenderer implements Renderer {
         } else if (this.alignment == AlignmentConstants.VERTICAL) {
             bar.addQuad(new Rectangle2D.Double(row - ( barSize / 2 ), start, barSize, val));
         }
-        bar.getTriangleDetails().forEach(tri -> tri.setColor(color).setPickColor(pickColor));
+        bar.getTriangleDetails().forEach(tri -> tri.setPickColor(pickColor).setColor(color));
         return bar;
     }
 

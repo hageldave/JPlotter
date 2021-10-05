@@ -24,7 +24,6 @@ public class CombinedBarChart {
     protected TrianglesRenderer content;
     protected JPlotterCanvas canvas;
     protected CombinedBarRenderer barRenderer;
-    protected LinkedList<BarGroup> barsInRenderer = new LinkedList<>();
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 
     final protected Legend legend = new Legend();
@@ -42,8 +41,8 @@ public class CombinedBarChart {
     public CombinedBarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
-        this.canvas.asComponent().setBackground(Color.white);
-        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.HORIZONTAL, DefaultColorScheme.LIGHT.get());
+        this.canvas.asComponent().setBackground(Color.WHITE);
+        this.barRenderer = new CombinedBarRenderer(AlignmentConstants.VERTICAL, DefaultColorScheme.LIGHT.get());
         this.content = new TrianglesRenderer();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
         this.barRenderer.setContent(content);
@@ -60,7 +59,6 @@ public class CombinedBarChart {
                 stack.setPickColor(registerInPickingRegistry(stack));
             }
         }
-        this.barsInRenderer.add(group);
         this.barRenderer.addBarGroup(group);
         return this;
     }
@@ -137,6 +135,11 @@ public class CombinedBarChart {
         this.legendBottomHeight = legendBottomHeight;
     }
 
+
+    /**
+     * IDEA: return group, struct and stack - manipulate this data and refresh
+     *
+     */
     protected void createMouseEventHandler() {
         MouseAdapter mouseEventHandler = new MouseAdapter() {
             @Override
@@ -169,12 +172,9 @@ public class CombinedBarChart {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {
                         Object pointLocalizer = pickingRegistry.lookup(pixel);
-                        /*if(pointLocalizer instanceof int[]) {
-                            int chunkIdx = ((int[])pointLocalizer)[0];
-                            int pointIdx = ((int[])pointLocalizer)[1];*/
-                            //notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, pointIdx);
-                        //}
-                        notifyInsideMouseEventPoint(eventType, e, coordsysPoint, 0, 1);
+                        if (pointLocalizer instanceof BarGroup.Stack) {
+                            notifyInsideMouseEventStack(eventType, e, coordsysPoint, (BarGroup.Stack) pointLocalizer);
+                        }
                     }
                 } else {
                     /* mouse outside coordinate area */
@@ -184,9 +184,8 @@ public class CombinedBarChart {
                         notifyOutsideMouseEventeNone(eventType, e);
                     } else {
                         Object miscLocalizer = pickingRegistry.lookup(pixel);
-                        if(miscLocalizer instanceof Integer) {
-                            int chunkIdx = (int)miscLocalizer;
-                            notifyOutsideMouseEventElement(eventType, e, chunkIdx);
+                        if(miscLocalizer instanceof Legend.BarLabel) {
+                            notifyOutsideMouseEventElement(eventType, e, (Legend.BarLabel) miscLocalizer);
                         }
                     }
                 }
@@ -202,9 +201,9 @@ public class CombinedBarChart {
             l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
 
-    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+    protected synchronized void notifyInsideMouseEventStack(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {
         for(BarChartMouseEventListener l:mouseEventListeners)
-            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, stack);
     }
 
     protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
@@ -212,9 +211,9 @@ public class CombinedBarChart {
             l.onOutsideMouseEventeNone(mouseEventType, e);
     }
 
-    protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
+    protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {
         for(BarChartMouseEventListener l:mouseEventListeners)
-            l.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
+            l.onOutsideMouseEventElement(mouseEventType, e, legendElement);
     }
 
     public static interface BarChartMouseEventListener {
@@ -226,11 +225,11 @@ public class CombinedBarChart {
 
         public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
 
-        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {}
+        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {}
 
         public default void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
 
-        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {}
+        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {}
     }
 
     public synchronized BarChartMouseEventListener addBarChartMouseEventListener(BarChartMouseEventListener l) {

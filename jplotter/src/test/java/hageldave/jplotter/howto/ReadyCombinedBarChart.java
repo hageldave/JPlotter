@@ -2,6 +2,7 @@ package hageldave.jplotter.howto;
 
 import hageldave.jplotter.charts.CombinedBarChart;
 import hageldave.jplotter.renderables.BarGroup;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.svg.SVGUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
@@ -33,9 +34,9 @@ public class ReadyCombinedBarChart {
         group1.addBar(2, 1, Color.BLUE);
 
         BarGroup group2 = new BarGroup("test2");
-        group2.addBar(1, 6, Color.GREEN, "ba34");
-        group2.addBar(2, -4, Color.MAGENTA, "");
-        group2.addBar(3, 5, Color.RED, "4");
+        //group2.addBar(1, 6, Color.GREEN, "ba34");
+        //group2.addBar(2, -4, Color.MAGENTA, "");
+        //group2.addBar(3, 5, Color.RED, "4");
         group2.addBar(3, 3, Color.ORANGE, "bar1");
         group2.addBar(3, -3, Color.ORANGE, "bar1");
         group2.addBar(7, 17, Color.CYAN, "bar4");
@@ -52,43 +53,13 @@ public class ReadyCombinedBarChart {
 
         barChart.addData(group1);
         barChart.addData(group2);
-        barChart.addData(group1);
+        //barChart.addData(group1);
+
         barChart.placeLegendOnRight()
                 .addBarLabel(Color.RED.getRGB(), "test1", 5)
                 .addBarLabel(Color.BLUE.getRGB(), "test2", 6);
 
         group1.getGroupedBars().get(1).stacks.get(0).stackColor = Color.YELLOW;
-
-        barChart.addBarChartMouseEventListener(new CombinedBarChart.BarChartMouseEventListener() {
-            @Override
-            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
-                CombinedBarChart.BarChartMouseEventListener.super.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
-            }
-
-            @Override
-            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
-                CombinedBarChart.BarChartMouseEventListener.super.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
-            }
-
-            @Override
-            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
-                CombinedBarChart.BarChartMouseEventListener.super.onOutsideMouseEventeNone(mouseEventType, e);
-            }
-
-            @Override
-            public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
-                CombinedBarChart.BarChartMouseEventListener.super.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
-            }
-        });
-
-       barChart.getBarRenderer().setCoordinateView(
-                barChart.getBarRenderer().getBounds().getMinX(),
-                barChart.getBarRenderer().getBounds().getMinY(),
-                barChart.getBarRenderer().getBounds().getMaxX(),
-                barChart.getBarRenderer().getBounds().getMaxY());
-
-       barChart.getBarRenderer().setDirty();
-        barChart.getCanvas().scheduleRepaint();
 
         JFrame frame = new JFrame();
         frame.getContentPane().add(barChart.getCanvas().asComponent());
@@ -101,6 +72,39 @@ public class ReadyCombinedBarChart {
             frame.pack();
             frame.setVisible(true);
         });
+
+        barChart.addBarChartMouseEventListener(new CombinedBarChart.BarChartMouseEventListener() {
+            @Override
+            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+            }
+
+            @Override
+            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {
+                stack.stackColor = Color.BLACK;
+                barChart.getBarRenderer().setDirty();
+                barChart.getCanvas().scheduleRepaint();
+            }
+
+            @Override
+            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+            }
+
+            @Override
+            public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {
+                System.out.println(legendElement);
+            }
+        });
+
+       barChart.getBarRenderer().setCoordinateView(
+                barChart.getBarRenderer().getBounds().getMinX(),
+                barChart.getBarRenderer().getBounds().getMinY(),
+                barChart.getBarRenderer().getBounds().getMaxX(),
+                barChart.getBarRenderer().getBounds().getMaxY());
+
+       barChart.getBarRenderer().setDirty();
+        barChart.getCanvas().scheduleRepaint();
+
+
 
 
         // paint PDF to PDDocument
