@@ -60,6 +60,7 @@ public class PDFUtils {
 
     public static PDPageContentStream createPDFShadedTriangle(PDPageContentStream cs, Point2D p0,
                                                               Point2D p1, Point2D p2, Color c0, Color c1, Color c2) throws IOException {
+        // TODO nochmal anschauen
         // See PDF 32000 specification,
         // 8.7.4.5.5 Type 4 Shadings (Free-Form Gouraud-Shaded Triangle Meshes)
         PDShadingType4 gouraudShading = new PDShadingType4(new COSStream());
