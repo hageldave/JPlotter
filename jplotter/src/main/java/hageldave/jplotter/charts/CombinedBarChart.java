@@ -35,8 +35,8 @@ public class CombinedBarChart {
     private int legendRightWidth = 100;
     private int legendBottomHeight = 60;
 
-    public CombinedBarChart(final boolean useOpenGL, final int alignment) {
-        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y", alignment);
+    public CombinedBarChart(final boolean useFallback, final int alignment) {
+        this(useFallback ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y", alignment);
     }
 
     public CombinedBarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel, final int alignment) {
