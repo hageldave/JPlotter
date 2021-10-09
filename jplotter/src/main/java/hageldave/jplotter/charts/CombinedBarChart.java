@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.TreeSet;
 
+
 public class CombinedBarChart {
     protected TrianglesRenderer content;
     protected JPlotterCanvas canvas;
@@ -34,11 +35,11 @@ public class CombinedBarChart {
     private int legendRightWidth = 100;
     private int legendBottomHeight = 60;
 
-    public CombinedBarChart(final boolean useOpenGL) {
-        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
+    public CombinedBarChart(final boolean useOpenGL, final int alignment) {
+        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y", alignment);
     }
 
-    public CombinedBarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
+    public CombinedBarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel, final int alignment) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
@@ -135,6 +136,13 @@ public class CombinedBarChart {
         this.legendBottomHeight = legendBottomHeight;
     }
 
+    public int getAlignment() {
+        return this.barRenderer.getAlignment();
+    }
+
+    public void setAlignment(int alignment) {
+        this.barRenderer.setAlignment(alignment);
+    }
 
     /**
      * IDEA: return group, struct and stack - manipulate this data and refresh
@@ -168,6 +176,7 @@ public class CombinedBarChart {
                     Point2D coordsysPoint = barRenderer.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+                    System.out.println(Integer.toHexString(pixel));
                     if((pixel & 0x00ffffff) == 0) {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {

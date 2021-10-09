@@ -394,6 +394,18 @@ public class CombinedBarRenderer implements Renderer {
         return colorScheme;
     }
 
+    // TODO: add documentation
+    public int getAlignment() {
+        return alignment;
+    }
+
+    // TODO: add documentation
+    public void setAlignment(int alignment) {
+        this.alignment = alignment;
+        setupAndLayout();
+        setDirty();
+    }
+
     /**
      * Sets up pretty much everything.
      * <ul>
@@ -557,7 +569,6 @@ public class CombinedBarRenderer implements Renderer {
             }
         }
 
-        // TODO: rightBound needs a better name
         setupBoundaries(guides, rightBound, yAxisHeight);
         for (Text txt : tickMarkLabels)
             preContentTextR.addItemToRender(txt);
