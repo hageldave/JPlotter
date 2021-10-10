@@ -1,74 +1,188 @@
 package hageldave.jplotter.howto;
 
-
 import hageldave.jplotter.charts.BarChart;
+import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.renderables.BarGroup;
+import hageldave.jplotter.renderables.Legend;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.AlignmentConstants;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.w3c.dom.Document;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.stream.IntStream;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Scanner;
 
 public class ReadyBarChart {
+    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
+
+        BarChart barChart = new BarChart(false, 1);
+        ColorMap classcolors = DefaultColorMap.S_VIRIDIS;
+
+        String[] groupLabels = new String[]{
+                "Iris Setosa",
+                "Iris Versicolor",
+                "Iris Virginica"
+        };
+
+        String[] barLabels = new String[]{
+                "sl",
+                "sw",
+                "pl",
+                "pw",
+        };
+
+        HashMap<String, Integer> keymap = new HashMap<>();
+        keymap.put("Iris-setosa", 0);
+        keymap.put("Iris-versicolor", 1);
+        keymap.put("Iris-virginica", 2);
 
 
-    public static void main(String[] args) {
-        String[] cases = {"A","B","C","D1","D2*"};
-        double[] scores = IntStream.range(0, cases.length)
-                .mapToDouble(i->Math.random()).toArray();
-        //scores[scores.length-2] = -5.269;
-        //scores[scores.length-1] = -5.22;
-        int[] ids = IntStream.range(0, cases.length).toArray();
+        LinkedList<LinkedList<String[]>> data = new LinkedList<>();
+        for (int i = 0; i < 3; i++)
+            data.add(new LinkedList());
 
-        Color[] color = new Color[]{Color.RED, Color.RED, Color.RED, Color.RED, Color.RED};
+        URL statlogsrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data");
+        try (InputStream stream = statlogsrc.openStream();
+             Scanner sc = new Scanner(stream)) {
+            int i = 1;
+            while (sc.hasNextLine()) {
+                String nextLine = sc.nextLine();
+                String[] fields = nextLine.split(",");
+                String groupClass = fields[fields.length-1];
 
-        BarChart barChart = new BarChart(false, AlignmentConstants.HORIZONTAL);
+                fields = Arrays.copyOf(fields, fields.length-1);
 
-        BarChart.BarGroup group1 = barChart.createGroup(1);
-        BarChart.BarGroup group2 = barChart.createGroup(2);
+                // sort all array values to its group
+                if (keymap.get(groupClass) != null)
+                    data.get(keymap.get(groupClass)).add(fields);
 
-        group1.addData(ids, scores, color, cases);
+            }
 
-        group1.addBar(9, 8, Color.DARK_GRAY);
-        group1.addBar(19, 16, Color.BLACK, "test2");
-        group2.addBar(20, 6, Color.YELLOW, "test3");
-        group2.addBar(14, 7, Color.ORANGE, "test14");
+            // set up groups
+            BarGroup groupSetosa = new BarGroup(groupLabels[0]);
+            BarGroup groupVersicolor = new BarGroup(groupLabels[1]);
+            BarGroup groupVirginica = new BarGroup(groupLabels[2]);
+
+            double[] setosaValues = new double[4];
+            double[] versicolorValues = new double[4];
+            double[] virginicaValues = new double[4];
+
+            LinkedList<BarGroup> allGroups = new LinkedList<>();
+            allGroups.add(groupSetosa);
+            allGroups.add(groupVersicolor);
+            allGroups.add(groupVirginica);
+
+            LinkedList<double[]> combinedVals = new LinkedList<>();
+            combinedVals.add(setosaValues);
+            combinedVals.add(versicolorValues);
+            combinedVals.add(virginicaValues);
+
+            // now calculate mean for all values and save it in an array
+            // TODO: call count differently
+            int count = 0;
+            for (LinkedList<String[]> category : data) {
+                for (int j = 0; j < 4; j++) {
+                    double tempValue = 0;
+                    int counter = 0;
+                    for (String[] allValues : category) {
+                        tempValue += Double.parseDouble(allValues[j]);
+                        counter++;
+                    }
+                    if (count == 0) {
+                        setosaValues[j] = tempValue/counter;
+                    } else if (count == 1) {
+                        versicolorValues[j] = tempValue/counter;
+                    } else {
+                        virginicaValues[j] = tempValue/counter;
+                    }
+                }
+                count++;
+            }
+
+            for (int j = 0; j < combinedVals.size(); j++) {
+                int index = 0;
+                for (double value : combinedVals.get(j)) {
+                    allGroups.get(j).addBar(index, value, new Color(classcolors.getColor(index)), barLabels[index]);
+                    index++;
+                }
+
+            }
+
+            for (BarGroup group : allGroups)
+                barChart.addData(group);
+        }
 
 
-        BarChart.BarStruct barStruct = group1.getBarsInGroup().get(9);
-        group1.addBar(9, 5, Color.GREEN);
-        group1.addBar(19, 50, Color.CYAN);
+        barChart.placeLegendBottom()
+                .addBarLabel(classcolors.getColor(0), "sepal length", 0)
+                .addBarLabel(classcolors.getColor(1), "sepal width", 1)
+                .addBarLabel(classcolors.getColor(2), "petal length", 2)
+                .addBarLabel(classcolors.getColor(3), "petal width", 3);
 
-
-
-        group1.removeBars(14);
-        //group2.sortBars();
-
-        /*barChart.sortBars();
-        group1.addBar(29, 5, Color.MAGENTA, "jef").setBarContentBoundaries().setTickmarks();
-        barChart.sortBars();
-        barChart.sortBarsIDs();*/
-
-        /*barChart.createGroup(9, 19, 20, 14).setBarContentBoundaries();
-
-        barChart.createGroup(3, 9, 29).setTickmarks();*/
-
-
-        group2.sortBarsIDs();
-        barChart.setBarContentBoundaries();
-
-        group1.getBarsInGroup().get(19).stacks.get(1).getTriangleDetails().get(0).setColor(Color.BLUE);
-
-        barChart.renderBars();
+        barChart.getBarRenderer().setxAxisLabel("mean (in cm)");
+        barChart.getBarRenderer().setyAxisLabel("mean (in cm)");
 
         JFrame frame = new JFrame();
         frame.getContentPane().add(barChart.getCanvas().asComponent());
-        frame.setTitle("barchart");
+        frame.setTitle("Comparison chart of iris plants");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         barChart.getCanvas().addCleanupOnWindowClosingListener(frame);
         // make visible on AWT event dispatch thread
-        SwingUtilities.invokeLater(()->{
+        SwingUtilities.invokeAndWait(()->{
             frame.pack();
             frame.setVisible(true);
         });
+
+        barChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
+            @Override
+            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+            }
+
+            @Override
+            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {
+            }
+
+            @Override
+            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+            }
+
+            @Override
+            public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {
+            }
+        });
+
+        barChart.setAlignment(AlignmentConstants.HORIZONTAL);
+
+       barChart.getBarRenderer().setCoordinateView(
+                barChart.getBarRenderer().getBounds().getMinX(),
+                barChart.getBarRenderer().getBounds().getMinY(),
+                barChart.getBarRenderer().getBounds().getMaxX(),
+                barChart.getBarRenderer().getBounds().getMaxY());
+
+        barChart.getBarRenderer().setDirty();
+        barChart.getCanvas().scheduleRepaint();
+
+        // paint PDF to PDDocument
+        PDDocument doc = barChart.getCanvas().paintPDF();
+        // save file and choosing filename
+        doc.save("barchart_demo.pdf");
+        doc.close();
+
+        Document doc2 = barChart.getCanvas().paintSVG();
+        SVGUtils.documentToXMLFile(doc2, new File("barchart_demo.svg"));
+
+
     }
 }
