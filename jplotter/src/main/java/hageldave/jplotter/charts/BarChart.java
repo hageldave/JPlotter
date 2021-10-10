@@ -36,7 +36,7 @@ public class BarChart {
     private int legendBottomHeight = 60;
 
     public BarChart(final boolean useFallback, final int alignment) {
-        this(useFallback ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y", alignment);
+        this(useFallback ? new BlankCanvasFallback() : new BlankCanvas(), "X", "Y", alignment);
     }
 
     public BarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel, final int alignment) {

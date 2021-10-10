@@ -25,8 +25,7 @@ import java.util.Scanner;
 
 public class ReadyBarChart {
     public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
-
-        BarChart barChart = new BarChart(false, 1);
+        BarChart barChart = new BarChart(true, 1);
         ColorMap classcolors = DefaultColorMap.S_VIRIDIS;
 
         String[] groupLabels = new String[]{
