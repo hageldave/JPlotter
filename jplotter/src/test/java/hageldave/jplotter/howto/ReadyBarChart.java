@@ -6,7 +6,6 @@ import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.renderables.BarGroup;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.AlignmentConstants;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
 
@@ -117,25 +116,37 @@ public class ReadyBarChart {
                     allGroups.get(j).addBar(index, value, new Color(classcolors.getColor(index)), barLabels[index]);
                     index++;
                 }
-
             }
 
+            // add all groups to the chart
             for (BarGroup group : allGroups)
                 barChart.addData(group);
         }
 
-
         barChart.placeLegendBottom()
-                .addBarLabel(classcolors.getColor(0), "sepal length", 0)
-                .addBarLabel(classcolors.getColor(1), "sepal width", 1)
+                .addBarLabel(classcolors.getColor(3), "petal width", 3)
                 .addBarLabel(classcolors.getColor(2), "petal length", 2)
-                .addBarLabel(classcolors.getColor(3), "petal width", 3);
+                .addBarLabel(classcolors.getColor(1), "sepal width", 1)
+                .addBarLabel(classcolors.getColor(0), "sepal length", 0);
 
         barChart.getBarRenderer().setxAxisLabel("mean (in cm)");
         barChart.getBarRenderer().setyAxisLabel("mean (in cm)");
 
+        // set up gui stuff
+        Container buttonWrapper = new Container();
+        JButton eachCategory = new JButton("Show each category");
+        JButton combined = new JButton("Combined View");
+        buttonWrapper.add(combined);
+        buttonWrapper.add(eachCategory);
+        buttonWrapper.setLayout(new FlowLayout());
+
+        Container contentWrapper = new Container();
+        contentWrapper.setLayout(new BoxLayout(contentWrapper, BoxLayout.Y_AXIS));
+        contentWrapper.add(barChart.getCanvas().asComponent());
+        contentWrapper.add(buttonWrapper);
+
         JFrame frame = new JFrame();
-        frame.getContentPane().add(barChart.getCanvas().asComponent());
+        frame.getContentPane().add(contentWrapper);
         frame.setTitle("Comparison chart of iris plants");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         barChart.getCanvas().addCleanupOnWindowClosingListener(frame);
@@ -144,6 +155,7 @@ public class ReadyBarChart {
             frame.pack();
             frame.setVisible(true);
         });
+
 
         barChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
             @Override
@@ -163,9 +175,9 @@ public class ReadyBarChart {
             }
         });
 
-        barChart.setAlignment(AlignmentConstants.HORIZONTAL);
+        //barChart.setAlignment(AlignmentConstants.HORIZONTAL);
 
-       barChart.getBarRenderer().setCoordinateView(
+        barChart.getBarRenderer().setCoordinateView(
                 barChart.getBarRenderer().getBounds().getMinX(),
                 barChart.getBarRenderer().getBounds().getMinY(),
                 barChart.getBarRenderer().getBounds().getMaxX(),
@@ -182,7 +194,5 @@ public class ReadyBarChart {
 
         Document doc2 = barChart.getCanvas().paintSVG();
         SVGUtils.documentToXMLFile(doc2, new File("barchart_demo.svg"));
-
-
     }
 }
