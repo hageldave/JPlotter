@@ -58,29 +58,19 @@ public class PDFUtils {
         return cs;
     }
 
-    public static PDPageContentStream createPDFShadedTriangle(PDPageContentStream cs, Point2D p0,
+    public static PDPageContentStream createPDFShadedTriangle(PDDocument doc, PDPageContentStream cs, Point2D p0,
                                                               Point2D p1, Point2D p2, Color c0, Color c1, Color c2) throws IOException {
-        // TODO nochmal anschauen
-        // See PDF 32000 specification,
-        // 8.7.4.5.5 Type 4 Shadings (Free-Form Gouraud-Shaded Triangle Meshes)
-        PDShadingType4 gouraudShading = new PDShadingType4(new COSStream());
+        PDShadingType4 gouraudShading = new PDShadingType4(doc.getDocument().createCOSStream());
         gouraudShading.setShadingType(PDShading.SHADING_TYPE4);
-        // we use multiple of 8, so that no padding is needed
         gouraudShading.setBitsPerFlag(8);
         gouraudShading.setBitsPerCoordinate(16);
         gouraudShading.setBitsPerComponent(8);
 
         COSArray decodeArray = new COSArray();
-        // coordinates x y map 16 bits 0..FFFF to 0..FFFF to make your life easy
-        // so no calculation is needed, but you can only use integer coordinates
-        // for real numbers, you'll need smaller bounds, e.g. 0xFFFF / 0xA = 0x1999
-        // would allow 1 point decimal result coordinate.
-        // See in PDF specification: 8.9.5.2 Decode Arrays
         decodeArray.add(COSInteger.ZERO);
         decodeArray.add(COSInteger.get(0xFFFF));
         decodeArray.add(COSInteger.ZERO);
         decodeArray.add(COSInteger.get(0xFFFF));
-        // colors r g b map 8 bits from 0..FF to 0..1
         decodeArray.add(COSInteger.ZERO);
         decodeArray.add(COSInteger.ONE);
         decodeArray.add(COSInteger.ZERO);
@@ -90,10 +80,6 @@ public class PDFUtils {
         gouraudShading.setDecodeValues(decodeArray);
         gouraudShading.setColorSpace(PDDeviceRGB.INSTANCE);
 
-        // Function is not required for type 4 shadings and not really useful,
-        // because if a function would be used, each edge "color" of a triangle would be one value,
-        // which would then transformed into n color components by the function so it is
-        // difficult to get 3 "extremes".
         OutputStream os = ((COSStream) gouraudShading.getCOSObject()).createOutputStream();
         MemoryCacheImageOutputStream mcos = new MemoryCacheImageOutputStream(os);
 
@@ -128,11 +114,11 @@ public class PDFUtils {
         mcos.writeByte(c2.getGreen());
         mcos.writeByte(c2.getBlue());
         mcos.close();
+
         os.close();
         cs.shadingFill(gouraudShading);
         return cs;
     }
-
 
     public static PDPageContentStream createPDFText(PDDocument document, PDPageContentStream cs, String txt,
                                                     Point2D point, Color color, int fontSize, int style, float angle) throws IOException {

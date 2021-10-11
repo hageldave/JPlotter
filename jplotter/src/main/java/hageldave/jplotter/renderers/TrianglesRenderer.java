@@ -431,7 +431,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					int c12 = new Color(tri.c1.getAsInt(), true).getAlpha();
 					int c22 = new Color(tri.c2.getAsInt(), true).getAlpha();
 
-					PDFUtils.createPDFShadedTriangle(maskCS,
+					PDFUtils.createPDFShadedTriangle(doc, maskCS,
 							new Point2D.Double(x0, y0),
 							new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2),
@@ -467,7 +467,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					contentStream.setGraphicsStateParameters(extendedGraphicsState);
 					maskDoc.close();
 
-					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
+					PDFUtils.createPDFShadedTriangle(doc, contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2), new Color(c0), new Color(c1), new Color(c2));
 					contentStream.restoreGraphicsState();
 				}
