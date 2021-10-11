@@ -774,7 +774,7 @@ public class BarRenderer implements Renderer {
             // add guide here
             groupSeparators[groupindex++] = structPos - 0.75;
             for (BarGroup.BarStruct struct : group.getSortedBars()) {
-                int stackStart = 0; int stackEnd = 0;
+                double stackStart = 0; double stackEnd = 0;
                 // add description labels on y axis
                 // (or) add description labels on x axis (when vertical alignment instead of horizontal)
                 xticks[index] = structPos;
@@ -850,6 +850,7 @@ public class BarRenderer implements Renderer {
     }
 
     // creates quad (to be rendered) at pos start, in row row, with value and color
+    // TODO: here seems to be a bug (startPosition might not be correct)
     protected Triangles makeBar(final double start, final double row, final double val, final Color color, final int pickColor) {
         Triangles bar = new Triangles();
         if (this.alignment == AlignmentConstants.HORIZONTAL) {
