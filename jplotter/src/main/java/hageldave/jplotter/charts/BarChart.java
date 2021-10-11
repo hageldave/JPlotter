@@ -8,7 +8,6 @@ import hageldave.jplotter.renderables.BarGroup;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderers.BarRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
-import hageldave.jplotter.util.AlignmentConstants;
 import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
 
@@ -43,7 +42,7 @@ public class BarChart {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
-        this.barRenderer = new BarRenderer(AlignmentConstants.VERTICAL, DefaultColorScheme.LIGHT.get());
+        this.barRenderer = new BarRenderer(alignment, DefaultColorScheme.LIGHT.get());
         this.content = new TrianglesRenderer();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
         this.barRenderer.setContent(content);
@@ -176,7 +175,6 @@ public class BarChart {
                     Point2D coordsysPoint = barRenderer.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
-                    //System.out.println(Integer.toHexString(pixel));
                     if((pixel & 0x00ffffff) == 0) {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {
