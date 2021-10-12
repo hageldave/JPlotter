@@ -70,6 +70,7 @@ public class ScatterPlot {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
     protected CompleteRenderer content;
+    protected CompleteRenderer contentHighlight;
 //    final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 //    final protected ScatterPlotModel_<Object> selectedItem = new ScatterPlotModel_<>();
@@ -102,8 +103,9 @@ public class ScatterPlot {
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.coordsys = new CoordSysRenderer();
         this.content = new CompleteRenderer();
+        this.contentHighlight = new CompleteRenderer();
         this.coordsys.setCoordinateView(-1, -1, 1, 1);
-        this.coordsys.setContent(content);
+        this.coordsys.setContent(content.withAppended(contentHighlight));
         this.canvas.setRenderer(coordsys);
         this.coordsys.setxAxisLabel(xLabel);
         this.coordsys.setyAxisLabel(yLabel);
@@ -148,6 +150,10 @@ public class ScatterPlot {
 
 	public CompleteRenderer getContent() {
 	    return content;
+	}
+	
+	public CompleteRenderer getContentHighlight() {
+		return contentHighlight;
 	}
 
 	protected synchronized int registerInPickingRegistry(Object obj) {

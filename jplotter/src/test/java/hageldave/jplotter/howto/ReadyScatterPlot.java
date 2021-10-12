@@ -9,6 +9,7 @@ import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
+import hageldave.jplotter.interaction.SimpleSelectionModel.SimpleSelectionListener;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
@@ -32,11 +33,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
+import java.util.SortedSet;
 import java.util.function.IntSupplier;
+import java.util.stream.Collectors;
 
 import static java.awt.event.KeyEvent.*;
 
@@ -182,7 +187,6 @@ public class ReadyScatterPlot {
 			}
 		});
 
-
         plot.alignCoordsys(1.2);
         plot.addPanning().setKeyListenerMask(new KeyMaskListener(VK_W));
         plot.addRectangleSelectionZoom();
@@ -202,31 +206,55 @@ public class ReadyScatterPlot {
         			datasetTable.scrollRectToVisible(datasetTable.getCellRect(selectedRows[0],0, true));
         		}
         	});
+        	
         }
+        datasetTable.getSelectionModel().addListSelectionListener(e->{
+        	if(e.getValueIsAdjusting())
+        		return;
+        	int[] selectedRows = datasetTable.getSelectedRows();
+        	List<Pair<Integer, Integer>> selectedInstances = Arrays.stream(selectedRows).mapToObj(i->plot.getDataModel().locateGlobalIndex(i)).collect(Collectors.toList());
+        	selectedDataPoints.setSelection(selectedInstances);
+        });
         
-
-        KeyMaskListener mousePointInteractionKeyMask = new KeyMaskListener(VK_ALT);
-        plot.getCanvas().asComponent().addKeyListener(mousePointInteractionKeyMask);
+        selectedDataPoints.addSelectionListener(new SimpleSelectionListener<Pair<Integer,Integer>>() {
+        	
+        	// TODO: bring selected points to front
+        	Points backlight = new Points(DefaultGlyph.SQUARE_F);
+        	
+        	{
+        		plot.getContentHighlight().addItemToRender(backlight);
+        	}
+        	
+			@Override
+			public void selectionChanged(SortedSet<Pair<Integer, Integer>> selection) {
+				backlight.removeAllPoints();
+				for(Pair<Integer, Integer> instance : selection) {
+					PointDetails point = plot.getPointsForChunk(instance.first).getPointDetails().get(instance.second);
+					backlight.addPoint(point.location).setScaling(point.scale.getAsDouble()*1.2).setColor(Color.LIGHT_GRAY);
+				}
+				plot.getCanvas().scheduleRepaint();
+			}
+		});
+        
         plot.addScatterPlotMouseEventListener(new ScatterPlotMouseEventListener() {
         	
-        	Points highlight = null;
+        	Points pointHighlight;
+        	boolean chunkHighlighted=false;
+        	{
+        		pointHighlight = new Points(DefaultGlyph.CIRCLE_F);
+				plot.getContentHighlight().points.addItemToRender(pointHighlight);
+        	}
         	
         	@Override
         	public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
-        		if(!mousePointInteractionKeyMask.isKeysPressed())
-        			return;
         		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
         			selectedDataPoints.setSelection(Pair.of(chunkIdx, pointIdx));
         		}
         		
         		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
         			PointDetails visiblePoint = plot.getPointsForChunk(chunkIdx).getPointDetails().get(pointIdx);
-        			if (highlight == null) {
-        				highlight = new Points(DefaultGlyph.CIRCLE_F);
-        				plot.getContent().points.addItemToRender(highlight);
-        			}
-        			highlight.removeAllPoints();
-        			Points.PointDetails pointDetail = highlight.addPoint(visiblePoint.location);
+        			pointHighlight.removeAllPoints();
+        			Points.PointDetails pointDetail = pointHighlight.addPoint(visiblePoint.location);
         			pointDetail.setColor(visiblePoint.color);
         			pointDetail.setScaling(1.5);
         			plot.getCanvas().scheduleRepaint();
@@ -238,10 +266,8 @@ public class ReadyScatterPlot {
         		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED)
         			selectedDataPoints.setSelection();
         		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
-        			if(highlight != null) {
-        				highlight.removeAllPoints();
-        				plot.getCanvas().scheduleRepaint();
-        			}
+        			pointHighlight.removeAllPoints();
+        			plot.getCanvas().scheduleRepaint();
         		}
         	}
         	
@@ -249,24 +275,34 @@ public class ReadyScatterPlot {
         	public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
         		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED)
         			return;
-        		// TODO: desaturate everything except corresponding chunk, for the time being we change alpha instead
+        		// desaturate everything except corresponding chunk
         		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
-        			double alpha = 0.1;
-        			if(chunk==chunkIdx)
+        			Points p = plot.getPointsForChunk(chunk);
+        			plot.getContentHighlight().points.removeItemToRender(p);
+        			double alpha;
+        			if(chunk==chunkIdx) {
         				alpha = 1.0;
-        			plot.getPointsForChunk(chunk).setGlobalAlphaMultiplier(alpha).setGlobalSaturationMultiplier(alpha);
+        				plot.getContentHighlight().addItemToRender(p);
+        			} else {
+        				alpha = 0.1;
+        			}
+        			p.setGlobalAlphaMultiplier(alpha).setGlobalSaturationMultiplier(alpha);
         		}
+        		chunkHighlighted=true;
         		plot.getCanvas().scheduleRepaint();
         	}
         	
         	@Override
         	public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
-        		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED)
+        		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED || !chunkHighlighted)
         			return;
-        		// TODO: resaturate everything, for the time being we change alpha instead
+        		// resaturate everything
         		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
-        			plot.getPointsForChunk(chunk).setGlobalAlphaMultiplier(1.0).setGlobalSaturationMultiplier(1.0);
+        			Points p = plot.getPointsForChunk(chunk);
+        			p.setGlobalAlphaMultiplier(1.0).setGlobalSaturationMultiplier(1.0);
+        			plot.getContentHighlight().points.removeItemToRender(p);
         		}
+        		chunkHighlighted=false;
         		plot.getCanvas().scheduleRepaint();
         	}
 		});
