@@ -62,6 +62,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			+ NL + "layout(location = 3) in float in_thickness;"
 			+ NL + "layout(location = 4) in float in_pathlen;"
 			+ NL + "layout(location = 5) in double in_param;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out dvec4 vposition;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
@@ -73,11 +74,24 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			/* we forward in_position to geometry shader since in_position contains two vec2 */
 			+ NL + "   vposition = in_position;"
-			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vcolor = scaleSaturation(unpackARGB(in_color), saturationScaling);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "   vthickness = in_thickness;"
 			+ NL + "   vpathlen = in_pathlen;"
@@ -93,6 +107,7 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			+ NL + "layout(location = 3) in float in_thickness;"
 			+ NL + "layout(location = 4) in float in_pathlen;"
 			+ NL + "layout(location = 5) in float in_param;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
 			+ NL + "out float vthickness;"
@@ -103,11 +118,24 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			/* we forward in_position to geometry shader since in_position contains two vec2 */
 			+ NL + "   gl_Position = in_position;"
-			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vcolor = scaleSaturation(unpackARGB(in_color), saturationScaling);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "   vthickness = in_thickness;"
 			+ NL + "   vpathlen = in_pathlen;"
@@ -460,21 +488,25 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 
 	@Override
 	@GLContextRequired
-	protected void renderItem(Curves lines, Shader shader) {
+	protected void renderItem(Curves curves, Shader shader) {
+		if(curves.numCurves() < 1) {
+			return;
+		}
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidthMultiplier");
-		GL20.glUniform1f(loc, lines.getGlobalThicknessMultiplier());
-		// set projection matrix in shader
+		GL20.glUniform1f(loc, curves.getGlobalThicknessMultiplier());
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "saturationScaling");
+		GL20.glUniform1f(loc, curves.getGlobalSaturationMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
-		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
+		GL20.glUniform1f(loc, curves.getGlobalAlphaMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokePattern");
-		GL20.glUniform1iv(loc, transferBits(lines.getStrokePattern(), strokePattern));
+		GL20.glUniform1iv(loc, transferBits(curves.getStrokePattern(), strokePattern));
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "strokeLength");
-		GL20.glUniform1f(loc, lines.hasStrokePattern() ? lines.getStrokeLength():0);
+		GL20.glUniform1f(loc, curves.hasStrokePattern() ? curves.getStrokeLength():0);
 		// draw things
-		lines.bindVertexArray();
-		GL11.glDrawArrays(GL11.GL_LINES, 0, lines.getNumEffectiveSegments()*2);
-		lines.releaseVertexArray();
+		curves.bindVertexArray();
+		GL11.glDrawArrays(GL11.GL_LINES, 0, curves.getNumEffectiveSegments()*2);
+		curves.releaseVertexArray();
 	}
 
 	/**
@@ -565,7 +597,12 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                 }
                 g.setStroke(stroke);
                 p.setStroke(stroke);
-                g.setColor(new Color(ColorOperations.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
+
+                // new color
+                int color = ColorOperations.changeSaturation(curvestrip.get(0).color.getAsInt(), curves.getGlobalSaturationMultiplier());
+                color = ColorOperations.scaleColorAlpha(color,curves.getGlobalAlphaMultiplier());
+                //g.setColor(new Color(ColorOperations.scaleColorAlpha(curvestrip.get(0).color.getAsInt(), curves.getGlobalAlphaMultiplier()), true));
+                g.setColor(new Color(color, true));
 
                 for (CurveDetails cd : curvestrip) {
                     float x1 = (float) ( scaleX * ( cd.p0.getX() - translateX ) );
@@ -641,7 +678,9 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                 path.setAttributeNS(null, "d", pathSVGCoordinates(curvestrip, translateX, translateY, scaleX, scaleY));
                 double strokew = curvestrip.get(0).thickness.getAsDouble() * curves.getGlobalThicknessMultiplier();
                 path.setAttributeNS(null, "stroke-width", SVGUtils.svgNumber(strokew));
-                int color = curvestrip.get(0).color.getAsInt();
+
+                int color = ColorOperations.changeSaturation(curvestrip.get(0).color.getAsInt(), curves.getGlobalSaturationMultiplier());
+
                 path.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(color));
                 double opacity = Pixel.a_normalized(color) * curves.getGlobalAlphaMultiplier();
                 if (opacity != 1.0) {
@@ -802,12 +841,15 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                             real[i] = Float.parseFloat(splited[i]);
                         }
 
+                        int color =
+                                ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());
+
                         PDFUtils.createPDFCurve(cs, new Point2D.Double(x1 + x, y1 + y),
                                 new Point2D.Double(cp0x + x, cp0y + y),
                                 new Point2D.Double(cp1x + x, cp1y + y),
                                 new Point2D.Double(x2 + x, y2 + y));
                         cs.setLineDashPattern(real, 0);
-                        cs.setStrokingColor(new Color(details.color.getAsInt()));
+                        cs.setStrokingColor(new Color(color));
                         cs.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
                         cs.stroke();
 

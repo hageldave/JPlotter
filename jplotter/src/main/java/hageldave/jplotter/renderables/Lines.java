@@ -47,6 +47,8 @@ public class Lines implements Renderable {
 
 	protected ArrayList<SegmentDetails> segments = new ArrayList<>();
 
+	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
+
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 
 	protected boolean isDirty = true;
@@ -260,6 +262,34 @@ public class Lines implements Renderable {
 	 */
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
+	}
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Lines setGlobalSaturationMultiplier(DoubleSupplier saturation) {
+		this.globalSaturationMultiplier = saturation;
+		return this;
+	}
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Lines setGlobalSaturationMultiplier(double saturation) {
+		return setGlobalSaturationMultiplier(() -> saturation);
+	}
+
+	/** @return the saturation multiplier of this renderable */
+	public float getGlobalSaturationMultiplier() {
+		return (float)globalSaturationMultiplier.getAsDouble();
 	}
 
 	/**
