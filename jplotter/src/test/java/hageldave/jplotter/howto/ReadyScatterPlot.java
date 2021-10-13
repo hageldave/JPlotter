@@ -1,71 +1,59 @@
 package hageldave.jplotter.howto;
 
+import static java.awt.event.KeyEvent.VK_W;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.SortedSet;
+import java.util.stream.Collectors;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.TableModel;
+
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.charts.ScatterPlot;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel.ScatterPlotDataModelListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
-import hageldave.jplotter.color.ColorMap;
-import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.charts.ScatterPlot.ScatterPlotVisualMapping;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.interaction.SimpleSelectionModel.SimpleSelectionListener;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
-import hageldave.jplotter.renderables.Legend;
+import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.util.Pair;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.SortedSet;
-import java.util.function.IntSupplier;
-import java.util.stream.Collectors;
-
-import static java.awt.event.KeyEvent.*;
-
 public class ReadyScatterPlot {
 
-    private static double[][] randomData(int n){
-        double[][] d = new double[n][3];
-        for(int i=0; i<n; i++){
-            d[i][0]=Math.random()*200-1;
-            d[i][1]=Math.random()*200-1;
-            d[i][2]=(d[i][1]+1)/2;
-        }
-        return d;
-    }
-
     public static void main(String[] args) throws IOException {
-        // generate or get data
-        JFrame frame = new JFrame();
-        JLabel selectedPoint = new JLabel();
-        ScatterPlot plot = new ScatterPlot(true);
-        Component canvas = plot.getCanvas().asComponent();
-
+        // generate or load data
         LinkedList<LinkedList<double[]>> data = new LinkedList<>();
-
         String[] classLabels = new String[]{
                 "Rad Flow",
                 "Fpv Close",
@@ -75,7 +63,6 @@ public class ReadyScatterPlot {
                 "Bpv Close",
                 "Bpv Open",
         };
-        
         for (int i = 0; i < classLabels.length; i++)
             data.add(new LinkedList<>());
 
@@ -94,18 +81,43 @@ public class ReadyScatterPlot {
                 }
                 list.add(tempArray);
             }
-
-            int index = 0;
-            // parse list to array so that scatterplot class can read data
-            for (LinkedList<double[]> list : data) {
-                double[][] array = list.toArray(new double[0][]);
-                // adds data to scatter plot
-                plot.getDataModel().addData(array, 6, 7, classLabels[index++]);
-            }
         }
+
+        // create scatter plot of dataset
+        ScatterPlot plot = new ScatterPlot(true);
+        plot.setVisualMapping(new ScatterPlotVisualMapping() {
+        	// standard scatter plot glyphs excluding CROSS because we can't easily draw an outline for CROSS
+        	Glyph[] glyphs = new Glyph[] {
+    				DefaultGlyph.CIRCLE_F,
+    				DefaultGlyph.SQUARE_F,
+    				DefaultGlyph.TRIANGLE_F,
+    				DefaultGlyph.CIRCLE,
+    				DefaultGlyph.SQUARE,
+    				DefaultGlyph.TRIANGLE,
+    		};
+        	@Override
+        	public Glyph getGlyphForChunk(int chunkIdx, String chunkDescr) {
+        		return glyphs[chunkIdx%glyphs.length];
+        	}
+		});
         
+        // feed dataset to plot
+        for(int i=0; i<data.size(); i++) {
+        	LinkedList<double[]> list = data.get(i);
+        	double[][] array = list.toArray(new double[0][]);
+        	// adds data to scatter plot
+        	plot.getDataModel().addData(array, 0, 2, classLabels[i]);
+        }
+        plot.alignCoordsys(1.2);
+        plot.placeLegendOnBottom();
+        
+        // basic coordinate system interaction schemes
+        plot.addPanning().setKeyListenerMask(new KeyMaskListener(VK_W));
+        plot.addRectangleSelectionZoom();
+        plot.addScrollZoom();
+        
+        // create a table that uses the plot's data model 
         JTable datasetTable = new JTable(new TableModel() {
-			
         	private ScatterPlotDataModel spdm = plot.getDataModel();
         	private HashMap<TableModelListener, ScatterPlotDataModelListener> listenerLookup = new HashMap<>();
         	
@@ -149,7 +161,7 @@ public class ReadyScatterPlot {
 				if(columnIndex==0)
 					return "class";
 				else
-					return "feature " + columnIndex; 
+					return "val " + columnIndex; 
 			}
 			
 			@Override
@@ -171,6 +183,7 @@ public class ReadyScatterPlot {
 			
 			@Override
 			public void addTableModelListener(TableModelListener l) {
+				// creating a listener for the plot's data model instead since its the source of the table model
 				TableModel self = this;
 				ScatterPlotDataModelListener proxyListener = new ScatterPlotDataModelListener() {
 					@Override
@@ -186,13 +199,8 @@ public class ReadyScatterPlot {
 				listenerLookup.put(l, proxyListener);
 			}
 		});
-
-        plot.alignCoordsys(1.2);
-        plot.addPanning().setKeyListenerMask(new KeyMaskListener(VK_W));
-        plot.addRectangleSelectionZoom();
-        plot.addScrollZoom();
-        plot.placeLegendOnBottom();
         
+        // setup selection model for data points
         SimpleSelectionModel<Pair<Integer, Integer>> selectedDataPoints = new SimpleSelectionModel<Pair<Integer,Integer>>();
         {
         	selectedDataPoints.addSelectionListener(s->{
@@ -208,6 +216,7 @@ public class ReadyScatterPlot {
         	});
         	
         }
+        // couple table's selection model with the general selection model
         datasetTable.getSelectionModel().addListSelectionListener(e->{
         	if(e.getValueIsAdjusting())
         		return;
@@ -216,26 +225,38 @@ public class ReadyScatterPlot {
         	selectedDataPoints.setSelection(selectedInstances);
         });
         
-        selectedDataPoints.addSelectionListener(new SimpleSelectionListener<Pair<Integer,Integer>>() {
+        // on data point selection change: highlight in scatter plot
+        selectedDataPoints.addSelectionListener(new SimpleSelectionListener<Pair<Integer,Integer>>() {	
+        	private HashMap<Glyph, Points> glyph2points = new HashMap<Glyph, Points>();
         	
-        	// TODO: bring selected points to front
-        	Points backlight = new Points(DefaultGlyph.SQUARE_F);
+        	private void reset() {
+        		glyph2points.values().forEach(p->p.removeAllPoints());
+        	}
         	
-        	{
-        		plot.getContentHighlight().addItemToRender(backlight);
+        	private Points pointsForGlyph(Glyph g) {
+        		return glyph2points.computeIfAbsent(g, g_->{
+        			Points p = new Points(g_);
+        			p.setGlobalScaling(1.2);
+        			plot.getContentHighlight().addItemToRender(p);
+        			return p;
+        		});
         	}
         	
 			@Override
 			public void selectionChanged(SortedSet<Pair<Integer, Integer>> selection) {
-				backlight.removeAllPoints();
+				reset();
 				for(Pair<Integer, Integer> instance : selection) {
-					PointDetails point = plot.getPointsForChunk(instance.first).getPointDetails().get(instance.second);
-					backlight.addPoint(point.location).setScaling(point.scale.getAsDouble()*1.2).setColor(Color.LIGHT_GRAY);
+					Points points = plot.getPointsForChunk(instance.first);
+					PointDetails p = points.getPointDetails().get(instance.second);
+					Points front = pointsForGlyph(points.glyph);
+					front.addPoint(p.location).setColor(Color.black).setScaling(1.2);
+					front.addPoint(p.location).setColor(p.color);
 				}
 				plot.getCanvas().scheduleRepaint();
 			}
 		});
         
+        // setup mouse -> plot interaction
         plot.addScatterPlotMouseEventListener(new ScatterPlotMouseEventListener() {
         	
         	Points pointHighlight;
@@ -247,13 +268,17 @@ public class ReadyScatterPlot {
         	
         	@Override
         	public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+        		/* mouse interacting with point in the coordinate system */
+        		
         		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
+        			// on click: select data point
         			selectedDataPoints.setSelection(Pair.of(chunkIdx, pointIdx));
         		}
         		
         		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
-        			PointDetails visiblePoint = plot.getPointsForChunk(chunkIdx).getPointDetails().get(pointIdx);
+        			// on mouse over: highlight point under cursor
         			pointHighlight.removeAllPoints();
+        			PointDetails visiblePoint = plot.getPointsForChunk(chunkIdx).getPointDetails().get(pointIdx);
         			Points.PointDetails pointDetail = pointHighlight.addPoint(visiblePoint.location);
         			pointDetail.setColor(visiblePoint.color);
         			pointDetail.setScaling(1.5);
@@ -263,9 +288,14 @@ public class ReadyScatterPlot {
         	
         	@Override
         	public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
-        		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED)
+        		/* mouse in coordinate system but NOT interacting with point (is in empty area) */
+        		
+        		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
+        			// on click: empty selection
         			selectedDataPoints.setSelection();
+        		}
         		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
+        			// remove highlight since no point is under cursor
         			pointHighlight.removeAllPoints();
         			plot.getCanvas().scheduleRepaint();
         		}
@@ -273,9 +303,11 @@ public class ReadyScatterPlot {
         	
         	@Override
         	public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
+        		/* mouse interacting with element outside the coordinate system, e.g. legend element */
+        		
         		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED)
         			return;
-        		// desaturate everything except corresponding chunk
+        		// on mouse over legend element of chunk: desaturate every point chunk except corresponding chunk
         		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
         			Points p = plot.getPointsForChunk(chunk);
         			plot.getContentHighlight().points.removeItemToRender(p);
@@ -296,6 +328,7 @@ public class ReadyScatterPlot {
         	public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
         		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED || !chunkHighlighted)
         			return;
+        		
         		// resaturate everything
         		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
         			Points p = plot.getPointsForChunk(chunk);
@@ -309,19 +342,16 @@ public class ReadyScatterPlot {
 
 
         // display within a JFrame
+        JFrame frame = new JFrame();
         frame.setSize(new Dimension(400, 400));
         Container contentPane = frame.getContentPane();
         contentPane.setLayout(new BorderLayout());
 
-        Container bottomPanel = setupSidepanel();
-
         // display currently selected point
-        bottomPanel.add(setupCurrentPoint());
-        contentPane.add(canvas, BorderLayout.CENTER);
-        contentPane.add(bottomPanel, BorderLayout.SOUTH);
+        contentPane.add(plot.getCanvas().asComponent(), BorderLayout.CENTER);
+        contentPane.add(new JScrollPane(datasetTable), BorderLayout.SOUTH);
         // put dataset table on bottom
-        datasetTable.setPreferredScrollableViewportSize(new Dimension(400, 150));
-        bottomPanel.add(new JScrollPane(datasetTable));
+        datasetTable.setPreferredScrollableViewportSize(new Dimension(500, 150));
 
         frame.setVisible(true);
         frame.setTitle("Scatterplot");
@@ -341,35 +371,6 @@ public class ReadyScatterPlot {
                 img.paint(g2d->frame.paintAll(g2d));
                 ImageSaver.saveImage(img.getRemoteBufferedImage(), "scatterplot.png");
             });
-    }
-
-
-    protected static Container setupCurrentPoint() {
-        Container selectedPointWrapper = new Container();
-        selectedPointWrapper.setLayout(new BoxLayout(selectedPointWrapper, BoxLayout.Y_AXIS));
-        Box box = Box.createHorizontalBox();
-        JLabel selectedPointLabel = new JLabel("Currently selected: ");
-        selectedPointLabel.setFont(new Font("Calibri", Font.BOLD, 13));
-        selectedPointLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        box.add(selectedPointLabel);
-        box.add(Box.createHorizontalGlue());
-        box.setBorder(new EmptyBorder(15, 15, 15, 15));
-        selectedPointWrapper.add(box);
-
-        return selectedPointWrapper;
-    }
-
-    protected static Container setupSidepanel() {
-        Container boxWrapper = new Container();
-        boxWrapper.setLayout(new BoxLayout(boxWrapper, BoxLayout.Y_AXIS));
-        JLabel label = new JLabel("Scatterplot Demo App");
-        Box box = Box.createHorizontalBox();
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        box.add(label);
-        box.add(Box.createHorizontalGlue());
-        box.setBorder(new EmptyBorder(15, 15, 15, 15));
-        boxWrapper.add(box);
-        return boxWrapper;
     }
 
 
