@@ -1,5 +1,22 @@
 package hageldave.jplotter.charts;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.TreeSet;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -17,26 +34,9 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.util.DataModel;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
-
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.TreeSet;
 
 /**
  *
@@ -645,6 +645,28 @@ public class ScatterPlot {
 
 	public Points getPointsForChunk(int chunkIdx) {
 		return this.pointsPerDataChunk.get(chunkIdx);
+	}
+	
+	/**
+	 * Sets up JFrame boilerplate, puts this plot into it, and sets the
+	 * frame visible on the AWT event dispatch thread.
+	 * @param title of the window
+	 * @return the JFrame
+	 */
+	public JFrame display(String title) {
+		JFrame frame = new JFrame();
+		frame.setTitle(title);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().setLayout(new BorderLayout());
+		frame.getContentPane().add(this.canvas.asComponent());
+		this.canvas.addCleanupOnWindowClosingListener(frame);
+		
+		SwingUtilities.invokeLater( ()->{
+			frame.pack();
+			frame.setVisible(true);
+		});
+		
+		return frame;
 	}
     
     
