@@ -9,7 +9,9 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TreeSet;
@@ -71,11 +73,7 @@ public class ScatterPlot {
     protected CoordSysRenderer coordsys;
     protected CompleteRenderer content;
     protected CompleteRenderer contentHighlight;
-//    final protected HashMap<Integer, RenderedPoints> pointsInRenderer = new HashMap<>();
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
-//    final protected ScatterPlotModel_<Object> selectedItem = new ScatterPlotModel_<>();
-//    final protected ScatterPlotModel_<Object> hoveredItem = new ScatterPlotModel_<>();
-    
 
     final protected ScatterPlotDataModel dataModel = new ScatterPlotDataModel();
     final protected ArrayList<Points> pointsPerDataChunk = new ArrayList<>();
@@ -88,6 +86,12 @@ public class ScatterPlot {
     final protected LinkedList<PointSetSelectionListener> pointSetSelectionOngoingListeners = new LinkedList<>();
 	private int legendRightWidth = 100;
 	private int legendBottomHeight = 60;
+	
+	private HashMap<Glyph, Points> accentuation_glyph2points = new HashMap<Glyph, Points>();
+	protected SimpleSelectionModel<Pair<Integer, Integer>> accentuationSelection = new SimpleSelectionModel<>();
+	
+	private HashMap<Glyph, Points> emphasis_glyph2points = new HashMap<Glyph, Points>();
+	protected SimpleSelectionModel<Pair<Integer, Integer>> emphasisSelection = new SimpleSelectionModel<>();
     
     public ScatterPlot(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
@@ -123,6 +127,9 @@ public class ScatterPlot {
         
         createMouseEventHandler();
         createRectangularPointSetSelectionCapabilities();
+        
+        this.accentuationSelection.addSelectionListener(this::createAccentutation);
+        this.emphasisSelection.addSelectionListener(this::createEmphasis);
     }
     
     public ScatterPlotVisualMapping getVisualMapping() {
@@ -667,6 +674,81 @@ public class ScatterPlot {
 		});
 		
 		return frame;
+	}
+
+	@SafeVarargs
+	public final void accentuate(Pair<Integer, Integer> ... toAccentuate) {
+		accentuate(Arrays.asList(toAccentuate));
+	}
+	
+	public void accentuate(Iterable<Pair<Integer, Integer>> toAccentuate) {
+		this.accentuationSelection.setSelection(toAccentuate);
+	}
+	
+	@SafeVarargs
+	public final void emphasize(Pair<Integer, Integer> ... toEmphasize) {
+		emphasize(Arrays.asList(toEmphasize));
+	}
+	
+	public void emphasize(Iterable<Pair<Integer, Integer>> toEmphasize) {
+		this.emphasisSelection.setSelection(toEmphasize);
+	}
+	
+	protected void createAccentuation() {
+		createAccentutation(this.accentuationSelection.getSelection());
+	}
+	
+	protected void createAccentutation(Iterable<Pair<Integer, Integer>> toAccentuate) {
+		clearAccentuation();
+		for(Pair<Integer, Integer> instance : toAccentuate) {
+			Points points = getPointsForChunk(instance.first);
+			PointDetails p = points.getPointDetails().get(instance.second);
+			Points front = getOrCreateAccentuationPointsForGlyph(points.glyph);
+			front.addPoint(p.location).setColor(this.coordsys.getColorScheme().getColor1()).setScaling(1.2);
+			front.addPoint(p.location).setColor(p.color);
+		}
+		this.getCanvas().scheduleRepaint();
+	}
+	
+	protected void createEmphasis() {
+		createEmphasis(this.emphasisSelection.getSelection());
+	}
+	
+	protected void createEmphasis(Iterable<Pair<Integer, Integer>> toHighlight) {
+		clearEmphasis();
+		for(Pair<Integer, Integer> instance : toHighlight) {
+			Points points = getPointsForChunk(instance.first);
+			PointDetails p = points.getPointDetails().get(instance.second);
+			Points front = getOrCreateEmphasisPointsForGlyph(points.glyph);
+			front.addPoint(p.location).setColor(p.color).setScaling(1.5);
+		}
+		this.getCanvas().scheduleRepaint();
+	}
+	
+	private Points getOrCreateAccentuationPointsForGlyph(Glyph g) {
+		return this.accentuation_glyph2points.computeIfAbsent(g, g_->{
+			Points p = new Points(g_);
+			p.setGlobalScaling(1.2);
+			getContentHighlight().addItemToRender(p);
+			return p;
+		});
+	}
+	
+	private Points getOrCreateEmphasisPointsForGlyph(Glyph g) {
+		return this.emphasis_glyph2points.computeIfAbsent(g, g_->{
+			Points p = new Points(g_);
+			p.setGlobalScaling(1.2);
+			getContentHighlight().addItemToRender(p);
+			return p;
+		});
+	}
+	
+	private void clearAccentuation() {
+		this.accentuation_glyph2points.values().forEach(p->p.removeAllPoints());
+	}
+	
+	private void clearEmphasis() {
+		this.emphasis_glyph2points.values().forEach(p->p.removeAllPoints());
 	}
     
     

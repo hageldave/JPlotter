@@ -220,35 +220,7 @@ public class ReadyScatterPlot {
         });
         
         // on data point selection change: highlight in scatter plot
-        selectedDataPoints.addSelectionListener(new SimpleSelectionListener<Pair<Integer,Integer>>() {	
-        	private HashMap<Glyph, Points> glyph2points = new HashMap<Glyph, Points>();
-        	
-        	private void reset() {
-        		glyph2points.values().forEach(p->p.removeAllPoints());
-        	}
-        	
-        	private Points pointsForGlyph(Glyph g) {
-        		return glyph2points.computeIfAbsent(g, g_->{
-        			Points p = new Points(g_);
-        			p.setGlobalScaling(1.2);
-        			plot.getContentHighlight().addItemToRender(p);
-        			return p;
-        		});
-        	}
-        	
-			@Override
-			public void selectionChanged(SortedSet<Pair<Integer, Integer>> selection) {
-				reset();
-				for(Pair<Integer, Integer> instance : selection) {
-					Points points = plot.getPointsForChunk(instance.first);
-					PointDetails p = points.getPointDetails().get(instance.second);
-					Points front = pointsForGlyph(points.glyph);
-					front.addPoint(p.location).setColor(Color.black).setScaling(1.2);
-					front.addPoint(p.location).setColor(p.color);
-				}
-				plot.getCanvas().scheduleRepaint();
-			}
-		});
+        selectedDataPoints.addSelectionListener(plot::accentuate);
         
         // setup mouse -> plot interaction
         plot.addScatterPlotMouseEventListener(new ScatterPlotMouseEventListener() {
@@ -271,12 +243,7 @@ public class ReadyScatterPlot {
         		
         		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
         			// on mouse over: highlight point under cursor
-        			pointHighlight.removeAllPoints();
-        			PointDetails visiblePoint = plot.getPointsForChunk(chunkIdx).getPointDetails().get(pointIdx);
-        			Points.PointDetails pointDetail = pointHighlight.addPoint(visiblePoint.location);
-        			pointDetail.setColor(visiblePoint.color);
-        			pointDetail.setScaling(1.5);
-        			plot.getCanvas().scheduleRepaint();
+        			plot.emphasize(Pair.of(chunkIdx, pointIdx));
         		}
         	}
         	
@@ -289,9 +256,8 @@ public class ReadyScatterPlot {
         			selectedDataPoints.setSelection();
         		}
         		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
-        			// remove highlight since no point is under cursor
-        			pointHighlight.removeAllPoints();
-        			plot.getCanvas().scheduleRepaint();
+//        			// remove highlight since no point is under cursor
+        			plot.emphasize();
         		}
         	}
         	
