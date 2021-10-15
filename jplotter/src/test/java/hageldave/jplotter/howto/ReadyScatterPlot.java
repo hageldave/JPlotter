@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -229,7 +230,7 @@ public class ReadyScatterPlot {
         	boolean chunkHighlighted=false;
         	{
         		pointHighlight = new Points(DefaultGlyph.CIRCLE_F);
-				plot.getContentHighlight().points.addItemToRender(pointHighlight);
+				plot.getContentLayer2().points.addItemToRender(pointHighlight);
         	}
         	
         	@Override
@@ -268,20 +269,11 @@ public class ReadyScatterPlot {
         		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED)
         			return;
         		// on mouse over legend element of chunk: desaturate every point chunk except corresponding chunk
-        		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
-        			Points p = plot.getPointsForChunk(chunk);
-        			plot.getContentHighlight().points.removeItemToRender(p);
-        			double alpha;
-        			if(chunk==chunkIdx) {
-        				alpha = 1.0;
-        				plot.getContentHighlight().addItemToRender(p);
-        			} else {
-        				alpha = 0.1;
-        			}
-        			p.setGlobalAlphaMultiplier(alpha).setGlobalSaturationMultiplier(alpha);
-        		}
+        		List<Pair<Integer, Integer>> instancesOfChunk = IntStream.range(0, plot.getDataModel().chunkSize(chunkIdx))
+        				.mapToObj(i->Pair.of(chunkIdx, i))
+        				.collect(Collectors.toList());
+        		plot.highlight(instancesOfChunk);
         		chunkHighlighted=true;
-        		plot.getCanvas().scheduleRepaint();
         	}
         	
         	@Override
@@ -289,14 +281,8 @@ public class ReadyScatterPlot {
         		if(mouseEventType != MOUSE_EVENT_TYPE_MOVED || !chunkHighlighted)
         			return;
         		
-        		// resaturate everything
-        		for(int chunk=0; chunk<plot.getDataModel().numChunks(); chunk++) {
-        			Points p = plot.getPointsForChunk(chunk);
-        			p.setGlobalAlphaMultiplier(1.0).setGlobalSaturationMultiplier(1.0);
-        			plot.getContentHighlight().points.removeItemToRender(p);
-        		}
+        		plot.highlight();
         		chunkHighlighted=false;
-        		plot.getCanvas().scheduleRepaint();
         	}
 		});
 

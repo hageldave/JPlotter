@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.swing.JFrame;
@@ -36,6 +37,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
@@ -71,8 +73,9 @@ import hageldave.jplotter.util.Utils;
 public class ScatterPlot {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
-    protected CompleteRenderer content;
-    protected CompleteRenderer contentHighlight;
+    protected CompleteRenderer contentLayer0;
+    protected CompleteRenderer contentLayer1;
+    protected CompleteRenderer contentLayer2;
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 
     final protected ScatterPlotDataModel dataModel = new ScatterPlotDataModel();
@@ -87,11 +90,17 @@ public class ScatterPlot {
 	private int legendRightWidth = 100;
 	private int legendBottomHeight = 60;
 	
-	private HashMap<Glyph, Points> accentuation_glyph2points = new HashMap<Glyph, Points>();
-	protected SimpleSelectionModel<Pair<Integer, Integer>> accentuationSelection = new SimpleSelectionModel<>();
+	protected static final String CUE_HIGHLIGHT = "HIGHLIGHT";
+	protected static final String CUE_ACCENTUATE = "ACCENTUATE";
+	protected static final String CUE_EMPHASIZE = "EMPHASIZE";
 	
-	private HashMap<Glyph, Points> emphasis_glyph2points = new HashMap<Glyph, Points>();
-	protected SimpleSelectionModel<Pair<Integer, Integer>> emphasisSelection = new SimpleSelectionModel<>();
+	protected HashMap<String, HashMap<Glyph, Points>> glyph2pointMaps = new HashMap<>();
+	protected HashMap<String, SimpleSelectionModel<Pair<Integer, Integer>>> cueSelectionModels = new HashMap<>();
+//	private HashMap<Glyph, Points> accentuation_glyph2points = new HashMap<Glyph, Points>();
+//	protected SimpleSelectionModel<Pair<Integer, Integer>> accentuationSelection = new SimpleSelectionModel<>();
+//	
+//	private HashMap<Glyph, Points> emphasis_glyph2points = new HashMap<Glyph, Points>();
+//	protected SimpleSelectionModel<Pair<Integer, Integer>> emphasisSelection = new SimpleSelectionModel<>();
     
     public ScatterPlot(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
@@ -106,10 +115,11 @@ public class ScatterPlot {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.coordsys = new CoordSysRenderer();
-        this.content = new CompleteRenderer();
-        this.contentHighlight = new CompleteRenderer();
+        this.contentLayer0 = new CompleteRenderer();
+        this.contentLayer1 = new CompleteRenderer();
+        this.contentLayer2 = new CompleteRenderer();
         this.coordsys.setCoordinateView(-1, -1, 1, 1);
-        this.coordsys.setContent(content.withAppended(contentHighlight));
+        this.coordsys.setContent(contentLayer0.withAppended(contentLayer1).withAppended(contentLayer2));
         this.canvas.setRenderer(coordsys);
         this.coordsys.setxAxisLabel(xLabel);
         this.coordsys.setyAxisLabel(yLabel);
@@ -128,8 +138,11 @@ public class ScatterPlot {
         createMouseEventHandler();
         createRectangularPointSetSelectionCapabilities();
         
-        this.accentuationSelection.addSelectionListener(this::createAccentutation);
-        this.emphasisSelection.addSelectionListener(this::createEmphasis);
+        for(String cueType : Arrays.asList(CUE_EMPHASIZE, CUE_ACCENTUATE, CUE_HIGHLIGHT)){
+        	this.glyph2pointMaps.put(cueType, new HashMap<>());
+        	this.cueSelectionModels.put(cueType, new SimpleSelectionModel<>());
+        	this.cueSelectionModels.get(cueType).addSelectionListener(selection->createCue(cueType));
+        }
     }
     
     public ScatterPlotVisualMapping getVisualMapping() {
@@ -156,11 +169,19 @@ public class ScatterPlot {
 	}
 
 	public CompleteRenderer getContent() {
-	    return content;
+	    return getContentLayer0();
 	}
 	
-	public CompleteRenderer getContentHighlight() {
-		return contentHighlight;
+	public CompleteRenderer getContentLayer0() {
+		return contentLayer0;
+	}
+	
+	public CompleteRenderer getContentLayer1() {
+		return contentLayer1;
+	}
+	
+	public CompleteRenderer getContentLayer2() {
+		return contentLayer2;
 	}
 
 	protected synchronized int registerInPickingRegistry(Object obj) {
@@ -179,7 +200,7 @@ public class ScatterPlot {
     protected synchronized void onDataAdded(int chunkIdx, double[][] dataChunk, String chunkDescription, int xIdx, int yIdx) {
     	Points points = new Points(getVisualMapping().getGlyphForChunk(chunkIdx, chunkDescription));
     	pointsPerDataChunk.add(points);
-    	content.addItemToRender(points);
+    	contentLayer0.addItemToRender(points);
     	for(int i=0; i<dataChunk.length; i++) {
     		int i_=i;
     		double[] datapoint = dataChunk[i];
@@ -682,7 +703,8 @@ public class ScatterPlot {
 	}
 	
 	public void accentuate(Iterable<Pair<Integer, Integer>> toAccentuate) {
-		this.accentuationSelection.setSelection(toAccentuate);
+		SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_ACCENTUATE);
+		selectionModel.setSelection(toAccentuate);
 	}
 	
 	@SafeVarargs
@@ -691,64 +713,149 @@ public class ScatterPlot {
 	}
 	
 	public void emphasize(Iterable<Pair<Integer, Integer>> toEmphasize) {
-		this.emphasisSelection.setSelection(toEmphasize);
+		SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_EMPHASIZE);
+		selectionModel.setSelection(toEmphasize);
 	}
 	
-	protected void createAccentuation() {
-		createAccentutation(this.accentuationSelection.getSelection());
+	@SafeVarargs
+	public final void highlight(Pair<Integer, Integer> ... toHighlight) {
+		highlight(Arrays.asList(toHighlight));
 	}
 	
-	protected void createAccentutation(Iterable<Pair<Integer, Integer>> toAccentuate) {
-		clearAccentuation();
-		for(Pair<Integer, Integer> instance : toAccentuate) {
-			Points points = getPointsForChunk(instance.first);
-			PointDetails p = points.getPointDetails().get(instance.second);
-			Points front = getOrCreateAccentuationPointsForGlyph(points.glyph);
-			front.addPoint(p.location).setColor(this.coordsys.getColorScheme().getColor1()).setScaling(1.2);
-			front.addPoint(p.location).setColor(p.color);
+	public void highlight(Iterable<Pair<Integer, Integer>> toHighlight) {
+		SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_HIGHLIGHT);
+		selectionModel.setSelection(toHighlight);
+	}
+	
+	protected void createCue(final String cueType) {
+		SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(cueType);
+		SortedSet<Pair<Integer, Integer>> instancesToCue = selectionModel.getSelection();
+		
+		clearCue(cueType);
+		
+		switch (cueType) {
+		case CUE_ACCENTUATE:
+		{
+			// emphasis: show point in top layer with outline
+			for(Pair<Integer, Integer> instance : instancesToCue) {
+				Points points = getPointsForChunk(instance.first);
+				PointDetails p = points.getPointDetails().get(instance.second);
+				Points front = getOrCreateCuePointsForGlyph(cueType, points.glyph);
+				// fake outline by putting slightly larger point behind
+				front.addPoint(p.location).setColor(this.coordsys.getColorScheme().getColor1()).setScaling(1.2);
+				front.addPoint(p.location).setColor(p.color);
+			}
 		}
+		break;
+		case CUE_EMPHASIZE:
+		{
+			// accentuation: show enlarged point in top layer
+			for(Pair<Integer, Integer> instance : instancesToCue) {
+				Points points = getPointsForChunk(instance.first);
+				PointDetails p = points.getPointDetails().get(instance.second);
+				Points front = getOrCreateCuePointsForGlyph(cueType, points.glyph);
+				front.addPoint(p.location).setColor(p.color).setScaling(1.5);
+			}
+		}
+		break;
+		case CUE_HIGHLIGHT:
+		{
+			if(instancesToCue.isEmpty()) {
+				for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
+					greyOutChunk(chunk, false);
+			} else {
+				for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
+					greyOutChunk(chunk, true);
+				for(Pair<Integer, Integer> instance : instancesToCue) {
+					Points points = getPointsForChunk(instance.first);
+					PointDetails p = points.getPointDetails().get(instance.second);
+					Points front = getOrCreateCuePointsForGlyph(cueType, points.glyph);
+					front.addPoint(p.location).setColor(p.color);
+				}
+			}
+		}
+		break;
+		default:
+			throw new IllegalStateException("Unhandled cue type " + cueType);
+		}
+		
 		this.getCanvas().scheduleRepaint();
 	}
 	
-	protected void createEmphasis() {
-		createEmphasis(this.emphasisSelection.getSelection());
+	protected void greyOutChunk(int chunkIdx, boolean greyedOut) {
+		double factor = greyedOut ? 0.1 : 1.0;
+		getPointsForChunk(chunkIdx).setGlobalSaturationMultiplier(factor).setGlobalAlphaMultiplier(factor);
 	}
 	
-	protected void createEmphasis(Iterable<Pair<Integer, Integer>> toHighlight) {
-		clearEmphasis();
-		for(Pair<Integer, Integer> instance : toHighlight) {
-			Points points = getPointsForChunk(instance.first);
-			PointDetails p = points.getPointDetails().get(instance.second);
-			Points front = getOrCreateEmphasisPointsForGlyph(points.glyph);
-			front.addPoint(p.location).setColor(p.color).setScaling(1.5);
+	
+//	protected void createHighlighting(SortedSet<Pair<Integer, Integer>> instancesToHighlight) {
+//		if(instancesToHighlight.isEmpty()) {
+//			for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++) {
+//				getPointsForChunk(chunk).set
+//			}
+//		}
+//	}
+//	
+//	protected void createAccentuation() {
+//		createAccentutation(this.accentuationSelection.getSelection());
+//	}
+//	
+//	protected void createAccentutation(Iterable<Pair<Integer, Integer>> toAccentuate) {
+//		clearAccentuation();
+//		for(Pair<Integer, Integer> instance : toAccentuate) {
+//			Points points = getPointsForChunk(instance.first);
+//			PointDetails p = points.getPointDetails().get(instance.second);
+//			Points front = getOrCreateAccentuationPointsForGlyph(points.glyph);
+//			front.addPoint(p.location).setColor(this.coordsys.getColorScheme().getColor1()).setScaling(1.2);
+//			front.addPoint(p.location).setColor(p.color);
+//		}
+//		this.getCanvas().scheduleRepaint();
+//	}
+//	
+//	protected void createEmphasis() {
+//		createEmphasis(this.emphasisSelection.getSelection());
+//	}
+//	
+//	protected void createEmphasis(Iterable<Pair<Integer, Integer>> toHighlight) {
+//		clearEmphasis();
+//		for(Pair<Integer, Integer> instance : toHighlight) {
+//			Points points = getPointsForChunk(instance.first);
+//			PointDetails p = points.getPointDetails().get(instance.second);
+//			Points front = getOrCreateEmphasisPointsForGlyph(points.glyph);
+//			front.addPoint(p.location).setColor(p.color).setScaling(1.5);
+//		}
+//		this.getCanvas().scheduleRepaint();
+//	}
+	
+	private Points getOrCreateCuePointsForGlyph(String cue, Glyph g) {
+		HashMap<Glyph, Points> glyph2points = this.glyph2pointMaps.get(cue);
+		if(!glyph2points.containsKey(g)) {
+			Points points = new Points(g);
+			glyph2points.put(g, points);
+			switch (cue) {
+			case CUE_ACCENTUATE: // fallthrough
+			case CUE_EMPHASIZE:
+			{
+				points.setGlobalScaling(1.2);
+				getContentLayer2().addItemToRender(points);
+			}
+			break;
+			case CUE_HIGHLIGHT:
+			{
+				getContentLayer1().addItemToRender(points);
+			}
+			break;
+			default:
+				throw new IllegalStateException("unhandled cue case " + cue);
+			}
 		}
-		this.getCanvas().scheduleRepaint();
+		
+		return glyph2points.get(g);
 	}
 	
-	private Points getOrCreateAccentuationPointsForGlyph(Glyph g) {
-		return this.accentuation_glyph2points.computeIfAbsent(g, g_->{
-			Points p = new Points(g_);
-			p.setGlobalScaling(1.2);
-			getContentHighlight().addItemToRender(p);
-			return p;
-		});
-	}
-	
-	private Points getOrCreateEmphasisPointsForGlyph(Glyph g) {
-		return this.emphasis_glyph2points.computeIfAbsent(g, g_->{
-			Points p = new Points(g_);
-			p.setGlobalScaling(1.2);
-			getContentHighlight().addItemToRender(p);
-			return p;
-		});
-	}
-	
-	private void clearAccentuation() {
-		this.accentuation_glyph2points.values().forEach(p->p.removeAllPoints());
-	}
-	
-	private void clearEmphasis() {
-		this.emphasis_glyph2points.values().forEach(p->p.removeAllPoints());
+	private void clearCue(String cue) {
+		HashMap<Glyph, Points> glyph2points = this.glyph2pointMaps.get(cue);
+		glyph2points.values().forEach(p->p.removeAllPoints());
 	}
     
     
