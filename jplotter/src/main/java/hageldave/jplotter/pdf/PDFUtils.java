@@ -193,6 +193,16 @@ public class PDFUtils {
             return cs;
     }
 
+    /**
+     * Draws all components of a {@link Container} to
+     * an PDF document.
+     * For this an {@link PdfBoxGraphics2D} object is used that will
+     * create the PDF elements for the specified container and all of its children.
+     *
+     * @param c container to be converted to PDF
+     * @return PDF document representing the specified container.
+     * @throws IOException
+     */
     public static PDDocument containerToPDF(Container c) throws IOException {
         PDDocument doc = new PDDocument();
         PDPage page = new PDPage();
