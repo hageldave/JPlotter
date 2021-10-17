@@ -527,7 +527,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 
 					if (txt.getAngle()==0) {
 						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
-								txt.getColor(), txt.getTextSize(), txt.fontsize, txt.style);
+								txt.getColor(), txt.fontsize, txt.style);
 					} else {
 						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
 								txt.getColor(), txt.fontsize, txt.style, txt.getAngle());
