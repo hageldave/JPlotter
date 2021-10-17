@@ -521,9 +521,11 @@ public class BarRenderer implements Renderer {
         for (int i = 0; i < groupSeparators.length; i++) {
             double x = (( groupSeparators[i] - coordinateView.getMinX() ) / coordinateView.getWidth()) * xAxisWidth;
             Point2D barBorder = new Point2D.Double(Math.round(x), coordsysAreaLB.getY());
-            xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, yAxisHeight)).setColor(groupGuideColor);
-            rightBound = barBorder.getX();
-            xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, -12)).setColor(boundaryColor);
+            if (i != 0) {
+                xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, yAxisHeight)).setColor(groupGuideColor);
+                rightBound = barBorder.getX();
+                xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, -12)).setColor(boundaryColor);
+            }
             double xNext = (( groupSeparators[i == groupSeparators.length - 1 ? i : i + 1] - coordinateView.getMinX() )
                     / coordinateView.getWidth()) * xAxisWidth;
             barBorder = new Point2D.Double(Math.round((x + xNext)/2), coordsysAreaLB.getY() - 12);
@@ -574,9 +576,6 @@ public class BarRenderer implements Renderer {
             preContentTextR.addItemToRender(txt);
         for (Text txt : xyCondTickMarkLabels)
             xyCondBoundsTextR.addItemToRender(txt);
-        // TODO: when orientation is changed later, both axisLabels are empty - needs fix
-        //setxAxisLabel("");
-        //setupAxisLabels(xAxisWidth, yAxisHeight);
         setupYAxisLabel(yAxisHeight);
 
         // setup legend areas
@@ -691,14 +690,14 @@ public class BarRenderer implements Renderer {
         for (int i=0; i<groupSeparators.length; i++) {
             double y = ((groupSeparators[i]-coordinateView.getMinY())/coordinateView.getHeight())*yAxisHeight;
             Point2D barBorder = new TranslatedPoint2D(new Point2D.Double(coordsysAreaLB.getX(), 0), 0, Math.round(y));
-            //
-            xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, xAxisWidth, 0)).setColor(groupGuideColor);
-            upperBound = barBorder.getY();
-            xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, -12, 0)).setColor(boundaryColor);
+            if (i != 0) {
+                xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, xAxisWidth, 0)).setColor(groupGuideColor);
+                upperBound = barBorder.getY();
+                xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, -12, 0)).setColor(boundaryColor);
+            }
             double yNext = ((groupSeparators[i == groupSeparators.length - 1 ? i : i + 1] - coordinateView.getMinY() )
                     / coordinateView.getHeight())*yAxisHeight;
             barBorder = new Point2D.Double(20, Math.round((y + yNext)/2));
-
             // add group labels
             if (i < groupSeparators.length - 1 && this.groupDescriptions.get(i) != null) {
                 Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1, this.textColor.getAsInt());
@@ -707,6 +706,7 @@ public class BarRenderer implements Renderer {
                 xyCondTickMarkLabels.add(groupLabel);
             }
         }
+
 
         // xaxis ticks
         for(int i=0; i<xticks.length; i++){
@@ -1421,7 +1421,6 @@ public class BarRenderer implements Renderer {
     /**
      * @return
      */
-    // TODO padding bei den bars hinzufügen, bspw. links rechts bei VERTICAL
     public Rectangle2D getBounds() {
         // default values
         double minX = 0;
@@ -1429,7 +1428,6 @@ public class BarRenderer implements Renderer {
         double maxX = 1;
         double maxY = 1;
         if (this.alignment == AlignmentConstants.HORIZONTAL) {
-            minY = 0;
             minX = groupedBars.parallelStream()
                     .map(e->e.getBounds(this.alignment))
                     .mapToDouble(RectangularShape::getMinX)
@@ -1442,9 +1440,8 @@ public class BarRenderer implements Renderer {
                     .map(e->e.getBounds(this.alignment))
                     .mapToDouble(RectangularShape::getWidth)
                     .max().orElse(0);
-            return new Rectangle2D.Double(minX, minY - ( barSize / 2 ), (maxX - minX), ( maxY - minY ) + barSize);
+            return new Rectangle2D.Double(minX, -barSize, maxX-minX, maxY + barSize*2);
         } else if (this.alignment == AlignmentConstants.VERTICAL) {
-            minX = 0;
             minY = groupedBars.parallelStream()
                     .map(e->e.getBounds(AlignmentConstants.VERTICAL))
                     .mapToDouble(RectangularShape::getMinY)
@@ -1457,7 +1454,7 @@ public class BarRenderer implements Renderer {
                     .map(e->e.getBounds(AlignmentConstants.VERTICAL))
                     .mapToDouble(RectangularShape::getHeight)
                     .max().orElse(0);
-            return new Rectangle2D.Double(minX - (barSize / 2), minY, (maxX - minX) + barSize, maxY - minY);
+            return new Rectangle2D.Double(-barSize, minY, maxX + barSize*2, maxY - minY);
         }
         return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
     }
