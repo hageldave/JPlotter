@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -141,51 +142,15 @@ public class ReadyBarChart {
         for (LinkedList<Double> propertyList : virginicaHistogramValues)
             propertyList.sort(Comparator.naturalOrder());
 
-        int index = 0;
-        int setosaCount = 0;
-        int versicolorCount = 0;
-        int virginicaCount = 0;
+        HashMap<Integer, String> colorStringMapping = new HashMap<>();
+        colorStringMapping.put(classcolors.getColor(0), "Iris Setosa");
+        colorStringMapping.put(classcolors.getColor(1), "Iris Versicolor");
+        colorStringMapping.put(classcolors.getColor(2), "Iris Virginica");
 
-        // set up each property
-        BigDecimal currentBin = BigDecimal.valueOf(3.4);
-        while (currentBin.doubleValue() < 8) {
-            createHistogram(index, setosaCount, currentBin, setosaHistogramValues.get(0), sepalLength, new Color(classcolors.getColor(0)));
-            createHistogram(index, versicolorCount, currentBin, versicolorHistogramValues.get(0), sepalLength, new Color(classcolors.getColor(1)));
-            createHistogram(index, virginicaCount, currentBin, virginicaHistogramValues.get(0), sepalLength, new Color(classcolors.getColor(2)));
-            index++;
-            BigDecimal additor = BigDecimal.valueOf(0.5);
-            currentBin = currentBin.add(additor);
-        }
-        index = 0;
-        currentBin = BigDecimal.valueOf(1.0);
-        while (currentBin.doubleValue() < 8) {
-            createHistogram(index, setosaCount, currentBin, setosaHistogramValues.get(1), sepalWidth, new Color(classcolors.getColor(0)));
-            createHistogram(index, versicolorCount, currentBin, versicolorHistogramValues.get(1), sepalWidth, new Color(classcolors.getColor(1)));
-            createHistogram(index, virginicaCount, currentBin, virginicaHistogramValues.get(1), sepalWidth, new Color(classcolors.getColor(2)));
-            index++;
-            BigDecimal additor = BigDecimal.valueOf(0.5);
-            currentBin = currentBin.add(additor);
-        }
-        index = 0;
-        currentBin = BigDecimal.valueOf(0.0);
-        while (currentBin.doubleValue() < 8) {
-            createHistogram(index, setosaCount, currentBin, setosaHistogramValues.get(2), petalLength, new Color(classcolors.getColor(0)));
-            createHistogram(index, versicolorCount, currentBin, versicolorHistogramValues.get(2), petalLength, new Color(classcolors.getColor(1)));
-            createHistogram(index, virginicaCount, currentBin, virginicaHistogramValues.get(2), petalLength, new Color(classcolors.getColor(2)));
-            index++;
-            BigDecimal additor = BigDecimal.valueOf(0.5);
-            currentBin = currentBin.add(additor);
-        }
-        index = 0;
-        currentBin = BigDecimal.valueOf(0.0);
-        while (currentBin.doubleValue() < 8) {
-            createHistogram(index, setosaCount, currentBin, setosaHistogramValues.get(3), petalWidth, new Color(classcolors.getColor(0)));
-            createHistogram(index, versicolorCount, currentBin, versicolorHistogramValues.get(3), petalWidth, new Color(classcolors.getColor(1)));
-            createHistogram(index, virginicaCount, currentBin, virginicaHistogramValues.get(3), petalWidth, new Color(classcolors.getColor(2)));
-            index++;
-            BigDecimal additor = BigDecimal.valueOf(0.5);
-            currentBin = currentBin.add(additor);
-        }
+        createHistogramGroup(3.4, sepalLength, classcolors, setosaHistogramValues.get(0), versicolorHistogramValues.get(0), virginicaHistogramValues.get(0));
+        createHistogramGroup(1.0, sepalWidth, classcolors, setosaHistogramValues.get(1), versicolorHistogramValues.get(1), virginicaHistogramValues.get(1));
+        createHistogramGroup(0.0, petalLength, classcolors, setosaHistogramValues.get(2), versicolorHistogramValues.get(2), virginicaHistogramValues.get(2));
+        createHistogramGroup(0.0, petalWidth, classcolors, setosaHistogramValues.get(3), versicolorHistogramValues.get(3), virginicaHistogramValues.get(3));
 
         combinedChart.addData(sepalLength);
         combinedChart.addData(sepalWidth);
@@ -212,8 +177,8 @@ public class ReadyBarChart {
 
         // set up gui stuff
         Container buttonWrapper = new Container();
-        JButton eachCategory = new JButton("Show each category");
-        JButton combined = new JButton("Combined View");
+        JButton eachCategory = new JButton("Mean View");
+        JButton combined = new JButton("Histogram View");
         buttonWrapper.add(eachCategory);
         buttonWrapper.add(combined);
         buttonWrapper.setLayout(new FlowLayout());
@@ -264,42 +229,36 @@ public class ReadyBarChart {
             frame.pack();
         });
 
-        BarGroup.Stack selectedStack = null;
 
         // set up interaction stuff
-        barChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
+        combinedChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
+            BarGroup.Stack selectedStack;
+            final JPopupMenu popUp = new JPopupMenu("Hovered Plant");
             @Override
-            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
-
+            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+                selectedStack = null;
+                popUp.setVisible(false);
+            }
             @Override
             public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {
-                System.out.println(stack);
-                //stack.stackColor = Color.BLACK;
-
-
-                barChart.getBarRenderer().setDirty();
-                barChart.getCanvas().scheduleRepaint();
+                if (stack != selectedStack) {
+                    selectedStack = stack;
+                    popUp.setFocusable(false);
+                    popUp.setVisible(false);
+                    popUp.removeAll();
+                    JLabel label = new JLabel(String.valueOf(colorStringMapping.get(stack.stackColor.getRGB())));
+                    label.setBorder(new EmptyBorder(3, 12, 3, 12));
+                    popUp.add(label);
+                    popUp.show(combinedChart.getCanvas().asComponent(), 50, 20);
+                    popUp.setVisible(true);
+                }
             }
-
-            @Override
-            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
-
-            @Override
-            public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {}
-        });
-
-        combinedChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
-            @Override
-            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
-            @Override
-            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {}
             @Override
             public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
             @Override
             public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {}
         });
 
-        // TODO: bounds werden links/rechts unterschiedlich berechnet
         barChart.getBarRenderer().setCoordinateView(
                 barChart.getBarRenderer().getBounds().getMinX(),
                 barChart.getBarRenderer().getBounds().getMinY(),
@@ -340,7 +299,6 @@ public class ReadyBarChart {
             }
         });
 
-
         // add a pop up menu (on right click) for exporting to SVG
         PopupMenu combinedMenu = new PopupMenu();
         combinedChart.getCanvas().asComponent().add(combinedMenu);
@@ -373,14 +331,30 @@ public class ReadyBarChart {
         });
     }
 
+    public static void createHistogramGroup(double startBin, BarGroup barGroup, ColorMap classcolors,
+                                            LinkedList<Double> setosaHistogramValues, LinkedList<Double> versicolorHistogramValues,
+                                            LinkedList<Double> virginicaHistogramValues) {
+        int index = 0;
+        int setosaCount = 0;
+        int versicolorCount = 0;
+        int virginicaCount = 0;
+        BigDecimal currentBin = BigDecimal.valueOf(startBin);
+        while (currentBin.doubleValue() < 9) {
+            createHistogram(index, setosaCount, currentBin, setosaHistogramValues, barGroup, new Color(classcolors.getColor(0)));
+            createHistogram(index, versicolorCount, currentBin, versicolorHistogramValues, barGroup, new Color(classcolors.getColor(1)));
+            createHistogram(index, virginicaCount, currentBin, virginicaHistogramValues, barGroup, new Color(classcolors.getColor(2)));
+            index++;
+            BigDecimal additor = BigDecimal.valueOf(0.5);
+            currentBin = currentBin.add(additor);
+        }
+    }
 
     public static void createHistogram(int index, int plantCount, BigDecimal currentBin,
                                 LinkedList<Double> plantHistogramValues, BarGroup currentProperty, Color color) {
         for (double value : plantHistogramValues) {
-            if (value >= currentBin.doubleValue() && value < (currentBin.doubleValue() + 0.2)) {
+            if (value >= currentBin.doubleValue() && value < (currentBin.doubleValue() + 0.5)) {
                 plantCount++;
-            } else if (value >= (currentBin.doubleValue()+0.2)) {
-                // TODO: register here in the picking registry
+            } else if (value >= (currentBin.doubleValue()+0.5)) {
                 currentProperty.addBar(index, plantCount, color, String.valueOf(currentBin.doubleValue()));
                 break;
             }
