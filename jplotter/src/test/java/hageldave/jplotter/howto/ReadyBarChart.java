@@ -246,7 +246,7 @@ public class ReadyBarChart {
                     popUp.setFocusable(false);
                     popUp.setVisible(false);
                     popUp.removeAll();
-                    JLabel label = new JLabel(String.valueOf(colorStringMapping.get(stack.stackColor.getRGB())));
+                    JLabel label = new JLabel("Plant: " + colorStringMapping.get(stack.stackColor.getRGB()) + ", Frequency in interval: " + stack.length);
                     label.setBorder(new EmptyBorder(3, 12, 3, 12));
                     popUp.add(label);
                     popUp.show(combinedChart.getCanvas().asComponent(), 50, 20);
