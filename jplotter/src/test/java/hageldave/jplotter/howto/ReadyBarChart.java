@@ -177,10 +177,10 @@ public class ReadyBarChart {
 
         // set up gui stuff
         Container buttonWrapper = new Container();
-        JButton eachCategory = new JButton("Mean View");
-        JButton combined = new JButton("Histogram View");
-        buttonWrapper.add(eachCategory);
-        buttonWrapper.add(combined);
+        JButton meanView = new JButton("Mean View");
+        JButton histogramView = new JButton("Histogram View");
+        buttonWrapper.add(meanView);
+        buttonWrapper.add(histogramView);
         buttonWrapper.setLayout(new FlowLayout());
 
         Container contentWrapper = new Container();
@@ -199,8 +199,11 @@ public class ReadyBarChart {
             frame.setVisible(true);
         });
 
+        // set maximum size of the button wrapper, to force canvas to scale matching the resized window
+        buttonWrapper.setMaximumSize(new Dimension(buttonWrapper.getWidth(), buttonWrapper.getHeight()));
+
         // add eventlisteners to buttons
-        eachCategory.addActionListener(e -> {
+        meanView.addActionListener(e -> {
             contentWrapper.removeAll();
             contentWrapper.add(barChart.getCanvas().asComponent());
             contentWrapper.add(buttonWrapper);
@@ -214,7 +217,7 @@ public class ReadyBarChart {
             frame.repaint();
             frame.pack();
         });
-        combined.addActionListener(e -> {
+        histogramView.addActionListener(e -> {
             contentWrapper.removeAll();
             contentWrapper.add(combinedChart.getCanvas().asComponent());
             contentWrapper.add(buttonWrapper);
