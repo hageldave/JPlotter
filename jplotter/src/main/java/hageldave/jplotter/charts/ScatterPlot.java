@@ -96,11 +96,6 @@ public class ScatterPlot {
 	
 	protected HashMap<String, HashMap<Glyph, Points>> glyph2pointMaps = new HashMap<>();
 	protected HashMap<String, SimpleSelectionModel<Pair<Integer, Integer>>> cueSelectionModels = new HashMap<>();
-//	private HashMap<Glyph, Points> accentuation_glyph2points = new HashMap<Glyph, Points>();
-//	protected SimpleSelectionModel<Pair<Integer, Integer>> accentuationSelection = new SimpleSelectionModel<>();
-//	
-//	private HashMap<Glyph, Points> emphasis_glyph2points = new HashMap<Glyph, Points>();
-//	protected SimpleSelectionModel<Pair<Integer, Integer>> emphasisSelection = new SimpleSelectionModel<>();
     
     public ScatterPlot(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
@@ -211,7 +206,6 @@ public class ScatterPlot {
     	// create a picking ID for use in legend for this data chunk
     	this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
     	visualMapping.createLegendElementForChunk(legend, chunkIdx, chunkDescription, legendElementPickIds.get(chunkIdx));
-    	// TODO: update highlighting
     	this.canvas.scheduleRepaint();
     }
     
@@ -233,7 +227,16 @@ public class ScatterPlot {
     		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
     		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
     	}
-    	// TODO: update highlighting
+    	// update cues (which may have been in place before)
+    	for(String cueType : Arrays.asList(CUE_ACCENTUATE, CUE_EMPHASIZE, CUE_HIGHLIGHT)) {
+    		// check cue selections for out of index bounds (in case chunk got smaller)
+    		SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(cueType);
+    		SortedSet<Pair<Integer, Integer>> chunkCues = selectionModel.getSelection().subSet(Pair.of(chunkIdx, 0), Pair.of(chunkIdx+1, 0));
+    		SortedSet<Pair<Integer, Integer>> invalidCues = chunkCues.tailSet(Pair.of(chunkIdx, getDataModel().chunkSize(chunkIdx)));
+    		// remove cues (selection model will not fire in this case, but thats okay since we will call createCue ourselves)
+    		invalidCues.clear();
+    		this.createCue(cueType);
+    	}
     	
     	this.canvas.scheduleRepaint();
     }
@@ -788,45 +791,6 @@ public class ScatterPlot {
 		getPointsForChunk(chunkIdx).setGlobalSaturationMultiplier(factor).setGlobalAlphaMultiplier(factor);
 	}
 	
-	
-//	protected void createHighlighting(SortedSet<Pair<Integer, Integer>> instancesToHighlight) {
-//		if(instancesToHighlight.isEmpty()) {
-//			for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++) {
-//				getPointsForChunk(chunk).set
-//			}
-//		}
-//	}
-//	
-//	protected void createAccentuation() {
-//		createAccentutation(this.accentuationSelection.getSelection());
-//	}
-//	
-//	protected void createAccentutation(Iterable<Pair<Integer, Integer>> toAccentuate) {
-//		clearAccentuation();
-//		for(Pair<Integer, Integer> instance : toAccentuate) {
-//			Points points = getPointsForChunk(instance.first);
-//			PointDetails p = points.getPointDetails().get(instance.second);
-//			Points front = getOrCreateAccentuationPointsForGlyph(points.glyph);
-//			front.addPoint(p.location).setColor(this.coordsys.getColorScheme().getColor1()).setScaling(1.2);
-//			front.addPoint(p.location).setColor(p.color);
-//		}
-//		this.getCanvas().scheduleRepaint();
-//	}
-//	
-//	protected void createEmphasis() {
-//		createEmphasis(this.emphasisSelection.getSelection());
-//	}
-//	
-//	protected void createEmphasis(Iterable<Pair<Integer, Integer>> toHighlight) {
-//		clearEmphasis();
-//		for(Pair<Integer, Integer> instance : toHighlight) {
-//			Points points = getPointsForChunk(instance.first);
-//			PointDetails p = points.getPointDetails().get(instance.second);
-//			Points front = getOrCreateEmphasisPointsForGlyph(points.glyph);
-//			front.addPoint(p.location).setColor(p.color).setScaling(1.5);
-//		}
-//		this.getCanvas().scheduleRepaint();
-//	}
 	
 	private Points getOrCreateCuePointsForGlyph(String cue, Glyph g) {
 		HashMap<Glyph, Points> glyph2points = this.glyph2pointMaps.get(cue);
