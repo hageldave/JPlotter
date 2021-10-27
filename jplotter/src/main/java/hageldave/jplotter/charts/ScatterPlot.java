@@ -37,7 +37,6 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
@@ -822,6 +821,8 @@ public class ScatterPlot {
 		HashMap<Glyph, Points> glyph2points = this.glyph2pointMaps.get(cue);
 		glyph2points.values().forEach(p->p.removeAllPoints());
 	}
+	
+	// TODO: convenience methods to create listeners for cues (e.g. hovering does highlighting)
     
     
 }
