@@ -211,7 +211,7 @@ public class ScatterPlot {
     	// create a picking ID for use in legend for this data chunk
     	this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
     	visualMapping.createLegendElementForChunk(legend, chunkIdx, chunkDescription, legendElementPickIds.get(chunkIdx));
-    	
+    	// TODO: update highlighting
     	this.canvas.scheduleRepaint();
     }
     
@@ -233,6 +233,7 @@ public class ScatterPlot {
     		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
     		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
     	}
+    	// TODO: update highlighting
     	
     	this.canvas.scheduleRepaint();
     }

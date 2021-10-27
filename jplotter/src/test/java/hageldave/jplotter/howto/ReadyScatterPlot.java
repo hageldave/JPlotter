@@ -1,11 +1,9 @@
 package hageldave.jplotter.howto;
 
-import static java.awt.event.KeyEvent.VK_W;
-
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.IOException;
@@ -16,7 +14,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.SortedSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -36,12 +33,10 @@ import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel.ScatterPlotDat
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotVisualMapping;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
-import hageldave.jplotter.interaction.SimpleSelectionModel.SimpleSelectionListener;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
-import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.util.Pair;
 
 public class ReadyScatterPlot {
@@ -107,7 +102,7 @@ public class ReadyScatterPlot {
         plot.placeLegendOnBottom();
         
         // basic coordinate system interaction schemes
-        plot.addPanning().setKeyListenerMask(new KeyMaskListener(VK_W));
+        plot.addPanning().setKeyListenerMask(new KeyMaskListener(KeyEvent.VK_W));
         plot.addRectangleSelectionZoom();
         plot.addScrollZoom();
         
