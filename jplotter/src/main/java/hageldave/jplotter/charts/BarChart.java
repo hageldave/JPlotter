@@ -55,8 +55,8 @@ public class BarChart {
 
     public BarChart addData(BarGroup group) {
         for (BarGroup.BarStruct struct : group.getGroupedBars().values()) {
-            for (BarGroup.Stack stack : struct.stacks) {
-                stack.setPickColor(registerInPickingRegistry(stack));
+            for (BarGroup.BarStack barStack : struct.barStacks) {
+                barStack.setPickColor(registerInPickingRegistry(barStack));
             }
         }
         this.barRenderer.addBarGroup(group);
@@ -179,8 +179,8 @@ public class BarChart {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {
                         Object pointLocalizer = pickingRegistry.lookup(pixel);
-                        if (pointLocalizer instanceof BarGroup.Stack) {
-                            notifyInsideMouseEventStack(eventType, e, coordsysPoint, (BarGroup.Stack) pointLocalizer);
+                        if (pointLocalizer instanceof BarGroup.BarStack) {
+                            notifyInsideMouseEventStack(eventType, e, coordsysPoint, (BarGroup.BarStack) pointLocalizer);
                         }
                     }
                 } else {
@@ -208,9 +208,9 @@ public class BarChart {
             l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
 
-    protected synchronized void notifyInsideMouseEventStack(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {
+    protected synchronized void notifyInsideMouseEventStack(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStack barStack) {
         for(BarChartMouseEventListener l:mouseEventListeners)
-            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, stack);
+            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, barStack);
     }
 
     protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
@@ -232,7 +232,7 @@ public class BarChart {
 
         public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
 
-        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {}
+        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStack barStack) {}
 
         public default void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
 

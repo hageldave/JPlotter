@@ -7,6 +7,7 @@ import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordinateViewListener;
 import hageldave.jplotter.renderables.*;
+import hageldave.jplotter.renderables.BarGroup.BarStruct;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -27,6 +28,44 @@ import java.util.*;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
+import static hageldave.jplotter.renderables.BarGroup.BarStack;
+
+/**
+ * The BarRenderer is a {@link Renderer} that displays a Barchart in a coordinate system.
+ * To display the Barchart the BarRenderer knows the concept of BarGroups (see {@link BarGroup}), BarStructs (see {@link BarStruct}) and BarStacks (see {@link BarStack}).
+ * Each BarGroup contains a set of BarStructs which also hold a set of BarStacks.
+ * The groups in the barchart are separated from each other by guides. The stacks of a struct are (like the name implies) stacked onto each other.
+ * Therefore every BarStruct is always a set of BarStacks (with a minimum of one stack).
+ *
+ * Depending on the BarRenderers orientation ({@link AlignmentConstants}), there is a label on the top or right.
+ * The label helps to define and visualize the meaning of the value axis.
+ * <p>
+ * The positioning and labeling of the tick marks on the value axis is done by a {@link TickMarkGenerator}
+ * which is per default an instance of {@link ExtendedWilkinson}.
+ * The positioning and labeling of the tick marks on the category axis is defined by the bar groups
+ * (and their respective BarStructs (see {@link BarStruct})) that will be rendered by the BarRenderer.
+ * There are 2 types of labels for the category axis: Group labels/struct labels which are defined by the BarGroups/BarStructs description property.
+ * They will be displayed simultaneously.
+ * <p>
+ * What coordinate range the coordinate system area corresponds to is controlled by
+ * the coordinate view (see {@link #setCoordinateView(double, double, double, double)})
+ * and defaults to [-1,1] for both axes.
+ * The contents that are drawn inside the coordinate area are rendered by the TriangleRenderer
+ * (see {@link #setContent(Renderer)}).
+ * The TriangleRenderer will be able to draw within the viewport defined by the coordinate
+ * system area of this BarRenderer.
+ * <p>
+ * Optionally a {@link Renderer} for drawing a legend (such as the {@link Legend} class)
+ * can be set to either the bottom or right hand side of the coordinate system (can also
+ * use both areas at once).
+ * Use {@link #setLegendBottom(Renderer)} or {@link #setLegendRight(Renderer)} to do so.
+ * The legend area size can be partially controlled by {@link #setLegendBottomHeight(int)}
+ * and {@link #setLegendRightWidth(int)} if this is needed.
+ * <p>
+ * The overlay renderer ({@link #setOverlay(Renderer)}) can be used to finally draw over all
+ * of the renderer viewport.
+ * <p>
+ */
 public class BarRenderer implements Renderer {
 
     protected int alignment;
@@ -38,6 +77,7 @@ public class BarRenderer implements Renderer {
     protected LinesRenderer postContentLinesR = new LinesRenderer();
     protected TextRenderer postContentTextR = new TextRenderer();
 
+    // overlay necessary?!
     protected Renderer overlay;
     protected TrianglesRenderer content = null;
     protected Renderer legendRight = null;
@@ -394,26 +434,37 @@ public class BarRenderer implements Renderer {
         return colorScheme;
     }
 
-    // TODO: add documentation
+    /**
+     *
+     * @return Alignment (see {@link AlignmentConstants}) of the BarRenderer.
+     */
     public int getAlignment() {
         return alignment;
     }
 
-    // TODO: add documentation
-    public void setAlignment(int alignment) {
+    /**
+     * The BarRenderer supports vertical and horizontal bar charts.
+     * This method sets the orientation of the bar chart.
+     *
+     * @param alignment sets the alignment (vertical or horizontal) of the BarRenderer (see {@link AlignmentConstants}
+     * @return this for chaining
+     */
+    public BarRenderer setAlignment(int alignment) {
         this.alignment = alignment;
         setupAndLayout();
         setDirty();
+        return this;
     }
 
     /**
-     * Sets up pretty much everything.
+     * Sets up the layout of the renderer.
      * <ul>
      * <li>the bounds of the coordinate system frame ({@link #coordsysAreaLB}, {@link #coordsysAreaRT})</li>
      * <li>the tick mark values and labels</li>
      * <li>the tick mark guides</li>
-     * <li>the location of the axis labels</li>
+     * <li>the location of the axis label</li>
      * <li>the areas for the legends (right and bottom legend)</li>
+     * <li>the bargroups (+ labels), structs (+ labels) and stacks</li>
      * </ul>
      */
     protected void setupAndLayout() {
@@ -423,9 +474,8 @@ public class BarRenderer implements Renderer {
             setupLayoutHorizontal();
     }
 
-    /**
-     *
-     */
+
+    // The layouting algorithm for the vertical orientation of the barchart.
     protected void setupLayoutVertical() {
         Pair<double[], String[]> yticksAndLabels = tickMarkGenerator.genTicksAndLabels(
                 coordinateView.getMinY(),
@@ -601,9 +651,8 @@ public class BarRenderer implements Renderer {
         }
     }
 
-    /**
-     *
-     */
+
+    // The layouting algorithm for the horizontal orientation of the barchart.
     protected void setupLayoutHorizontal() {
         // place new label positioning somewhere here
         Pair<double[],String[]> xticksAndLabels = tickMarkGenerator.genTicksAndLabels(
@@ -736,7 +785,6 @@ public class BarRenderer implements Renderer {
             preContentTextR.addItemToRender(txt);
         for (Text txt : xyCondTickMarkLabels)
             xyCondBoundsTextR.addItemToRender(txt);
-        //setyAxisLabel("");
         setupXAxisLabel(xAxisWidth);
 
         // setup legend areas
@@ -773,20 +821,20 @@ public class BarRenderer implements Renderer {
         for (BarGroup group : this.groupedBars) {
             // add guide here
             groupSeparators[groupindex++] = structPos - 0.75;
-            for (BarGroup.BarStruct struct : group.getSortedBars()) {
+            for (BarStruct struct : group.getSortedBars()) {
                 double stackStart = 0; double stackEnd = 0;
                 // add description labels on y axis
                 // (or) add description labels on x axis (when vertical alignment instead of horizontal)
                 xticks[index] = structPos;
                 xticklabels[index] = struct.description;
                 // adds each stack to the triangle renderer
-                for (BarGroup.Stack stack : struct.stacks) {
-                    if (stack.length >= 0) {
-                        this.content.addItemToRender((makeBar(stackEnd, structPos, stack.length, stack.stackColor, stack.pickColor)));
-                        stackEnd += stack.length;
+                for (BarStack barStack : struct.barStacks) {
+                    if (barStack.length >= 0) {
+                        this.content.addItemToRender((makeBar(stackEnd, structPos, barStack.length, barStack.stackColor, barStack.pickColor)));
+                        stackEnd += barStack.length;
                     } else {
-                        this.content.addItemToRender((makeBar(stackEnd, structPos, stack.length, stack.stackColor, stack.pickColor)));
-                        stackStart += stack.length;
+                        this.content.addItemToRender((makeBar(stackEnd, structPos, barStack.length, barStack.stackColor, barStack.pickColor)));
+                        stackStart += barStack.length;
                     }
                 }
                 // increment pos for every struct
@@ -799,6 +847,7 @@ public class BarRenderer implements Renderer {
         groupSeparators[groupindex] = structPos - 0.75;
     }
 
+    // clear label content (e.g. when changing bar renderers' orientation)
     protected void clearLabelRenderer() {
         yAxisLabelText.setTextString("");
         xAxisLabelText.setTextString("");
@@ -814,6 +863,7 @@ public class BarRenderer implements Renderer {
         xyCondTickMarkLabels.clear();
     }
 
+    // calculates max tick width
     protected int calcMaxTickWidth(int maxTickLabelWidth, String[] yticklabels, String[] xticklabels) {
         for(String label:yticklabels){
             int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
@@ -826,12 +876,14 @@ public class BarRenderer implements Renderer {
         return maxTickLabelWidth;
     }
 
+    // sets the label on the y axis
     protected void setupYAxisLabel(final double yAxisHeight) {
         yAxisLabelText.setTextString(getyAxisLabel());
         yAxisLabelText.setAngle(-(float) Math.PI / 2);
         yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight / 2 + yAxisLabelText.getTextSize().width / 2));
     }
 
+    // sets the label on the x axis
     protected void setupXAxisLabel(final double xAxisWidth) {
         // axis labels
         xAxisLabelText.setTextString(getxAxisLabel());
@@ -839,7 +891,6 @@ public class BarRenderer implements Renderer {
     }
 
     // helper method to add boundaries
-    // TODO: xAxisWidth changed to just a point
     protected void setupBoundaries(final Lines guides, final double xAxisWidth, final double yAxisHeight) {
         // x axis
         guides.addSegment(new Point2D.Double(coordsysAreaLB.getX() - 14, coordsysAreaLB.getY()),
@@ -849,14 +900,13 @@ public class BarRenderer implements Renderer {
                 new TranslatedPoint2D(coordsysAreaLB, 0, yAxisHeight)).setColor(boundaryColor);
     }
 
-    // creates quad (to be rendered) at pos start, in row row, with value and color
-    // TODO: here seems to be a bug (startPosition might not be correct)
-    protected Triangles makeBar(final double start, final double row, final double val, final Color color, final int pickColor) {
+    // creates a bar at startPosition, in row "row", with length, color and the specified pickColor
+    protected Triangles makeBar(final double startPosition, final double row, final double length, final Color color, final int pickColor) {
         Triangles bar = new Triangles();
         if (this.alignment == AlignmentConstants.HORIZONTAL) {
-            bar.addQuad(new Rectangle2D.Double(start, row - ( barSize / 2 ), val, barSize));
+            bar.addQuad(new Rectangle2D.Double(startPosition, row - ( barSize / 2 ), length, barSize));
         } else if (this.alignment == AlignmentConstants.VERTICAL) {
-            bar.addQuad(new Rectangle2D.Double(row - ( barSize / 2 ), start, barSize, val));
+            bar.addQuad(new Rectangle2D.Double(row - ( barSize / 2 ), startPosition, barSize, length));
         }
         bar.getTriangleDetails().forEach(tri -> tri.setPickColor(pickColor).setColor(color));
         return bar;
@@ -1412,14 +1462,21 @@ public class BarRenderer implements Renderer {
         return this.isEnabled;
     }
 
-    // add item to renderer
-    public void addBarGroup(final BarGroup barGroup) {
+    /**
+     * Adds a bar group to the bar renderer.
+     * The group (and its structs/stacks) will then be displayed by the renderer.
+     *
+     * @param barGroup group that will be added to the renderer
+     * @return this for chaining
+     */
+    public BarRenderer addBarGroup(final BarGroup barGroup) {
         this.groupedBars.add(barGroup);
         this.setupAndLayout();
+        return this;
     }
 
     /**
-     * @return
+     * @return bounds of all content of the bar renderer as a rectangle
      */
     public Rectangle2D getBounds() {
         // default values

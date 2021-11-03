@@ -235,21 +235,21 @@ public class ReadyBarChart {
 
         // set up interaction stuff
         combinedChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
-            BarGroup.Stack selectedStack;
+            BarGroup.BarStack selectedBarStack;
             final JPopupMenu popUp = new JPopupMenu("Hovered Plant");
             @Override
             public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
-                selectedStack = null;
+                selectedBarStack = null;
                 popUp.setVisible(false);
             }
             @Override
-            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.Stack stack) {
-                if (stack != selectedStack) {
-                    selectedStack = stack;
+            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStack barStack) {
+                if (barStack != selectedBarStack) {
+                    selectedBarStack = barStack;
                     popUp.setFocusable(false);
                     popUp.setVisible(false);
                     popUp.removeAll();
-                    JLabel label = new JLabel("Plant: " + colorStringMapping.get(stack.stackColor.getRGB()) + ", Frequency in interval: " + stack.length);
+                    JLabel label = new JLabel("Plant: " + colorStringMapping.get(barStack.stackColor.getRGB()) + ", Frequency in interval: " + barStack.length);
                     label.setBorder(new EmptyBorder(3, 12, 3, 12));
                     popUp.add(label);
                     popUp.show(combinedChart.getCanvas().asComponent(), 50, 20);
