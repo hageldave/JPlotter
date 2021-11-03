@@ -12,7 +12,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
  */
 public interface PDFRenderer {
     /**
-     * renders this PDFRenderers contents, that is creating
+     * Renders this PDFRenderers contents, that is creating
      * pdf elements and appending them to the specified page
      * within the corresponding document.
      *

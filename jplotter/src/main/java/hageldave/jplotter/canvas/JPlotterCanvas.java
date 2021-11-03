@@ -172,7 +172,7 @@ public interface JPlotterCanvas {
 	 * the document and the first page.
 	 *
 	 * @return the resulting pdf document with all the rendered content
-	 * @throws IOException
+	 * @throws IOException If there is an error while creating the document.
 	 */
 	public default PDDocument paintPDF() throws IOException {
 		PDDocument document = new PDDocument();
@@ -188,8 +188,8 @@ public interface JPlotterCanvas {
 	 * the document and creating the initial elements.
 	 *
 	 * @param document PDF document holding the page
-	 * @param page page in the document to create PDF elements in
-	 * @throws IOException
+	 * @param page Page in the document to create PDF elements in
+	 * @throws IOException If there is an error while creating the document.
 	 */
 	public default void paintPDF(PDDocument document, PDPage page) throws IOException {
 		int w,h;

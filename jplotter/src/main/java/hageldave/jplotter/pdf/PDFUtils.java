@@ -19,17 +19,20 @@ import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * Utility class for PDF related methods.
+ */
 public class PDFUtils {
 
     /**
      * Creates a point at the specified position with the given radius.
      *
-     * @param cs content stream where the point is appended to
+     * @param cs content stream that the point is appended to
      * @param x x coordinate of the point
      * @param y y coordinate of the point
      * @param radius radius of the point
-     * @return the resulting content stream
-     * @throws IOException
+     * @return resulting content stream
+     * @throws IOException If there is an error while creating the point in the document
      */
     public static PDPageContentStream createPDFPoint(PDPageContentStream cs,
                                                      float x, float y, float radius) throws IOException {
@@ -45,11 +48,11 @@ public class PDFUtils {
     /**
      * Creates a simple segment in the pdf document.
      *
-     * @param cs content stream where the segment is appended to
+     * @param cs content stream that the segment is appended to
      * @param p0 starting point of the segment
      * @param p1 ending point of the segment
-     * @return the resulting content stream
-     * @throws IOException
+     * @return resulting content stream
+     * @throws IOException If there is an error while creating the line segment in the document
      */
     public static PDPageContentStream createPDFSegment(PDPageContentStream cs, Point2D p0,
                                                        Point2D p1) throws IOException {
@@ -61,13 +64,13 @@ public class PDFUtils {
     /**
      * Creates a cubic bézier curve in the pdf document.
      *
-     * @param cs content stream where the curve is appended to
+     * @param cs content stream that the curve is appended to
      * @param p0 starting point of the curve
      * @param cP0 first control point
      * @param cP1 second control point
      * @param p1 ending point of the curve
-     * @return the resulting content stream
-     * @throws IOException
+     * @return resulting content stream
+     * @throws IOException If there is an error while creating the curve in the document
      */
     public static PDPageContentStream createPDFCurve(PDPageContentStream cs, Point2D p0, Point2D cP0,
                                                     Point2D cP1, Point2D p1) throws IOException {
@@ -82,15 +85,15 @@ public class PDFUtils {
      * More information about Gouraud shading: https://en.wikipedia.org/wiki/Gouraud_shading
      *
      * @param doc PDF document holding the content stream
-     * @param cs content stream where the curve is appended to
+     * @param cs content stream that the shaded triangle is appended to
      * @param p0 coordinates of first vertex of the triangle
      * @param p1 coordinates of second vertex of the triangle
      * @param p2 coordinates of third vertex of the triangle
      * @param c0 color of the 'first coordinate' vertex of the triangle
      * @param c1 color of the 'second coordinate' vertex of the triangle
      * @param c2 color of the 'third coordinate' vertex of the triangle
-     * @return the resulting content stream
-     * @throws IOException
+     * @return resulting content stream
+     * @throws IOException If there is an error while creating the shaded triangle
      */
     public static PDPageContentStream createPDFShadedTriangle(PDDocument doc, PDPageContentStream cs, Point2D p0,
                                                               Point2D p1, Point2D p2, Color c0, Color c1, Color c2) throws IOException {
@@ -154,6 +157,16 @@ public class PDFUtils {
         return cs;
     }
 
+    /**
+     * @param outputStream holds the coordinates & colors of the triangle
+     * @param p0 coordinates of first vertex of the triangle
+     * @param p1 coordinates of second vertex of the triangle
+     * @param p2 coordinates of third vertex of the triangle
+     * @param c0 color of the 'first coordinate' vertex of the triangle
+     * @param c1 color of the 'second coordinate' vertex of the triangle
+     * @param c2 color of the 'third coordinate' vertex of the triangle
+     * @throws IOException If there is an error while writing to the output stream
+     */
     public static void writeShadedTriangle(MemoryCacheImageOutputStream outputStream, Point2D p0,
                                            Point2D p1, Point2D p2, Color c0, Color c1, Color c2) throws IOException {
         // Vertex 1, starts with flag1
@@ -192,15 +205,15 @@ public class PDFUtils {
      * Creates a text string in the pdf document.
      *
      * @param doc PDF document holding the content stream
-     * @param cs content stream where the curve is appended to
+     * @param cs content stream that the text is appended to
      * @param txt text string that should be rendered in the document
      * @param position position where the text should be rendered
      * @param color color of the text
      * @param fontSize size of font
      * @param style style of font
      * @param angle rotation of the text
-     * @return the resulting content stream
-     * @throws IOException
+     * @return resulting content stream
+     * @throws IOException If there is an error while creating the text in the document
      */
     public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, String txt,
                                                     Point2D position, Color color, int fontSize, int style, float angle) throws IOException {
@@ -240,14 +253,14 @@ public class PDFUtils {
      * Creates a text string in the pdf document with angle 0.
      *
      * @param doc PDF document holding the content stream
-     * @param cs content stream where the curve is appended to
+     * @param cs content stream that the curve is appended to
      * @param txt text string that should be rendered in the document
      * @param position position where the text should be rendered
      * @param color color of the text
      * @param fontSize size of font
      * @param style style of font
-     * @return the resulting content stream
-     * @throws IOException
+     * @return resulting content stream
+     * @throws IOException If there is an error while creating the text in the document
      */
     public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, String txt,
                                                     Point2D position, Color color, int fontSize, int style) throws IOException {
@@ -272,25 +285,25 @@ public class PDFUtils {
      * Creates a polygon in the pdf document.
      * The x (& y) coordinates will be used counter clockwise.
      *
-     * @param cs content stream where the polygon is appended to
+     * @param cs content stream that the polygon is appended to
      * @param x x coordinates of the polygon
      * @param y y coordinates of the polygon
-     * @return the resulting content stream
-     * @throws IOException
+     * @return resulting content stream
+     * @throws IOException If there is an error while creating the polygon
      */
     public static PDPageContentStream createPDFPolygon(PDPageContentStream cs, double[] x, double[] y) throws IOException {
-            if (x.length != y.length) {
-                throw new IllegalArgumentException("Length of x and y coordinate arrays have to be equal!");
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("Length of x and y coordinate arrays have to be equal!");
+        }
+        for (int i = 0; i < x.length; i++) {
+            if (i == 0) {
+                cs.moveTo((float) x[i], (float) y[i]);
             }
-            for (int i = 0; i < x.length; i++) {
-                if (i == 0) {
-                    cs.moveTo((float) x[i], (float) y[i]);
-                }
-                else {
-                    cs.lineTo((float) x[i], (float) y[i]);
-                }
+            else {
+                cs.lineTo((float) x[i], (float) y[i]);
             }
-            cs.closePath();
-            return cs;
+        }
+        cs.closePath();
+        return cs;
     }
 }
