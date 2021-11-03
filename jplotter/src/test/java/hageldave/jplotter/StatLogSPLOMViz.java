@@ -1,48 +1,12 @@
 package hageldave.jplotter;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.MenuItem;
-import java.awt.PopupMenu;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.FontProvider;
-import hageldave.jplotter.interaction.CoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -53,6 +17,24 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import org.w3c.dom.Document;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class StatLogSPLOMViz {
 
@@ -352,8 +334,8 @@ public class StatLogSPLOMViz {
 						}
 					});
 					// selecting points (brush & link)
-					new CoordSysViewSelector(canvas,coordsys) {
-						{extModifierMask=0;/* no shift needed */}
+					new CoordSysViewSelector(canvas,coordsys, new KeyMaskListener(0)) {
+						// deprecated {extModifierMask=0;/* no shift needed */}
 						public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
 							pointInfo.setText("");
 							desaturateExcept(minX, minY, maxX, maxY);

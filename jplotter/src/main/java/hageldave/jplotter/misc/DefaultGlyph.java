@@ -32,7 +32,7 @@ public enum DefaultGlyph implements Glyph {
 	/** a cross glyph, two diagonal lines */
 	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false, false, DefaultGlyph::mkCrossSVG, DefaultGlyph::mkCrossPDF, DefaultGlyph::drawCross),
 	/** a square glyph */
-	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false, false, DefaultGlyph::mkSquareSVG, DefaultGlyph::mkSquarePDF, DefaultGlyph::drawSquare),
+	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 7, false, false, DefaultGlyph::mkSquareSVG, DefaultGlyph::mkSquarePDF, DefaultGlyph::drawSquare),
 	/** a filled square glyph */
 	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false, true, DefaultGlyph::mkSquareSVG, DefaultGlyph::mkSquarePDF, DefaultGlyph::drawSquareF),
 	/** a triangle glyph */
@@ -246,7 +246,7 @@ public enum DefaultGlyph implements Glyph {
 	}
 	
 	static void mkArrow(VertexArray va){
-		va.setBuffer(0, 2,  -.5f,0f,  .5f,0f,  .1f,-.2f, .5,0, .1f,.2f, .5f,0f);
+		va.setBuffer(0, 2,  -.5f,0f,  .5f,0f,  .1f,-.2f, .5f,0f, .1f,.2f, .5f,0f);
 	}
 	
 	static void drawArrow(Graphics2D g, int pixelSize, float scaling) {
@@ -276,7 +276,7 @@ public enum DefaultGlyph implements Glyph {
 	}
 	
 	static void mkArrowHead(VertexArray va){
-		va.setBuffer(0, 2,  -.2f,0f,  -.5f,-.3f,  .5f,0f, -.5,.3);
+		va.setBuffer(0, 2,  -.2f,0f,  -.5f,-.3f,  .5f,0f, -.5f,.3f);
 	}
 	
 	static void drawArrowHead(Graphics2D g, int pixelSize, float scaling) {
@@ -346,7 +346,7 @@ public enum DefaultGlyph implements Glyph {
 	}
 	
 	static void mkTriangle(VertexArray va){
-		va.setBuffer(0, 2,  -.5,-.5,  .5,-.5, 0,.5);
+		va.setBuffer(0, 2,  -.5f,-.5f,  .5f,-.5f, 0f,.5f);
 	}
 	
 	static void drawTriangle(Graphics2D g, int pixelSize, float scaling) {

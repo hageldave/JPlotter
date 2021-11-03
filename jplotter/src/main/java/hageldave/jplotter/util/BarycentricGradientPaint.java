@@ -243,29 +243,52 @@ public class BarycentricGradientPaint implements Paint {
 		}
 
 		protected void fillRaster(int xA, int yA, int w, int h, int[] data) {
-			for(int i=0; i<h; i++) {
-				float y = yA+i+.5f;
-				float ypart11 = -x23*(y-y3);
-				float ypart21 =  x13*(y-y3);
-		
-				for(int j=0; j<w; j++) {
-					float x = xA+j+.5f;
-					// calculate barycentric coordinates for (x,y)
-					float l1 = ( y23*(x-x3)+ypart11)*denom;
-					float l2 = (-y13*(x-x3)+ypart21)*denom;
-					float l3 = 1f-l1-l2;
-		
-					// determine color
-					int mix1;
-					if(l1<0||l2<0||l3<0) mix1 = 0;
-					else mix1 = mixColor3(c1, c2, c3, l1, l2, l3);
-					data[i*w+j] = mix1;
+			if(c1==c2&&c2==c3) {
+				// all vertices same color
+				for(int i=0; i<h; i++) {
+					float y = yA+i+.5f;
+					float ypart11 = -x23*(y-y3);
+					float ypart21 =  x13*(y-y3);
+			
+					for(int j=0; j<w; j++) {
+						float x = xA+j+.5f;
+						// calculate barycentric coordinates for (x,y)
+						float l1 = ( y23*(x-x3)+ypart11)*denom;
+						float l2 = (-y13*(x-x3)+ypart21)*denom;
+						float l3 = 1f-l1-l2;
+						// determine color
+						int mix1;
+						if(l1<0||l2<0||l3<0) mix1 = 0;
+						else mix1 = c1;
+						data[i*w+j] = mix1;
+					}
+				}
+			} else {
+				// vertices of different color
+				for(int i=0; i<h; i++) {
+					float y = yA+i+.5f;
+					float ypart11 = -x23*(y-y3);
+					float ypart21 =  x13*(y-y3);
+			
+					for(int j=0; j<w; j++) {
+						float x = xA+j+.5f;
+						// calculate barycentric coordinates for (x,y)
+						float l1 = ( y23*(x-x3)+ypart11)*denom;
+						float l2 = (-y13*(x-x3)+ypart21)*denom;
+						float l3 = 1f-l1-l2;
+						// determine color
+						int mix1;
+						if(l1<0||l2<0||l3<0) mix1 = 0;
+						else mix1 = mixColor3(c1, c2, c3, l1, l2, l3);
+						data[i*w+j] = mix1;
+					}
 				}
 			}
 		}
 
 
 		protected void fillRasterMSAA(int xA, int yA, int w, int h, int[] data) {
+			final boolean monochrome = c1==c2&&c2==c3;
 			for(int i=0; i<h; i++) {
 				float y = yA+i+MSAA_SAMPLES[1];
 				float ypart11 = -x23*(y-y3);
@@ -316,16 +339,16 @@ public class BarycentricGradientPaint implements Paint {
 					float w1,w2,w3,w4;
 
 					if(l11<0||l21<0||l31<0) { mix1 = 0; w1=0f; }
-					else { mix1 = mixColor3(c1, c2, c3, l11, l21, l31); w1=1f; }
+					else { mix1 = monochrome ? c1:mixColor3(c1, c2, c3, l11, l21, l31); w1=1f; }
 
 					if(l12<0||l22<0||l32<0) { mix2 = 0; w2=0f; }
-					else { mix2 = mixColor3(c1, c2, c3, l12, l22, l32); w2=1f; }
+					else { mix2 = monochrome ? c1:mixColor3(c1, c2, c3, l12, l22, l32); w2=1f; }
 
 					if(l13<0||l23<0||l33<0) {mix3 = 0; w3=0f; }
-					else { mix3 = mixColor3(c1, c2, c3, l13, l23, l33); w3=1f; }
+					else { mix3 = monochrome ? c1:mixColor3(c1, c2, c3, l13, l23, l33); w3=1f; }
 
 					if(l14<0||l24<0||l34<0) { mix4 = 0; w4=0f; }
-					else { mix4 = mixColor3(c1, c2, c3, l14, l24, l34); w4=1f; }
+					else { mix4 = monochrome ? c1:mixColor3(c1, c2, c3, l14, l24, l34); w4=1f; }
 
 					int color = mixColor4(mix1, mix2, mix3, mix4, w1,w2,w3,w4);
 					data[i*w+j] = scaleColorAlpha(color,(w1+w2+w3+w4)*.25f);

@@ -1,6 +1,12 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.renderers.LinesRenderer;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -10,12 +16,6 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.renderers.LinesRenderer;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The Lines class is a collection of linear line segments.
@@ -46,6 +46,8 @@ public class Lines implements Renderable {
 	protected VertexArray va;
 
 	protected ArrayList<SegmentDetails> segments = new ArrayList<>();
+
+	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 
@@ -263,6 +265,34 @@ public class Lines implements Renderable {
 	}
 
 	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Lines setGlobalSaturationMultiplier(DoubleSupplier saturation) {
+		this.globalSaturationMultiplier = saturation;
+		return this;
+	}
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Lines setGlobalSaturationMultiplier(double saturation) {
+		return setGlobalSaturationMultiplier(() -> saturation);
+	}
+
+	/** @return the saturation multiplier of this renderable */
+	public float getGlobalSaturationMultiplier() {
+		return (float)globalSaturationMultiplier.getAsDouble();
+	}
+
+	/**
 	 * @return whether vertex rounding is enabled. This indicates if
 	 * the {@link LinesRenderer}'s shader will round vertex positions of 
 	 * the quad vertices (that a segment is expanded to) to integer values.
@@ -404,7 +434,9 @@ public class Lines implements Renderable {
 	public boolean isHidden() {
 		return hidden;
 	}
-	
+
+
+
 	/**
 	 * Hides or unhides this Lines object, i.e. sets the {@link #isHidden()} field
 	 * value. When hidden, renderers will not draw it.
@@ -466,13 +498,13 @@ public class Lines implements Renderable {
 		 * @param pickID picking color of the segment (see {@link Lines} for details)
 		 * @return this for chaining
 		 */
-		public SegmentDetails setPickColor(int pickID){
+		public SegmentDetails setPickColor (int pickID) {
 			if(pickID != 0)
 				pickID = pickID | 0xff000000;
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
 		/**
 		 * Sets the color at the starting point of the segment
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)

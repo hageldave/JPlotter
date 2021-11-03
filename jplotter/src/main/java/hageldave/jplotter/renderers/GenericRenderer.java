@@ -1,14 +1,14 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.geom.Rectangle2D;
-import java.util.LinkedList;
-import java.util.Objects;
-
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
+
+import java.awt.geom.Rectangle2D;
+import java.util.LinkedList;
+import java.util.Objects;
 
 /**
  * The GenericRenderer class is an abstract {@link Renderer} intended
@@ -141,10 +141,11 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	 */
 	public GenericRenderer<T> addItemToRender(T item){
 		if(!itemsToRender.contains(item))
+			// add item to render chain
 			itemsToRender.add(item);
 		return this;
 	}
-	
+
 	/**
 	 * Removes an item from this renderer's {@link #itemsToRender} list.
 	 * @param item to remove
@@ -205,7 +206,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	public LinkedList<T> getItemsToRender() {
 		return itemsToRender;
 	}
-	
+
 	@Override
 	public void setView(Rectangle2D view){
 		this.view = Objects.isNull(view) ? null:Utils.copy(view);

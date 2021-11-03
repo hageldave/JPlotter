@@ -83,7 +83,7 @@ public class Legend implements Renderable, Renderer {
 		this.colorScheme = colorScheme;
 	}
 
-	protected static class GlyphLabel {
+	public static class GlyphLabel {
 		public String labelText;
 		public Glyph glyph;
 		public int color;
@@ -97,7 +97,7 @@ public class Legend implements Renderable, Renderer {
 		}
 	}
 
-	protected static class LineLabel {
+	public static class LineLabel {
 		public String labelText;
 		public double thickness;
 		public int color;
@@ -118,7 +118,7 @@ public class Legend implements Renderable, Renderer {
 		}
 	}
 
-	protected static class ColormapLabel {
+	public static class ColormapLabel {
 		public String labelText;
 		public ColorMap cmap;
 		public boolean vertical;
@@ -390,7 +390,7 @@ public class Legend implements Renderable, Renderer {
 							.setPickColor(glyphLabel.pickColor)
 							.setOrigin(itemWidth+itemTextSpacing,0);
 					texts.add(lbltxt);
-					pd = points.addPoint(itemWidth/2, fontHeight/2+1).setColor(glyphLabel.color);
+					pd = points.addPoint(itemWidth/2, fontHeight/2+1).setColor(glyphLabel.color).setPickColor(glyphLabel.pickColor);
 					rect = new Rectangle(itemWidth+itemTextSpacing+lbltxt.getTextSize().width, fontHeight);
 				}
 				@Override
@@ -603,7 +603,6 @@ public class Legend implements Renderable, Renderer {
 						currY -= maptextoffset+fontSize-2;
 						elementHeight = -currY+fontHeight;
 						rect = new Rectangle(elementWidth, elementHeight);
-						//								tris.addQuad(Utils.translate(Utils.copy(rect),0,-rect.getHeight()+fontHeight)).forEach(tri->tri.setColor(0x55000000));
 					}
 				}
 				@Override

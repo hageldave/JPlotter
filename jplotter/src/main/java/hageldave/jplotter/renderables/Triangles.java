@@ -1,19 +1,20 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The Triangles class is a collection of 2D triangles.
@@ -37,7 +38,8 @@ public class Triangles implements Renderable {
 
 	protected VertexArray va;
 	protected boolean isDirty = true;
-	protected float globalAlphaMultiplier = 1f;
+	protected DoubleSupplier globalAlphaMultiplier = ()->1.0;
+	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 	protected ArrayList<TriangleDetails> triangles = new ArrayList<>();
 	protected boolean useCrispEdgesForSVG = true;
 	protected boolean useAAinFallback = false;
@@ -210,7 +212,18 @@ public class Triangles implements Renderable {
 	 * @return this for chaining
 	 */
 	public Triangles setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
-		this.globalAlphaMultiplier = (float)globalAlphaMultiplier;
+		return setGlobalAlphaMultiplier(()->globalAlphaMultiplier);
+	}
+	
+	/**
+	 * Sets the global alpha multiplier parameter of this {@link Triangles} object.
+	 * The value will be multiplied with each vertex' alpha color value when rendering.
+	 * The triangle will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+	 * @param globalAlphaMultiplier of the triangles in this collection
+	 * @return this for chaining
+	 */
+	public Triangles setGlobalAlphaMultiplier(DoubleSupplier globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = globalAlphaMultiplier;
 		return this;
 	}
 
@@ -218,9 +231,37 @@ public class Triangles implements Renderable {
 	 * @return the global alpha multiplier of the triangles in this collection
 	 */
 	public float getGlobalAlphaMultiplier() {
-		return globalAlphaMultiplier;
+		return (float)globalAlphaMultiplier.getAsDouble();
 	}
-	
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Triangles setGlobalSaturationMultiplier(DoubleSupplier saturation) {
+		this.globalSaturationMultiplier = saturation;
+		return this;
+	}
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Triangles setGlobalSaturationMultiplier(double saturation) {
+		return setGlobalSaturationMultiplier(() -> saturation);
+	}
+
+	/** @return the saturation multiplier of this renderable */
+	public float getGlobalSaturationMultiplier() {
+		return (float)globalSaturationMultiplier.getAsDouble();
+	}
+
 	@Override
 	public boolean isHidden() {
 		return hidden;
@@ -470,7 +511,7 @@ public class Triangles implements Renderable {
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
 		/**
 		 * Sets the color for vertex 0
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)

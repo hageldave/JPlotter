@@ -1,30 +1,12 @@
 package hageldave.jplotter;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.DoubleBinaryOperator;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.CoordSysPanning;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysPanning;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.misc.Contours;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
@@ -35,6 +17,17 @@ import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import org.w3c.dom.Document;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.DoubleBinaryOperator;
 
 public class IsolinesViz {
 	

@@ -153,15 +153,15 @@ public class Text implements Renderable {
 	 * (invisible) picking color attachment of an {@link FBO}. 
 	 * This color may serve as an identifier of the object that can be queried from a location of the
 	 * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values).
-	 * @param pickColor opaque integer packed RGB value, 0 or one in [0xff000001..0xffffffff]. 
+	 * @param pickID opaque integer packed RGB value, 0 or one in [0xff000001..0xffffffff].
 	 * When a transparent color is specified its alpha channel will be set to 0xff to make it opaque.
 	 * @return this for chaining
 	 */
-	public Text setPickColor(int pickColor) {
-		this.pickColor = pickColor;
+	public Text setPickColor(int pickID) {
+		this.pickColor = pickID;
 		// can only use opaque colors cause transparent colors will not work on overlaps
-		if(pickColor != 0)
-			this.pickColor = pickColor | 0xff000000;
+		if(pickID != 0)
+			this.pickColor = pickID | 0xff000000;
 		return this;
 	}
 
@@ -366,6 +366,7 @@ public class Text implements Renderable {
 	public String getTextString(){
 		return txtStr;
 	}
+
 	
 	/**
 	 * Sets the string of this text.

@@ -1,6 +1,11 @@
 package hageldave.jplotter.renderables;
 
-import java.awt.Color;
+import hageldave.jplotter.gl.FBO;
+import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
+import hageldave.jplotter.util.Utils;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -8,11 +13,6 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
-
-import hageldave.jplotter.gl.FBO;
-import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.util.Annotations.GLContextRequired;
-import hageldave.jplotter.util.Utils;
 
 /**
  * The Curves class is a collection of cubic Bezier curves.
@@ -42,6 +42,7 @@ public class Curves implements Renderable {
 	protected float strokeLength = 16;
 	protected boolean isDirty = true;
 	protected boolean hidden = false;
+	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 	protected int numEffectiveSegments = 0;
@@ -521,7 +522,36 @@ public class Curves implements Renderable {
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
-	
+
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Curves setGlobalSaturationMultiplier(DoubleSupplier saturation) {
+		this.globalSaturationMultiplier = saturation;
+		return this;
+	}
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Curves setGlobalSaturationMultiplier(double saturation) {
+		return setGlobalSaturationMultiplier(() -> saturation);
+	}
+
+	/** @return the saturation multiplier of this renderable */
+	public float getGlobalSaturationMultiplier() {
+		return (float)globalSaturationMultiplier.getAsDouble();
+	}
+
 	/**
 	 * Sets this Curves object's stroke pattern.
 	 * The stroke pattern is a 16bit number that defines a sequence of solid and empty parts of a stroke.
@@ -596,7 +626,7 @@ public class Curves implements Renderable {
 	public ArrayList<CurveDetails> getCurveDetails() {
 		return curves;
 	}
-	
+
 	/**
 	 * Adds a curve to the collection
 	 * @param cd curve to add
@@ -864,7 +894,7 @@ public class Curves implements Renderable {
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
 		/**
 		 * Sets the color of the curve
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
