@@ -389,6 +389,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			return;
 		}
 
+		int factor = 10;
+
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
@@ -406,9 +408,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 				COSArray decodeArray = new COSArray();
 				decodeArray.add(COSInteger.ZERO);
-				decodeArray.add(COSInteger.get(0xFFFF));
+				decodeArray.add(COSInteger.get(0xFFFF/factor));
 				decodeArray.add(COSInteger.ZERO);
-				decodeArray.add(COSInteger.get(0xFFFF));
+				decodeArray.add(COSInteger.get(0xFFFF/factor));
 				decodeArray.add(COSInteger.ZERO);
 				decodeArray.add(COSInteger.ONE);
 				decodeArray.add(COSInteger.ZERO);
@@ -437,9 +439,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 				COSArray decodeArrayMask = new COSArray();
 				decodeArrayMask.add(COSInteger.ZERO);
-				decodeArrayMask.add(COSInteger.get(0xFFFF));
+				decodeArrayMask.add(COSInteger.get(0xFFFF/factor));
 				decodeArrayMask.add(COSInteger.ZERO);
-				decodeArrayMask.add(COSInteger.get(0xFFFF));
+				decodeArrayMask.add(COSInteger.get(0xFFFF/factor));
 				decodeArrayMask.add(COSInteger.ZERO);
 				decodeArrayMask.add(COSInteger.ONE);
 				decodeArrayMask.add(COSInteger.ZERO);
@@ -468,10 +470,14 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					x0*=scaleX; x1*=scaleX; x2*=scaleX;
 					y0*=scaleY; y1*=scaleY; y2*=scaleY;
 					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
+
+					// rescale x,y coordinates
+					x0 *= factor; x1 *= factor; x2 *= factor;
+					y0 *= factor; y1 *= factor; y2 *= factor;
+
 					int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
-
 
 					int c02 = new Color(tri.c0.getAsInt(), true).getAlpha();
 					int c12 = new Color(tri.c1.getAsInt(), true).getAlpha();
@@ -518,22 +524,16 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
 				extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, softMaskDictionary);
 
-
-
 				contentStream.saveGraphicsState();
 				// clipping
 				contentStream.addRect(x, y, w, h);
 				contentStream.clip();
 				contentStream.setGraphicsStateParameters(extendedGraphicsState);
-				maskDoc.close();
-
 				contentStream.shadingFill(gouraudShading);
 				mcos.close();
 				os.close();
-
 				contentStream.restoreGraphicsState();
 			}
-
 			contentStream.close();
 		} catch (IOException e) {
 			System.out.println(e);
