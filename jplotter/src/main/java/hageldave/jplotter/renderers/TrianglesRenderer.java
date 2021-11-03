@@ -12,14 +12,16 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.BarycentricGradientPaint;
 import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDTransparencyGroup;
 import org.apache.pdfbox.pdmodel.graphics.form.PDTransparencyGroupAttributes;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -27,10 +29,12 @@ import org.lwjgl.opengl.GL40;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Objects;
 
 /**
@@ -174,7 +178,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		closeAllItems();
 	}
 
-	// TODO implement saturation multiplier
 	/**
 	 * Disables {@link GL11#GL_DEPTH_TEST},
 	 * enables {@link GL11#GL_BLEND}
@@ -327,7 +330,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				x0*=scaleX; x1*=scaleX; x2*=scaleX;
 				y0*=scaleY; y1*=scaleY; y2*=scaleY;
 
-				// TODO neeeds further testing
 				int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
 				// not needed: alpha multiplier is passed via SVGTriangleRendering - c0 = ColorOperations.scaleColorAlpha(c0, tris.getGlobalAlphaMultiplier());
 				int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
@@ -394,15 +396,65 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 		try {
 			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
-			contentStream.saveGraphicsState();
-			contentStream.addRect(x, y, w, h);
-			contentStream.clip();
 
 			for(Triangles tris : getItemsToRender()){
+				PDShadingType4 gouraudShading = new PDShadingType4(doc.getDocument().createCOSStream());
+				gouraudShading.setShadingType(PDShading.SHADING_TYPE4);
+				gouraudShading.setBitsPerFlag(8);
+				gouraudShading.setBitsPerCoordinate(16);
+				gouraudShading.setBitsPerComponent(8);
+
+				COSArray decodeArray = new COSArray();
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.get(0xFFFF));
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.get(0xFFFF));
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.ONE);
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.ONE);
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.ONE);
+				gouraudShading.setDecodeValues(decodeArray);
+				gouraudShading.setColorSpace(PDDeviceRGB.INSTANCE);
+
+				OutputStream os = ((COSStream) gouraudShading.getCOSObject()).createOutputStream();
+				MemoryCacheImageOutputStream mcos = new MemoryCacheImageOutputStream(os);
+
+				// soft masking for triangle transparency
+				PDDocument maskDoc = new PDDocument();
+				PDPage maskPage = new PDPage();
+				maskDoc.addPage(maskPage);
+				maskPage.setMediaBox(new PDRectangle(w+x, h+y));
+				PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
+						PDPageContentStream.AppendMode.APPEND, false);
+
+				PDShadingType4 gouraudShadingMask = new PDShadingType4(doc.getDocument().createCOSStream());
+				gouraudShadingMask.setShadingType(PDShading.SHADING_TYPE4);
+				gouraudShadingMask.setBitsPerFlag(8);
+				gouraudShadingMask.setBitsPerCoordinate(16);
+				gouraudShadingMask.setBitsPerComponent(8);
+
+				COSArray decodeArrayMask = new COSArray();
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.get(0xFFFF));
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.get(0xFFFF));
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.ONE);
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.ONE);
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.ONE);
+				gouraudShadingMask.setDecodeValues(decodeArrayMask);
+				gouraudShadingMask.setColorSpace(PDDeviceRGB.INSTANCE);
+
+				OutputStream osMask = ((COSStream) gouraudShadingMask.getCOSObject()).createOutputStream();
+				MemoryCacheImageOutputStream mcosMask = new MemoryCacheImageOutputStream(osMask);
+
 				if(tris.isHidden()){
 					continue;
 				}
-
 				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
 				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
@@ -420,64 +472,72 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
 
-					// soft masking for triangle transparency
-					PDDocument maskDoc = new PDDocument();
-					PDPage maskPage = new PDPage();
-					maskDoc.addPage(maskPage);
-					PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
-							PDPageContentStream.AppendMode.APPEND, true);
 
 					int c02 = new Color(tri.c0.getAsInt(), true).getAlpha();
 					int c12 = new Color(tri.c1.getAsInt(), true).getAlpha();
 					int c22 = new Color(tri.c2.getAsInt(), true).getAlpha();
 
-					PDFUtils.createPDFShadedTriangle(doc, maskCS,
+					// write shaded triangle to mask stream
+					PDFUtils.writeShadedTriangle(mcosMask,
 							new Point2D.Double(x0, y0),
 							new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2),
 							new Color(c02, c02, c02),
 							new Color(c12, c12, c12),
 							new Color(c22, c22, c22));
-					maskCS.close();
 
-					// import b/w triangle as a mask
-					LayerUtility maskLayer = new LayerUtility(doc);
-					PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
-					maskDoc.close();
-
-					PDTransparencyGroupAttributes transparencyGroupAttributes = new PDTransparencyGroupAttributes();
-					transparencyGroupAttributes.getCOSObject().setItem(COSName.CS, COSName.DEVICEGRAY);
-
-					PDTransparencyGroup transparencyGroup = new PDTransparencyGroup(doc);
-					transparencyGroup.setBBox(PDRectangle.A4);
-					transparencyGroup.setResources(new PDResources());
-					transparencyGroup.getCOSObject().setItem(COSName.GROUP, transparencyGroupAttributes);
-					try (PDFormContentStream canvas = new PDFormContentStream(transparencyGroup)) {
-						canvas.drawForm(maskForm);
-					}
-
-					COSDictionary softMaskDictionary = new COSDictionary();
-					softMaskDictionary.setItem(COSName.S, COSName.LUMINOSITY);
-					softMaskDictionary.setItem(COSName.G, transparencyGroup);
-
-					PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
-					extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, softMaskDictionary);
-
-					contentStream.saveGraphicsState();
-					contentStream.setGraphicsStateParameters(extendedGraphicsState);
-					maskDoc.close();
-
-					PDFUtils.createPDFShadedTriangle(doc, contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
+					// write shaded (colored) triangle to normal stream
+					PDFUtils.writeShadedTriangle(mcos, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2), new Color(c0), new Color(c1), new Color(c2));
-					contentStream.restoreGraphicsState();
 				}
+
+				maskCS.shadingFill(gouraudShadingMask);
+				mcosMask.close();
+				osMask.close();
+				maskCS.close();
+				// import b/w triangle as a mask
+				LayerUtility maskLayer = new LayerUtility(doc);
+				PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
+				maskDoc.close();
+
+				PDTransparencyGroupAttributes transparencyGroupAttributes = new PDTransparencyGroupAttributes();
+				transparencyGroupAttributes.getCOSObject().setItem(COSName.CS, COSName.DEVICEGRAY);
+
+				PDTransparencyGroup transparencyGroup = new PDTransparencyGroup(doc);
+				transparencyGroup.setBBox(new PDRectangle(w+x, h+y));
+				transparencyGroup.setResources(new PDResources());
+				transparencyGroup.getCOSObject().setItem(COSName.GROUP, transparencyGroupAttributes);
+				try (PDFormContentStream canvas = new PDFormContentStream(transparencyGroup)) {
+					canvas.drawForm(maskForm);
+				}
+
+				COSDictionary softMaskDictionary = new COSDictionary();
+				softMaskDictionary.setItem(COSName.S, COSName.LUMINOSITY);
+				softMaskDictionary.setItem(COSName.G, transparencyGroup);
+
+				PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
+				extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, softMaskDictionary);
+
+
+
+				contentStream.saveGraphicsState();
+				// clipping
+				contentStream.addRect(x, y, w, h);
+				contentStream.clip();
+				contentStream.setGraphicsStateParameters(extendedGraphicsState);
+				maskDoc.close();
+
+				contentStream.shadingFill(gouraudShading);
+				mcos.close();
+				os.close();
+
+				contentStream.restoreGraphicsState();
 			}
-			contentStream.restoreGraphicsState();
+
 			contentStream.close();
 		} catch (IOException e) {
 			System.out.println(e);
 			throw new RuntimeException("Error occurred!");
 		}
 	}
-
 }

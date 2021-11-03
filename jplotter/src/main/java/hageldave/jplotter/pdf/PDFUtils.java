@@ -154,6 +154,40 @@ public class PDFUtils {
         return cs;
     }
 
+    public static void writeShadedTriangle(MemoryCacheImageOutputStream outputStream, Point2D p0,
+                                           Point2D p1, Point2D p2, Color c0, Color c1, Color c2) throws IOException {
+        // Vertex 1, starts with flag1
+        // (flags always 0 for vertices of start triangle)
+        outputStream.writeByte(0);
+        // x1 y1 (left corner)
+        outputStream.writeShort((int) p0.getX());
+        outputStream.writeShort((int) p0.getY());
+        // r1 g1 b1 (red)
+        outputStream.writeByte(c0.getRed());
+        outputStream.writeByte(c0.getGreen());
+        outputStream.writeByte(c0.getBlue());
+
+        // Vertex 2, starts with flag2
+        outputStream.writeByte(0);
+        // x2 y2 (top corner)
+        outputStream.writeShort((int) p1.getX());
+        outputStream.writeShort((int) p1.getY());
+        // r2 g2 b2 (green)
+        outputStream.writeByte(c1.getRed());
+        outputStream.writeByte(c1.getGreen());
+        outputStream.writeByte(c1.getBlue());
+
+        // Vertex 3, starts with flag3
+        outputStream.writeByte(0);
+        // x3 y3 (right corner)
+        outputStream.writeShort((int) p2.getX());
+        outputStream.writeShort((int) p2.getY());
+        // r3 g3 b3 (blue)
+        outputStream.writeByte(c2.getRed());
+        outputStream.writeByte(c2.getGreen());
+        outputStream.writeByte(c2.getBlue());
+    }
+
     /**
      * Creates a text string in the pdf document.
      *
