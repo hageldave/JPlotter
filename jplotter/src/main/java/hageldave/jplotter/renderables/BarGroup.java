@@ -6,44 +6,48 @@ import hageldave.jplotter.util.Pair;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.TreeMap;
 
 // renderable class for bars
 public class BarGroup {
     final protected TreeMap<Integer, BarStruct> groupedBars = new TreeMap<>();
-    protected PriorityQueue<BarStruct> sortedBars =
-            new PriorityQueue<>(Comparator.comparingDouble(o -> o.ID));
-    protected String label;
+    protected String label = "";
 
-    public BarGroup() { }
+    public BarGroup() {}
 
     public BarGroup(final String label) {
         this.label = label;
     }
 
-    public BarGroup addBar(final int ID, final double[] data, final Color color, final String groupLabel) {
-        double val = Arrays.stream(data).sum();
-        return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{groupLabel});
-    }
-
-    public BarGroup addBar(final int ID, final double val, final Color color, final String groupLabel) {
-        return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{groupLabel});
-    }
-
-    public BarGroup addBar(final int ID, final double val, final Color color) {
-        return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{""});
+    public BarGroup addBar(final int ID, final double val, final Color color, final String structLabel) {
+        return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{structLabel});
     }
 
     // what if stack is added, and user passes description?!
-    public BarGroup addData(final int[] IDs, final double[] data, final Color[] color, final String[] groupLabel) {
-        if (!(IDs.length == data.length && data.length == color.length && color.length == groupLabel.length))
+    public BarGroup addData(final int[] IDs, final double[] data, final Color[] color, final String[] structLabel) {
+        if (!(IDs.length == data.length && data.length == color.length && color.length == structLabel.length))
             throw new IllegalArgumentException("All arrays have to have equal size!");
         for (int i = 0; i < data.length; i++) {
             if (this.groupedBars.containsKey(IDs[i])) {
                 this.groupedBars.get(IDs[i]).barStacks.add(new BarStack(data[i], color[i]));
+                this.groupedBars.get(IDs[i]).description = structLabel[i];
             } else {
-                this.groupedBars.put(IDs[i], new BarStruct(data[i], color[i], groupLabel[i], IDs[i]));
+                this.groupedBars.put(IDs[i], new BarStruct(data[i], color[i], structLabel[i], IDs[i]));
             }
+        }
+        return this;
+    }
+
+    /**
+     *
+     * @param structs these BarStructs will be added to the BarGroup
+     * @return this for chaining
+     */
+    public BarGroup addBar(final BarStruct... structs) {
+        for (BarStruct struct:structs) {
+            this.groupedBars.put(struct.ID, struct);
         }
         return this;
     }
@@ -60,8 +64,14 @@ public class BarGroup {
         return this;
     }
 
-    public BarGroup sortBars(final Comparator<BarStruct> comparator) {
-        this.sortedBars = new PriorityQueue<>(comparator);
+    /**
+     * @param structs these BarStructs will be removed of the BarGroup
+     * @return this for chaining
+     */
+    public BarGroup removeBars(final BarStruct... structs) {
+        for (BarStruct struct: structs) {
+            this.groupedBars.remove(struct.ID);
+        }
         return this;
     }
 
@@ -105,14 +115,6 @@ public class BarGroup {
      */
     public TreeMap<Integer, BarStruct> getGroupedBars() {
         return groupedBars;
-    }
-
-    /**
-     * @return the sorted bars
-     */
-    public PriorityQueue<BarStruct> getSortedBars() {
-        copyContent(this.sortedBars, groupedBars.values());
-        return sortedBars;
     }
 
     /**

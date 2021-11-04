@@ -821,8 +821,8 @@ public class BarRenderer implements Renderer {
         for (BarGroup group : this.groupedBars) {
             // add guide here
             groupSeparators[groupindex++] = structPos - 0.75;
-            for (BarStruct struct : group.getSortedBars()) {
-                double stackStart = 0; double stackEnd = 0;
+            for (BarStruct struct : group.getGroupedBars().values()) {
+                double stackEnd = 0;
                 // add description labels on y axis
                 // (or) add description labels on x axis (when vertical alignment instead of horizontal)
                 xticks[index] = structPos;
@@ -834,7 +834,6 @@ public class BarRenderer implements Renderer {
                         stackEnd += barStack.length;
                     } else {
                         this.content.addItemToRender((makeBar(stackEnd, structPos, barStack.length, barStack.stackColor, barStack.pickColor)));
-                        stackStart += barStack.length;
                     }
                 }
                 // increment pos for every struct
