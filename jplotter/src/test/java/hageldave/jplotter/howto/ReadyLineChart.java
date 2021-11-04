@@ -3,6 +3,8 @@ package hageldave.jplotter.howto;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.charts.LineChart;
+import hageldave.jplotter.interaction.SimpleSelectionModel;
+import hageldave.jplotter.util.Pair;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
@@ -55,6 +57,8 @@ public class ReadyLineChart {
         chart.getCoordsys().setCoordinateView(-10,-10,200,200);
         chart.placeLegendOnBottom();
 
+
+        SimpleSelectionModel<Pair<Integer, Integer>> selectedDataPoints = new SimpleSelectionModel<Pair<Integer,Integer>>();
         chart.addLineChartMouseEventListener(new LineChart.LineChartMouseEventListener() {
             @Override
             public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
@@ -64,6 +68,17 @@ public class ReadyLineChart {
             @Override
             public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
                 LineChart.LineChartMouseEventListener.super.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+
+
+                if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
+                    // on click: select data point
+                    selectedDataPoints.setSelection(Pair.of(chunkIdx, pointIdx));
+                }
+
+                if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
+                    // on mouse over: highlight point under cursor
+                    chart.emphasize(Pair.of(chunkIdx, pointIdx));
+                }
 
             }
 

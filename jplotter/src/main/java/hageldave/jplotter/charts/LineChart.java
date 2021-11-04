@@ -16,6 +16,7 @@ import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -26,7 +27,9 @@ import java.util.*;
 public class LineChart {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
-    protected CompleteRenderer content;
+    protected CompleteRenderer contentLayer0;
+    protected CompleteRenderer contentLayer1;
+    protected CompleteRenderer contentLayer2;
     final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
     final protected HashMap<Integer, Lines> linesAdded = new HashMap<>();
 
@@ -44,6 +47,12 @@ public class LineChart {
     private int legendRightWidth = 100;
     private int legendBottomHeight = 60;
 
+    protected static final String CUE_HIGHLIGHT = "HIGHLIGHT";
+    protected static final String CUE_ACCENTUATE = "ACCENTUATE";
+    protected static final String CUE_EMPHASIZE = "EMPHASIZE";
+
+    protected HashMap<String, HashMap<Color, Lines>> cp2linesMaps = new HashMap<>();
+    protected HashMap<String, SimpleSelectionModel<Pair<Integer, Integer>>> cueSelectionModels = new HashMap<>();
 
     public LineChart(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
@@ -58,9 +67,11 @@ public class LineChart {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.coordsys = new CoordSysRenderer();
-        this.content = new CompleteRenderer();
+        this.contentLayer0 = new CompleteRenderer();
+        this.contentLayer1 = new CompleteRenderer();
+        this.contentLayer2 = new CompleteRenderer();
         this.coordsys.setCoordinateView(-1, -1, 1, 1);
-        this.coordsys.setContent(content);
+        this.coordsys.setContent(contentLayer0.withAppended(contentLayer1).withAppended(contentLayer2));
         this.canvas.setRenderer(coordsys);
         this.coordsys.setxAxisLabel(xLabel);
         this.coordsys.setyAxisLabel(yLabel);
@@ -79,6 +90,12 @@ public class LineChart {
 
         createMouseEventHandler();
         createRectangularPointSetSelectionCapabilities();
+
+        for(String cueType : Arrays.asList(CUE_EMPHASIZE, CUE_ACCENTUATE, CUE_HIGHLIGHT)){
+            this.cp2linesMaps.put(cueType, new HashMap<>());
+            this.cueSelectionModels.put(cueType, new SimpleSelectionModel<>());
+            this.cueSelectionModels.get(cueType).addSelectionListener(selection->createCue(cueType));
+        }
     }
 
     public LineChartVisualMapping getVisualMapping() {
@@ -112,7 +129,7 @@ public class LineChart {
     protected synchronized void onDataAdded(int chunkIdx, double[][] dataChunk, String chunkDescription, int xIdx, int yIdx, int startEndInterval) {
         Lines lines = new Lines();
         linesPerDataChunk.add(lines);
-        content.addItemToRender(lines);
+        contentLayer0.addItemToRender(lines);
         lines.setStrokePattern(getVisualMapping().getStrokePatternForChunk(chunkIdx, chunkDescription));
         for(int i=0; i<dataChunk.length-startEndInterval; i++) {
             int i_=i;
@@ -154,6 +171,18 @@ public class LineChart {
                     new Point2D.Double(scndDatapoint[dataModel.getXIdx(chunkIdx)], scndDatapoint[dataModel.getYIdx(chunkIdx)]));
             segmentDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
             segmentDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+        }
+
+        // update cues (which may have been in place before)
+        for(String cueType : Arrays.asList(CUE_ACCENTUATE, CUE_EMPHASIZE, CUE_HIGHLIGHT)) {
+            // check cue selections for out of index bounds (in case chunk got smaller)
+            // TODO: implement this
+            /*SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(cueType);
+            SortedSet<Pair<Integer, Integer>> chunkCues = selectionModel.getSelection().subSet(Pair.of(chunkIdx, 0), Pair.of(chunkIdx+1, 0));
+            SortedSet<Pair<Integer, Integer>> invalidCues = chunkCues.tailSet(Pair.of(chunkIdx, getDataModel().chunkSize(chunkIdx)));*/
+            // remove cues (selection model will not fire in this case, but thats okay since we will call createCue ourselves)
+           // invalidCues.clear();
+            this.createCue(cueType);
         }
 
         this.canvas.scheduleRepaint();
@@ -227,6 +256,32 @@ public class LineChart {
             }
             return containedPointIndices;
         }
+
+        // TODO: check if necessary
+        /*public int getGlobalIndex(int chunkIdx, int idx) {
+            int globalIdx=0;
+            for(int i=0; i<chunkIdx; i++) {
+                globalIdx += chunkSize(i);
+            }
+            return globalIdx + idx;
+        }
+
+        public Pair<Integer, Integer> locateGlobalIndex(int globalIdx){
+            int chunkIdx=0;
+            while(globalIdx >= chunkSize(chunkIdx)) {
+                globalIdx -= chunkSize(chunkIdx);
+                chunkIdx++;
+            }
+            return Pair.of(chunkIdx, globalIdx);
+        }
+
+        public int numDataPoints() {
+            int n = 0;
+            for(int i=0; i<numChunks(); i++)
+                n+=chunkSize(i);
+            return n;
+        }*/
+
 
         public synchronized void addListener(LineChartDataModelListener l) {
             listeners.add(l);
@@ -362,7 +417,19 @@ public class LineChart {
     }
 
     public CompleteRenderer getContent() {
-        return content;
+        return getContentLayer0();
+    }
+
+    public CompleteRenderer getContentLayer0() {
+        return contentLayer0;
+    }
+
+    public CompleteRenderer getContentLayer1() {
+        return contentLayer1;
+    }
+
+    public CompleteRenderer getContentLayer2() {
+        return contentLayer2;
     }
 
     protected void createMouseEventHandler() {
@@ -560,7 +627,152 @@ public class LineChart {
         this.pointSetSelectionOngoingListeners.add(l);
     }
 
-    public Lines getPointsForChunk(int chunkIdx) {
+    public Lines getLinesForChunk(int chunkIdx) {
         return this.linesPerDataChunk.get(chunkIdx);
     }
+
+    /**
+     * Sets up JFrame boilerplate, puts this plot into it, and sets the
+     * frame visible on the AWT event dispatch thread.
+     * @param title of the window
+     * @return the JFrame
+     */
+    public JFrame display(String title) {
+        JFrame frame = new JFrame();
+        frame.setTitle(title);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setLayout(new BorderLayout());
+        frame.getContentPane().add(this.canvas.asComponent());
+        this.canvas.addCleanupOnWindowClosingListener(frame);
+
+        SwingUtilities.invokeLater( ()->{
+            frame.pack();
+            frame.setVisible(true);
+        });
+
+        return frame;
+    }
+
+    @SafeVarargs
+    public final void accentuate(Pair<Integer, Integer> ... toAccentuate) {
+        accentuate(Arrays.asList(toAccentuate));
+    }
+
+    public void accentuate(Iterable<Pair<Integer, Integer>> toAccentuate) {
+        SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_ACCENTUATE);
+        selectionModel.setSelection(toAccentuate);
+    }
+
+    @SafeVarargs
+    public final void emphasize(Pair<Integer, Integer> ... toEmphasize) {
+        emphasize(Arrays.asList(toEmphasize));
+    }
+
+    public void emphasize(Iterable<Pair<Integer, Integer>> toEmphasize) {
+        SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_EMPHASIZE);
+        selectionModel.setSelection(toEmphasize);
+    }
+
+    @SafeVarargs
+    public final void highlight(Pair<Integer, Integer> ... toHighlight) {
+        highlight(Arrays.asList(toHighlight));
+    }
+
+    public void highlight(Iterable<Pair<Integer, Integer>> toHighlight) {
+        SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_HIGHLIGHT);
+        selectionModel.setSelection(toHighlight);
+    }
+
+    protected void createCue(final String cueType) {
+        SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(cueType);
+        SortedSet<Pair<Integer, Integer>> instancesToCue = selectionModel.getSelection();
+
+        clearCue(cueType);
+
+        switch (cueType) {
+            case CUE_ACCENTUATE:
+            {
+                // emphasis: show point in top layer with outline
+                // TODO: to implement
+                for(Pair<Integer, Integer> instance : instancesToCue) {
+                    Lines lines = getLinesForChunk(instance.first);
+                    Lines.SegmentDetails p = lines.getSegments().get(instance.second);
+
+                }
+            }
+            break;
+            case CUE_EMPHASIZE:
+            {
+                // accentuation: show enlarged point in top layer
+                for(Pair<Integer, Integer> instance : instancesToCue) {
+                    Lines lines = getLinesForChunk(instance.first);
+                    Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                    Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()));
+                    front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1).setThickness(1.5);
+
+                }
+            }
+            break;
+            case CUE_HIGHLIGHT:
+            {
+                if(instancesToCue.isEmpty()) {
+                    for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
+                        greyOutChunk(chunk, false);
+                } else {
+                    for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
+                        greyOutChunk(chunk, true);
+                    for(Pair<Integer, Integer> instance : instancesToCue) {
+                        Lines lines = getLinesForChunk(instance.first);
+                        Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                        Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()));
+                        front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1);
+                    }
+                }
+            }
+            break;
+            default:
+                throw new IllegalStateException("Unhandled cue type " + cueType);
+        }
+
+        this.getCanvas().scheduleRepaint();
+    }
+
+    protected void greyOutChunk(int chunkIdx, boolean greyedOut) {
+        double factor = greyedOut ? 0.1 : 1.0;
+        getLinesForChunk(chunkIdx).setGlobalSaturationMultiplier(factor).setGlobalAlphaMultiplier(factor);
+    }
+
+
+    private Lines getOrCreateCueLinesForGlyph(String cue, Color c) {
+        HashMap<Color, Lines> cp2lines = this.cp2linesMaps.get(cue);
+        if(!cp2lines.containsKey(c)) {
+            //Points points = new Points(g);
+            Lines lines = new Lines();
+            cp2lines.put(c, lines);
+            switch (cue) {
+                case CUE_ACCENTUATE: // fallthrough
+                case CUE_EMPHASIZE:
+                {
+                    lines.setGlobalThicknessMultiplier(1.2);
+                    getContentLayer2().addItemToRender(lines);
+                }
+                break;
+                case CUE_HIGHLIGHT:
+                {
+                    getContentLayer1().addItemToRender(lines);
+                }
+                break;
+                default:
+                    throw new IllegalStateException("unhandled cue case " + cue);
+            }
+        }
+        return cp2lines.get(c);
+    }
+
+    private void clearCue(String cue) {
+        HashMap<Color, Lines> cp2lines = this.cp2linesMaps.get(cue);
+        cp2lines.values().forEach(Lines::removeAllSegments);
+    }
+
+    // TODO: convenience methods to create listeners for cues (e.g. hovering does highlighting)
 }
