@@ -25,9 +25,9 @@ import java.util.*;
 
 public class ReadyBarChart {
     public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
-        BarChart barChart = new BarChart(true, 1);
-        BarChart combinedChart = new BarChart(true, 1);
-        combinedChart.getCanvas().asComponent().setPreferredSize(new Dimension(900, 400));
+        BarChart meanChart = new BarChart(true, 2);
+        BarChart histogramChart = new BarChart(true, 1);
+        histogramChart.getCanvas().asComponent().setPreferredSize(new Dimension(900, 400));
         ColorMap classcolors = DefaultColorMap.S_VIRIDIS;
 
         String[] plantLabels = new String[]{
@@ -125,7 +125,7 @@ public class ReadyBarChart {
 
             // add all groups to the chart
             for (BarGroup group : allGroups)
-                barChart.addData(group);
+                meanChart.addData(group);
         }
 
         // set up histogram
@@ -152,28 +152,28 @@ public class ReadyBarChart {
         createHistogramGroup(0.0, petalLength, classcolors, setosaHistogramValues.get(2), versicolorHistogramValues.get(2), virginicaHistogramValues.get(2));
         createHistogramGroup(0.0, petalWidth, classcolors, setosaHistogramValues.get(3), versicolorHistogramValues.get(3), virginicaHistogramValues.get(3));
 
-        combinedChart.addData(sepalLength);
-        combinedChart.addData(sepalWidth);
-        combinedChart.addData(petalLength);
-        combinedChart.addData(petalWidth);
+        histogramChart.addData(sepalLength);
+        histogramChart.addData(sepalWidth);
+        histogramChart.addData(petalLength);
+        histogramChart.addData(petalWidth);
 
-        barChart.placeLegendBottom()
+        meanChart.placeLegendBottom()
                 .addBarLabel(classcolors.getColor(3), "petal width", 3)
                 .addBarLabel(classcolors.getColor(2), "petal length", 2)
                 .addBarLabel(classcolors.getColor(1), "sepal width", 1)
                 .addBarLabel(classcolors.getColor(0), "sepal length", 0);
 
-        combinedChart.placeLegendBottom()
+        histogramChart.placeLegendBottom()
                 .addBarLabel(classcolors.getColor(0), plantLabels[0], 3)
                 .addBarLabel(classcolors.getColor(1), plantLabels[1], 2)
                 .addBarLabel(classcolors.getColor(2), plantLabels[2], 1);
 
 
-        barChart.getBarRenderer().setxAxisLabel("mean (in cm)");
-        barChart.getBarRenderer().setyAxisLabel("mean (in cm)");
+        meanChart.getBarRenderer().setxAxisLabel("mean (in cm)");
+        meanChart.getBarRenderer().setyAxisLabel("mean (in cm)");
 
-        combinedChart.getBarRenderer().setxAxisLabel("number of entries");
-        combinedChart.getBarRenderer().setyAxisLabel("number of entries");
+        histogramChart.getBarRenderer().setxAxisLabel("number of entries");
+        histogramChart.getBarRenderer().setyAxisLabel("number of entries");
 
         // set up gui stuff
         Container buttonWrapper = new Container();
@@ -185,14 +185,14 @@ public class ReadyBarChart {
 
         Container contentWrapper = new Container();
         contentWrapper.setLayout(new BoxLayout(contentWrapper, BoxLayout.Y_AXIS));
-        contentWrapper.add(barChart.getCanvas().asComponent());
+        contentWrapper.add(meanChart.getCanvas().asComponent());
         contentWrapper.add(buttonWrapper);
 
         JFrame frame = new JFrame();
         frame.getContentPane().add(contentWrapper);
         frame.setTitle("Comparison chart of iris plants");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        barChart.getCanvas().addCleanupOnWindowClosingListener(frame);
+        meanChart.getCanvas().addCleanupOnWindowClosingListener(frame);
         // make visible on AWT event dispatch thread
         SwingUtilities.invokeAndWait(()->{
             frame.pack();
@@ -205,36 +205,36 @@ public class ReadyBarChart {
         // add eventlisteners to buttons
         meanView.addActionListener(e -> {
             contentWrapper.removeAll();
-            contentWrapper.add(barChart.getCanvas().asComponent());
+            contentWrapper.add(meanChart.getCanvas().asComponent());
             contentWrapper.add(buttonWrapper);
-            barChart.getBarRenderer().setCoordinateView(
-                    barChart.getBarRenderer().getBounds().getMinX(),
-                    barChart.getBarRenderer().getBounds().getMinY(),
-                    barChart.getBarRenderer().getBounds().getMaxX(),
-                    barChart.getBarRenderer().getBounds().getMaxY());
-            barChart.getBarRenderer().setDirty();
-            barChart.getCanvas().scheduleRepaint();
+            meanChart.getBarRenderer().setCoordinateView(
+                    meanChart.getBarRenderer().getBounds().getMinX(),
+                    meanChart.getBarRenderer().getBounds().getMinY(),
+                    meanChart.getBarRenderer().getBounds().getMaxX(),
+                    meanChart.getBarRenderer().getBounds().getMaxY());
+            meanChart.getBarRenderer().setDirty();
+            meanChart.getCanvas().scheduleRepaint();
             frame.repaint();
             frame.pack();
         });
         histogramView.addActionListener(e -> {
             contentWrapper.removeAll();
-            contentWrapper.add(combinedChart.getCanvas().asComponent());
+            contentWrapper.add(histogramChart.getCanvas().asComponent());
             contentWrapper.add(buttonWrapper);
-            combinedChart.getBarRenderer().setCoordinateView(
-                    combinedChart.getBarRenderer().getBounds().getMinX(),
-                    combinedChart.getBarRenderer().getBounds().getMinY(),
-                    combinedChart.getBarRenderer().getBounds().getMaxX()+1,
-                    combinedChart.getBarRenderer().getBounds().getMaxY());
-            combinedChart.getBarRenderer().setDirty();
-            combinedChart.getCanvas().scheduleRepaint();
+            histogramChart.getBarRenderer().setCoordinateView(
+                    histogramChart.getBarRenderer().getBounds().getMinX(),
+                    histogramChart.getBarRenderer().getBounds().getMinY(),
+                    histogramChart.getBarRenderer().getBounds().getMaxX()+1,
+                    histogramChart.getBarRenderer().getBounds().getMaxY());
+            histogramChart.getBarRenderer().setDirty();
+            histogramChart.getCanvas().scheduleRepaint();
             frame.repaint();
             frame.pack();
         });
 
 
         // set up interaction stuff
-        combinedChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
+        histogramChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
             BarGroup.BarStack selectedBarStack;
             final JPopupMenu popUp = new JPopupMenu("Hovered Plant");
             @Override
@@ -252,7 +252,7 @@ public class ReadyBarChart {
                     JLabel label = new JLabel("Plant: " + colorStringMapping.get(barStack.stackColor.getRGB()) + ", Frequency in interval: " + barStack.length);
                     label.setBorder(new EmptyBorder(3, 12, 3, 12));
                     popUp.add(label);
-                    popUp.show(combinedChart.getCanvas().asComponent(), 50, 20);
+                    popUp.show(histogramChart.getCanvas().asComponent(), 50, 20);
                     popUp.setVisible(true);
                 }
             }
@@ -262,22 +262,22 @@ public class ReadyBarChart {
             public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {}
         });
 
-        barChart.getBarRenderer().setCoordinateView(
-                barChart.getBarRenderer().getBounds().getMinX(),
-                barChart.getBarRenderer().getBounds().getMinY(),
-                barChart.getBarRenderer().getBounds().getMaxX(),
-                barChart.getBarRenderer().getBounds().getMaxY());
+        meanChart.getBarRenderer().setCoordinateView(
+                meanChart.getBarRenderer().getBounds().getMinX(),
+                meanChart.getBarRenderer().getBounds().getMinY(),
+                meanChart.getBarRenderer().getBounds().getMaxX(),
+                meanChart.getBarRenderer().getBounds().getMaxY());
 
-        barChart.getBarRenderer().setDirty();
-        barChart.getCanvas().scheduleRepaint();
+        meanChart.getBarRenderer().setDirty();
+        meanChart.getCanvas().scheduleRepaint();
 
         // add a pop up menu (on right click) for exporting to SVG
         PopupMenu menu = new PopupMenu();
-        barChart.getCanvas().asComponent().add(menu);
+        meanChart.getCanvas().asComponent().add(menu);
         MenuItem svgExport = new MenuItem("SVG export");
         menu.add(svgExport);
         svgExport.addActionListener(e->{
-            Document doc2 = barChart.getCanvas().paintSVG();
+            Document doc2 = meanChart.getCanvas().paintSVG();
             SVGUtils.documentToXMLFile(doc2, new File("barchart_demo.svg"));
             System.out.println("exported barchart_demo.svg");
         });
@@ -285,7 +285,7 @@ public class ReadyBarChart {
         menu.add(pdfExport);
         pdfExport.addActionListener(e->{
             try {
-                PDDocument doc = barChart.getCanvas().paintPDF();
+                PDDocument doc = meanChart.getCanvas().paintPDF();
                 doc.save("barchart_demo.pdf");
                 doc.close();
                 System.out.println("exported barchart_demo.pdf");
@@ -294,21 +294,21 @@ public class ReadyBarChart {
             }
         });
 
-        barChart.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
+        meanChart.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(SwingUtilities.isRightMouseButton(e))
-                    menu.show(barChart.getCanvas().asComponent(), e.getX(), e.getY());
+                    menu.show(meanChart.getCanvas().asComponent(), e.getX(), e.getY());
             }
         });
 
         // add a pop up menu (on right click) for exporting to SVG
         PopupMenu combinedMenu = new PopupMenu();
-        combinedChart.getCanvas().asComponent().add(combinedMenu);
+        histogramChart.getCanvas().asComponent().add(combinedMenu);
         MenuItem combinedSvgExport = new MenuItem("SVG export");
         combinedMenu.add(combinedSvgExport);
         combinedSvgExport.addActionListener(e->{
-            Document doc2 = combinedChart.getCanvas().paintSVG();
+            Document doc2 = histogramChart.getCanvas().paintSVG();
             SVGUtils.documentToXMLFile(doc2, new File("barchart_demo.svg"));
             System.out.println("exported barchart_demo.svg");
         });
@@ -316,7 +316,7 @@ public class ReadyBarChart {
         combinedMenu.add(combinedPdfExport);
         combinedPdfExport.addActionListener(e->{
             try {
-                PDDocument doc = combinedChart.getCanvas().paintPDF();
+                PDDocument doc = histogramChart.getCanvas().paintPDF();
                 doc.save("barchart_demo.pdf");
                 doc.close();
                 System.out.println("exported barchart_demo.pdf");
@@ -325,11 +325,11 @@ public class ReadyBarChart {
             }
         });
 
-        combinedChart.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
+        histogramChart.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(SwingUtilities.isRightMouseButton(e))
-                    combinedMenu.show(combinedChart.getCanvas().asComponent(), e.getX(), e.getY());
+                    combinedMenu.show(histogramChart.getCanvas().asComponent(), e.getX(), e.getY());
             }
         });
     }
