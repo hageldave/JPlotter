@@ -927,6 +927,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			contentStream.saveGraphicsState();
 			contentStream.addRect(x, y, w, h);
 			contentStream.clip();
+
 			for (Lines lines : getItemsToRender()) {
                 if (lines.isHidden() || lines.getStrokePattern() == 0 || lines.numSegments() == 0) {
                     // line is invisible
@@ -999,6 +1000,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                     c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
 
                     if (!lines.hasStrokePattern()) {
+						PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
                         // create invisible rectangle so that elements outside w, h won't be rendered
 						if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
 							setStaticColor(contentStream, seg, lines);
@@ -1006,49 +1008,56 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 							graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
 							contentStream.setGraphicsStateParameters(graphicsState);
+
 							PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
 									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+
 							contentStream.setNonStrokingColor(createShadedColor(page, shading));
+
+							// soft masking for line transparency
+							PDDocument maskDoc = new PDDocument();
+							PDPage maskPage = new PDPage();
+							maskDoc.addPage(maskPage);
+							maskPage.setMediaBox(new PDRectangle(w+x, h+y));
+							PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
+									PDPageContentStream.AppendMode.APPEND, false);
+
+							int c02 = new Color(seg.color0.getAsInt(), true).getAlpha();
+							int c12 = new Color(seg.color1.getAsInt(), true).getAlpha();
+
+							PDShadingType2 shading2 = createGradientColor(
+									new Color(c02, c02, c02).getRGB(),
+									new Color(c12, c12, c12).getRGB(),
+									new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+
+							maskCS.saveGraphicsState();
+							// create segments
+							PDFUtils.createPDFPolygon(maskCS, new double[]{( x1 + miterX * t1 ) + x, ( x2 + miterX * t2 ) + x,
+									( x2 - miterX * t2 ) + x, ( x1 - miterX * t1 ) + x}, new double[]{( y1 + miterY * t1 ) + y, ( y2 + miterY * t2 ) + y,
+									( y2 - miterY * t2 ) + y, ( y1 - miterY * t1 ) + y});
+
+							maskCS.clip();
+							maskCS.shadingFill(shading2);
+							maskCS.restoreGraphicsState();
+							maskCS.close();
+
+							// import b/w triangle as a mask
+							LayerUtility maskLayer = new LayerUtility(doc);
+							PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
+							maskDoc.close();
+
+							// modify new graphics state with softmaskdict
+							extendedGraphicsState = new PDExtendedGraphicsState();
+							extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, createCOSDict(doc, maskForm, new PDRectangle(x+w,y+h)));
 						}
 
-						// soft masking for triangle transparency
-						PDDocument maskDoc = new PDDocument();
-						PDPage maskPage = new PDPage();
-						maskDoc.addPage(maskPage);
-						PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
-								PDPageContentStream.AppendMode.APPEND, true);
-
-						int c02 = new Color(seg.color0.getAsInt(), true).getAlpha();
-						int c12 = new Color(seg.color1.getAsInt(), true).getAlpha();
-
-						PDShadingType2 shading2 = createGradientColor(
-								new Color(c02, c02, c02).getRGB(),
-								new Color(c12, c12, c12).getRGB(),
-								new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-								new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-						maskCS.saveGraphicsState();
-						// create segments
-						PDFUtils.createPDFPolygon(maskCS, new double[]{( x1 + miterX * t1 ) + x, ( x2 + miterX * t2 ) + x,
-								( x2 - miterX * t2 ) + x, ( x1 - miterX * t1 ) + x}, new double[]{( y1 + miterY * t1 ) + y, ( y2 + miterY * t2 ) + y,
-								( y2 - miterY * t2 ) + y, ( y1 - miterY * t1 ) + y});
-						maskCS.clip();
-						maskCS.shadingFill(shading2);
-						maskCS.restoreGraphicsState();
-						maskCS.close();
-
-						// import b/w triangle as a mask
-						LayerUtility maskLayer = new LayerUtility(doc);
-						PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
-						maskDoc.close();
-
-						// modify new graphics state with softmaskdict
-						PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
-						extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, createCOSDict(doc, maskForm));
-						maskDoc.close();
 
 						// put line into content stream and add transparency via graphics state
 						contentStream.saveGraphicsState();
-						contentStream.setGraphicsStateParameters(extendedGraphicsState);
+						// only set graphics state if necessary to decrease file size
+						if (!(seg.color0.getAsInt() == seg.color1.getAsInt()))
+							contentStream.setGraphicsStateParameters(extendedGraphicsState);
                         // create segments
                         PDFUtils.createPDFPolygon(contentStream, new double[]{( x1 + miterX * t1 ) + x, ( x2 + miterX * t2 ) + x,
                                 ( x2 - miterX * t2 ) + x, ( x1 - miterX * t1 ) + x}, new double[]{( y1 + miterY * t1 ) + y, ( y2 + miterY * t2 ) + y,
@@ -1057,6 +1066,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 						contentStream.restoreGraphicsState();
                     } else {
                         double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+						PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
                         while (strokeInterval[0] < l2) {
                             double start = strokeInterval[0];
                             double end = Math.min(strokeInterval[1], l2);
@@ -1085,41 +1095,44 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                                 graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
                                 contentStream.setGraphicsStateParameters(graphicsState);
                                 contentStream.setNonStrokingColor(createShadedColor(page, shading));
+
+								// soft masking for triangle transparency
+								PDDocument maskDoc = new PDDocument();
+								PDPage maskPage = new PDPage();
+								maskDoc.addPage(maskPage);
+								maskPage.setMediaBox(new PDRectangle(w+x, h+y));
+								PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
+										PDPageContentStream.AppendMode.APPEND, false);
+								PDShadingType2 shading2 = createGradientColor(
+										new Color(new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha()).getRGB(),
+										new Color(new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha()).getRGB(),
+										new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+										new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+								maskCS.saveGraphicsState();
+								// create segments
+								PDFUtils.createPDFPolygon(maskCS, new double[]{( x1_ + miterX * t1_ ) + x, ( x2_ + miterX * t2_ ) + x,
+										( x2_ - miterX * t2_ ) + x, ( x1_ - miterX * t1_ ) + x}, new double[]{( y1_ + miterY * t1_ ) + y, ( y2_ + miterY * t2_ ) + y,
+										( y2_ - miterY * t2_ ) + y, ( y1_ - miterY * t1_ ) + y});
+								maskCS.clip();
+								maskCS.shadingFill(shading2);
+								maskCS.restoreGraphicsState();
+								maskCS.close();
+
+								// import b/w triangle as a mask
+								LayerUtility maskLayer = new LayerUtility(doc);
+								PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
+								maskDoc.close();
+
+								// modify new graphics state with softmaskdict
+								extendedGraphicsState = new PDExtendedGraphicsState();
+								extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, createCOSDict(doc, maskForm, new PDRectangle(x+w,y+h)));
+								maskDoc.close();
                             }
-							// soft masking for triangle transparency
-							PDDocument maskDoc = new PDDocument();
-							PDPage maskPage = new PDPage();
-							maskDoc.addPage(maskPage);
-							PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
-									PDPageContentStream.AppendMode.APPEND, false);
-							PDShadingType2 shading2 = createGradientColor(
-									new Color(new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha()).getRGB(),
-									new Color(new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha()).getRGB(),
-									new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-							maskCS.saveGraphicsState();
-							// create segments
-							PDFUtils.createPDFPolygon(maskCS, new double[]{( x1_ + miterX * t1_ ) + x, ( x2_ + miterX * t2_ ) + x,
-									( x2_ - miterX * t2_ ) + x, ( x1_ - miterX * t1_ ) + x}, new double[]{( y1_ + miterY * t1_ ) + y, ( y2_ + miterY * t2_ ) + y,
-									( y2_ - miterY * t2_ ) + y, ( y1_ - miterY * t1_ ) + y});
-							maskCS.clip();
-							maskCS.shadingFill(shading2);
-							maskCS.restoreGraphicsState();
-							maskCS.close();
-
-							// import b/w triangle as a mask
-							LayerUtility maskLayer = new LayerUtility(doc);
-							PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
-							maskDoc.close();
-
-							// modify new graphics state with softmaskdict
-							PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
-							extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, createCOSDict(doc, maskForm));
-							maskDoc.close();
-
 							// put line into content stream and add transparency via graphics state
 							contentStream.saveGraphicsState();
-							contentStream.setGraphicsStateParameters(extendedGraphicsState);
+							// only set graphics state if necessary to decrease file size
+							if (!(seg.color0.getAsInt() == seg.color1.getAsInt()))
+								contentStream.setGraphicsStateParameters(extendedGraphicsState);
 							// create segments
 							PDFUtils.createPDFPolygon(contentStream, new double[]{( x1_ + miterX * t1_ ) + x, ( x2_ + miterX * t2_ ) + x,
 									( x2_ - miterX * t2_ ) + x, ( x1_ - miterX * t1_ ) + x}, new double[]{( y1_ + miterY * t1_ ) + y, ( y2_ + miterY * t2_ ) + y,
@@ -1154,11 +1167,11 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		return new PDColor(name, new PDPattern(null));
 	}
 
-	protected static COSDictionary createCOSDict(final PDDocument doc, final PDFormXObject maskForm) {
+	protected static COSDictionary createCOSDict(final PDDocument doc, final PDFormXObject maskForm, PDRectangle boundingBox) {
 		PDTransparencyGroupAttributes transparencyGroupAttributes = new PDTransparencyGroupAttributes();
 		transparencyGroupAttributes.getCOSObject().setItem(COSName.CS, COSName.DEVICEGRAY);
 		PDTransparencyGroup transparencyGroup = new PDTransparencyGroup(doc);
-		transparencyGroup.setBBox(PDRectangle.A4);
+		transparencyGroup.setBBox(boundingBox);
 		transparencyGroup.setResources(new PDResources());
 		transparencyGroup.getCOSObject().setItem(COSName.GROUP, transparencyGroupAttributes);
 		try (PDFormContentStream canvas = new PDFormContentStream(transparencyGroup)) {
