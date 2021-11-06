@@ -51,7 +51,7 @@ public class LineChart {
     protected static final String CUE_ACCENTUATE = "ACCENTUATE";
     protected static final String CUE_EMPHASIZE = "EMPHASIZE";
 
-    protected HashMap<String, HashMap<Color, Lines>> cp2linesMaps = new HashMap<>();
+    protected HashMap<String, HashMap<Pair<Color, Integer>, Lines>> cp2linesMaps = new HashMap<>();
     protected HashMap<String, SimpleSelectionModel<Pair<Integer, Integer>>> cueSelectionModels = new HashMap<>();
 
     public LineChart(final boolean useOpenGL) {
@@ -177,11 +177,11 @@ public class LineChart {
         for(String cueType : Arrays.asList(CUE_ACCENTUATE, CUE_EMPHASIZE, CUE_HIGHLIGHT)) {
             // check cue selections for out of index bounds (in case chunk got smaller)
             // TODO: implement this
-            /*SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(cueType);
+            SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(cueType);
             SortedSet<Pair<Integer, Integer>> chunkCues = selectionModel.getSelection().subSet(Pair.of(chunkIdx, 0), Pair.of(chunkIdx+1, 0));
-            SortedSet<Pair<Integer, Integer>> invalidCues = chunkCues.tailSet(Pair.of(chunkIdx, getDataModel().chunkSize(chunkIdx)));*/
+            SortedSet<Pair<Integer, Integer>> invalidCues = chunkCues.tailSet(Pair.of(chunkIdx, getDataModel().chunkSize(chunkIdx)));
             // remove cues (selection model will not fire in this case, but thats okay since we will call createCue ourselves)
-           // invalidCues.clear();
+            invalidCues.clear();
             this.createCue(cueType);
         }
 
@@ -218,6 +218,10 @@ public class LineChart {
 
         public double[][] getDataChunk(int chunkIdx){
             return dataChunks.get(chunkIdx);
+        }
+
+        public int chunkSize(int chunkIdx) {
+            return getDataChunk(chunkIdx).length;
         }
 
         public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
@@ -304,7 +308,6 @@ public class LineChart {
         int[] usualLineChartStrokePatterns = {0xffff, 0xff00, 0x0f0f, 0xaaaa};
 
         public default int getStrokePatternForChunk(int chunkIdx, String chunkDescr) {
-            //int[] usualLineChartStrokePatterns = {0xffff, 0xff00, 0x0f0f, 0xaaaa};
             if (chunkIdx > colorMap.numColors()) {
                 return usualLineChartStrokePatterns[chunkIdx%usualLineChartStrokePatterns.length];
             }
@@ -312,7 +315,6 @@ public class LineChart {
         }
 
         public default int getColorForDataPoint(int chunkIdx, String chunkDescr, double[][] dataChunk, int pointIdx) {
-            //DefaultColorMap colorMap = DefaultColorMap.Q_8_SET2;
             return colorMap.getColor(chunkIdx%colorMap.numColors());
         }
 
@@ -707,9 +709,9 @@ public class LineChart {
                 for(Pair<Integer, Integer> instance : instancesToCue) {
                     Lines lines = getLinesForChunk(instance.first);
                     Lines.SegmentDetails l = lines.getSegments().get(instance.second);
-                    Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()));
+                    Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
+                    front.setStrokePattern(lines.getStrokePattern());
                     front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1).setThickness(1.5);
-
                 }
             }
             break;
@@ -724,7 +726,8 @@ public class LineChart {
                     for(Pair<Integer, Integer> instance : instancesToCue) {
                         Lines lines = getLinesForChunk(instance.first);
                         Lines.SegmentDetails l = lines.getSegments().get(instance.second);
-                        Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()));
+                        Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
+                        front.setStrokePattern(lines.getStrokePattern());
                         front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1);
                     }
                 }
@@ -743,12 +746,12 @@ public class LineChart {
     }
 
 
-    private Lines getOrCreateCueLinesForGlyph(String cue, Color c) {
-        HashMap<Color, Lines> cp2lines = this.cp2linesMaps.get(cue);
-        if(!cp2lines.containsKey(c)) {
+    private Lines getOrCreateCueLinesForGlyph(String cue, Color c, int strokePattern) {
+        HashMap<Pair<Color, Integer>, Lines> cp2lines = this.cp2linesMaps.get(cue);
+        if(!cp2lines.containsKey(new Pair<>(c, strokePattern))) {
             //Points points = new Points(g);
             Lines lines = new Lines();
-            cp2lines.put(c, lines);
+            cp2lines.put(new Pair<>(c, strokePattern), lines);
             switch (cue) {
                 case CUE_ACCENTUATE: // fallthrough
                 case CUE_EMPHASIZE:
@@ -766,11 +769,11 @@ public class LineChart {
                     throw new IllegalStateException("unhandled cue case " + cue);
             }
         }
-        return cp2lines.get(c);
+        return cp2lines.get(new Pair<>(c, strokePattern));
     }
 
     private void clearCue(String cue) {
-        HashMap<Color, Lines> cp2lines = this.cp2linesMaps.get(cue);
+        HashMap<Pair<Color, Integer>, Lines> cp2lines = this.cp2linesMaps.get(cue);
         cp2lines.values().forEach(Lines::removeAllSegments);
     }
 
