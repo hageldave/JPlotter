@@ -261,8 +261,8 @@ public class LineChart {
             return containedPointIndices;
         }
 
-        // TODO: check if necessary
-        /*public int getGlobalIndex(int chunkIdx, int idx) {
+        // TODO: check if correct
+        public int getGlobalIndex(int chunkIdx, int idx) {
             int globalIdx=0;
             for(int i=0; i<chunkIdx; i++) {
                 globalIdx += chunkSize(i);
@@ -284,7 +284,7 @@ public class LineChart {
             for(int i=0; i<numChunks(); i++)
                 n+=chunkSize(i);
             return n;
-        }*/
+        }
 
 
         public synchronized void addListener(LineChartDataModelListener l) {

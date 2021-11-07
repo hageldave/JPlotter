@@ -63,6 +63,8 @@ public class ReadyLineChart {
             @Override
             public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
                 LineChart.LineChartMouseEventListener.super.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
+
+                chart.highlight();
             }
 
             @Override
@@ -77,7 +79,7 @@ public class ReadyLineChart {
 
                 if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
                     // on mouse over: highlight point under cursor
-                    chart.emphasize(Pair.of(chunkIdx, pointIdx));
+                    chart.highlight(Pair.of(chunkIdx, pointIdx));
                 }
 
             }
@@ -85,6 +87,8 @@ public class ReadyLineChart {
             @Override
             public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
                 LineChart.LineChartMouseEventListener.super.onOutsideMouseEventeNone(mouseEventType, e);
+
+
             }
 
             @Override
