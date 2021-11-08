@@ -506,10 +506,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
             Paint paint;
 
-            //int c1, c2;
             int c1 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
             c1 = ColorOperations.scaleColorAlpha(c1, lines.getGlobalAlphaMultiplier());
-            //c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
 
             int c2 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
             c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
@@ -599,13 +597,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 
             Paint paint;
-            /*int c1, c2;
-            c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
-            c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());*/
 
             int c1 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
             c1 = ColorOperations.scaleColorAlpha(c1, lines.getGlobalAlphaMultiplier());
-            //c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
 
             int c2 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
             c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
@@ -1025,7 +1019,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							int c02 = new Color(seg.color0.getAsInt(), true).getAlpha();
 							int c12 = new Color(seg.color1.getAsInt(), true).getAlpha();
 
-							PDShadingType2 shading2 = createGradientColor(
+							PDShadingType2 maskShading = createGradientColor(
 									new Color(c02, c02, c02).getRGB(),
 									new Color(c12, c12, c12).getRGB(),
 									new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
@@ -1038,7 +1032,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 									( y2 - miterY * t2 ) + y, ( y1 - miterY * t1 ) + y});
 
 							maskCS.clip();
-							maskCS.shadingFill(shading2);
+							maskCS.shadingFill(maskShading);
 							maskCS.restoreGraphicsState();
 							maskCS.close();
 
@@ -1051,7 +1045,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							extendedGraphicsState = new PDExtendedGraphicsState();
 							extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, createCOSDict(doc, maskForm, new PDRectangle(x+w,y+h)));
 						}
-
 
 						// put line into content stream and add transparency via graphics state
 						contentStream.saveGraphicsState();
@@ -1103,7 +1096,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 								maskPage.setMediaBox(new PDRectangle(w+x, h+y));
 								PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
 										PDPageContentStream.AppendMode.APPEND, false);
-								PDShadingType2 shading2 = createGradientColor(
+								PDShadingType2 maskShading = createGradientColor(
 										new Color(new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha()).getRGB(),
 										new Color(new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha()).getRGB(),
 										new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
@@ -1114,7 +1107,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 										( x2_ - miterX * t2_ ) + x, ( x1_ - miterX * t1_ ) + x}, new double[]{( y1_ + miterY * t1_ ) + y, ( y2_ + miterY * t2_ ) + y,
 										( y2_ - miterY * t2_ ) + y, ( y1_ - miterY * t1_ ) + y});
 								maskCS.clip();
-								maskCS.shadingFill(shading2);
+								maskCS.shadingFill(maskShading);
 								maskCS.restoreGraphicsState();
 								maskCS.close();
 
@@ -1131,8 +1124,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							// put line into content stream and add transparency via graphics state
 							contentStream.saveGraphicsState();
 							// only set graphics state if necessary to decrease file size
-							if (!(seg.color0.getAsInt() == seg.color1.getAsInt()))
+							if (!(seg.color0.getAsInt() == seg.color1.getAsInt())) {
 								contentStream.setGraphicsStateParameters(extendedGraphicsState);
+							}
 							// create segments
 							PDFUtils.createPDFPolygon(contentStream, new double[]{( x1_ + miterX * t1_ ) + x, ( x2_ + miterX * t2_ ) + x,
 									( x2_ - miterX * t2_ ) + x, ( x1_ - miterX * t1_ ) + x}, new double[]{( y1_ + miterY * t1_ ) + y, ( y2_ + miterY * t2_ ) + y,
