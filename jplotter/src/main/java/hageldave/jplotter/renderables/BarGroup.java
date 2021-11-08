@@ -9,6 +9,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.TreeMap;
+import java.util.function.DoubleSupplier;
 
 // renderable class for bars
 public class BarGroup {
@@ -126,6 +127,8 @@ public class BarGroup {
         final public LinkedList<BarStack> barStacks = new LinkedList<>();
         public String description;
         public int ID;
+        protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
+        protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 
         public BarStruct(final double length, final Color color, final String description, final int ID) {
             this.barStacks.add(new BarStack(length, color));
@@ -166,6 +169,66 @@ public class BarGroup {
                 tempStackLength += barStack.length;
             }
             return new Pair<>(minVal, maxVal);
+        }
+
+
+        /**
+         * Sets the global alpha multiplier parameter of this {@link BarStruct} object.
+         * The value will be multiplied with each stacks point's alpha color value when rendering.
+         * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+         * @param globalAlphaMultiplier of the structs in this collection
+         * @return this for chaining
+         */
+        public BarStruct setGlobalAlphaMultiplier(DoubleSupplier globalAlphaMultiplier) {
+            this.globalAlphaMultiplier = globalAlphaMultiplier;
+            return this;
+        }
+
+        /**
+         * Sets the global alpha multiplier parameter of this {@link BarStruct} object.
+         * The value will be multiplied with each stacks point's alpha color value when rendering.
+         * The segment will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+         * @param globalAlphaMultiplier of the structs in this collection
+         * @return this for chaining
+         */
+        public BarStruct setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
+            return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
+        }
+
+        /**
+         * @return the global alpha multiplier of the stacks in this struct
+         */
+        public float getGlobalAlphaMultiplier() {
+            return (float)globalAlphaMultiplier.getAsDouble();
+        }
+
+
+        /**
+         * Sets the saturation multiplier for this Renderable.
+         * The effective saturation of the colors results form multiplication of
+         * the respective color's saturation by this value.
+         * @param saturation change of saturation, default is 1
+         * @return this for chaining
+         */
+        public BarStruct setGlobalSaturationMultiplier(DoubleSupplier saturation) {
+            this.globalSaturationMultiplier = saturation;
+            return this;
+        }
+
+        /**
+         * Sets the saturation multiplier for this Renderable.
+         * The effective saturation of the colors results form multiplication of
+         * the respective color's saturation by this value.
+         * @param saturation change of saturation, default is 1
+         * @return this for chaining
+         */
+        public BarStruct setGlobalSaturationMultiplier(double saturation) {
+            return setGlobalSaturationMultiplier(() -> saturation);
+        }
+
+        /** @return the saturation multiplier of this renderable */
+        public float getGlobalSaturationMultiplier() {
+            return (float)globalSaturationMultiplier.getAsDouble();
         }
     }
 

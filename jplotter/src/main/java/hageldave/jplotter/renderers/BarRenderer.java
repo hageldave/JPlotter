@@ -830,10 +830,10 @@ public class BarRenderer implements Renderer {
                 // adds each stack to the triangle renderer
                 for (BarStack barStack : struct.barStacks) {
                     if (barStack.length >= 0) {
-                        this.content.addItemToRender((makeBar(stackEnd, structPos, barStack.length, barStack.stackColor, barStack.pickColor)));
+                        this.content.addItemToRender((makeBar(stackEnd, structPos, struct, barStack)));
                         stackEnd += barStack.length;
                     } else {
-                        this.content.addItemToRender((makeBar(stackEnd, structPos, barStack.length, barStack.stackColor, barStack.pickColor)));
+                        this.content.addItemToRender((makeBar(stackEnd, structPos, struct, barStack)));
                     }
                 }
                 // increment pos for every struct
@@ -900,14 +900,16 @@ public class BarRenderer implements Renderer {
     }
 
     // creates a bar at startPosition, in row "row", with length, color and the specified pickColor
-    protected Triangles makeBar(final double startPosition, final double row, final double length, final Color color, final int pickColor) {
+    protected Triangles makeBar(final double startPosition, final double row, final BarStruct struct, final BarStack stack) {
         Triangles bar = new Triangles();
         if (this.alignment == AlignmentConstants.HORIZONTAL) {
-            bar.addQuad(new Rectangle2D.Double(startPosition, row - ( barSize / 2 ), length, barSize));
+            bar.addQuad(new Rectangle2D.Double(startPosition, row - ( barSize / 2 ), stack.length, barSize));
         } else if (this.alignment == AlignmentConstants.VERTICAL) {
-            bar.addQuad(new Rectangle2D.Double(row - ( barSize / 2 ), startPosition, barSize, length));
+            bar.addQuad(new Rectangle2D.Double(row - ( barSize / 2 ), startPosition, barSize, stack.length));
         }
-        bar.getTriangleDetails().forEach(tri -> tri.setPickColor(pickColor).setColor(color));
+        bar.setGlobalAlphaMultiplier(struct.getGlobalAlphaMultiplier());
+        bar.setGlobalSaturationMultiplier(struct.getGlobalSaturationMultiplier());
+        bar.getTriangleDetails().forEach(tri -> tri.setPickColor(stack.pickColor).setColor(stack.stackColor));
         return bar;
     }
 
