@@ -51,6 +51,7 @@ public class ReadyLineChart {
         chart.getDataModel().addData(seriesD, 0, 1, 1, "test999");
         chart.getDataModel().addData(seriesE, 0, 1, 1, "test1111");
 
+        chart.getContent().lines.getItemsToRender().get(0).setGlobalThicknessMultiplier(10);
         /*double[][] dm = *///chart.getDataModel().getDataChunk(0)[0][0] = 0;
         chart.getDataModel().setDataChunk(0, seriesC);
 
@@ -64,12 +65,12 @@ public class ReadyLineChart {
             public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
                 LineChart.LineChartMouseEventListener.super.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
 
-                chart.highlight();
+                chart.emphasize();
             }
 
             @Override
-            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
-                LineChart.LineChartMouseEventListener.super.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+            public void onInsideMouseEventLine(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+                LineChart.LineChartMouseEventListener.super.onInsideMouseEventLine(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
 
 
                 if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
@@ -79,7 +80,7 @@ public class ReadyLineChart {
 
                 if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
                     // on mouse over: highlight point under cursor
-                    chart.highlight(Pair.of(chunkIdx, pointIdx));
+                    chart.emphasize(Pair.of(chunkIdx, pointIdx));
                 }
 
             }
