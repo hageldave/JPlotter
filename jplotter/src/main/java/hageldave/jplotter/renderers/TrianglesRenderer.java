@@ -389,7 +389,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			return;
 		}
 
-		int factor = 10;
+		int factor = 100;
 
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
@@ -527,7 +527,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				contentStream.saveGraphicsState();
 				// clipping
 				contentStream.addRect(x, y, w, h);
-				contentStream.clip();
+				//contentStream.clip();
 				contentStream.setGraphicsStateParameters(extendedGraphicsState);
 				contentStream.shadingFill(gouraudShading);
 				mcos.close();
