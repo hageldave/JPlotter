@@ -30,8 +30,6 @@ public class LineChart {
     protected CompleteRenderer contentLayer0;
     protected CompleteRenderer contentLayer1;
     protected CompleteRenderer contentLayer2;
-    final protected ArrayList<double[][]> dataAdded = new ArrayList<>();
-    final protected HashMap<Integer, Lines> linesAdded = new HashMap<>();
 
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 
@@ -469,7 +467,7 @@ public class LineChart {
                         if(pointLocalizer instanceof int[]) {
                             int chunkIdx = ((int[])pointLocalizer)[0];
                             int pointIdx = ((int[])pointLocalizer)[1];
-                            notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, pointIdx);
+                            notifyInsideMouseEventLine(eventType, e, coordsysPoint, chunkIdx, pointIdx);
                         }
                     }
                 } else {
@@ -498,9 +496,9 @@ public class LineChart {
             l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
 
-    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+    protected synchronized void notifyInsideMouseEventLine(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
         for(LineChartMouseEventListener l:mouseEventListeners)
-            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+            l.onInsideMouseEventLine(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
     }
 
     protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
@@ -522,7 +520,7 @@ public class LineChart {
 
         public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
 
-        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {}
+        public default void onInsideMouseEventLine(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {}
 
         public default void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
 
@@ -534,7 +532,7 @@ public class LineChart {
         return l;
     }
 
-    public synchronized boolean removeScatterPlotMouseEventListener(LineChartMouseEventListener l) {
+    public synchronized boolean removeLineChartMouseEventListener(LineChartMouseEventListener l) {
         return this.mouseEventListeners.remove(l);
     }
 
@@ -695,11 +693,15 @@ public class LineChart {
             case CUE_ACCENTUATE:
             {
                 // emphasis: show point in top layer with outline
-                // TODO: to implement
                 for(Pair<Integer, Integer> instance : instancesToCue) {
                     Lines lines = getLinesForChunk(instance.first);
-                    Lines.SegmentDetails p = lines.getSegments().get(instance.second);
-
+                    Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                    Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
+                    front.addSegment(l.p0, l.p1).setColor(this.coordsys.getColorScheme().getColor1())
+                            .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier()+2, l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier()+2);
+                    front.setStrokePattern(lines.getStrokePattern());
+                    front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
+                            .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier());
                 }
             }
             break;
@@ -711,7 +713,8 @@ public class LineChart {
                     Lines.SegmentDetails l = lines.getSegments().get(instance.second);
                     Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
                     front.setStrokePattern(lines.getStrokePattern());
-                    front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1).setThickness(1.5);
+                    front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
+                            .setThickness((l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier())+1, (l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier())+1);
                 }
             }
             break;
@@ -728,7 +731,8 @@ public class LineChart {
                         Lines.SegmentDetails l = lines.getSegments().get(instance.second);
                         Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
                         front.setStrokePattern(lines.getStrokePattern());
-                        front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1);
+                        front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
+                                .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier());
                     }
                 }
             }
