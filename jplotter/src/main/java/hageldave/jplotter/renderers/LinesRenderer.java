@@ -922,6 +922,22 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			contentStream.addRect(x, y, w, h);
 			contentStream.clip();
 
+			COSDictionary fdict = new COSDictionary();
+			fdict.setInt(COSName.FUNCTION_TYPE, 2);
+			PDFunctionType2 func = new PDFunctionType2(fdict);
+			PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
+			axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+			axialShading.setShadingType(PDShading.SHADING_TYPE2);
+			axialShading.setFunction(func);
+
+			COSDictionary maskFfdict = new COSDictionary();
+			maskFfdict.setInt(COSName.FUNCTION_TYPE, 2);
+			PDFunctionType2 maskFunc = new PDFunctionType2(maskFfdict);
+			PDShadingType2 maskAxialShading = new PDShadingType2(new COSDictionary());
+			maskAxialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+			maskAxialShading.setShadingType(PDShading.SHADING_TYPE2);
+			maskAxialShading.setFunction(maskFunc);
+
 			for (Lines lines : getItemsToRender()) {
                 if (lines.isHidden() || lines.getStrokePattern() == 0 || lines.numSegments() == 0) {
                     // line is invisible
@@ -1003,10 +1019,9 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
 							contentStream.setGraphicsStateParameters(graphicsState);
 
-							PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+							axialShading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
 									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-
-							contentStream.setNonStrokingColor(createShadedColor(page, shading));
+							contentStream.setNonStrokingColor(createShadedColor(page, axialShading));
 
 							// soft masking for line transparency
 							PDDocument maskDoc = new PDDocument();
@@ -1019,11 +1034,11 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							int c02 = new Color(seg.color0.getAsInt(), true).getAlpha();
 							int c12 = new Color(seg.color1.getAsInt(), true).getAlpha();
 
-							PDShadingType2 maskShading = createGradientColor(
+							writeGradientColor(
 									new Color(c02, c02, c02).getRGB(),
 									new Color(c12, c12, c12).getRGB(),
 									new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y), maskAxialShading, maskFfdict);
 
 							maskCS.saveGraphicsState();
 							// create segments
@@ -1032,7 +1047,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 									( y2 - miterY * t2 ) + y, ( y1 - miterY * t1 ) + y});
 
 							maskCS.clip();
-							maskCS.shadingFill(maskShading);
+							maskCS.shadingFill(maskAxialShading);
 							maskCS.restoreGraphicsState();
 							maskCS.close();
 
@@ -1221,5 +1236,38 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		axialShading.setFunction(func);
 
 		return axialShading;
+	}
+
+	protected static void writeGradientColor(int color1, int color2, Point2D p0, Point2D p1,
+											 PDShadingType2 axialShading, COSDictionary fdict) throws IOException {
+		Color startColor = new Color(color1);
+		Color endColor = new Color(color2);
+
+		COSArray domain = new COSArray();
+		domain.add(COSInteger.ZERO);
+		domain.add(COSInteger.ONE);
+
+		COSArray c0 = new COSArray();
+		c0.add(new COSFloat(startColor.getRed() / 255f));
+		c0.add(new COSFloat(startColor.getGreen() / 255f));
+		c0.add(new COSFloat(startColor.getBlue() / 255f));
+
+		COSArray c1 = new COSArray();
+		c1.add(new COSFloat(endColor.getRed() / 255f));
+		c1.add(new COSFloat(endColor.getGreen() / 255f));
+		c1.add(new COSFloat(endColor.getBlue() / 255f));
+
+		fdict.setItem(COSName.DOMAIN, domain);
+		fdict.setItem(COSName.C0, c0);
+		fdict.setItem(COSName.C1, c1);
+		fdict.setInt(COSName.N, 1);
+
+		COSArray coords1 = new COSArray();
+		coords1.add(new COSFloat((float) p0.getX()));
+		coords1.add(new COSFloat((float) p0.getY()));
+		coords1.add(new COSFloat((float) p1.getX()));
+		coords1.add(new COSFloat((float) p1.getY()));
+
+		axialShading.setCoords(coords1);
 	}
 }
