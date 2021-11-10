@@ -23,6 +23,7 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDTransparencyGroupAttributes;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL40;
@@ -389,7 +390,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			return;
 		}
 
-		int factor = 100;
+		int factor = 10;
 
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
@@ -399,7 +400,42 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		try {
 			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
 
+			double xShift = 0.0;
+			double yShift = 0.0;
+
 			for(Triangles tris : getItemsToRender()){
+				if(tris.isHidden()){
+					continue;
+				}
+				for(TriangleDetails tri : tris.getTriangleDetails()) {
+					double x0,y0, x1,y1, x2,y2;
+					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
+					x0-=translateX; x1-=translateX; x2-=translateX;
+					y0-=translateY; y1-=translateY; y2-=translateY;
+					x0*=scaleX; x1*=scaleX; x2*=scaleX;
+					y0*=scaleY; y1*=scaleY; y2*=scaleY;
+					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
+
+					// rescale x,y coordinates
+					x0 *= factor; x1 *= factor; x2 *= factor;
+					y0 *= factor; y1 *= factor; y2 *= factor;
+
+					// check if one coordinate is negative
+					double minX = Math.min(Math.min(x0, x1), x2);
+					double minY = Math.min(Math.min(y0, y1), y2);
+
+					if (minX < xShift)
+						xShift = minX;
+
+					if (minY < yShift)
+						yShift = minY;
+				}
+			}
+
+			for(Triangles tris : getItemsToRender()){
+				if(tris.isHidden()){
+					continue;
+				}
 				PDShadingType4 gouraudShading = new PDShadingType4(doc.getDocument().createCOSStream());
 				gouraudShading.setShadingType(PDShading.SHADING_TYPE4);
 				gouraudShading.setBitsPerFlag(8);
@@ -428,8 +464,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				PDPage maskPage = new PDPage();
 				maskDoc.addPage(maskPage);
 				maskPage.setMediaBox(new PDRectangle(w+x, h+y));
-				PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
-						PDPageContentStream.AppendMode.APPEND, false);
+				PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage, PDPageContentStream.AppendMode.APPEND, false);
 
 				PDShadingType4 gouraudShadingMask = new PDShadingType4(doc.getDocument().createCOSStream());
 				gouraudShadingMask.setShadingType(PDShading.SHADING_TYPE4);
@@ -454,9 +489,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				OutputStream osMask = ((COSStream) gouraudShadingMask.getCOSObject()).createOutputStream();
 				MemoryCacheImageOutputStream mcosMask = new MemoryCacheImageOutputStream(osMask);
 
-				if(tris.isHidden()){
-					continue;
-				}
 				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
 				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
@@ -475,6 +507,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					x0 *= factor; x1 *= factor; x2 *= factor;
 					y0 *= factor; y1 *= factor; y2 *= factor;
 
+
 					int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
@@ -485,19 +518,22 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 					// write shaded triangle to mask stream
 					PDFUtils.writeShadedTriangle(mcosMask,
-							new Point2D.Double(x0, y0),
-							new Point2D.Double(x1,y1),
-							new Point2D.Double(x2, y2),
+							new Point2D.Double(x0-xShift, y0-yShift),
+							new Point2D.Double(x1-xShift,y1-yShift),
+							new Point2D.Double(x2-xShift, y2-yShift),
 							new Color(c02, c02, c02),
 							new Color(c12, c12, c12),
 							new Color(c22, c22, c22));
 
 					// write shaded (colored) triangle to normal stream
-					PDFUtils.writeShadedTriangle(mcos, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
-							new Point2D.Double(x2, y2), new Color(c0), new Color(c1), new Color(c2));
+					PDFUtils.writeShadedTriangle(mcos, new Point2D.Double(x0-xShift, y0-yShift), new Point2D.Double(x1-xShift,y1-yShift),
+							new Point2D.Double(x2-xShift, y2-yShift), new Color(c0), new Color(c1), new Color(c2));
 				}
 
+				maskCS.saveGraphicsState();
+				maskCS.transform(new Matrix(1,0,0,1, (float) xShift/factor, (float) yShift/factor));
 				maskCS.shadingFill(gouraudShadingMask);
+				maskCS.restoreGraphicsState();
 				mcosMask.close();
 				osMask.close();
 				maskCS.close();
@@ -527,8 +563,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				contentStream.saveGraphicsState();
 				// clipping
 				contentStream.addRect(x, y, w, h);
-				//contentStream.clip();
+				contentStream.clip();
 				contentStream.setGraphicsStateParameters(extendedGraphicsState);
+				contentStream.transform(new Matrix(1,0,0,1, (float) xShift/factor, (float) yShift/factor));
 				contentStream.shadingFill(gouraudShading);
 				mcos.close();
 				os.close();
