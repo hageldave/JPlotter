@@ -1019,8 +1019,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 							graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
 							contentStream.setGraphicsStateParameters(graphicsState);
 
-							axialShading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+							writeGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y), axialShading, fdict);
 							contentStream.setNonStrokingColor(createShadedColor(page, axialShading));
 
 							// soft masking for line transparency
@@ -1098,11 +1098,11 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 								PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 								graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
 								contentStream.setGraphicsStateParameters(graphicsState);
-                                PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-                                        new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+                                writeGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+                                        new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y), axialShading, fdict);
                                 graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
                                 contentStream.setGraphicsStateParameters(graphicsState);
-                                contentStream.setNonStrokingColor(createShadedColor(page, shading));
+                                contentStream.setNonStrokingColor(createShadedColor(page, axialShading));
 
 								// soft masking for triangle transparency
 								PDDocument maskDoc = new PDDocument();
@@ -1111,18 +1111,18 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 								maskPage.setMediaBox(new PDRectangle(w+x, h+y));
 								PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage,
 										PDPageContentStream.AppendMode.APPEND, false);
-								PDShadingType2 maskShading = createGradientColor(
+								writeGradientColor(
 										new Color(new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha()).getRGB(),
 										new Color(new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha()).getRGB(),
 										new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-										new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+										new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y), maskAxialShading, maskFfdict);
 								maskCS.saveGraphicsState();
 								// create segments
 								PDFUtils.createPDFPolygon(maskCS, new double[]{( x1_ + miterX * t1_ ) + x, ( x2_ + miterX * t2_ ) + x,
 										( x2_ - miterX * t2_ ) + x, ( x1_ - miterX * t1_ ) + x}, new double[]{( y1_ + miterY * t1_ ) + y, ( y2_ + miterY * t2_ ) + y,
 										( y2_ - miterY * t2_ ) + y, ( y1_ - miterY * t1_ ) + y});
 								maskCS.clip();
-								maskCS.shadingFill(maskShading);
+								maskCS.shadingFill(maskAxialShading);
 								maskCS.restoreGraphicsState();
 								maskCS.close();
 
@@ -1194,7 +1194,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		return softMaskDictionary;
 	}
 
-	protected static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
+	/*protected static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
 		Color startColor = new Color(color1);
 		Color endColor = new Color(color2);
 
@@ -1236,7 +1236,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		axialShading.setFunction(func);
 
 		return axialShading;
-	}
+	}*/
 
 	protected static void writeGradientColor(int color1, int color2, Point2D p0, Point2D p1,
 											 PDShadingType2 axialShading, COSDictionary fdict) throws IOException {
