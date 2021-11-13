@@ -54,9 +54,9 @@ public class BarChart {
     }
 
     public BarChart addData(BarGroup group) {
-        for (BarGroup.BarStruct struct : group.getGroupedBars().values()) {
-            for (BarGroup.BarStack barStack : struct.barStacks) {
-                barStack.setPickColor(registerInPickingRegistry(barStack));
+        for (BarGroup.BarStack struct : group.getGroupedBars().values()) {
+            for (BarGroup.BarStruct barStruct : struct.barStructs) {
+                barStruct.setPickColor(registerInPickingRegistry(barStruct));
             }
         }
         this.barRenderer.addBarGroup(group);
@@ -179,8 +179,8 @@ public class BarChart {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {
                         Object pointLocalizer = pickingRegistry.lookup(pixel);
-                        if (pointLocalizer instanceof BarGroup.BarStack) {
-                            notifyInsideMouseEventStack(eventType, e, coordsysPoint, (BarGroup.BarStack) pointLocalizer);
+                        if (pointLocalizer instanceof BarGroup.BarStruct) {
+                            notifyInsideMouseEventStack(eventType, e, coordsysPoint, (BarGroup.BarStruct) pointLocalizer);
                         }
                     }
                 } else {
@@ -208,9 +208,9 @@ public class BarChart {
             l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
 
-    protected synchronized void notifyInsideMouseEventStack(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStack barStack) {
+    protected synchronized void notifyInsideMouseEventStack(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {
         for(BarChartMouseEventListener l:mouseEventListeners)
-            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, barStack);
+            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, barStruct);
     }
 
     protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
@@ -232,7 +232,7 @@ public class BarChart {
 
         public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
 
-        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStack barStack) {}
+        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {}
 
         public default void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
 

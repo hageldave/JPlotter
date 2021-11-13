@@ -118,7 +118,7 @@ public class ReadyBarChart {
             for (int j = 0; j < allValues.size(); j++) {
                 index = 0;
                 for (double value : allValues.get(j)) {
-                    allGroups.get(j).addBar(index, value, new Color(classcolors.getColor(index)), propertyLabels[index]);
+                    allGroups.get(j).addBarStack(index, value, new Color(classcolors.getColor(index)), propertyLabels[index]);
                     index++;
                 }
             }
@@ -235,21 +235,21 @@ public class ReadyBarChart {
 
         // set up interaction stuff
         histogramChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
-            BarGroup.BarStack selectedBarStack;
+            BarGroup.BarStruct selectedBarStruct;
             final JPopupMenu popUp = new JPopupMenu("Hovered Plant");
             @Override
             public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
-                selectedBarStack = null;
+                selectedBarStruct = null;
                 popUp.setVisible(false);
             }
             @Override
-            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStack barStack) {
-                if (barStack != selectedBarStack) {
-                    selectedBarStack = barStack;
+            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {
+                if (barStruct != selectedBarStruct) {
+                    selectedBarStruct = barStruct;
                     popUp.setFocusable(false);
                     popUp.setVisible(false);
                     popUp.removeAll();
-                    JLabel label = new JLabel("Plant: " + colorStringMapping.get(barStack.stackColor.getRGB()) + ", Frequency in interval: " + barStack.length);
+                    JLabel label = new JLabel("Plant: " + colorStringMapping.get(barStruct.stackColor.getRGB()) + ", Frequency in interval: " + barStruct.length);
                     label.setBorder(new EmptyBorder(3, 12, 3, 12));
                     popUp.add(label);
                     popUp.show(histogramChart.getCanvas().asComponent(), 50, 20);
@@ -358,7 +358,7 @@ public class ReadyBarChart {
             if (value >= currentBin.doubleValue() && value < (currentBin.doubleValue() + 0.5)) {
                 plantCount++;
             } else if (value >= (currentBin.doubleValue()+0.5)) {
-                currentProperty.addBar(index, plantCount, color, String.valueOf(currentBin.doubleValue()));
+                currentProperty.addBarStack(index, plantCount, color, String.valueOf(currentBin.doubleValue()));
                 break;
             }
         }

@@ -7,7 +7,7 @@ import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordinateViewListener;
 import hageldave.jplotter.renderables.*;
-import hageldave.jplotter.renderables.BarGroup.BarStruct;
+import hageldave.jplotter.renderables.BarGroup.BarStack;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -28,11 +28,11 @@ import java.util.*;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
-import static hageldave.jplotter.renderables.BarGroup.BarStack;
+import static hageldave.jplotter.renderables.BarGroup.BarStruct;
 
 /**
  * The BarRenderer is a {@link Renderer} that displays a Barchart in a coordinate system.
- * To display the Barchart the BarRenderer knows the concept of BarGroups (see {@link BarGroup}), BarStructs (see {@link BarStruct}) and BarStacks (see {@link BarStack}).
+ * To display the Barchart the BarRenderer knows the concept of BarGroups (see {@link BarGroup}), BarStructs (see {@link BarStack}) and BarStacks (see {@link BarStruct}).
  * Each BarGroup contains a set of BarStructs which also hold a set of BarStacks.
  * The groups in the barchart are separated from each other by guides. The stacks of a struct are (like the name implies) stacked onto each other.
  * Therefore every BarStruct is always a set of BarStacks (with a minimum of one stack).
@@ -43,7 +43,7 @@ import static hageldave.jplotter.renderables.BarGroup.BarStack;
  * The positioning and labeling of the tick marks on the value axis is done by a {@link TickMarkGenerator}
  * which is per default an instance of {@link ExtendedWilkinson}.
  * The positioning and labeling of the tick marks on the category axis is defined by the bar groups
- * (and their respective BarStructs (see {@link BarStruct})) that will be rendered by the BarRenderer.
+ * (and their respective BarStructs (see {@link BarStack})) that will be rendered by the BarRenderer.
  * There are 2 types of labels for the category axis: Group labels/struct labels which are defined by the BarGroups/BarStructs description property.
  * They will be displayed simultaneously.
  * <p>
@@ -821,19 +821,19 @@ public class BarRenderer implements Renderer {
         for (BarGroup group : this.groupedBars) {
             // add guide here
             groupSeparators[groupindex++] = structPos - 0.75;
-            for (BarStruct struct : group.getGroupedBars().values()) {
+            for (BarStack struct : group.getGroupedBars().values()) {
                 double stackEnd = 0;
                 // add description labels on y axis
                 // (or) add description labels on x axis (when vertical alignment instead of horizontal)
                 xticks[index] = structPos;
                 xticklabels[index] = struct.description;
                 // adds each stack to the triangle renderer
-                for (BarStack barStack : struct.barStacks) {
-                    if (barStack.length >= 0) {
-                        this.content.addItemToRender((makeBar(stackEnd, structPos, struct, barStack)));
-                        stackEnd += barStack.length;
+                for (BarStruct barStruct : struct.barStructs) {
+                    if (barStruct.length >= 0) {
+                        this.content.addItemToRender((makeBar(stackEnd, structPos, struct, barStruct)));
+                        stackEnd += barStruct.length;
                     } else {
-                        this.content.addItemToRender((makeBar(stackEnd, structPos, struct, barStack)));
+                        this.content.addItemToRender((makeBar(stackEnd, structPos, struct, barStruct)));
                     }
                 }
                 // increment pos for every struct
@@ -900,7 +900,7 @@ public class BarRenderer implements Renderer {
     }
 
     // creates a bar at startPosition, in row "row", with length, color and the specified pickColor
-    protected Triangles makeBar(final double startPosition, final double row, final BarStruct struct, final BarStack stack) {
+    protected Triangles makeBar(final double startPosition, final double row, final BarStack struct, final BarStruct stack) {
         Triangles bar = new Triangles();
         if (this.alignment == AlignmentConstants.HORIZONTAL) {
             bar.addQuad(new Rectangle2D.Double(startPosition, row - ( barSize / 2 ), stack.length, barSize));
