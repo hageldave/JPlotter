@@ -435,7 +435,6 @@ public class BarRenderer implements Renderer {
     }
 
     /**
-     *
      * @return Alignment (see {@link AlignmentConstants}) of the BarRenderer.
      */
     public int getAlignment() {
@@ -1477,6 +1476,8 @@ public class BarRenderer implements Renderer {
     }
 
     /**
+     * Returns the content of the bar renderer.
+     *
      * @return bounds of all content of the bar renderer as a rectangle
      */
     public Rectangle2D getBounds() {

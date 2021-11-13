@@ -10,8 +10,6 @@ import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.function.DoubleSupplier;
 
-// renderable class for bars
-
 /**
  * The BarGroup class is a collection of BarStack elements.
  * Each BarStack element itself is a collection of BarStruct elements.
