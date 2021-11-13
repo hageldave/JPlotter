@@ -40,8 +40,8 @@ public class LineChart {
     final protected Legend legend = new Legend();
     protected LineChartVisualMapping visualMapping = new LineChartVisualMapping(){};
     final protected LinkedList<LineChartMouseEventListener> mouseEventListeners = new LinkedList<>();
-    final protected LinkedList<PointSetSelectionListener> pointSetSelectionListeners = new LinkedList<>();
-    final protected LinkedList<PointSetSelectionListener> pointSetSelectionOngoingListeners = new LinkedList<>();
+    final protected LinkedList<LineSetSelectionListener> lineSetSelectionListeners = new LinkedList<>();
+    final protected LinkedList<LineSetSelectionListener> lineSetSelectionOngoingListeners = new LinkedList<>();
     private int legendRightWidth = 100;
     private int legendBottomHeight = 60;
 
@@ -174,7 +174,6 @@ public class LineChart {
         // update cues (which may have been in place before)
         for(String cueType : Arrays.asList(CUE_ACCENTUATE, CUE_EMPHASIZE, CUE_HIGHLIGHT)) {
             // check cue selections for out of index bounds (in case chunk got smaller)
-            // TODO: implement this
             SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(cueType);
             SortedSet<Pair<Integer, Integer>> chunkCues = selectionModel.getSelection().subSet(Pair.of(chunkIdx, 0), Pair.of(chunkIdx+1, 0));
             SortedSet<Pair<Integer, Integer>> invalidCues = chunkCues.tailSet(Pair.of(chunkIdx, getDataModel().chunkSize(chunkIdx)));
@@ -259,7 +258,6 @@ public class LineChart {
             return containedPointIndices;
         }
 
-        // TODO: check if correct
         public int getGlobalIndex(int chunkIdx, int idx) {
             int globalIdx=0;
             for(int i=0; i<chunkIdx; i++) {
@@ -575,7 +573,7 @@ public class LineChart {
         CoordSysViewSelector selector = new CoordSysViewSelector(this.canvas, this.coordsys) {
             @Override
             public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
-                if(pointSetSelectionOngoingListeners.isEmpty())
+                if(lineSetSelectionOngoingListeners.isEmpty())
                     return;
                 Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
                 selectionRectMemory[0] = area;
@@ -584,7 +582,7 @@ public class LineChart {
 
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
-                if(pointSetSelectionListeners.isEmpty())
+                if(lineSetSelectionListeners.isEmpty())
                     return;
                 Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
                 selectionRectMemory[1] = area;
@@ -595,36 +593,36 @@ public class LineChart {
 
         selectedPointsOngoing.addSelectionListener(s->{
             ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
-            notifyPointSetSelectionChangeOngoing(list, selectionRectMemory[0]);
+            notifyLineSetSelectionChangeOngoing(list, selectionRectMemory[0]);
         });
         selectedPoints.addSelectionListener(s->{
             ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
-            notifyPointSetSelectionChange(list, selectionRectMemory[1]);
+            notifyLineSetSelectionChange(list, selectionRectMemory[1]);
         });
     }
 
-    public static interface PointSetSelectionListener {
-        public void onPointSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Rectangle2D selectionArea);
+    public static interface LineSetSelectionListener {
+        public void onLineSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Rectangle2D selectionArea);
     }
 
-    protected synchronized void notifyPointSetSelectionChangeOngoing(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
-        for(PointSetSelectionListener l:pointSetSelectionOngoingListeners) {
-            l.onPointSetSelectionChanged(list, rect);
+    protected synchronized void notifyLineSetSelectionChangeOngoing(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
+        for(LineSetSelectionListener l: lineSetSelectionOngoingListeners) {
+            l.onLineSetSelectionChanged(list, rect);
         }
     }
 
-    protected synchronized void notifyPointSetSelectionChange(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
-        for(PointSetSelectionListener l:pointSetSelectionListeners) {
-            l.onPointSetSelectionChanged(list, rect);
+    protected synchronized void notifyLineSetSelectionChange(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
+        for(LineSetSelectionListener l: lineSetSelectionListeners) {
+            l.onLineSetSelectionChanged(list, rect);
         }
     }
 
-    public synchronized void addPointSetSelectionListener(PointSetSelectionListener l) {
-        this.pointSetSelectionListeners.add(l);
+    public synchronized void addLineSetSelectionListener(LineSetSelectionListener l) {
+        this.lineSetSelectionListeners.add(l);
     }
 
-    public synchronized void addPointSetSelectionOngoingListener(PointSetSelectionListener l) {
-        this.pointSetSelectionOngoingListeners.add(l);
+    public synchronized void addLineSetSelectionOngoingListener(LineSetSelectionListener l) {
+        this.lineSetSelectionOngoingListeners.add(l);
     }
 
     public Lines getLinesForChunk(int chunkIdx) {
