@@ -403,6 +403,11 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			double xShift = 0.0;
 			double yShift = 0.0;
 
+			contentStream.saveGraphicsState();
+			// clipping
+			contentStream.addRect(x, y, w, h);
+			contentStream.clip();
+
 			for(Triangles tris : getItemsToRender()){
 				if(tris.isHidden()){
 					continue;
@@ -561,16 +566,15 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, softMaskDictionary);
 
 				contentStream.saveGraphicsState();
-				// clipping
-				contentStream.addRect(x, y, w, h);
-				contentStream.clip();
 				contentStream.setGraphicsStateParameters(extendedGraphicsState);
 				contentStream.transform(new Matrix(1,0,0,1, (float) xShift/factor, (float) yShift/factor));
 				contentStream.shadingFill(gouraudShading);
+				contentStream.restoreGraphicsState();
+
 				mcos.close();
 				os.close();
-				contentStream.restoreGraphicsState();
 			}
+			contentStream.restoreGraphicsState();
 			contentStream.close();
 		} catch (IOException e) {
 			System.out.println(e);
