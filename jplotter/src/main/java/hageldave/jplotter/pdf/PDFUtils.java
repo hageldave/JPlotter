@@ -158,6 +158,8 @@ public class PDFUtils {
     }
 
     /**
+     * Fills the output stream with the triangle information.
+     *
      * @param outputStream holds the coordinates & colors of the triangle
      * @param p0 coordinates of first vertex of the triangle
      * @param p1 coordinates of second vertex of the triangle

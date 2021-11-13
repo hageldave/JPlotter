@@ -922,6 +922,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			contentStream.addRect(x, y, w, h);
 			contentStream.clip();
 
+			// instantiate shading object for line shading
 			COSDictionary fdict = new COSDictionary();
 			fdict.setInt(COSName.FUNCTION_TYPE, 2);
 			PDFunctionType2 func = new PDFunctionType2(fdict);
@@ -930,9 +931,10 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			axialShading.setShadingType(PDShading.SHADING_TYPE2);
 			axialShading.setFunction(func);
 
-			COSDictionary maskFfdict = new COSDictionary();
-			maskFfdict.setInt(COSName.FUNCTION_TYPE, 2);
-			PDFunctionType2 maskFunc = new PDFunctionType2(maskFfdict);
+			// instantiate shading object for masking layer
+			COSDictionary maskFdict = new COSDictionary();
+			maskFdict.setInt(COSName.FUNCTION_TYPE, 2);
+			PDFunctionType2 maskFunc = new PDFunctionType2(maskFdict);
 			PDShadingType2 maskAxialShading = new PDShadingType2(new COSDictionary());
 			maskAxialShading.setColorSpace(PDDeviceRGB.INSTANCE);
 			maskAxialShading.setShadingType(PDShading.SHADING_TYPE2);
@@ -1038,7 +1040,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 									new Color(c02, c02, c02).getRGB(),
 									new Color(c12, c12, c12).getRGB(),
 									new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y), maskAxialShading, maskFfdict);
+									new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y), maskAxialShading, maskFdict);
 
 							maskCS.saveGraphicsState();
 							// create segments
@@ -1115,7 +1117,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 										new Color(new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha(),new Color(seg.color0.getAsInt(), true).getAlpha()).getRGB(),
 										new Color(new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha(),new Color(seg.color1.getAsInt(), true).getAlpha()).getRGB(),
 										new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-										new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y), maskAxialShading, maskFfdict);
+										new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y), maskAxialShading, maskFdict);
 								maskCS.saveGraphicsState();
 								// create segments
 								PDFUtils.createPDFPolygon(maskCS, new double[]{( x1_ + miterX * t1_ ) + x, ( x2_ + miterX * t2_ ) + x,
@@ -1194,7 +1196,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		return softMaskDictionary;
 	}
 
-	/*protected static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
+	protected static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {
 		Color startColor = new Color(color1);
 		Color endColor = new Color(color2);
 
@@ -1236,7 +1238,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 		axialShading.setFunction(func);
 
 		return axialShading;
-	}*/
+	}
 
 	protected static void writeGradientColor(int color1, int color2, Point2D p0, Point2D p1,
 											 PDShadingType2 axialShading, COSDictionary fdict) throws IOException {
