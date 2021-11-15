@@ -390,7 +390,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			return;
 		}
 
-		int factor = 10;
+		// 2^16-1 / w oder h, je nachdem was größer ist
+		float factor = 34.1328125f;
 
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
@@ -449,9 +450,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 				COSArray decodeArray = new COSArray();
 				decodeArray.add(COSInteger.ZERO);
-				decodeArray.add(COSInteger.get(0xFFFF/factor));
+				decodeArray.add(COSInteger.get(1920));
 				decodeArray.add(COSInteger.ZERO);
-				decodeArray.add(COSInteger.get(0xFFFF/factor));
+				decodeArray.add(COSInteger.get(1920));
 				decodeArray.add(COSInteger.ZERO);
 				decodeArray.add(COSInteger.ONE);
 				decodeArray.add(COSInteger.ZERO);
@@ -479,9 +480,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 				COSArray decodeArrayMask = new COSArray();
 				decodeArrayMask.add(COSInteger.ZERO);
-				decodeArrayMask.add(COSInteger.get(0xFFFF/factor));
+				decodeArrayMask.add(COSInteger.get(1920));
 				decodeArrayMask.add(COSInteger.ZERO);
-				decodeArrayMask.add(COSInteger.get(0xFFFF/factor));
+				decodeArrayMask.add(COSInteger.get(1920));
 				decodeArrayMask.add(COSInteger.ZERO);
 				decodeArrayMask.add(COSInteger.ONE);
 				decodeArrayMask.add(COSInteger.ZERO);
@@ -576,6 +577,11 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			}
 			contentStream.restoreGraphicsState();
 			contentStream.close();
+
+			System.out.println(0xFFFFFFFF/10);
+			System.out.println(0xFFFFFF/10);
+
+
 		} catch (IOException e) {
 			System.out.println(e);
 			throw new RuntimeException("Error occurred!");
