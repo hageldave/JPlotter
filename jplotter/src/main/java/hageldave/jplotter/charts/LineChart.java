@@ -686,7 +686,7 @@ public class LineChart {
         SortedSet<Pair<Integer, Integer>> instancesToCue = selectionModel.getSelection();
 
         clearCue(cueType);
-
+        // TODO: mit Dicke skalieren, mit Transparenz probieren
         switch (cueType) {
             case CUE_ACCENTUATE:
             {
