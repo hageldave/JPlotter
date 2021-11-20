@@ -411,6 +411,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			contentStream.addRect(x, y, w, h);
 			contentStream.clip();
 
+			// calculate the min/max values (the bounds) of all triangles
 			for(Triangles tris : getItemsToRender()){
 				if(tris.isHidden()){
 					continue;
@@ -425,33 +426,34 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
 
 					// check if one coordinate is negative
-					double tempMinX = Math.min(Math.min(x0, x1), x2);
-					double tempMinY = Math.min(Math.min(y0, y1), y2);
-					double tempMaxX = Math.max(Math.max(x0, x1), x2);
-					double tempMaxY = Math.max(Math.max(y0, y1), y2);
+					double triMinX = Math.min(Math.min(x0, x1), x2);
+					double triMinY = Math.min(Math.min(y0, y1), y2);
+					double triMaxX = Math.max(Math.max(x0, x1), x2);
+					double triMaxY = Math.max(Math.max(y0, y1), y2);
 
-					if (tempMinX < minX)
-						minX = tempMinX;
-					if (tempMinY < minY)
-						minY = tempMinY;
-					if (maxX < tempMaxX)
-						maxX = tempMaxX;
-					if (maxY < tempMaxY)
-						maxY = tempMaxY;
+					if (triMinX < minX)
+						minX = triMinX;
+					if (triMinY < minY)
+						minY = triMinY;
+					if (maxX < triMaxX)
+						maxX = triMaxX;
+					if (maxY < triMaxY)
+						maxY = triMaxY;
 				}
 			}
 
-			if ((maxX-minX) > (maxY-minY)) {
-				// what about w+maxX-minX?
+			// what about w+maxX-minX?
+			// calculate the factor/maxValue Attributes
+			if ((maxX-minX) > (maxY-minY))
 				factor = (float) ((Math.pow(2, 16)-1) / (maxX-minX));
-			} else {
+			else
 				factor = (float) ((Math.pow(2, 16)-1) / (maxY-minY));
-			}
 			maxValue = (int) ((Math.pow(2, 16)-1) / factor);
-
 
 			double shiftX = 0.0;
 			double shiftY = 0.0;
+
+			// calculate how much the content has to be shifted
 			for(Triangles tris : getItemsToRender()){
 				if(tris.isHidden()){
 					continue;
@@ -469,13 +471,13 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					y0 *= factor; y1 *= factor; y2 *= factor;
 
 					// check if one coordinate is negative
-					double tempMinX = Math.min(Math.min(x0, x1), x2);
-					double tempMinY = Math.min(Math.min(y0, y1), y2);
+					double triMinX = Math.min(Math.min(x0, x1), x2);
+					double triMinY = Math.min(Math.min(y0, y1), y2);
 
-					if (tempMinX < shiftX)
-						shiftX = tempMinX;
-					if (tempMinY < shiftY)
-						shiftY = tempMinY;
+					if (triMinX < shiftX)
+						shiftX = triMinX;
+					if (triMinY < shiftY)
+						shiftY = triMinY;
 				}
 			}
 
@@ -554,7 +556,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					x0 *= factor; x1 *= factor; x2 *= factor;
 					y0 *= factor; y1 *= factor; y2 *= factor;
 
-
 					int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
@@ -618,7 +619,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			}
 			contentStream.restoreGraphicsState();
 			contentStream.close();
-
 		} catch (IOException e) {
 			System.out.println(e);
 			throw new RuntimeException("Error occurred!");
