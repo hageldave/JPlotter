@@ -435,6 +435,18 @@ public class BarRenderer implements Renderer {
     }
 
     /**
+     * Sets a new color scheme on the BarRenderer.
+     *
+     * @param colorScheme new {@link ColorScheme} used by the BarRenderer.
+     * @return new BarRenderer
+     */
+    public BarRenderer setColorScheme(final ColorScheme colorScheme) {
+        this.colorScheme = colorScheme;
+        updateColors();
+        return this;
+    }
+
+    /**
      * @return Alignment (see {@link AlignmentConstants}) of the BarRenderer.
      */
     public int getAlignment() {
