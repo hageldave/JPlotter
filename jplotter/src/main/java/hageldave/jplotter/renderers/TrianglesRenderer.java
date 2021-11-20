@@ -390,8 +390,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			return;
 		}
 
-		// 2^16-1 / w oder h, je nachdem was größer ist
-		float factor = 34.1328125f;
+		float factor;
+		int maxValue;
 
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
@@ -401,8 +401,10 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		try {
 			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
 
-			double xShift = 0.0;
-			double yShift = 0.0;
+			double minX = 0.0;
+			double minY = 0.0;
+			double maxX = w;
+			double maxY = h;
 
 			contentStream.saveGraphicsState();
 			// clipping
@@ -422,19 +424,58 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					y0*=scaleY; y1*=scaleY; y2*=scaleY;
 					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
 
-					// rescale x,y coordinates
+					// check if one coordinate is negative
+					double tempMinX = Math.min(Math.min(x0, x1), x2);
+					double tempMinY = Math.min(Math.min(y0, y1), y2);
+					double tempMaxX = Math.max(Math.max(x0, x1), x2);
+					double tempMaxY = Math.max(Math.max(y0, y1), y2);
+
+					if (tempMinX < minX)
+						minX = tempMinX;
+					if (tempMinY < minY)
+						minY = tempMinY;
+					if (maxX < tempMaxX)
+						maxX = tempMaxX;
+					if (maxY < tempMaxY)
+						maxY = tempMaxY;
+				}
+			}
+
+			if ((maxX-minX) > (maxY-minY)) {
+				// what about w+maxX-minX?
+				factor = (float) ((Math.pow(2, 16)-1) / (maxX-minX));
+			} else {
+				factor = (float) ((Math.pow(2, 16)-1) / (maxY-minY));
+			}
+			maxValue = (int) ((Math.pow(2, 16)-1) / factor);
+
+
+			double shiftX = 0.0;
+			double shiftY = 0.0;
+			for(Triangles tris : getItemsToRender()){
+				if(tris.isHidden()){
+					continue;
+				}
+				for(TriangleDetails tri : tris.getTriangleDetails()) {
+					double x0,y0, x1,y1, x2,y2;
+					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
+					x0-=translateX; x1-=translateX; x2-=translateX;
+					y0-=translateY; y1-=translateY; y2-=translateY;
+					x0*=scaleX; x1*=scaleX; x2*=scaleX;
+					y0*=scaleY; y1*=scaleY; y2*=scaleY;
+					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
+
 					x0 *= factor; x1 *= factor; x2 *= factor;
 					y0 *= factor; y1 *= factor; y2 *= factor;
 
 					// check if one coordinate is negative
-					double minX = Math.min(Math.min(x0, x1), x2);
-					double minY = Math.min(Math.min(y0, y1), y2);
+					double tempMinX = Math.min(Math.min(x0, x1), x2);
+					double tempMinY = Math.min(Math.min(y0, y1), y2);
 
-					if (minX < xShift)
-						xShift = minX;
-
-					if (minY < yShift)
-						yShift = minY;
+					if (tempMinX < shiftX)
+						shiftX = tempMinX;
+					if (tempMinY < shiftY)
+						shiftY = tempMinY;
 				}
 			}
 
@@ -450,9 +491,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 				COSArray decodeArray = new COSArray();
 				decodeArray.add(COSInteger.ZERO);
-				decodeArray.add(COSInteger.get(1920));
+				decodeArray.add(COSInteger.get(maxValue));
 				decodeArray.add(COSInteger.ZERO);
-				decodeArray.add(COSInteger.get(1920));
+				decodeArray.add(COSInteger.get(maxValue));
 				decodeArray.add(COSInteger.ZERO);
 				decodeArray.add(COSInteger.ONE);
 				decodeArray.add(COSInteger.ZERO);
@@ -480,9 +521,9 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 				COSArray decodeArrayMask = new COSArray();
 				decodeArrayMask.add(COSInteger.ZERO);
-				decodeArrayMask.add(COSInteger.get(1920));
+				decodeArrayMask.add(COSInteger.get(maxValue));
 				decodeArrayMask.add(COSInteger.ZERO);
-				decodeArrayMask.add(COSInteger.get(1920));
+				decodeArrayMask.add(COSInteger.get(maxValue));
 				decodeArrayMask.add(COSInteger.ZERO);
 				decodeArrayMask.add(COSInteger.ONE);
 				decodeArrayMask.add(COSInteger.ZERO);
@@ -524,20 +565,20 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 					// write shaded triangle to mask stream
 					PDFUtils.writeShadedTriangle(mcosMask,
-							new Point2D.Double(x0-xShift, y0-yShift),
-							new Point2D.Double(x1-xShift,y1-yShift),
-							new Point2D.Double(x2-xShift, y2-yShift),
+							new Point2D.Double(x0-shiftX, y0-shiftY),
+							new Point2D.Double(x1-shiftX,y1-shiftY),
+							new Point2D.Double(x2-shiftX, y2-shiftY),
 							new Color(c02, c02, c02),
 							new Color(c12, c12, c12),
 							new Color(c22, c22, c22));
 
 					// write shaded (colored) triangle to normal stream
-					PDFUtils.writeShadedTriangle(mcos, new Point2D.Double(x0-xShift, y0-yShift), new Point2D.Double(x1-xShift,y1-yShift),
-							new Point2D.Double(x2-xShift, y2-yShift), new Color(c0), new Color(c1), new Color(c2));
+					PDFUtils.writeShadedTriangle(mcos, new Point2D.Double(x0-shiftX, y0-shiftY), new Point2D.Double(x1-shiftX,y1-shiftY),
+							new Point2D.Double(x2-shiftX, y2-shiftY), new Color(c0), new Color(c1), new Color(c2));
 				}
 
 				maskCS.saveGraphicsState();
-				maskCS.transform(new Matrix(1,0,0,1, (float) xShift/factor, (float) yShift/factor));
+				maskCS.transform(new Matrix(1,0,0,1, (float) shiftX/factor, (float) shiftY/factor));
 				maskCS.shadingFill(gouraudShadingMask);
 				maskCS.restoreGraphicsState();
 				mcosMask.close();
@@ -568,7 +609,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 				contentStream.saveGraphicsState();
 				contentStream.setGraphicsStateParameters(extendedGraphicsState);
-				contentStream.transform(new Matrix(1,0,0,1, (float) xShift/factor, (float) yShift/factor));
+				contentStream.transform(new Matrix(1,0,0,1, (float) shiftX/factor, (float) shiftY/factor));
 				contentStream.shadingFill(gouraudShading);
 				contentStream.restoreGraphicsState();
 
@@ -577,10 +618,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			}
 			contentStream.restoreGraphicsState();
 			contentStream.close();
-
-			System.out.println(0xFFFFFFFF/10);
-			System.out.println(0xFFFFFF/10);
-
 
 		} catch (IOException e) {
 			System.out.println(e);
