@@ -1,143 +1,308 @@
 package hageldave.jplotter.howto;
 
-import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.charts.LineChart;
-import hageldave.jplotter.interaction.SimpleSelectionModel;
+import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Pair;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.w3c.dom.Document;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-// TODO echter Datensatz
 public class ReadyLineChart {
-
-    private static double[][] randomData(int n) {
-        double[][] d = new double[n][2];
-        for (int i = 0; i < n; i++) {
-            d[i][0] = Math.random() * 200 - 1;
-            d[i][1] = Math.random() * 200 - 1;
-        }
-        return d;
-    }
-
     @SuppressWarnings("resource")
-    public static void main(String[] args) {
-        // obtain data series
-        double[][] seriesA = randomData(10);
-        double[][] seriesB = randomData(10);
-        double[][] seriesC = randomData(2);
-        double[][] seriesD = randomData(10);
-        double[][] seriesE = randomData(10);
-        double[][] seriesF = randomData(10);
-        double[][] seriesG = randomData(10);
-        double[][] seriesZ = randomData(10);
+    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
+
+        final TreeMap<Double, Double> hpToMpg = new TreeMap<>();
+        final TreeMap<Double, Double> weightToMpg = new TreeMap<>();
+        final TreeMap<Double, Double> displacementToMpg = new TreeMap<>();
+        final TreeMap<Double, Double> accelerationToMpg = new TreeMap<>();
+
+        URL statlogsrc = new URL("https://archive.ics.uci.edu/ml/machine-learning-databases/auto-mpg/auto-mpg.data");
+        try (InputStream stream = statlogsrc.openStream();
+             Scanner sc = new Scanner(stream)) {
+            while (sc.hasNextLine()) {
+                String nextLine = sc.nextLine();
+                String[] fields = nextLine.replaceAll("\\s\\p{Zs}+", "  ").split("(\\s\\s)|(\")");
+                if (!Objects.equals(fields[3], "?")) {
+                    hpToMpg.put(Double.valueOf(fields[3]), Double.valueOf(fields[0]));
+                }
+                weightToMpg.put(Double.valueOf(fields[4]), Double.valueOf(fields[0]));
+                displacementToMpg.put(Double.valueOf(fields[2]), Double.valueOf(fields[0]));
+                accelerationToMpg.put(Double.valueOf(fields[5]), Double.valueOf(fields[0]));
+            }
+        }
 
         // display within a JFrame
         JFrame frame = new JFrame();
+        LineChart normalizedChart = new LineChart(false);
 
-        hageldave.jplotter.charts.LineChart chart = new hageldave.jplotter.charts.LineChart(false);
+        normalizedChart.getCoordsys().setxAxisLabel("Horsepower / Weight / Displacement / ...");
+        normalizedChart.getCoordsys().setyAxisLabel("Miles per Gallon");
 
-        chart.getDataModel().addData(seriesA, 0, 1, 1, "test");
-        chart.getDataModel().addData(seriesB, 0, 1, 1, "test2");
-        chart.getDataModel().addData(seriesD, 0, 1, 1, "test3");
-        chart.getDataModel().addData(seriesE, 0, 1, 1, "test4");
-        chart.getDataModel().addData(seriesF, 0, 1, 1, "test5");
-        chart.getDataModel().addData(seriesG, 0, 1, 1, "test6");
-        chart.getDataModel().addData(seriesZ, 0, 1, 1, "test7");
-        chart.getDataModel().addData(seriesA, 0, 1, 1, "test88");
-        chart.getDataModel().addData(seriesB, 0, 1, 1, "test99");
-        chart.getDataModel().addData(seriesD, 0, 1, 1, "test999");
-        chart.getDataModel().addData(seriesE, 0, 1, 1, "test1111");
+        LineChart standardChart = new LineChart(false);
 
-        chart.getContent().lines.getItemsToRender().get(0).setGlobalThicknessMultiplier(10);
-        /*double[][] dm = *///chart.getDataModel().getDataChunk(0)[0][0] = 0;
-        chart.getDataModel().setDataChunk(0, seriesC);
+        standardChart.getCoordsys().setxAxisLabel("Horsepower / Weight / Displacement / ...");
+        standardChart.getCoordsys().setyAxisLabel("Miles per Gallon");
 
-        chart.getCoordsys().setCoordinateView(-10,-10,200,200);
-        chart.placeLegendOnBottom();
+        double[][] hpToMpgArr =
+                hpToMpg.entrySet().stream()
+                        .map(e -> new double[]{e.getKey(), e.getValue()})
+                        .toArray(double[][]::new);
 
+        double[][] weightToMpgArr =
+                weightToMpg.entrySet().stream()
+                        .map(e -> new double[]{e.getKey(), e.getValue()})
+                        .toArray(double[][]::new);
 
-        SimpleSelectionModel<Pair<Integer, Integer>> selectedDataPoints = new SimpleSelectionModel<Pair<Integer,Integer>>();
-        chart.addLineChartMouseEventListener(new LineChart.LineChartMouseEventListener() {
+        double[][] displacementToMpgArr =
+                displacementToMpg.entrySet().stream()
+                        .map(e -> new double[]{e.getKey(), e.getValue()})
+                        .toArray(double[][]::new);
+
+        double[][] accelerationToMpgArr =
+                accelerationToMpg.entrySet().stream()
+                        .map(e -> new double[]{e.getKey(), e.getValue()})
+                        .toArray(double[][]::new);
+
+        standardChart.getDataModel().addData(hpToMpgArr, 0, 1, 1, "Horsepower");
+        standardChart.getDataModel().addData(weightToMpgArr, 0, 1, 1, "Weight");
+        standardChart.getDataModel().addData(displacementToMpgArr, 0, 1, 1, "Displacement");
+        standardChart.getDataModel().addData(accelerationToMpgArr, 0, 1, 1, "Acceleration");
+
+        standardChart.getCoordsys().setCoordinateView(-10,-1,3400,100);
+
+        double mpgMax = hpToMpg.values().parallelStream().max(Double::compare).get();
+
+        Double hpMax = hpToMpg.keySet().parallelStream().max(Double::compare).get();
+        Arrays.stream(hpToMpgArr).parallel().forEach(e -> e[0] = e[0]/hpMax);
+        Arrays.stream(hpToMpgArr).parallel().forEach(e -> e[1] = e[1]/mpgMax);
+
+        Double weightMax = weightToMpg.keySet().parallelStream().max(Double::compare).get();
+        Arrays.stream(weightToMpgArr).parallel().forEach(e -> e[0] = e[0]/weightMax);
+        Arrays.stream(weightToMpgArr).parallel().forEach(e -> e[1] = e[1]/mpgMax);
+
+        Double displacementMax = displacementToMpg.keySet().parallelStream().max(Double::compare).get();
+        Arrays.stream(displacementToMpgArr).parallel().forEach(e -> e[0] = e[0]/displacementMax);
+        Arrays.stream(displacementToMpgArr).parallel().forEach(e -> e[1] = e[1]/mpgMax);
+
+        Double accelerationMax = accelerationToMpg.keySet().parallelStream().max(Double::compare).get();
+        Arrays.stream(accelerationToMpgArr).parallel().forEach(e -> e[0] = e[0]/accelerationMax);
+        Arrays.stream(accelerationToMpgArr).parallel().forEach(e -> e[1] = e[1]/mpgMax);
+
+        normalizedChart.getDataModel().addData(hpToMpgArr, 0, 1, 1, "Horsepower");
+        normalizedChart.getDataModel().addData(weightToMpgArr, 0, 1, 1, "Weight");
+        normalizedChart.getDataModel().addData(displacementToMpgArr, 0, 1, 1, "Displacement");
+        normalizedChart.getDataModel().addData(accelerationToMpgArr, 0, 1, 1, "Acceleration");
+
+        normalizedChart.getCoordsys().setCoordinateView(0,0,1.1,1.1);
+
+        normalizedChart.addLineChartMouseEventListener(new LineChart.LineChartMouseEventListener() {
+            Lines pointHighlight;
+            boolean chunkHighlighted=false;
+            {
+                pointHighlight = new Lines();
+                normalizedChart.getContentLayer2().lines.addItemToRender(pointHighlight);
+            }
             @Override
             public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
-                LineChart.LineChartMouseEventListener.super.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
-
-                chart.emphasize();
+                if(mouseEventType != MOUSE_EVENT_TYPE_CLICKED)
+                    return;
+                normalizedChart.highlight();
             }
 
             @Override
             public void onInsideMouseEventLine(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
-                LineChart.LineChartMouseEventListener.super.onInsideMouseEventLine(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
-
-
-                if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
-                    // on click: select data point
-                    selectedDataPoints.setSelection(Pair.of(chunkIdx, pointIdx));
-                }
-
-                if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
-                    // on mouse over: highlight point under cursor
-                    chart.emphasize(Pair.of(chunkIdx, pointIdx));
-                }
-
+                if(mouseEventType != MOUSE_EVENT_TYPE_CLICKED)
+                    return;
+                normalizedChart.highlight(new Pair<>(chunkIdx, pointIdx));
             }
 
             @Override
             public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
-                LineChart.LineChartMouseEventListener.super.onOutsideMouseEventeNone(mouseEventType, e);
+                if(mouseEventType != MOUSE_EVENT_TYPE_CLICKED || !chunkHighlighted)
+                    return;
 
-
+                normalizedChart.highlight();
+                chunkHighlighted=false;
             }
 
             @Override
             public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
-                LineChart.LineChartMouseEventListener.super.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
+                if(mouseEventType != MOUSE_EVENT_TYPE_CLICKED)
+                    return;
+                // on mouse over legend element of chunk: desaturate every point chunk except corresponding chunk
+                List<Pair<Integer, Integer>> instancesOfChunk = IntStream.range(0, normalizedChart.getDataModel().chunkSize(chunkIdx))
+                        .mapToObj(i->Pair.of(chunkIdx, i))
+                        .collect(Collectors.toList());
+                normalizedChart.highlight(instancesOfChunk);
+                chunkHighlighted=true;
             }
         });
 
-        /*chart.addLineSegment(1, seriesA, Color.RED);
-        chart.addLineSegment(2, seriesB, Color.BLUE).setStrokePattern(0xf0f0);
-
-        chart.highlightDatapoints(DefaultGlyph.CIRCLE, Color.green);
-        chart.alignCoordsys();
-
-        chart.new LineClickedInterface() {
-            { extModifierMask = KeyEvent.VK_K; }
-            @Override
-            public void segmentClicked(Point mouseLocation, Lines.SegmentDetails line, double[][] data, int startIndex, int endIndex) {
-                System.out.println(line);
-                System.out.println(startIndex);
-                System.out.println(endIndex);
+        standardChart.addLineChartMouseEventListener(new LineChart.LineChartMouseEventListener() {
+            Lines pointHighlight;
+            boolean chunkHighlighted=false;
+            {
+                pointHighlight = new Lines();
+                standardChart.getContentLayer2().lines.addItemToRender(pointHighlight);
             }
-        }.register();
-
-        chart.new PointsSelectedInterface() {
             @Override
-            public void pointsSelected(Rectangle2D bounds, ArrayList<double[][]> data, ArrayList<Integer> dataIndices) {
-
+            public void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+                if(mouseEventType != MOUSE_EVENT_TYPE_CLICKED)
+                    return;
+                standardChart.highlight();
             }
-        };*/
 
-        frame.getContentPane().add(chart.getCanvas().asComponent());
-        frame.setTitle("linechart");
+            @Override
+            public void onInsideMouseEventLine(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+                if(mouseEventType != MOUSE_EVENT_TYPE_CLICKED)
+                    return;
+                standardChart.highlight(new Pair<>(chunkIdx, pointIdx));
+            }
+
+            @Override
+            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+                if(mouseEventType != MOUSE_EVENT_TYPE_CLICKED || !chunkHighlighted)
+                    return;
+
+                standardChart.highlight();
+                chunkHighlighted=false;
+            }
+
+            @Override
+            public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
+                if(mouseEventType != MOUSE_EVENT_TYPE_CLICKED)
+                    return;
+                // on mouse over legend element of chunk: desaturate every point chunk except corresponding chunk
+                List<Pair<Integer, Integer>> instancesOfChunk = IntStream.range(0, standardChart.getDataModel().chunkSize(chunkIdx))
+                        .mapToObj(i->Pair.of(chunkIdx, i))
+                        .collect(Collectors.toList());
+                standardChart.highlight(instancesOfChunk);
+                chunkHighlighted=true;
+            }
+        });
+
+        // set up gui stuff
+        Container buttonWrapper = new Container();
+        JButton normalView = new JButton("Standard View");
+        JButton normalizedView = new JButton("Normalized View");
+        buttonWrapper.add(normalizedView);
+        buttonWrapper.add(normalView);
+        buttonWrapper.setLayout(new FlowLayout());
+
+        standardChart.getCanvas().asComponent().setPreferredSize(new Dimension(700, 450));
+        normalizedChart.getCanvas().asComponent().setPreferredSize(new Dimension(700, 450));
+        Container contentWrapper = new Container();
+        contentWrapper.setLayout(new BoxLayout(contentWrapper, BoxLayout.Y_AXIS));
+        contentWrapper.add(normalizedChart.getCanvas().asComponent());
+        contentWrapper.add(buttonWrapper);
+
+        normalView.addActionListener(e -> {
+            contentWrapper.removeAll();
+            contentWrapper.add(standardChart.getCanvas().asComponent());
+            contentWrapper.add(buttonWrapper);
+            frame.repaint();
+            frame.pack();
+        });
+
+        normalizedView.addActionListener(e -> {
+            contentWrapper.removeAll();
+            contentWrapper.add(normalizedChart.getCanvas().asComponent());
+            contentWrapper.add(buttonWrapper);
+            frame.repaint();
+            frame.pack();
+        });
+
+        normalizedChart.placeLegendOnBottom();
+        standardChart.placeLegendOnBottom();
+
+        frame.getContentPane().add(contentWrapper);
+        frame.setTitle("MPG Chart");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //canvas.addCleanupOnWindowClosingListener(frame);
         // make visible on AWT event dispatch thread
-        SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeAndWait(() -> {
             frame.pack();
             frame.setVisible(true);
         });
 
-        long t = System.currentTimeMillis() + 2000;
-        while (t > System.currentTimeMillis()) ;
-        if ("false".equals("true"))
-            SwingUtilities.invokeLater(() -> {
-                Img img = new Img(frame.getSize());
-                img.paint(g2d -> frame.paintAll(g2d));
-                ImageSaver.saveImage(img.getRemoteBufferedImage(), "linechart.png");
-            });
+        // set maximum size of the button wrapper, to force canvas to scale matching the resized window
+        buttonWrapper.setMaximumSize(new Dimension(buttonWrapper.getWidth(), buttonWrapper.getHeight()));
+
+        // add a pop up menu (on right click) for exporting to SVG
+        PopupMenu menu = new PopupMenu();
+        standardChart.getCanvas().asComponent().add(menu);
+        MenuItem svgExport = new MenuItem("SVG export");
+        menu.add(svgExport);
+        svgExport.addActionListener(e->{
+            Document doc2 = standardChart.getCanvas().paintSVG();
+            SVGUtils.documentToXMLFile(doc2, new File("linechart_demo.svg"));
+            System.out.println("exported linechart_demo.svg");
+        });
+        MenuItem pdfExport = new MenuItem("PDF export");
+        menu.add(pdfExport);
+        pdfExport.addActionListener(e->{
+            try {
+                PDDocument doc = standardChart.getCanvas().paintPDF();
+                doc.save("linechart_demo.pdf");
+                doc.close();
+                System.out.println("exported linechart_demo.pdf");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        standardChart.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(SwingUtilities.isRightMouseButton(e))
+                    menu.show(standardChart.getCanvas().asComponent(), e.getX(), e.getY());
+            }
+        });
+
+        // add a pop up menu (on right click) for exporting to SVG
+        PopupMenu combinedMenu = new PopupMenu();
+        normalizedChart.getCanvas().asComponent().add(combinedMenu);
+        MenuItem combinedSvgExport = new MenuItem("SVG export");
+        combinedMenu.add(combinedSvgExport);
+        combinedSvgExport.addActionListener(e->{
+            Document doc2 = normalizedChart.getCanvas().paintSVG();
+            SVGUtils.documentToXMLFile(doc2, new File("linechart_demo.svg"));
+            System.out.println("exported linechart_demo.svg");
+        });
+        MenuItem combinedPdfExport = new MenuItem("PDF export");
+        combinedMenu.add(combinedPdfExport);
+        combinedPdfExport.addActionListener(e->{
+            try {
+                PDDocument doc = normalizedChart.getCanvas().paintPDF();
+                doc.save("linechart_demo.pdf");
+                doc.close();
+                System.out.println("exported linechart_demo.pdf");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        normalizedChart.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(SwingUtilities.isRightMouseButton(e))
+                    combinedMenu.show(normalizedChart.getCanvas().asComponent(), e.getX(), e.getY());
+            }
+        });
     }
 }
