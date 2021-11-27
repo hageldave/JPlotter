@@ -686,7 +686,6 @@ public class LineChart {
         SortedSet<Pair<Integer, Integer>> instancesToCue = selectionModel.getSelection();
 
         clearCue(cueType);
-        // TODO: mit Dicke skalieren, mit Transparenz probieren
         switch (cueType) {
             case CUE_ACCENTUATE:
             {
@@ -696,11 +695,13 @@ public class LineChart {
                     if (instance.second <= lines.getSegments().size()-1) {
                         Lines.SegmentDetails l = lines.getSegments().get(instance.second);
                         Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
-                        front.addSegment(l.p0, l.p1).setColor(this.coordsys.getColorScheme().getColor1())
-                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() + 2, l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() + 2);
+                        Color c = new Color(this.coordsys.getColorScheme().getColor1());
+                        front.addSegment(l.p0, l.p1).setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 0.75f))
+                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2*lines.getGlobalThicknessMultiplier() + 1.5,
+                                        l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2*lines.getGlobalThicknessMultiplier() + 1.5);
                         front.setStrokePattern(lines.getStrokePattern());
                         front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
-                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier());
+                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() * 1.05, l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() * 1.05);
                     }
                 }
             }
