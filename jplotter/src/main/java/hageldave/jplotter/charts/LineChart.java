@@ -494,9 +494,9 @@ public class LineChart {
             l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
 
-    protected synchronized void notifyInsideMouseEventLine(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+    protected synchronized void notifyInsideMouseEventLine(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int lineIdx) {
         for(LineChartMouseEventListener l:mouseEventListeners)
-            l.onInsideMouseEventLine(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+            l.onInsideMouseEventLine(mouseEventType, e, coordsysPoint, chunkIdx, lineIdx);
     }
 
     protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
@@ -693,13 +693,15 @@ public class LineChart {
                 // emphasis: show point in top layer with outline
                 for(Pair<Integer, Integer> instance : instancesToCue) {
                     Lines lines = getLinesForChunk(instance.first);
-                    Lines.SegmentDetails l = lines.getSegments().get(instance.second);
-                    Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
-                    front.addSegment(l.p0, l.p1).setColor(this.coordsys.getColorScheme().getColor1())
-                            .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier()+2, l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier()+2);
-                    front.setStrokePattern(lines.getStrokePattern());
-                    front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
-                            .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier());
+                    if (instance.second <= lines.getSegments().size()-1) {
+                        Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                        Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
+                        front.addSegment(l.p0, l.p1).setColor(this.coordsys.getColorScheme().getColor1())
+                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() + 2, l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() + 2);
+                        front.setStrokePattern(lines.getStrokePattern());
+                        front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
+                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier());
+                    }
                 }
             }
             break;
@@ -708,11 +710,13 @@ public class LineChart {
                 // accentuation: show enlarged point in top layer
                 for(Pair<Integer, Integer> instance : instancesToCue) {
                     Lines lines = getLinesForChunk(instance.first);
-                    Lines.SegmentDetails l = lines.getSegments().get(instance.second);
-                    Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
-                    front.setStrokePattern(lines.getStrokePattern());
-                    front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
-                            .setThickness((l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier())+1, (l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier())+1);
+                    if (instance.second <= lines.getSegments().size()-1) {
+                        Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                        Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
+                        front.setStrokePattern(lines.getStrokePattern());
+                        front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
+                                .setThickness(( l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() ) + 1, ( l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() ) + 1);
+                    }
                 }
             }
             break;
@@ -724,13 +728,16 @@ public class LineChart {
                 } else {
                     for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
                         greyOutChunk(chunk, true);
+
                     for(Pair<Integer, Integer> instance : instancesToCue) {
                         Lines lines = getLinesForChunk(instance.first);
-                        Lines.SegmentDetails l = lines.getSegments().get(instance.second);
-                        Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
-                        front.setStrokePattern(lines.getStrokePattern());
-                        front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
-                                .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier());
+                        if (instance.second <= lines.getSegments().size()-1) {
+                            Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                            Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
+                            front.setStrokePattern(lines.getStrokePattern());
+                            front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
+                                    .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier());
+                        }
                     }
                 }
             }
