@@ -433,7 +433,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					triangleDetails.p0 = new Point2D.Double(x0, y0);
 					triangleDetails.p1 = new Point2D.Double(x1, y1);
 					triangleDetails.p2 = new Point2D.Double(x2, y2);
-					modifiedTriangle.addTriangle(triangleDetails);
+					modifiedTriangle.getTriangleDetails().add(triangleDetails);
 				}
 				allTriangles.add(modifiedTriangle);
 			}
@@ -443,7 +443,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				ArrayList<TriangleDetails> list = new ArrayList<>(tris.getIntersectingTriangles(new Rectangle2D.Double(x, y, w, h)));
 				tris.removeAllTriangles();
 				for (TriangleDetails details : list)
-					tris.addTriangle(details);
+					tris.getTriangleDetails().add(details);
 			}
 
 			// calculate the min/max values (the bounds) of all triangles
