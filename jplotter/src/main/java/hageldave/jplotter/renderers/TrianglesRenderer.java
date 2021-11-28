@@ -448,27 +448,20 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 			// calculate the min/max values (the bounds) of all triangles
 			for(Triangles tris : allTriangles){
-				if(tris.isHidden()){
-					continue;
-				}
 				for(TriangleDetails tri : tris.getTriangleDetails()) {
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
-
-					// check if one coordinate is negative
-					double triMinX = Math.min(Math.min(x0, x1), x2);
-					double triMinY = Math.min(Math.min(y0, y1), y2);
-					double triMaxX = Math.max(Math.max(x0, x1), x2);
-					double triMaxY = Math.max(Math.max(y0, y1), y2);
-
-					minX = Math.min(triMinX, minX);
-					minY = Math.min(triMinY, minY);
-					maxX = Math.max(triMaxX, maxX);
-					maxY = Math.max(triMaxY, maxY);
+					// first get min/max vertex x/y value of triangle (Math.min(Math.min(x0, x1), x2))
+					// then update min/max values if necessary
+					minX = Math.min(Math.min(Math.min(x0, x1), x2), minX);
+					minY = Math.min(Math.min(Math.min(y0, y1), y2), minY);
+					maxX = Math.max(Math.max(Math.max(x0, x1), x2), maxX);
+					maxY = Math.max(Math.max(Math.max(y0, y1), y2), maxY);
 				}
 			}
 
 			// calculate the factor/maxValue Attributes
+			// maybe there's an error: contourplot seems to be "too accurate"
 			if ((maxX-minX) > (maxY-minY))
 				factor = (float) ((Math.pow(2, 16)-1) / (maxX-minX));
 			else
@@ -480,9 +473,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 			// calculate how much the content has to be shifted
 			for(Triangles tris : allTriangles){
-				if(tris.isHidden()){
-					continue;
-				}
 				for(TriangleDetails tri : tris.getTriangleDetails()) {
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
@@ -499,9 +489,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			}
 
 			for(Triangles tris : allTriangles){
-				if(tris.isHidden()){
-					continue;
-				}
 				PDShadingType4 gouraudShading = new PDShadingType4(doc.getDocument().createCOSStream());
 				gouraudShading.setShadingType(PDShading.SHADING_TYPE4);
 				gouraudShading.setBitsPerFlag(8);
