@@ -36,6 +36,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
@@ -411,11 +412,15 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			contentStream.addRect(x, y, w, h);
 			contentStream.clip();
 
-			// calculate the min/max values (the bounds) of all triangles
+			ArrayList<Triangles> allTriangles = new ArrayList<>(getItemsToRender().size());
 			for(Triangles tris : getItemsToRender()){
 				if(tris.isHidden()){
 					continue;
 				}
+				Triangles modifiedTriangle = new Triangles();
+				modifiedTriangle.setGlobalAlphaMultiplier(tris.getGlobalAlphaMultiplier());
+				modifiedTriangle.setGlobalSaturationMultiplier(tris.getGlobalSaturationMultiplier());
+
 				for(TriangleDetails tri : tris.getTriangleDetails()) {
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
@@ -424,6 +429,31 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					x0*=scaleX; x1*=scaleX; x2*=scaleX;
 					y0*=scaleY; y1*=scaleY; y2*=scaleY;
 					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
+					TriangleDetails triangleDetails = tri.clone();
+					triangleDetails.p0 = new Point2D.Double(x0, y0);
+					triangleDetails.p1 = new Point2D.Double(x1, y1);
+					triangleDetails.p2 = new Point2D.Double(x2, y2);
+					modifiedTriangle.addTriangle(triangleDetails);
+				}
+				allTriangles.add(modifiedTriangle);
+			}
+
+			// remove all triangles details and add intersecting triangles back
+			for(Triangles tris : allTriangles) {
+				ArrayList<TriangleDetails> list = new ArrayList<>(tris.getIntersectingTriangles(new Rectangle2D.Double(x, y, w, h)));
+				tris.removeAllTriangles();
+				for (TriangleDetails details : list)
+					tris.addTriangle(details);
+			}
+
+			// calculate the min/max values (the bounds) of all triangles
+			for(Triangles tris : allTriangles){
+				if(tris.isHidden()){
+					continue;
+				}
+				for(TriangleDetails tri : tris.getTriangleDetails()) {
+					double x0,y0, x1,y1, x2,y2;
+					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
 
 					// check if one coordinate is negative
 					double triMinX = Math.min(Math.min(x0, x1), x2);
@@ -442,7 +472,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				}
 			}
 
-			// what about w+maxX-minX?
 			// calculate the factor/maxValue Attributes
 			if ((maxX-minX) > (maxY-minY))
 				factor = (float) ((Math.pow(2, 16)-1) / (maxX-minX));
@@ -454,18 +483,13 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			double shiftY = 0.0;
 
 			// calculate how much the content has to be shifted
-			for(Triangles tris : getItemsToRender()){
+			for(Triangles tris : allTriangles){
 				if(tris.isHidden()){
 					continue;
 				}
 				for(TriangleDetails tri : tris.getTriangleDetails()) {
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
-					x0-=translateX; x1-=translateX; x2-=translateX;
-					y0-=translateY; y1-=translateY; y2-=translateY;
-					x0*=scaleX; x1*=scaleX; x2*=scaleX;
-					y0*=scaleY; y1*=scaleY; y2*=scaleY;
-					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
 
 					x0 *= factor; x1 *= factor; x2 *= factor;
 					y0 *= factor; y1 *= factor; y2 *= factor;
@@ -481,7 +505,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				}
 			}
 
-			for(Triangles tris : getItemsToRender()){
+			for(Triangles tris : allTriangles){
 				if(tris.isHidden()){
 					continue;
 				}
@@ -546,11 +570,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				for(TriangleDetails tri : tris.getTriangleDetails()){
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
-					x0-=translateX; x1-=translateX; x2-=translateX;
-					y0-=translateY; y1-=translateY; y2-=translateY;
-					x0*=scaleX; x1*=scaleX; x2*=scaleX;
-					y0*=scaleY; y1*=scaleY; y2*=scaleY;
-					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
 
 					// rescale x,y coordinates
 					x0 *= factor; x1 *= factor; x2 *= factor;
