@@ -461,14 +461,10 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					double triMaxX = Math.max(Math.max(x0, x1), x2);
 					double triMaxY = Math.max(Math.max(y0, y1), y2);
 
-					if (triMinX < minX)
-						minX = triMinX;
-					if (triMinY < minY)
-						minY = triMinY;
-					if (maxX < triMaxX)
-						maxX = triMaxX;
-					if (maxY < triMaxY)
-						maxY = triMaxY;
+					minX = Math.min(triMinX, minX);
+					minY = Math.min(triMinY, minY);
+					maxX = Math.max(triMaxX, maxX);
+					maxY = Math.max(triMaxY, maxY);
 				}
 			}
 
@@ -497,11 +493,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					// check if one coordinate is negative
 					double triMinX = Math.min(Math.min(x0, x1), x2);
 					double triMinY = Math.min(Math.min(y0, y1), y2);
-
-					if (triMinX < shiftX)
-						shiftX = triMinX;
-					if (triMinY < shiftY)
-						shiftY = triMinY;
+					shiftX = Math.min(triMinX, shiftX);
+					shiftY = Math.min(triMinY, shiftY);
 				}
 			}
 
