@@ -554,6 +554,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					// rescale x,y coordinates
 					x0 *= factor; x1 *= factor; x2 *= factor;
 					y0 *= factor; y1 *= factor; y2 *= factor;
+					x0 -= shiftX; x1 -= shiftX; x2 -= shiftX;
+					y0 -= shiftY; y1 -= shiftY; y2 -= shiftY;
 
 					int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
@@ -565,16 +567,16 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 					// write shaded triangle to mask stream
 					PDFUtils.writeShadedTriangle(mcosMask,
-							new Point2D.Double(x0-shiftX, y0-shiftY),
-							new Point2D.Double(x1-shiftX,y1-shiftY),
-							new Point2D.Double(x2-shiftX, y2-shiftY),
+							new Point2D.Double(x0, y0),
+							new Point2D.Double(x1,y1),
+							new Point2D.Double(x2, y2),
 							new Color(c02, c02, c02),
 							new Color(c12, c12, c12),
 							new Color(c22, c22, c22));
 
 					// write shaded (colored) triangle to normal stream
-					PDFUtils.writeShadedTriangle(mcos, new Point2D.Double(x0-shiftX, y0-shiftY), new Point2D.Double(x1-shiftX,y1-shiftY),
-							new Point2D.Double(x2-shiftX, y2-shiftY), new Color(c0), new Color(c1), new Color(c2));
+					PDFUtils.writeShadedTriangle(mcos, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
+							new Point2D.Double(x2, y2), new Color(c0), new Color(c1), new Color(c2));
 				}
 
 				maskCS.saveGraphicsState();
