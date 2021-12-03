@@ -85,30 +85,18 @@ public class ReadyLineChart {
 
         standardChart.getCoordsys().setCoordinateView(-10,-1,3400,100);
 
-        double mpgMax = hpToMpg.values().parallelStream().max(Double::compare).get();
-
-        Double hpMax = hpToMpg.keySet().parallelStream().max(Double::compare).get();
-        Arrays.stream(hpToMpgArr).parallel().forEach(e -> e[0] = e[0]/hpMax);
-        Arrays.stream(hpToMpgArr).parallel().forEach(e -> e[1] = e[1]/mpgMax);
-
-        Double weightMax = weightToMpg.keySet().parallelStream().max(Double::compare).get();
-        Arrays.stream(weightToMpgArr).parallel().forEach(e -> e[0] = e[0]/weightMax);
-        Arrays.stream(weightToMpgArr).parallel().forEach(e -> e[1] = e[1]/mpgMax);
-
-        Double displacementMax = displacementToMpg.keySet().parallelStream().max(Double::compare).get();
-        Arrays.stream(displacementToMpgArr).parallel().forEach(e -> e[0] = e[0]/displacementMax);
-        Arrays.stream(displacementToMpgArr).parallel().forEach(e -> e[1] = e[1]/mpgMax);
-
-        Double accelerationMax = accelerationToMpg.keySet().parallelStream().max(Double::compare).get();
-        Arrays.stream(accelerationToMpgArr).parallel().forEach(e -> e[0] = e[0]/accelerationMax);
-        Arrays.stream(accelerationToMpgArr).parallel().forEach(e -> e[1] = e[1]/mpgMax);
+        // normalize values in chart
+        normalizeValues(hpToMpg, hpToMpgArr);
+        normalizeValues(weightToMpg, weightToMpgArr);
+        normalizeValues(displacementToMpg, displacementToMpgArr);
+        normalizeValues(accelerationToMpg, accelerationToMpgArr);
 
         normalizedChart.getDataModel().addData(hpToMpgArr, 0, 1, 1, "Horsepower");
         normalizedChart.getDataModel().addData(weightToMpgArr, 0, 1, 1, "Weight");
         normalizedChart.getDataModel().addData(displacementToMpgArr, 0, 1, 1, "Displacement");
         normalizedChart.getDataModel().addData(accelerationToMpgArr, 0, 1, 1, "Acceleration");
 
-        normalizedChart.getCoordsys().setCoordinateView(0,0,1.1,1.1);
+        normalizedChart.getCoordsys().setCoordinateView(-0.1,-0.1,1.1,1.1);
 
         normalizedChart.addLineChartMouseEventListener(new LineChart.LineChartMouseEventListener() {
             Lines pointHighlight;
@@ -304,5 +292,17 @@ public class ReadyLineChart {
                     combinedMenu.show(normalizedChart.getCanvas().asComponent(), e.getX(), e.getY());
             }
         });
+    }
+
+    protected static double[][] normalizeValues(TreeMap<Double, Double> inputMap, double[][] outputArray) {
+        double xAxisMax = inputMap.keySet().parallelStream().max(Double::compare).get();
+        double xAxisMin = inputMap.keySet().parallelStream().min(Double::compare).get();
+        double yAxisMin = inputMap.values().parallelStream().min(Double::compare).get();
+        double yAxisMax = inputMap.values().parallelStream().max(Double::compare).get();
+        Arrays.stream(outputArray).parallel().forEach(e -> e[0] = e[0]-xAxisMin);
+        Arrays.stream(outputArray).parallel().forEach(e -> e[0] = e[0]/(xAxisMax-xAxisMin));
+        Arrays.stream(outputArray).parallel().forEach(e -> e[1] = e[1]-yAxisMin);
+        Arrays.stream(outputArray).parallel().forEach(e -> e[1] = e[1]/(yAxisMax-yAxisMin));
+        return outputArray;
     }
 }
