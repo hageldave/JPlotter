@@ -768,11 +768,11 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
 
         try {
-            PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+            PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
 
-			cs.saveGraphicsState();
-			cs.addRect(x, y, w, h);
-			cs.clip();
+			contentStream.saveGraphicsState();
+			contentStream.addRect(x, y, w, h);
+			contentStream.clip();
 			for (Curves curves : getItemsToRender()) {
                 if (curves.isHidden() || curves.getStrokePattern() == 0 || curves.numCurves() == 0) {
                     // line is invisible
@@ -823,16 +823,16 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 						Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, curves.getGlobalAlphaMultiplier()), true);
 						graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
 						graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
-						cs.setGraphicsStateParameters(graphicsState);
+						contentStream.setGraphicsStateParameters(graphicsState);
 
-                        PDFUtils.createPDFCurve(cs, new Point2D.Double(x1 + x, y1 + y),
+                        PDFUtils.createPDFCurve(contentStream, new Point2D.Double(x1 + x, y1 + y),
                                 new Point2D.Double(cp0x + x, cp0y + y),
                                 new Point2D.Double(cp1x + x, cp1y + y),
                                 new Point2D.Double(x2 + x, y2 + y));
-                        cs.setLineDashPattern(real, 0);
-                        cs.setStrokingColor(new Color(color));
-                        cs.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
-                        cs.stroke();
+                        contentStream.setLineDashPattern(real, 0);
+                        contentStream.setStrokingColor(new Color(color));
+                        contentStream.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
+                        contentStream.stroke();
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -840,8 +840,8 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                 }
             }
 			// restore graphics
-			cs.restoreGraphicsState();
-            cs.close();
+			contentStream.restoreGraphicsState();
+            contentStream.close();
         } catch (IOException e) {
             throw new RuntimeException("Error occurred!");
         }
