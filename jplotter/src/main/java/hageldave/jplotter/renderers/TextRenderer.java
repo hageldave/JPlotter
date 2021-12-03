@@ -518,7 +518,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 					// clipping area
 					contentStream.saveGraphicsState();
 					contentStream.addRect(x, y, w, h);
-					contentStream.closePath();
 					contentStream.clip();
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
