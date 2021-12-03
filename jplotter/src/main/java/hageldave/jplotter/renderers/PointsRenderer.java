@@ -469,8 +469,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 				if (points.isHidden()) {
 					continue;
 				}
-				Glyph glyph = points.getGlyph();
 
+				Glyph glyph = points.getGlyph();
 
 				for (PointDetails point : points.getPointDetails()) {
 					double x1, y1;
@@ -490,6 +490,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						continue;
 					}
 
+					// save graphics state
+					contentStream.saveGraphicsState();
 					// transform
 					contentStream.transform(new Matrix(1, 0, 0, 1, (float) x1 + x, (float) y1 + y));
 					if(point.rot.getAsDouble() != 0){
@@ -501,8 +503,10 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					contentStream.transform(new Matrix((float) (glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0,
 						(float) (glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0));
 
-					// compatibility issues: contentStream.drawForm(glyphForm);
 					glyph.createPDFElement(contentStream);
+
+					// restore the graphics state again, after the affine transformation has been applied -> resets content stream transform property
+					contentStream.restoreGraphicsState();
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
@@ -522,6 +526,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						contentStream.setStrokingColor(new Color(color));
 						contentStream.stroke();
 					}
+
+
 				}
 			}
 			// restore graphics
