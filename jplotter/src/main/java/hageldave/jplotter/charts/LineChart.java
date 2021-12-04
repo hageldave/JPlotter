@@ -27,11 +27,14 @@ import java.util.*;
 public class LineChart {
     protected JPlotterCanvas canvas;
     protected CoordSysRenderer coordsys;
+
+    protected ScatterPlot scatterPlot;
+
     protected CompleteRenderer contentLayer0;
     protected CompleteRenderer contentLayer1;
     protected CompleteRenderer contentLayer2;
 
-    final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
+    final public PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 
     final protected LineChartDataModel dataModel = new LineChartDataModel();
     final protected ArrayList<Lines> linesPerDataChunk = new ArrayList<>();
@@ -132,11 +135,11 @@ public class LineChart {
         for(int i=0; i<dataChunk.length-startEndInterval; i++) {
             int i_=i;
             double[] datapoint = dataChunk[i];
-            double[] scndDatapoint = dataChunk[i+startEndInterval];
+            double[] nextDatapoint = dataChunk[i+startEndInterval];
             Lines.SegmentDetails linesDetails = lines.addSegment(
-                    new Point2D.Double(datapoint[xIdx], datapoint[yIdx]), new Point2D.Double(scndDatapoint[xIdx], scndDatapoint[yIdx]));
+                    new Point2D.Double(datapoint[xIdx], datapoint[yIdx]), new Point2D.Double(nextDatapoint[xIdx], nextDatapoint[yIdx]));
             linesDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, chunkDescription, dataChunk, i_));
-            linesDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+            linesDetails.setPickColor(registerInPickingRegistry(new LineDataChunk(chunkIdx, i)));
         }
         // create a picking ID for use in legend for this data chunk
         this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
@@ -163,12 +166,12 @@ public class LineChart {
         for(int i=0; i<dataChunk.length-interval; i++) {
             int i_=i;
             double[] datapoint = dataChunk[i];
-            double[] scndDatapoint = dataChunk[i+interval];
+            double[] nextDatapoint = dataChunk[i+interval];
             Lines.SegmentDetails segmentDetails = lines.addSegment(
                     new Point2D.Double(datapoint[dataModel.getXIdx(chunkIdx)], datapoint[dataModel.getYIdx(chunkIdx)]),
-                    new Point2D.Double(scndDatapoint[dataModel.getXIdx(chunkIdx)], scndDatapoint[dataModel.getYIdx(chunkIdx)]));
+                    new Point2D.Double(nextDatapoint[dataModel.getXIdx(chunkIdx)], nextDatapoint[dataModel.getYIdx(chunkIdx)]));
             segmentDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
-            segmentDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+            segmentDetails.setPickColor(registerInPickingRegistry(new LineDataChunk(chunkIdx, i)));
         }
 
         // update cues (which may have been in place before)
@@ -184,7 +187,6 @@ public class LineChart {
 
         this.canvas.scheduleRepaint();
     }
-
 
     public static class LineChartDataModel {
         protected ArrayList<double[][]> dataChunks = new ArrayList<>();
@@ -296,7 +298,12 @@ public class LineChart {
             for(LineChartDataModelListener l:listeners)
                 l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
         }
+    }
 
+    final public static class LineDataChunk extends DataChunk {
+        public LineDataChunk(int chunkID, int pointID) {
+            super(chunkID, pointID);
+        }
     }
 
     public static interface LineChartVisualMapping {
@@ -406,6 +413,20 @@ public class LineChart {
         }.register();
     }
 
+    public ScatterPlot getScatterPlot() {
+        return scatterPlot;
+    }
+
+    public void setScatterPlot(ScatterPlot scatterPlot) {
+        this.scatterPlot = scatterPlot;
+        this.scatterPlot.canvas = this.canvas;
+        this.scatterPlot.coordsys = this.coordsys;
+        this.scatterPlot.pickingRegistry = this.pickingRegistry;
+        this.scatterPlot.contentLayer0 = this.contentLayer0;
+        this.scatterPlot.contentLayer1 = this.contentLayer1;
+        this.scatterPlot.contentLayer2 = this.contentLayer2;
+    }
+
     public JPlotterCanvas getCanvas() {
         return canvas;
     }
@@ -460,12 +481,19 @@ public class LineChart {
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
                     if((pixel & 0x00ffffff) == 0) {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
+                        if (scatterPlot != null)
+                            scatterPlot.notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {
                         Object pointLocalizer = pickingRegistry.lookup(pixel);
-                        if(pointLocalizer instanceof int[]) {
-                            int chunkIdx = ((int[])pointLocalizer)[0];
-                            int pointIdx = ((int[])pointLocalizer)[1];
+                        if (pointLocalizer instanceof LineDataChunk) {
+                            int chunkIdx = ( (LineDataChunk) pointLocalizer ).getChunkID();
+                            int pointIdx = ( (LineDataChunk) pointLocalizer ).getPointID();
                             notifyInsideMouseEventLine(eventType, e, coordsysPoint, chunkIdx, pointIdx);
+                        } else if (pointLocalizer instanceof ScatterPlot.PointDataChunk) {
+                            int chunkIdx = ( (ScatterPlot.PointDataChunk) pointLocalizer ).getChunkID();
+                            int pointIdx = ( (ScatterPlot.PointDataChunk) pointLocalizer ).getPointID();
+                            if (scatterPlot != null)
+                                scatterPlot.notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, pointIdx);
                         }
                     }
                 } else {
@@ -474,11 +502,14 @@ public class LineChart {
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
                     if((pixel & 0x00ffffff) == 0) {
                         notifyOutsideMouseEventeNone(eventType, e);
+                        if (scatterPlot != null)
+                            scatterPlot.notifyOutsideMouseEventeNone(eventType, e);
                     } else {
                         Object miscLocalizer = pickingRegistry.lookup(pixel);
                         if(miscLocalizer instanceof Integer) {
                             int chunkIdx = (int)miscLocalizer;
                             notifyOutsideMouseEventElement(eventType, e, chunkIdx);
+
                         }
                     }
                 }

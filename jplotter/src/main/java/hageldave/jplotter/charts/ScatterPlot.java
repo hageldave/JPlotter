@@ -1,35 +1,11 @@
 package hageldave.jplotter.charts;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
-import hageldave.jplotter.interaction.kml.CoordSysPanning;
-import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
-import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
-import hageldave.jplotter.interaction.kml.DynamicCoordsysScrollZoom;
-import hageldave.jplotter.interaction.kml.KeyMaskListener;
+import hageldave.jplotter.interaction.kml.*;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -40,6 +16,15 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.*;
 
 /**
  *
@@ -53,20 +38,6 @@ import hageldave.jplotter.util.Utils;
  * With this ID the Dataset can be removed later on.
  * <p>
  *
- * CHANGELOG
- * - legend now also has a interaction interface (+ its elements are added to registry, etc. pp)
- * - KeylistenerMask has now its own class and is implemented in all interaction interfaces
- * - KeylistenerMask now can store > 1 keys
- * - ExtendedPointDetails stores now its label and Points
- * - update legend automatically if data is added
- * - Continued working on Scatterplot demo class
- *
- * Changelog
- *  - Barchart Implemenation
- *  - Bug mit Legenden items und focus gefixt - Registry reduziert
- *  - neue DataAdd Methode
- *  - Verbesserungen bei InteractionInterface
- *
  * @author lucareichmann
  */
 public class ScatterPlot {
@@ -75,7 +46,7 @@ public class ScatterPlot {
     protected CompleteRenderer contentLayer0;
     protected CompleteRenderer contentLayer1;
     protected CompleteRenderer contentLayer2;
-    final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
+    protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 
     final protected ScatterPlotDataModel dataModel = new ScatterPlotDataModel();
     final protected ArrayList<Points> pointsPerDataChunk = new ArrayList<>();
@@ -200,10 +171,10 @@ public class ScatterPlot {
     		double[] datapoint = dataChunk[i];
     		PointDetails pointDetails = points.addPoint(datapoint[xIdx], datapoint[yIdx]);
     		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, chunkDescription, dataChunk, i_));
-    		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+    		pointDetails.setPickColor(registerInPickingRegistry(new PointDataChunk(chunkIdx, i)));
     	}
     	// create a picking ID for use in legend for this data chunk
-    	this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
+    	this.legendElementPickIds.add(registerInPickingRegistry(new Pair<>(points, chunkIdx)));
     	visualMapping.createLegendElementForChunk(legend, chunkIdx, chunkDescription, legendElementPickIds.get(chunkIdx));
     	this.canvas.scheduleRepaint();
     }
@@ -224,7 +195,7 @@ public class ScatterPlot {
     		double[] datapoint = dataChunk[i];
     		PointDetails pointDetails = points.addPoint(datapoint[dataModel.getXIdx(chunkIdx)], datapoint[dataModel.getYIdx(chunkIdx)]);
     		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
-    		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+    		pointDetails.setPickColor(registerInPickingRegistry(new PointDataChunk(chunkIdx, i)));
     	}
     	// update cues (which may have been in place before)
     	for(String cueType : Arrays.asList(CUE_ACCENTUATE, CUE_EMPHASIZE, CUE_HIGHLIGHT)) {
@@ -351,8 +322,12 @@ public class ScatterPlot {
     	}
     	
     }
-    
 
+	final public static class PointDataChunk extends DataChunk {
+		public PointDataChunk(int chunkID, int pointID) {
+			super(chunkID, pointID);
+		}
+	}
     
     public static interface ScatterPlotVisualMapping {
     	
@@ -770,6 +745,9 @@ public class ScatterPlot {
 				for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
 					greyOutChunk(chunk, true);
 				for(Pair<Integer, Integer> instance : instancesToCue) {
+					// maybe also use this in other interfaces
+					if (instance.first < 0 || instance.second < 0)
+						return;
 					Points points = getPointsForChunk(instance.first);
 					PointDetails p = points.getPointDetails().get(instance.second);
 					Points front = getOrCreateCuePointsForGlyph(cueType, points.glyph);
