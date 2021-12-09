@@ -15,6 +15,7 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
+import org.apache.pdfbox.util.Matrix;
 
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.awt.*;
@@ -250,7 +251,7 @@ public class PDFUtils {
         AffineTransform at = new AffineTransform(1, 0.0, 0.0,
                1, position.getX(), position.getY());
         at.rotate(angle);
-        cs.setTextMatrix(at);
+        cs.setTextMatrix(new Matrix(at));
         cs.showText(txt);
         cs.endText();
         return cs;

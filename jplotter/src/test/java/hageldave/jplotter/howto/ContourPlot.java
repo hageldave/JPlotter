@@ -125,7 +125,7 @@ public class ContourPlot {
 		
 		long t=System.currentTimeMillis()+2000;
 		while(t>System.currentTimeMillis());
-		if("false".equals("true")) {
+		if("true".equals("true")) {
 			SwingUtilities.invokeLater(()->{
 				Img img = new Img(frame.getSize());
 				img.paint(g2d->frame.paintAll(g2d));

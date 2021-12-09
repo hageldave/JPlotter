@@ -21,8 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-
-public class PDFTest {
+public class PDFDemo {
 
     private static double[] randomData(int n){
         double[] d = new double[n];
@@ -32,7 +31,8 @@ public class PDFTest {
         return d;
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
+    public void create(String file) throws IOException, InterruptedException, InvocationTargetException {
+
         PDDocument document = null;
         try {
 
@@ -57,9 +57,12 @@ public class PDFTest {
             // add line segments to B (the short way)
             ArrayList<Lines.SegmentDetails> segmentsB = lineB.addLineStrip(seriesB_x, seriesB_y);
             segmentsB.forEach(seg->seg.setColor1(Color.BLUE).setColor0(Color.RED));
+            // use a coordinate system for display
+            // set the content renderer of the coordinate system
+            // we want to render Lines objects
 
-            // demonstrating curve rendering
-            CurvesRenderer curvesRenderer = new CurvesRenderer();
+            CompleteRenderer compr = new CompleteRenderer();
+
             Curves curve = new Curves();
             curve.addCurve(new Point2D.Double(20, 20), new Point2D.Double(4000, 30),
                     new Point2D.Double(50, 50), new Point2D.Double(60, 20)).setColor(Color.RED);
@@ -70,7 +73,6 @@ public class PDFTest {
             curve.setGlobalSaturationMultiplier(0.2);
             curve.setGlobalAlphaMultiplier(0.4);
             curve.setGlobalThicknessMultiplier(20);
-            curvesRenderer.addItemToRender(curve);
 
             CurvesRenderer curveCont = new CurvesRenderer();
             curveCont.addItemToRender(curve);
@@ -83,7 +85,6 @@ public class PDFTest {
                     .setThickness(9, 9).setColor0(new Color(0,255,0,30)).setColor1(Color.RED);
             lineContent.addItemToRender(lineA).addItemToRender(lineB);
 
-            // demonstrating triangle rendering
             Triangles tri = new Triangles();
             tri.setGlobalAlphaMultiplier(0.9);
             tri.setGlobalSaturationMultiplier(0.8);
@@ -124,22 +125,21 @@ public class PDFTest {
 
             CoordSysRenderer renderer = new CoordSysRenderer();
             Legend lg = new Legend();
-            lg.addGlyphLabel(DefaultGlyph.TRIANGLE, Color.RED.getRGB(), "Legend item 1");
-            lg.addLineLabel(3, Color.RED.getRGB(), "Legend item 2");
-            lg.addLineLabel(5, Color.RED.getRGB(), "Legend item 3");
+            lg.addGlyphLabel(DefaultGlyph.TRIANGLE, Color.RED.getRGB(), "Item 1");
+            lg.addLineLabel(3, Color.RED.getRGB(), "Item 2");
+            lg.addLineLabel(5, Color.RED.getRGB(), "Item 3");
             renderer.setLegendRight(lg);
-            renderer.setLegendRightWidth(110);
             renderer.setCoordinateView(-10,-10,100,100);
             renderer.setContent(compr);
 
             JFrame frame = new JFrame();
-            boolean useOpenGL = true;
+            boolean useOpenGL = false;
             JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
             canvas.setRenderer(renderer);
             canvas.asComponent().setPreferredSize(new Dimension(400, 400));
             //canvas.asComponent().setBackground(Color.BLACK);
             frame.getContentPane().add(canvas.asComponent());
-            frame.setTitle("PDF Test");
+            frame.setTitle("PDF Demo");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             canvas.addCleanupOnWindowClosingListener(frame);
             // make visible on AWT event dispatch thread
@@ -148,10 +148,8 @@ public class PDFTest {
                 frame.setVisible(true);
             });
 
-            // paint PDF to PDDocument
             PDDocument doc = canvas.paintPDF();
-            // save file and choosing filename
-            doc.save("pdf_test.pdf");
+            doc.save(file);
             doc.close();
 
             Document doc2 = canvas.paintSVG();
@@ -164,5 +162,10 @@ public class PDFTest {
                 document.close();
             }
         }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
+        PDFDemo creator = new PDFDemo();
+        creator.create("pdf_test.pdf");
     }
 }

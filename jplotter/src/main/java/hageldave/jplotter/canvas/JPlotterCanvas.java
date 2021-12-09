@@ -213,6 +213,26 @@ public interface JPlotterCanvas {
 		}
 	}
 
+
+	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream contentStream, Rectangle2D renderLoc) throws IOException {
+		contentStream.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
+		contentStream.setNonStrokingColor(asComponent().getBackground());
+		contentStream.fill();
+		paintToPDF(document, page, renderLoc);
+	}
+
+
+	public default void paintToPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) {
+		Renderer renderer = getRenderer();
+		if(renderer != null) {
+			renderer.renderPDF(document, page,
+					(int) renderLoc.getX(),
+					(int) (page.getMediaBox().getHeight()-renderLoc.getMaxY()),
+					(int) renderLoc.getMaxX(),
+					(int) (page.getMediaBox().getHeight()-renderLoc.getY()));
+		}
+	}
+
 	/**
 	 * Renders this {@link JPlotterCanvas} in terms of PDF elements
 	 * to the specified page of the specified PDF document.
