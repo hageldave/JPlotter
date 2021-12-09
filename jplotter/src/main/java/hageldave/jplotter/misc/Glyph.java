@@ -74,6 +74,14 @@ public interface Glyph {
 	 */
 	public List<Element> createSVGElements(Document doc);
 
+	/**
+	 * Creates PDF elements that will be appended to the content stream.
+	 * This is used to create an SVG {@code symbol}.
+	 * The {@link #isFilled()} method determines whether the "fill"
+	 * or "stroke" attribute is used for coloring an instance of the symbol.
+	 * @param contentStream content stream that the glyph will be added to
+	 * @return content stream that holds the glyph written to the document
+	 */
 	public PDPageContentStream createPDFElement(PDPageContentStream contentStream);
 
 	/**

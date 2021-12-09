@@ -27,7 +27,7 @@ public class PDFTest {
     private static double[] randomData(int n){
         double[] d = new double[n];
         for(int i=0; i<n; i++){
-            d[i]=Math.random()*100-1;
+            d[i]=Math.random()*200-1;
         }
         return d;
     }
@@ -35,16 +35,17 @@ public class PDFTest {
     public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
         PDDocument document = null;
         try {
-            double[] seriesA_y = randomData(200);
-            double[] seriesA_x = IntStream.range(0, 200).mapToDouble(i->i/1.0).toArray();
-            double[] seriesB_y = randomData(30);
-            double[] seriesB_x = randomData(30);
+
+            double[] seriesA_y = randomData(30);
+            double[] seriesA_x = IntStream.range(0, 30).mapToDouble(i->i/1.0).toArray();
+            double[] seriesB_y = randomData(6);
+            double[] seriesB_x = randomData(6);
             Arrays.sort(seriesB_x);
             // create Lines objects, one solid the other dashed
             Lines lineA = new Lines();
             Lines lineB = new Lines();
             lineB.setStrokePattern(0xf0f0);
-            lineB.setGlobalThicknessMultiplier(3);
+            lineB.setGlobalThicknessMultiplier(33);
             lineB.setGlobalAlphaMultiplier(0.2);
             // add line segments to A
             for(int i=0; i<seriesA_y.length-1; i++){
@@ -63,11 +64,11 @@ public class PDFTest {
             curve.addCurve(new Point2D.Double(20, 20), new Point2D.Double(4000, 30),
                     new Point2D.Double(50, 50), new Point2D.Double(60, 20)).setColor(Color.RED);
             curve.addCurve(new Point2D.Double(10, 20), new Point2D.Double(220, 30),
-                    new Point2D.Double(50, 50), new Point2D.Double(60, 20)).setColor(Color.BLUE);
+                    new Point2D.Double(50, 50), new Point2D.Double(60, 20)).setColor(new Color(0,0,255,30));
             curve.setStrokePattern(0xf0f0);
 
             curve.setGlobalSaturationMultiplier(0.2);
-            curve.setGlobalAlphaMultiplier(0.7);
+            curve.setGlobalAlphaMultiplier(0.4);
             curve.setGlobalThicknessMultiplier(20);
             curvesRenderer.addItemToRender(curve);
 
@@ -78,24 +79,17 @@ public class PDFTest {
             lineA.setGlobalSaturationMultiplier(0.8);
             lineA.setGlobalAlphaMultiplier(0.8);
             lineA.setGlobalThicknessMultiplier(7);
-
-            lineA.addSegment(new Point2D.Double(20, 20), new Point2D.Double(90, 90)).setThickness(9, 9).setColor0(Color.BLUE).setColor1(Color.ORANGE);
+            lineA.addSegment(new Point2D.Double(20, 20), new Point2D.Double(190, 90))
+                    .setThickness(9, 9).setColor0(new Color(0,255,0,30)).setColor1(Color.RED);
             lineContent.addItemToRender(lineA).addItemToRender(lineB);
 
             // demonstrating triangle rendering
             Triangles tri = new Triangles();
-            tri.setGlobalAlphaMultiplier(0.8);
-            tri.setGlobalSaturationMultiplier(0.5);
+            tri.setGlobalAlphaMultiplier(0.9);
+            tri.setGlobalSaturationMultiplier(0.8);
             tri.addTriangle(new Point2D.Double(0,0), new Point2D.Double(50, 50),
-                            new Point2D.Double(100, 60)).setColor0(Color.RED).setColor1(Color.BLUE)
-                    .setColor2(Color.GREEN);
-            for (int i = 0; i< 1000; i++) {
-                tri.addTriangle(new Point2D.Double(i,i), new Point2D.Double(50, 50),
-                                new Point2D.Double(100, 60)).setColor0(Color.RED).setColor1(Color.BLUE)
-                        .setColor2(Color.GREEN);
-            }
-            TrianglesRenderer trianglesRenderer = new TrianglesRenderer();
-            trianglesRenderer.addItemToRender(tri);
+                    new Point2D.Double(100, 60)).setColor0(new Color(255,0,0,20)).setColor1(Color.BLUE)
+                    .setColor2(new Color(0,255,0,40));
 
             tri.addQuad(new Rectangle2D.Double(30, 30, 100, 100));
             TrianglesRenderer renderer2 = new TrianglesRenderer();
@@ -108,7 +102,13 @@ public class PDFTest {
 
             ChainedRenderer chainedRenderer = new ChainedRenderer(lineContent, curveCont);
 
-            compr.addItemToRender(curve).addItemToRender(lineA).addItemToRender(tri).addItemToRender(lineB);
+            TextRenderer textRenderer = new TextRenderer();
+            Text txt = new Text("hallo", 19, 1, new Color(255, 0,0, 50));
+            txt.setOrigin(30,30);
+            txt.setAngle(2.3);
+            txt.setBackground(new Color(0,255,0, 255));
+            textRenderer.addItemToRender(txt);
+
 
             Points p = new Points(DefaultGlyph.CIRCLE_F);
             p.setGlobalAlphaMultiplier(0.9);
@@ -119,12 +119,8 @@ public class PDFTest {
             pr.setGlyphScaling(3);
             pr.addItemToRender(p);
 
-            CompleteRenderer completeRenderer = new CompleteRenderer()
-                    .addItemToRender(curve)
-                    .addItemToRender(lineA)
-                    .addItemToRender(lineB)
-                    .addItemToRender(tri)
-                    .addItemToRender(points);
+            compr.addItemToRender(curve).addItemToRender(lineA).addItemToRender(tri).addItemToRender(lineB).addItemToRender(p).addItemToRender(txt);
+
 
             CoordSysRenderer renderer = new CoordSysRenderer();
             Legend lg = new Legend();
@@ -134,9 +130,7 @@ public class PDFTest {
             renderer.setLegendRight(lg);
             renderer.setLegendRightWidth(110);
             renderer.setCoordinateView(-10,-10,100,100);
-
-            // choose which renderer should be rendered
-            renderer.setContent(pointsRenderer);
+            renderer.setContent(compr);
 
             JFrame frame = new JFrame();
             boolean useOpenGL = true;
@@ -163,7 +157,7 @@ public class PDFTest {
             Document doc2 = canvas.paintSVG();
             SVGUtils.documentToXMLFile(doc2, new File("svgtest.svg"));
             System.out.println("svg exported:");
-            System.out.println(SVGUtils.documentToXMLString(doc2));
+            //System.out.println(SVGUtils.documentToXMLString(doc2));
 
         } finally {
             if (document != null) {

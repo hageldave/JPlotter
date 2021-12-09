@@ -174,6 +174,14 @@ public interface JPlotterCanvas {
 			renderer.renderSVG(doc, parent, w, h);
 	}
 
+	/**
+	 * Creates a new PDF document {@link PDDocument} and renders this canvas on the PDF document.
+	 * Will call {@link #paintPDF()} after creating
+	 * the document and the first page.
+	 *
+	 * @return the resulting pdf document with all the rendered content
+	 * @throws IOException If there is an error while creating the document.
+	 */
 	public default PDDocument paintPDF() throws IOException {
 		PDDocument document = new PDDocument();
 		PDPage page = new PDPage();
@@ -182,6 +190,15 @@ public interface JPlotterCanvas {
 		return document;
 	}
 
+	/**
+	 * Sets up the PDF document (size, background color, ...).
+	 * Will call {@link #paintToPDF(PDDocument, PDPage, int, int)} after setting up
+	 * the document and creating the initial elements.
+	 *
+	 * @param document PDF document holding the page
+	 * @param page Page in the document to create PDF elements in
+	 * @throws IOException If there is an error while creating the document.
+	 */
 	public default void paintPDF(PDDocument document, PDPage page) throws IOException {
 		int w,h;
 		if ((w=asComponent().getWidth()) > 0 && (h=asComponent().getHeight()) > 0) {
@@ -196,25 +213,15 @@ public interface JPlotterCanvas {
 		}
 	}
 
-	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream contentStream, Rectangle2D renderLoc) throws IOException {
-		contentStream.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
-		contentStream.setNonStrokingColor(asComponent().getBackground());
-		contentStream.fill();
-		paintToPDF(document, page, renderLoc);
-	}
-
-
-	public default void paintToPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) {
-		Renderer renderer = getRenderer();
-		if(renderer != null) {
-			renderer.renderPDF(document, page,
-					(int) renderLoc.getX(),
-					(int) (page.getMediaBox().getHeight()-renderLoc.getMaxY()),
-					(int) renderLoc.getMaxX(),
-					(int) (page.getMediaBox().getHeight()-renderLoc.getY()));
-		}
-	}
-
+	/**
+	 * Renders this {@link JPlotterCanvas} in terms of PDF elements
+	 * to the specified page of the specified PDF document.
+	 *
+	 * @param document PDF document holding the page
+	 * @param page page in the document to create PDF elements in
+	 * @param w width of the page
+	 * @param h height of the page
+	 */
 	public default void paintToPDF(PDDocument document, PDPage page, int w, int h) {
 		Renderer renderer = getRenderer();
 		if(renderer != null)
