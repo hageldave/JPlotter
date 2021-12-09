@@ -69,6 +69,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 3) in float in_thickness;"
 			+ NL + "layout(location = 4) in float in_pathlen;"
 			+ NL + "uniform dvec4 viewTransform;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
 			+ NL + "out float vthickness;"
@@ -78,13 +79,26 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   dvec3 pos = dvec3(in_position,1);"
 			+ NL + "   pos = pos - dvec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * dvec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = vec4(pos,1);"
-			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vcolor = scaleSaturation(unpackARGB(in_color), saturationScaling);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "   vthickness = in_thickness;"
 			+ NL + "   vpathlen = in_pathlen;"
@@ -102,6 +116,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "layout(location = 3) in float in_thickness;"
 			+ NL + "layout(location = 4) in float in_pathlen;"
 			+ NL + "uniform vec4 viewTransform;"
+			+ NL + "uniform float saturationScaling;"
 			+ NL + "out vec4 vcolor;"
 			+ NL + "out vec4 vpick;"
 			+ NL + "out float vthickness;"
@@ -111,13 +126,26 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 			+ NL + "   uint mask = uint(255);"
 			+ NL + "   return vec4( (c>>16)&mask, (c>>8)&mask, (c)&mask, (c>>24)&mask )/255.0;"
 			+ NL + "}"
+			
+			+ NL + "vec4 scaleSaturation(vec4 rgba, float sat) {"
+			+ NL + "   float l = rgba.x*0.2126 + rgba.y*0.7152 + rgba.z*0.0722; // luminance"
+			+ NL + "   vec3 drgb = rgba.xyz-vec3(l);"
+			+ NL + "   float s=sat;"
+			+ NL + "   if(s > 1.0) {"
+			+ NL + "      // find maximal saturation that will keep channel values in range [0,1]"
+			+ NL + "      s = min(s, drgb.x<0.0 ? -l/drgb.x : (1-l)/drgb.x);" 
+			+ NL + "      s = min(s, drgb.y<0.0 ? -l/drgb.y : (1-l)/drgb.y);" 
+			+ NL + "      s = min(s, drgb.z<0.0 ? -l/drgb.z : (1-l)/drgb.z);"
+			+ NL + "   }"
+			+ NL + "   return vec4(vec3(l)+s*drgb, rgba.w);"
+			+ NL + "}"
 
 			+ NL + "void main() {"
 			+ NL + "   vec3 pos = vec3(in_position,1);"
 			+ NL + "   pos = pos - vec3(viewTransform.xy,0);"
 			+ NL + "   pos = pos * vec3(viewTransform.zw,1);"
 			+ NL + "   gl_Position = vec4(pos,1);"
-			+ NL + "   vcolor = unpackARGB(in_color);"
+			+ NL + "   vcolor = scaleSaturation(unpackARGB(in_color), saturationScaling);"
 			+ NL + "   vpick =  unpackARGB(in_pick);"
 			+ NL + "   vthickness = in_thickness;"
 			+ NL + "   vpathlen = in_pathlen;"
@@ -314,10 +342,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 	@Override
 	@GLContextRequired
 	protected void renderItem(Lines lines, Shader shader) {
+		if(lines.numSegments() < 1) {
+			return;
+		}
 		int loc;
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "linewidthMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalThicknessMultiplier());
-		// set projection matrix in shader
+		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "saturationScaling");
+		GL20.glUniform1f(loc, lines.getGlobalSaturationMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "alphaMultiplier");
 		GL20.glUniform1f(loc, lines.getGlobalAlphaMultiplier());
 		loc = GL20.glGetUniformLocation(shader.getShaderProgID(), "roundposition");
@@ -472,9 +504,15 @@ public class LinesRenderer extends GenericRenderer<Lines> {
             }
 
             Paint paint;
-            int c1, c2;
-            c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
-            c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
+
+            //int c1, c2;
+            int c1 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+            c1 = ColorOperations.scaleColorAlpha(c1, lines.getGlobalAlphaMultiplier());
+            //c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
+
+            int c2 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
+            c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
+
             if (c1 != c2) {
                 paint = new GradientPaint((float) x1, (float) y1, new Color(c1, true), (float) x2, (float) y2, new Color(c2, true));
             } else paint = new Color(c1, true);
@@ -560,9 +598,17 @@ public class LinesRenderer extends GenericRenderer<Lines> {
 
 
             Paint paint;
-            int c1, c2;
+            /*int c1, c2;
             c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
-            c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());
+            c2 = ColorOperations.scaleColorAlpha(seg.color1.getAsInt(), lines.getGlobalAlphaMultiplier());*/
+
+            int c1 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+            c1 = ColorOperations.scaleColorAlpha(c1, lines.getGlobalAlphaMultiplier());
+            //c1 = ColorOperations.scaleColorAlpha(seg.color0.getAsInt(), lines.getGlobalAlphaMultiplier());
+
+            int c2 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
+            c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
+
             if (c1 != c2) {
                 paint = new GradientPaint((float) x1, (float) y1, new Color(c1, true), (float) x2, (float) y2, new Color(c2, true));
             } else paint = new Color(c1, true);
@@ -636,7 +682,6 @@ public class LinesRenderer extends GenericRenderer<Lines> {
             }
         }
     }
-
 
     @Override
     public void renderSVG(Document doc, Element parent, int w, int h) {
@@ -717,6 +762,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                 double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
                 double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
 
+                int c0 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+                int c1 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
 
                 String defID = "";
                 if (seg.color0.getAsInt() != seg.color1.getAsInt()) {
@@ -735,14 +782,14 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                     gradient.appendChild(stop1);
                     stop1.setAttributeNS(null, "offset", "0%");
                     stop1.setAttributeNS(null, "style",
-                            "stop-color:" + SVGUtils.svgRGBhex(seg.color0.getAsInt()) + ";" +
-                                    "stop-opacity:" + SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(seg.color0.getAsInt())));
+                            "stop-color:" + SVGUtils.svgRGBhex(c0) + ";" +
+                                    "stop-opacity:" + SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(c0)));
                     Element stop2 = SVGUtils.createSVGElement(doc, "stop");
                     gradient.appendChild(stop2);
                     stop2.setAttributeNS(null, "offset", "100%");
                     stop2.setAttributeNS(null, "style",
-                            "stop-color:" + SVGUtils.svgRGBhex(seg.color1.getAsInt()) + ";" +
-                                    "stop-opacity:" + SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(seg.color1.getAsInt())));
+                            "stop-color:" + SVGUtils.svgRGBhex(c1) + ";" +
+                                    "stop-opacity:" + SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(c1)));
                 }
 
                 if (!lines.hasStrokePattern()) {
@@ -752,8 +799,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                             x1 + miterX * t1, y1 + miterY * t1, x2 + miterX * t2, y2 + miterY * t2,
                             x2 - miterX * t2, y2 - miterY * t2, x1 - miterX * t1, y1 - miterY * t1));
                     if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                        segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-                        segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(seg.color0.getAsInt())));
+                        segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(c0));
+                        segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(c0)));
                     } else {
                         // use gradient for line stroke
                         segment.setAttributeNS(null, "fill", "url(#" + defID + ")");
@@ -784,8 +831,8 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                         strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
 
                         if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-                            segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(seg.color0.getAsInt()));
-                            segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(seg.color0.getAsInt())));
+                            segment.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(c0));
+                            segment.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(lines.getGlobalAlphaMultiplier() * Pixel.a_normalized(c0)));
                         } else {
                             // use gradient for line stroke
                             segment.setAttributeNS(null, "fill", "url(#" + defID + ")");
@@ -860,174 +907,177 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         return Arrays.copyOf(dash, iDash + 1);
     }
 
-	@Override
-	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
-	    if (!isEnabled()) {
-	        return;
-	    }
-	    double translateX = Objects.isNull(view) ? 0 : view.getX();
-	    double translateY = Objects.isNull(view) ? 0 : view.getY();
-	    double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
-	    double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
-	
-	    Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
-	
-	    try {
-	        PDPageContentStream contentStream = new PDPageContentStream(doc, page,
-	                PDPageContentStream.AppendMode.APPEND, false);
-	        for (Lines lines : getItemsToRender()) {
-	            if (lines.isHidden() || lines.getStrokePattern() == 0 || lines.numSegments() == 0) {
-	                // line is invisible
-	                continue;
-	            }
-	
-	            double dist = 0;
-	            double prevX = 0;
-	            double prevY = 0;
-	
-	            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-	            graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-	            contentStream.setGraphicsStateParameters(graphicsState);
-	
-	            PDDocument glyphDoc = new PDDocument();
-	            PDPage rectPage = new PDPage();
-	            glyphDoc.addPage(rectPage);
-	            PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
-	            rectCont.addRect(x, y, w, h);
-	            LayerUtility layerUtility = new LayerUtility(doc);
-	            rectCont.close();
-	            PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
-	            glyphDoc.close();
-	
-	            // clipping area
-	            contentStream.saveGraphicsState();
-	            contentStream.drawForm(rectForm);
-	            contentStream.closePath();
-	            contentStream.clip();
-	
-	            for (SegmentDetails seg : lines.getSegments()) {
-	                double x1, y1, x2, y2;
-	                x1 = seg.p0.getX();
-	                y1 = seg.p0.getY();
-	                x2 = seg.p1.getX();
-	                y2 = seg.p1.getY();
-	
-	                x1 -= translateX;
-	                x2 -= translateX;
-	                y1 -= translateY;
-	                y2 -= translateY;
-	                x1 *= scaleX;
-	                x2 *= scaleX;
-	                y1 *= scaleY;
-	                y2 *= scaleY;
-	
-	                // path length calculations
-	                double dx = x2 - x1;
-	                double dy = y2 - y1;
-	                double len = hypot(dx, dy);
-	                double l1, l2;
-	                if (prevX == x1 && prevY == y1) {
-	                    l1 = dist;
-	                    l2 = dist + len;
-	                    dist += len;
-	                    dist = dist % lines.getStrokeLength();
-	                } else {
-	                    l1 = 0;
-	                    l2 = len;
-	                    dist = len;
-	                }
-	                prevX = x2;
-	                prevY = y2;
-	
-	                if (lines.isVertexRoundingEnabled()) {
-	                    x1 = (int) ( x1 + 0.5 );
-	                    x2 = (int) ( x2 + 0.5 );
-	                    y1 = (int) ( y1 + 0.5 );
-	                    y2 = (int) ( y2 + 0.5 );
-	                }
-	
-	                // visibility check
-	                if (!viewportRect.intersectsLine(x1, y1, x2, y2)) {
-	                    continue;
-	                }
-	
-	                // miter vector stuff
-	                double normalize = 1 / len;
-	                double miterX = dy * normalize * 0.5;
-	                double miterY = -dx * normalize * 0.5;
-	
-	                double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
-	                double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
-	
-	
-	
-	                    if (!lines.hasStrokePattern()) {
-	                        // create invisible rectangle so that elements outside w, h won't be rendered
-	                        if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-	                            contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
-	                        } else {
-	                            PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-	                                    new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-	                            PDShadingPattern pattern = new PDShadingPattern();
-	                            pattern.setShading(shading);
-	                            COSName name = page.getResources().add(pattern);
-	                            PDColor color = new PDColor(name, new PDPattern(null));
-	                            contentStream.setNonStrokingColor(color);
-	                        }
-	                        // create segments
-	                        PDFUtils.createPDFPolygon(contentStream, new double[]{(x1 + miterX * t1) + x, (x2 + miterX * t2) + x,
-	                                (x2 - miterX * t2) + x, (x1 - miterX * t1) + x}, new double[]{(y1 + miterY * t1) + y, (y2 + miterY * t2) + y,
-	                                (y2 - miterY * t2) + y, (y1 - miterY * t1) + y});
-	
-	                        contentStream.fill();
-	                    } else {
-	                        double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
-	                        while (strokeInterval[0] < l2) {
-	                            double start = strokeInterval[0];
-	                            double end = Math.min(strokeInterval[1], l2);
-	                            // interpolation factors
-	                            double m1 = Math.max(( start - l1 ) / ( l2 - l1 ), 0);
-	                            double m2 = ( end - l1 ) / ( l2 - l1 );
-	                            // interpolate miters
-	                            double t1_ = t1 * ( 1 - m1 ) + t2 * m1;
-	                            double t2_ = t1 * ( 1 - m2 ) + t2 * m2;
-	                            // interpolate segment
-	                            double x1_ = x1 + dx * m1;
-	                            double x2_ = x1 + dx * m2;
-	                            double y1_ = y1 + dy * m1;
-	                            double y2_ = y1 + dy * m2;
-	
-	                            strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
-	
-	
-	
-	                            if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
-	                                contentStream.setNonStrokingColor(new Color(seg.color0.getAsInt()));
-	                            } else {
-	                                PDShadingType2 shading = createGradientColor(seg.color0.getAsInt(), seg.color1.getAsInt(), new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
-	                                        new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
-	                                graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
-	                                contentStream.setGraphicsStateParameters(graphicsState);
-	                                PDShadingPattern pattern = new PDShadingPattern();
-	                                pattern.setShading(shading);
-	                                COSName name = page.getResources().add(pattern);
-	                                PDColor color = new PDColor(name, new PDPattern(null));
-	                                contentStream.setNonStrokingColor(color);
-	                            }
-	                            PDFUtils.createPDFPolygon(contentStream, new double[]{(x1_ + miterX * t1_) + x, (x2_ + miterX * t2_) + x,
-	                                    (x2_ - miterX * t2_) + x, (x1_ - miterX * t1_) + x}, new double[]{(y1_ + miterY * t1_) + y, (y2_ + miterY * t2_) + y,
-	                                    (y2_ - miterY * t2_) + y, (y1_ - miterY * t1_) + y});
-	                            contentStream.fill();
-	                        }
-	                    }
-	
-	            }
-	            contentStream.restoreGraphicsState();
-	        }
-	        contentStream.close();
-	    } catch (IOException e) {
-	        throw new RuntimeException("Error occurred!");
-	    }
+    @Override
+    public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
+        if (!isEnabled()) {
+            return;
+        }
+        double translateX = Objects.isNull(view) ? 0 : view.getX();
+        double translateY = Objects.isNull(view) ? 0 : view.getY();
+        double scaleX = Objects.isNull(view) ? 1 : w / view.getWidth();
+        double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
+
+        Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+
+        try {
+            PDPageContentStream contentStream = new PDPageContentStream(doc, page,
+                    PDPageContentStream.AppendMode.APPEND, false);
+            for (Lines lines : getItemsToRender()) {
+                if (lines.isHidden() || lines.getStrokePattern() == 0 || lines.numSegments() == 0) {
+                    // line is invisible
+                    continue;
+                }
+
+                double dist = 0;
+                double prevX = 0;
+                double prevY = 0;
+
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                contentStream.setGraphicsStateParameters(graphicsState);
+
+                PDDocument glyphDoc = new PDDocument();
+                PDPage rectPage = new PDPage();
+                glyphDoc.addPage(rectPage);
+                PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
+                rectCont.addRect(x, y, w, h);
+                LayerUtility layerUtility = new LayerUtility(doc);
+                rectCont.close();
+                PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
+                glyphDoc.close();
+
+                // clipping area
+                contentStream.saveGraphicsState();
+                contentStream.drawForm(rectForm);
+                contentStream.closePath();
+                contentStream.clip();
+
+                for (SegmentDetails seg : lines.getSegments()) {
+                    double x1, y1, x2, y2;
+                    x1 = seg.p0.getX();
+                    y1 = seg.p0.getY();
+                    x2 = seg.p1.getX();
+                    y2 = seg.p1.getY();
+
+                    x1 -= translateX;
+                    x2 -= translateX;
+                    y1 -= translateY;
+                    y2 -= translateY;
+                    x1 *= scaleX;
+                    x2 *= scaleX;
+                    y1 *= scaleY;
+                    y2 *= scaleY;
+
+                    // path length calculations
+                    double dx = x2 - x1;
+                    double dy = y2 - y1;
+                    double len = hypot(dx, dy);
+                    double l1, l2;
+                    if (prevX == x1 && prevY == y1) {
+                        l1 = dist;
+                        l2 = dist + len;
+                        dist += len;
+                        dist = dist % lines.getStrokeLength();
+                    } else {
+                        l1 = 0;
+                        l2 = len;
+                        dist = len;
+                    }
+                    prevX = x2;
+                    prevY = y2;
+
+                    if (lines.isVertexRoundingEnabled()) {
+                        x1 = (int) ( x1 + 0.5 );
+                        x2 = (int) ( x2 + 0.5 );
+                        y1 = (int) ( y1 + 0.5 );
+                        y2 = (int) ( y2 + 0.5 );
+                    }
+
+                    // visibility check
+                    if (!viewportRect.intersectsLine(x1, y1, x2, y2)) {
+                        continue;
+                    }
+
+                    // miter vector stuff
+                    double normalize = 1 / len;
+                    double miterX = dy * normalize * 0.5;
+                    double miterY = -dx * normalize * 0.5;
+
+                    double t1 = seg.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier();
+                    double t2 = seg.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier();
+
+                    int c1 = ColorOperations.changeSaturation(seg.color0.getAsInt(), lines.getGlobalSaturationMultiplier());
+                    c1 = ColorOperations.scaleColorAlpha(c1, lines.getGlobalAlphaMultiplier());
+
+                    int c2 = ColorOperations.changeSaturation(seg.color1.getAsInt(), lines.getGlobalSaturationMultiplier());
+                    c2 = ColorOperations.scaleColorAlpha(c2, lines.getGlobalAlphaMultiplier());
+
+                    if (!lines.hasStrokePattern()) {
+                        // create invisible rectangle so that elements outside w, h won't be rendered
+                        if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
+                            contentStream.setNonStrokingColor(new Color(c1));
+                        } else {
+                            PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+                                    new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+                            PDShadingPattern pattern = new PDShadingPattern();
+                            pattern.setShading(shading);
+                            COSName name = page.getResources().add(pattern);
+                            PDColor color = new PDColor(name, new PDPattern(null));
+                            contentStream.setNonStrokingColor(color);
+                        }
+                        // create segments
+                        PDFUtils.createPDFPolygon(contentStream, new double[]{( x1 + miterX * t1 ) + x, ( x2 + miterX * t2 ) + x,
+                                ( x2 - miterX * t2 ) + x, ( x1 - miterX * t1 ) + x}, new double[]{( y1 + miterY * t1 ) + y, ( y2 + miterY * t2 ) + y,
+                                ( y2 - miterY * t2 ) + y, ( y1 - miterY * t1 ) + y});
+
+                        contentStream.fill();
+                    } else {
+                        double[] strokeInterval = findStrokeInterval(l1, lines.getStrokeLength(), lines.getStrokePattern());
+                        while (strokeInterval[0] < l2) {
+                            double start = strokeInterval[0];
+                            double end = Math.min(strokeInterval[1], l2);
+                            // interpolation factors
+                            double m1 = Math.max(( start - l1 ) / ( l2 - l1 ), 0);
+                            double m2 = ( end - l1 ) / ( l2 - l1 );
+                            // interpolate miters
+                            double t1_ = t1 * ( 1 - m1 ) + t2 * m1;
+                            double t2_ = t1 * ( 1 - m2 ) + t2 * m2;
+                            // interpolate segment
+                            double x1_ = x1 + dx * m1;
+                            double x2_ = x1 + dx * m2;
+                            double y1_ = y1 + dy * m1;
+                            double y2_ = y1 + dy * m2;
+
+                            strokeInterval = findStrokeInterval(strokeInterval[2], lines.getStrokeLength(), lines.getStrokePattern());
+
+
+                            if (seg.color0.getAsInt() == seg.color1.getAsInt()) {
+                                contentStream.setNonStrokingColor(new Color(c1));
+                            } else {
+                                PDShadingType2 shading = createGradientColor(c1, c2, new Point2D.Double(( x1 + miterX * t1 ) + x, ( y1 + miterY * t1 ) + y),
+                                        new Point2D.Double(( x2 - miterX * t2 ) + x, ( y2 - miterY * t2 ) + y));
+                                graphicsState.setStrokingAlphaConstant(lines.getGlobalAlphaMultiplier());
+                                contentStream.setGraphicsStateParameters(graphicsState);
+                                PDShadingPattern pattern = new PDShadingPattern();
+                                pattern.setShading(shading);
+                                COSName name = page.getResources().add(pattern);
+                                PDColor color = new PDColor(name, new PDPattern(null));
+                                contentStream.setNonStrokingColor(color);
+                            }
+                            PDFUtils.createPDFPolygon(contentStream, new double[]{( x1_ + miterX * t1_ ) + x, ( x2_ + miterX * t2_ ) + x,
+                                    ( x2_ - miterX * t2_ ) + x, ( x1_ - miterX * t1_ ) + x}, new double[]{( y1_ + miterY * t1_ ) + y, ( y2_ + miterY * t2_ ) + y,
+                                    ( y2_ - miterY * t2_ ) + y, ( y1_ - miterY * t1_ ) + y});
+                            contentStream.fill();
+                        }
+                    }
+
+                }
+                contentStream.restoreGraphicsState();
+            }
+            contentStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Error occurred!");
+        }
 	}
 
 	protected static PDShadingType2 createGradientColor(int color1, int color2, Point2D p0, Point2D p1) throws IOException {

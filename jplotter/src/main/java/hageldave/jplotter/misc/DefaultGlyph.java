@@ -246,7 +246,7 @@ public enum DefaultGlyph implements Glyph {
 	}
 	
 	static void mkArrow(VertexArray va){
-		va.setBuffer(0, 2,  -.5f,0f,  .5f,0f,  .1f,-.2f, .5,0, .1f,.2f, .5f,0f);
+		va.setBuffer(0, 2,  -.5f,0f,  .5f,0f,  .1f,-.2f, .5f,0f, .1f,.2f, .5f,0f);
 	}
 	
 	static void drawArrow(Graphics2D g, int pixelSize, float scaling) {
@@ -276,7 +276,7 @@ public enum DefaultGlyph implements Glyph {
 	}
 	
 	static void mkArrowHead(VertexArray va){
-		va.setBuffer(0, 2,  -.2f,0f,  -.5f,-.3f,  .5f,0f, -.5,.3);
+		va.setBuffer(0, 2,  -.2f,0f,  -.5f,-.3f,  .5f,0f, -.5f,.3f);
 	}
 	
 	static void drawArrowHead(Graphics2D g, int pixelSize, float scaling) {
@@ -346,7 +346,7 @@ public enum DefaultGlyph implements Glyph {
 	}
 	
 	static void mkTriangle(VertexArray va){
-		va.setBuffer(0, 2,  -.5,-.5,  .5,-.5, 0,.5);
+		va.setBuffer(0, 2,  -.5f,-.5f,  .5f,-.5f, 0f,.5f);
 	}
 	
 	static void drawTriangle(Graphics2D g, int pixelSize, float scaling) {

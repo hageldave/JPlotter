@@ -6,11 +6,15 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.*;
 import hageldave.jplotter.renderers.*;
+import hageldave.jplotter.svg.SVGUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.w3c.dom.Document;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -61,20 +65,27 @@ public class PDFTest {
             curve.addCurve(new Point2D.Double(10, 20), new Point2D.Double(220, 30),
                     new Point2D.Double(50, 50), new Point2D.Double(60, 20)).setColor(Color.BLUE);
             curve.setStrokePattern(0xf0f0);
-            curve.setGlobalAlphaMultiplier(0.2);
+
+            curve.setGlobalSaturationMultiplier(0.2);
+            curve.setGlobalAlphaMultiplier(0.7);
             curve.setGlobalThicknessMultiplier(20);
             curvesRenderer.addItemToRender(curve);
 
-            // demonstrating line rendering
-            LinesRenderer linesRenderer = new LinesRenderer();
+            CurvesRenderer curveCont = new CurvesRenderer();
+            curveCont.addItemToRender(curve);
+
+            LinesRenderer lineContent = new LinesRenderer();
+            lineA.setGlobalSaturationMultiplier(0.8);
             lineA.setGlobalAlphaMultiplier(0.8);
             lineA.setGlobalThicknessMultiplier(7);
-            lineA.addSegment(new Point2D.Double(20, 20), new Point2D.Double(8000, 300)).setThickness(9, 9).setColor0(Color.BLUE).setColor1(Color.ORANGE);
-            linesRenderer.addItemToRender(lineA).addItemToRender(lineB);
+
+            lineA.addSegment(new Point2D.Double(20, 20), new Point2D.Double(90, 90)).setThickness(9, 9).setColor0(Color.BLUE).setColor1(Color.ORANGE);
+            lineContent.addItemToRender(lineA).addItemToRender(lineB);
 
             // demonstrating triangle rendering
             Triangles tri = new Triangles();
             tri.setGlobalAlphaMultiplier(0.8);
+            tri.setGlobalSaturationMultiplier(0.5);
             tri.addTriangle(new Point2D.Double(0,0), new Point2D.Double(50, 50),
                             new Point2D.Double(100, 60)).setColor0(Color.RED).setColor1(Color.BLUE)
                     .setColor2(Color.GREEN);
@@ -86,14 +97,27 @@ public class PDFTest {
             TrianglesRenderer trianglesRenderer = new TrianglesRenderer();
             trianglesRenderer.addItemToRender(tri);
 
-            // demonstrating point rendering
-            Points points = new Points(DefaultGlyph.TRIANGLE);
-            points.setGlobalAlphaMultiplier(0.4);
-            points.setGlobalScaling(2.4);
-            points.addPoint(new Point2D.Double(20, 20)).setColor(Color.RED).setScaling(1.9).setRotation(1.8).setScaling(5);
-            PointsRenderer pointsRenderer = new PointsRenderer();
-            pointsRenderer.setGlyphScaling(3);
-            pointsRenderer.addItemToRender(points);
+            tri.addQuad(new Rectangle2D.Double(30, 30, 100, 100));
+            TrianglesRenderer renderer2 = new TrianglesRenderer();
+            renderer2.addItemToRender(tri);
+
+            SplitScreenRenderer splitScreenRenderer = new SplitScreenRenderer();
+            splitScreenRenderer.setR1(renderer2).setR2(lineContent);
+            splitScreenRenderer.setVerticalSplit(true);
+            splitScreenRenderer.setDividerLocation(0.15);
+
+            ChainedRenderer chainedRenderer = new ChainedRenderer(lineContent, curveCont);
+
+            compr.addItemToRender(curve).addItemToRender(lineA).addItemToRender(tri).addItemToRender(lineB);
+
+            Points p = new Points(DefaultGlyph.CIRCLE_F);
+            p.setGlobalAlphaMultiplier(0.9);
+            p.setGlobalScaling(1.4);
+            p.setGlobalSaturationMultiplier(0.2);
+            p.addPoint(new Point2D.Double(20, 20)).setColor(Color.RED).setScaling(1.9).setRotation(1.8).setScaling(5);
+            PointsRenderer pr = new PointsRenderer();
+            pr.setGlyphScaling(3);
+            pr.addItemToRender(p);
 
             CompleteRenderer completeRenderer = new CompleteRenderer()
                     .addItemToRender(curve)
@@ -119,7 +143,7 @@ public class PDFTest {
             JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
             canvas.setRenderer(renderer);
             canvas.asComponent().setPreferredSize(new Dimension(400, 400));
-            canvas.asComponent().setBackground(Color.LIGHT_GRAY);
+            //canvas.asComponent().setBackground(Color.BLACK);
             frame.getContentPane().add(canvas.asComponent());
             frame.setTitle("PDF Test");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -135,6 +159,12 @@ public class PDFTest {
             // save file and choosing filename
             doc.save("pdf_test.pdf");
             doc.close();
+
+            Document doc2 = canvas.paintSVG();
+            SVGUtils.documentToXMLFile(doc2, new File("svgtest.svg"));
+            System.out.println("svg exported:");
+            System.out.println(SVGUtils.documentToXMLString(doc2));
+
         } finally {
             if (document != null) {
                 document.close();

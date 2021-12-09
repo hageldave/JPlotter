@@ -2,6 +2,7 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -43,20 +44,29 @@ public class Points implements Renderable {
 
 	public Glyph glyph;
 	protected VertexArray va;
-	protected boolean isDirty = true;
-	protected float globalScaling = 1f;
-	protected float globalAlphaMultiplier = 1f;
+	protected boolean isDirty;
+	protected DoubleSupplier globalScaling = ()->1.0;
+	protected DoubleSupplier globalAlphaMultiplier = ()->1.0;
+	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 	protected ArrayList<PointDetails> points = new ArrayList<>();
 	protected boolean hidden=false;
 	protected boolean useVertexRounding=false;
 	protected boolean isGLDoublePrecision = false;
 
+	
+	/**
+	 * Creates a new {@link Points} object which uses {@link DefaultGlyph#CIRCLE_F} for displaying its points.
+	 */
+	public Points() {
+		this(DefaultGlyph.CIRCLE_F);
+	}
+	
 	/**
 	 * Creates a new {@link Points} object which uses the specified {@link Glyph} for displaying its points.
 	 * @param glyph to be used for rendering single points
 	 */
 	public Points(Glyph glyph) {
-		this.glyph = glyph;
+		setGlyph(glyph);
 	}
 
 	/**
@@ -81,7 +91,6 @@ public class Points implements Renderable {
 	public void initGL() {
 		if(Objects.isNull(va)){
 			va = new VertexArray(4);
-			glyph.fillVertexArray(va);
 			updateGL(false);		
 		}
 	}
@@ -228,7 +237,18 @@ public class Points implements Renderable {
 	 * @return this for chaining
 	 */
 	public Points setGlobalScaling(double globalScaling) {
-		this.globalScaling = (float)globalScaling;
+		return setGlobalScaling(()->globalScaling);
+	}
+	
+	/**
+	 * Sets the global scaling parameter of this {@link Points} object.
+	 * The value will be multiplied with each point instance's scaling parameter when rendering.
+	 * The glyph will then be scaled by the factor {@code f = globalScaling * point.scaling * renderer.scaling}.
+	 * @param globalScaling of the points in this collection.
+	 * @return this for chaining
+	 */
+	public Points setGlobalScaling(DoubleSupplier globalScaling) {
+		this.globalScaling = globalScaling;
 		return this;
 	}
 
@@ -236,7 +256,7 @@ public class Points implements Renderable {
 	 * @return the global scaling factor of the points in this collection.
 	 */
 	public float getGlobalScaling() {
-		return globalScaling;
+		return (float)globalScaling.getAsDouble();
 	}
 
 	/**
@@ -247,7 +267,18 @@ public class Points implements Renderable {
 	 * @return this for chaining
 	 */
 	public Points setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
-		this.globalAlphaMultiplier = (float)globalAlphaMultiplier;
+		return setGlobalAlphaMultiplier(()->globalAlphaMultiplier);
+	}
+	
+	/**
+	 * Sets the global alpha multiplier parameter of this {@link Points} object.
+	 * The value will be multiplied with each points alpha color value when rendering.
+	 * The glyph will then be rendered with the opacity {@code alpha = globalAlphaMultiplier * point.alpha}.
+	 * @param globalAlphaMultiplier of the points in this collection
+	 * @return this for chaining
+	 */
+	public Points setGlobalAlphaMultiplier(DoubleSupplier globalAlphaMultiplier) {
+		this.globalAlphaMultiplier = globalAlphaMultiplier;
 		return this;
 	}
 
@@ -255,7 +286,35 @@ public class Points implements Renderable {
 	 * @return the global alpha multiplier of the points in this collection
 	 */
 	public float getGlobalAlphaMultiplier() {
-		return globalAlphaMultiplier;
+		return (float)globalAlphaMultiplier.getAsDouble();
+	}
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Points setGlobalSaturationMultiplier(DoubleSupplier saturation) {
+		this.globalSaturationMultiplier = saturation;
+		return this;
+	}
+
+	/**
+	 * Sets the saturation multiplier for this Renderable.
+	 * The effective saturation of the colors results form multiplication of
+	 * the respective color's saturation by this value.
+	 * @param saturation change of saturation, default is 1
+	 * @return this for chaining
+	 */
+	public Points setGlobalSaturationMultiplier(double saturation) {
+		return setGlobalSaturationMultiplier(() -> saturation);
+	}
+
+	/** @return the saturation multiplier of this renderable */
+	public float getGlobalSaturationMultiplier() {
+		return (float)globalSaturationMultiplier.getAsDouble();
 	}
 	
 	/**
@@ -538,5 +597,20 @@ public class Points implements Renderable {
 	public boolean isGLDoublePrecision() {
 		return isGLDoublePrecision;
 	}
+	
+	/**
+	 * Sets the glyph used to visually represent the points in this object.
+	 * @param glyph to use
+	 * @return this for chaining
+	 */
+	public Points setGlyph(Glyph glyph) {
+		this.glyph = glyph;
+		return this;
+	}
 
+	/** @return current glyph */
+	public Glyph getGlyph() {
+		return glyph;
+	}
+	
 }
