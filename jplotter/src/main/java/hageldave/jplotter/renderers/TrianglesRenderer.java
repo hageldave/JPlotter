@@ -391,7 +391,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			return;
 		}
 
-		float factor;
+		double factor;
 		int maxValue;
 
 		double translateX = Objects.isNull(view) ? 0:view.getX();
@@ -459,34 +459,20 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					maxY = Math.max(Math.max(Math.max(y0, y1), y2), maxY);
 				}
 			}
-
-			// calculate the factor/maxValue Attributes
-			// maybe there's an error: contourplot seems to be "too accurate"
-			if ((maxX-minX) > (maxY-minY))
-				factor = (float) ((Math.pow(2, 16)-1) / (maxX-minX));
-			else
-				factor = (float) ((Math.pow(2, 16)-1) / (maxY-minY));
-			maxValue = (int) ((Math.pow(2, 16)-1) / factor);
-
-			double shiftX = 0.0;
-			double shiftY = 0.0;
-
-			// calculate how much the content has to be shifted
-			for(Triangles tris : allTriangles){
-				for(TriangleDetails tri : tris.getTriangleDetails()) {
-					double x0,y0, x1,y1, x2,y2;
-					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
-
-					x0 *= factor; x1 *= factor; x2 *= factor;
-					y0 *= factor; y1 *= factor; y2 *= factor;
-
-					// check if one coordinate is negative
-					double triMinX = Math.min(Math.min(x0, x1), x2);
-					double triMinY = Math.min(Math.min(y0, y1), y2);
-					shiftX = Math.min(triMinX, shiftX);
-					shiftY = Math.min(triMinY, shiftY);
-				}
-			}
+			
+			/* The gouraud shading for triangle meshes expects integer valued coordinates
+			 * in range from [0 .. 2^16-1] (16 bits) which are then transformed to floating
+			 * point coordinates in range of [0,maxValue] (maxValue also integer valued). 
+			 * We want to choose maxValue in a way so that we get the highest level of precision 
+			 * for the 16 bits available per coordinate.
+			 * We already know that our triangle vertices are in range [minX,maxX] x [minY,maxY],
+			 * so we want to map the larger range (maxX-minX) or (maxY-minY) to 2^16-1
+			 * and scale our current coordinates accordingly (which will then be rescaled back
+			 * through the gouraud shading object by the PDF renderer).
+			 */
+			double range = Math.ceil(Math.max(maxX-minX, maxY-minY));
+			factor = 0xFFFF / range; // (2^16 -1) / range
+			maxValue = (int) range;
 
 			for(Triangles tris : allTriangles){
 				PDShadingType4 gouraudShading = new PDShadingType4(doc.getDocument().createCOSStream());
@@ -551,11 +537,11 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
 
-					// rescale x,y coordinates
+					// shift and rescale x,y coordinates
+					x0 -= minX; x1 -= minX; x2 -= minX;
+					y0 -= minY; y1 -= minY; y2 -= minY;
 					x0 *= factor; x1 *= factor; x2 *= factor;
 					y0 *= factor; y1 *= factor; y2 *= factor;
-					x0 -= shiftX; x1 -= shiftX; x2 -= shiftX;
-					y0 -= shiftY; y1 -= shiftY; y2 -= shiftY;
 
 					int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
 					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
@@ -580,7 +566,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				}
 
 				maskCS.saveGraphicsState();
-				maskCS.transform(new Matrix(1,0,0,1, (float) shiftX/factor, (float) shiftY/factor));
+				maskCS.transform(new Matrix(1,0,0,1, (float) minX, (float) minY));
 				maskCS.shadingFill(gouraudShadingMask);
 				maskCS.restoreGraphicsState();
 				mcosMask.close();
@@ -611,7 +597,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 
 				contentStream.saveGraphicsState();
 				contentStream.setGraphicsStateParameters(extendedGraphicsState);
-				contentStream.transform(new Matrix(1,0,0,1, (float) shiftX/factor, (float) shiftY/factor));
+				contentStream.transform(new Matrix(1,0,0,1, (float) minX, (float) minY));
 				contentStream.shadingFill(gouraudShading);
 				contentStream.restoreGraphicsState();
 
