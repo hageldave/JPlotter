@@ -594,6 +594,18 @@ public class BarRenderer implements Renderer {
             // add group labels
             if (i < groupSeparators.length - 1 && this.groupDescriptions.get(i) != null) {
                 Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1, this.textColor.getAsInt());
+
+                // truncating grouplabels if they're too large
+                if ((xNext-x) < groupLabel.getBounds().getWidth()) {
+                    int difference = (int) (groupLabel.getBounds().getWidth() - (xNext-x));
+                    String origString = groupLabel.getTextString();
+
+                    // prevent substracting more than the string is long
+                    int toSubstract = Math.min(difference, origString.length()-1);
+                    String truncatedString = origString.substring(0, origString.length()-toSubstract) + "...";
+                    groupLabel.setTextString(truncatedString);
+                }
+
                 groupLabel.setOrigin(new TranslatedPoint2D(barBorder, -groupLabel.getTextSize().getWidth() / 2,
                         -Math.round(groupLabel.getTextSize().getHeight() * 2) - 2.5));
                 // if shifting is enabled
@@ -761,6 +773,18 @@ public class BarRenderer implements Renderer {
             // add group labels
             if (i < groupSeparators.length - 1 && this.groupDescriptions.get(i) != null) {
                 Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1, this.textColor.getAsInt());
+
+                // truncating grouplabels if they're too large
+                if ((yNext-y) < groupLabel.getBounds().getWidth()) {
+                    int difference = (int) (groupLabel.getBounds().getWidth() - (yNext-y));
+                    String origString = groupLabel.getTextString();
+
+                    // prevent substracting more than the string is long
+                    int toSubstract = Math.min(difference, origString.length()-1);
+                    String truncatedString = origString.substring(0, origString.length()-toSubstract) + "...";
+                    groupLabel.setTextString(truncatedString);
+                }
+
                 groupLabel.setAngle(0.5 * Math.PI)
                         .setOrigin(new TranslatedPoint2D(barBorder, 0, -groupLabel.getTextSize().getWidth()/2));
                 xyCondTickMarkLabels.add(groupLabel);
