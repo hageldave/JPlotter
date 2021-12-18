@@ -36,7 +36,7 @@ import static hageldave.jplotter.renderables.BarGroup.BarStruct;
  * Each BarGroup contains a set of BarStructs which also hold a set of BarStacks.
  * The groups in the barchart are separated from each other by guides. The stacks of a struct are (like the name implies) stacked onto each other.
  * Therefore every BarStruct is always a set of BarStacks (with a minimum of one stack).
- *
+ * <p>
  * Depending on the BarRenderers orientation ({@link AlignmentConstants}), there is a label on the top or right.
  * The label helps to define and visualize the meaning of the value axis.
  * <p>
@@ -180,11 +180,11 @@ public class BarRenderer implements Renderer {
                 .addItemToRender(xyCondTicks)
                 .addItemToRender(xyCondGuides);
 
-        this.textColor = ()->getColorScheme().getColorText();
-        this.tickColor = ()->getColorScheme().getColor3();
-        this.guideColor = ()->getColorScheme().getColor4();
-        this.groupGuideColor = ()->getColorScheme().getColor4();
-        this.boundaryColor = ()->getColorScheme().getColor3();
+        this.textColor = () -> getColorScheme().getColorText();
+        this.tickColor = () -> getColorScheme().getColor3();
+        this.guideColor = () -> getColorScheme().getColor4();
+        this.groupGuideColor = () -> getColorScheme().getColor4();
+        this.boundaryColor = () -> getColorScheme().getColor3();
         updateColors();
     }
 
@@ -572,37 +572,37 @@ public class BarRenderer implements Renderer {
             }
             Point2D onaxis = new Point2D.Double(Math.round(x), coordsysAreaLB.getY());
             Point2D labelOrigin = new Point2D.Double((int) (onaxis.getX() - label.getTextSize().getWidth() / 2.0),
-                    (int) ( onaxis.getY() - 6 - label.getTextSize().getHeight() ) + 0.5);
+                    (int) (onaxis.getY() - 6 - label.getTextSize().getHeight()) + 0.5);
             label.setOrigin(labelOrigin);
             toShift.put(label, labelOrigin);
             xyCondTickMarkLabels.add(label);
         }
 
-        double rightBound=0;
+        double rightBound = 0;
         for (int i = 0; i < groupSeparators.length; i++) {
-            double x = (( groupSeparators[i] - coordinateView.getMinX() ) / coordinateView.getWidth()) * xAxisWidth;
+            double x = ((groupSeparators[i] - coordinateView.getMinX()) / coordinateView.getWidth()) * xAxisWidth;
             Point2D barBorder = new Point2D.Double(Math.round(x), coordsysAreaLB.getY());
             if (i != 0) {
                 xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, yAxisHeight)).setColor(groupGuideColor);
                 rightBound = barBorder.getX();
                 xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, 0, -12)).setColor(boundaryColor);
             }
-            double xNext = (( groupSeparators[i == groupSeparators.length - 1 ? i : i + 1] - coordinateView.getMinX() )
+            double xNext = ((groupSeparators[i == groupSeparators.length - 1 ? i : i + 1] - coordinateView.getMinX())
                     / coordinateView.getWidth()) * xAxisWidth;
-            barBorder = new Point2D.Double(Math.round((x + xNext)/2), coordsysAreaLB.getY() - 12);
+            barBorder = new Point2D.Double(Math.round((x + xNext) / 2), coordsysAreaLB.getY() - 12);
 
             // add group labels
             if (i < groupSeparators.length - 1 && this.groupDescriptions.get(i) != null) {
                 Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1, this.textColor.getAsInt());
 
                 // truncating grouplabels if they're too large
-                if ((xNext-x) < groupLabel.getBounds().getWidth()) {
-                    int difference = (int) (groupLabel.getBounds().getWidth() - (xNext-x));
+                if ((xNext - x) < groupLabel.getBounds().getWidth()) {
+                    int difference = (int) (groupLabel.getBounds().getWidth() - (xNext - x));
                     String origString = groupLabel.getTextString();
 
-                    // prevent substracting more than the string is long
-                    int toSubstract = Math.min(difference, origString.length()-1);
-                    String truncatedString = origString.substring(0, origString.length()-toSubstract) + "...";
+                    // prevent subtracting more than the string is long
+                    int toSubtract = Math.min(difference, origString.length() - 1);
+                    String truncatedString = origString.substring(0, origString.length() - toSubtract) + "...";
                     groupLabel.setTextString(truncatedString);
                 }
 
@@ -620,7 +620,7 @@ public class BarRenderer implements Renderer {
         // yaxis ticks
         for (int i = 0; i < yticks.length; i++) {
             // tick
-            double y = (( yticks[i] - coordinateView.getMinY() ) / coordinateView.getHeight()) * yAxisHeight;
+            double y = ((yticks[i] - coordinateView.getMinY()) / coordinateView.getHeight()) * yAxisHeight;
             Point2D onaxis = new TranslatedPoint2D(coordsysAreaLB, 0, Math.round(y));
             ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, -4, 0)).setColor(tickColor);
             // label
@@ -654,10 +654,10 @@ public class BarRenderer implements Renderer {
         // setup legend areas
         if (Objects.nonNull(legendRight)) {
             legendRightViewPort.setBounds(
-                    (int) ( yAxisLabelText.getOrigin().getX() + yAxisLabelText.getTextSize().getHeight() + 4),
+                    (int) (yAxisLabelText.getOrigin().getX() + yAxisLabelText.getTextSize().getHeight() + 4),
                     paddingBot,
                     (legendRightWidth - paddingRight),
-                    (int) ( coordsysAreaRT.getY() - paddingBot )
+                    (int) (coordsysAreaRT.getY() - paddingBot)
             );
         } else {
             legendRightViewPort.setBounds(0, 0, 0, 0);
@@ -666,7 +666,7 @@ public class BarRenderer implements Renderer {
             legendBottomViewPort.setBounds(
                     (int) coordsysAreaLB.getX(),
                     0,
-                    (int) ( coordsysAreaLB.distance(coordsysAreaRB) ),
+                    (int) (coordsysAreaLB.distance(coordsysAreaRB)),
                     legendBottomHeight
             );
         } else {
@@ -678,7 +678,7 @@ public class BarRenderer implements Renderer {
     // The layouting algorithm for the horizontal orientation of the barchart.
     protected void setupLayoutHorizontal() {
         // place new label positioning somewhere here
-        Pair<double[],String[]> xticksAndLabels = tickMarkGenerator.genTicksAndLabels(
+        Pair<double[], String[]> xticksAndLabels = tickMarkGenerator.genTicksAndLabels(
                 coordinateView.getMinX(),
                 coordinateView.getMaxX(),
                 5,
@@ -691,7 +691,7 @@ public class BarRenderer implements Renderer {
         String[] xticklabels = new String[barcount];
         this.xticks = new double[barcount];
         this.yticks = new double[barcount];
-        double[] groupSeparators = new double[groupcount+1];
+        double[] groupSeparators = new double[groupcount + 1];
 
         groupDescriptions = groupedBars.stream().map(BarGroup::getLabel).collect(Collectors.toList());
 
@@ -713,8 +713,8 @@ public class BarRenderer implements Renderer {
         int maxTickLabelWidth = calcMaxTickWidth(0, yticklabels, xticklabels);
         int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
         int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style).getBounds().height;
-        int legendRightW = Objects.nonNull(legendRight) ? legendRightWidth+4:0;
-        int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
+        int legendRightW = Objects.nonNull(legendRight) ? legendRightWidth + 4 : 0;
+        int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight + 4 : 0;
 
         // move coordwindow origin so that labels have enough display space
         coordsysAreaLB.x[0] = maxTickLabelWidth + paddingLeft + 10;
@@ -725,8 +725,8 @@ public class BarRenderer implements Renderer {
         }
 
         // move opposing corner of coordwindow to have enough display space
-        coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW-4;
-        coordsysAreaRT.y[0] = viewportheight-paddingTop-maxLabelHeight-4;
+        coordsysAreaRT.x[0] = viewportwidth - paddingRight - maxLabelHeight - legendRightW - 4;
+        coordsysAreaRT.y[0] = viewportheight - paddingTop - maxLabelHeight - 4;
 
         // dispose of old stuff (moved to top)
         clearLabelRenderer();
@@ -736,108 +736,108 @@ public class BarRenderer implements Renderer {
         double yAxisHeight = coordsysAreaLB.distance(coordsysAreaLT);
 
         // yaxis ticks
-        for(int i=0; i<yticks.length; i++){
+        for (int i = 0; i < yticks.length; i++) {
             // tick
-            double y = ((yticks[i]-coordinateView.getMinY())/coordinateView.getHeight()) * yAxisHeight;
+            double y = ((yticks[i] - coordinateView.getMinY()) / coordinateView.getHeight()) * yAxisHeight;
             // barticks
-            double yBottom = ((yticks[i < yticks.length-1 ? i+1 : i]-(barSize/2)-coordinateView.getMinY())
-                    /coordinateView.getHeight())*yAxisHeight;
-            double yTop = ((yticks[i]+(barSize/2)-coordinateView.getMinY())/coordinateView.getHeight()) * yAxisHeight;
+            double yBottom = ((yticks[i < yticks.length - 1 ? i + 1 : i] - (barSize / 2) - coordinateView.getMinY())
+                    / coordinateView.getHeight()) * yAxisHeight;
+            double yTop = ((yticks[i] + (barSize / 2) - coordinateView.getMinY()) / coordinateView.getHeight()) * yAxisHeight;
 
             Point2D onaxis = new TranslatedPoint2D(new Point2D.Double(coordsysAreaLB.getX(), 0), 0, Math.round(y));
             // create double ticks
-            Point2D barBorder = new TranslatedPoint2D(new Point2D.Double(coordsysAreaLB.getX(), 0), 0, Math.round((yTop + yBottom)/2));
-            if (i < yticks.length-1) {
+            Point2D barBorder = new TranslatedPoint2D(new Point2D.Double(coordsysAreaLB.getX(), 0), 0, Math.round((yTop + yBottom) / 2));
+            if (i < yticks.length - 1) {
                 xyCondTicks.addSegment(barBorder, new TranslatedPoint2D(barBorder, -6, 0)).setColor(boundaryColor);
             }
 
             // label
             Text label = new Text(yticklabels[i], tickfontSize, style, this.textColor.getAsInt());
             Dimension textSize = label.getTextSize();
-            label.setOrigin(new TranslatedPoint2D(onaxis, -7-textSize.getWidth(), -Math.round(textSize.getHeight()/2.0)+0.5));
+            label.setOrigin(new TranslatedPoint2D(onaxis, -7 - textSize.getWidth(), -Math.round(textSize.getHeight() / 2.0) + 0.5));
             xyCondTickMarkLabels.add(label);
         }
 
         double upperBound = 0;
-        for (int i=0; i<groupSeparators.length; i++) {
-            double y = ((groupSeparators[i]-coordinateView.getMinY())/coordinateView.getHeight())*yAxisHeight;
+        for (int i = 0; i < groupSeparators.length; i++) {
+            double y = ((groupSeparators[i] - coordinateView.getMinY()) / coordinateView.getHeight()) * yAxisHeight;
             Point2D barBorder = new TranslatedPoint2D(new Point2D.Double(coordsysAreaLB.getX(), 0), 0, Math.round(y));
             if (i != 0) {
                 xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, xAxisWidth, 0)).setColor(groupGuideColor);
                 upperBound = barBorder.getY();
                 xyCondGuides.addSegment(barBorder, new TranslatedPoint2D(barBorder, -12, 0)).setColor(boundaryColor);
             }
-            double yNext = ((groupSeparators[i == groupSeparators.length - 1 ? i : i + 1] - coordinateView.getMinY() )
-                    / coordinateView.getHeight())*yAxisHeight;
-            barBorder = new Point2D.Double(20, Math.round((y + yNext)/2));
+            double yNext = ((groupSeparators[i == groupSeparators.length - 1 ? i : i + 1] - coordinateView.getMinY())
+                    / coordinateView.getHeight()) * yAxisHeight;
+            barBorder = new Point2D.Double(20, Math.round((y + yNext) / 2));
             // add group labels
             if (i < groupSeparators.length - 1 && this.groupDescriptions.get(i) != null) {
                 Text groupLabel = new Text(this.groupDescriptions.get(i), tickfontSize, 1, this.textColor.getAsInt());
 
                 // truncating grouplabels if they're too large
-                if ((yNext-y) < groupLabel.getBounds().getWidth()) {
-                    int difference = (int) (groupLabel.getBounds().getWidth() - (yNext-y));
+                if ((yNext - y) < groupLabel.getBounds().getWidth()) {
+                    int difference = (int) (groupLabel.getBounds().getWidth() - (yNext - y));
                     String origString = groupLabel.getTextString();
 
-                    // prevent substracting more than the string is long
-                    int toSubstract = Math.min(difference, origString.length()-1);
-                    String truncatedString = origString.substring(0, origString.length()-toSubstract) + "...";
+                    // prevent subtracting more than the string is long
+                    int toSubtract = Math.min(difference, origString.length() - 1);
+                    String truncatedString = origString.substring(0, origString.length() - toSubtract) + "...";
                     groupLabel.setTextString(truncatedString);
                 }
 
                 groupLabel.setAngle(0.5 * Math.PI)
-                        .setOrigin(new TranslatedPoint2D(barBorder, 0, -groupLabel.getTextSize().getWidth()/2));
+                        .setOrigin(new TranslatedPoint2D(barBorder, 0, -groupLabel.getTextSize().getWidth() / 2));
                 xyCondTickMarkLabels.add(groupLabel);
             }
         }
 
 
         // xaxis ticks
-        for(int i=0; i<xticks.length; i++){
+        for (int i = 0; i < xticks.length; i++) {
             // tick
-            double m = (xticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
-            double x = coordsysAreaLB.getX()+m*xAxisWidth;
-            Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
-            ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
+            double m = (xticks[i] - coordinateView.getMinX()) / coordinateView.getWidth();
+            double x = coordsysAreaLB.getX() + m * xAxisWidth;
+            Point2D onaxis = new Point2D.Double(Math.round(x), coordsysAreaLB.getY());
+            ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, -4)).setColor(tickColor);
             // label
             Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor.getAsInt());
             Dimension textSize = label.getTextSize();
             label.setOrigin(new Point2D.Double(
-                    (int)(onaxis.getX()-textSize.getWidth()/2.0),
-                    (int)(onaxis.getY()-6-textSize.getHeight())+0.5));
+                    (int) (onaxis.getX() - textSize.getWidth() / 2.0),
+                    (int) (onaxis.getY() - 6 - textSize.getHeight()) + 0.5));
 
-            if (m*xAxisWidth < textSize.width) {
+            if (m * xAxisWidth < textSize.width) {
                 label.setOrigin(new Point2D.Double(
-                        (int) ( onaxis.getX() - textSize.getWidth() / 2.0 ),
-                        (int) ( onaxis.getY() - 6 - textSize.getHeight() ) - 8.5));
+                        (int) (onaxis.getX() - textSize.getWidth() / 2.0),
+                        (int) (onaxis.getY() - 6 - textSize.getHeight()) - 8.5));
             }
             tickMarkLabels.add(label);
             guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, upperBound)).setColor(guideColor);
         }
 
         setupBoundaries(guides, xAxisWidth, upperBound);
-        for(Text txt: tickMarkLabels)
+        for (Text txt : tickMarkLabels)
             preContentTextR.addItemToRender(txt);
         for (Text txt : xyCondTickMarkLabels)
             xyCondBoundsTextR.addItemToRender(txt);
         setupXAxisLabel(xAxisWidth);
 
         // setup legend areas
-        if(Objects.nonNull(legendRight)){
+        if (Objects.nonNull(legendRight)) {
             legendRightViewPort.setBounds(
-                    (int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4),
+                    (int) (yAxisLabelText.getOrigin().getX() + yAxisLabelText.getTextSize().getHeight() + 4),
                     paddingBot,
-                    legendRightWidth-paddingRight,
-                    (int)(coordsysAreaRT.getY()-paddingBot)
+                    legendRightWidth - paddingRight,
+                    (int) (coordsysAreaRT.getY() - paddingBot)
             );
         } else {
             legendRightViewPort.setBounds(0, 0, 0, 0);
         }
-        if(Objects.nonNull(legendBottom)){
+        if (Objects.nonNull(legendBottom)) {
             legendBottomViewPort.setBounds(
-                    (int)coordsysAreaLB.getX(),
+                    (int) coordsysAreaLB.getX(),
                     paddingBot,
-                    (int)(coordsysAreaLB.distance(coordsysAreaRB)),
+                    (int) (coordsysAreaLB.distance(coordsysAreaRB)),
                     legendBottomHeight
             );
         } else {
@@ -899,11 +899,11 @@ public class BarRenderer implements Renderer {
 
     // calculates max tick width
     protected int calcMaxTickWidth(int maxTickLabelWidth, String[] yticklabels, String[] xticklabels) {
-        for(String label:yticklabels){
+        for (String label : yticklabels) {
             int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
             maxTickLabelWidth = Math.max(maxTickLabelWidth, labelW);
         }
-        for(String label:xticklabels){
+        for (String label : xticklabels) {
             int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
             maxTickLabelWidth = Math.max(maxTickLabelWidth, labelW);
         }
@@ -912,7 +912,18 @@ public class BarRenderer implements Renderer {
 
     // sets the label on the y axis
     protected void setupYAxisLabel(final double yAxisHeight) {
-        yAxisLabelText.setTextString(getyAxisLabel());
+        int coordHeight = (int) (coordsysAreaRT.getY() - coordsysAreaRB.getY());
+        int labelWidth = (int) CharacterAtlas.boundsForText(getyAxisLabel().length(), 13, Font.PLAIN).getWidth();
+
+        // shorten Label before displaying to prevent overflow
+        String shortenedLabel = getyAxisLabel();
+        if (labelWidth > coordHeight) {
+            int toSubtract = labelWidth - coordHeight;
+            toSubtract = (int) (toSubtract / CharacterAtlas.boundsForText(1, 13, Font.PLAIN).getWidth());
+            toSubtract = Math.min(toSubtract, getyAxisLabel().length() - 1);
+            shortenedLabel = shortenedLabel.substring(0, shortenedLabel.length() - toSubtract) + "...";
+        }
+        yAxisLabelText.setTextString(shortenedLabel);
         yAxisLabelText.setAngle(-(float) Math.PI / 2);
         yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight / 2 + yAxisLabelText.getTextSize().width / 2));
     }
@@ -920,7 +931,18 @@ public class BarRenderer implements Renderer {
     // sets the label on the x axis
     protected void setupXAxisLabel(final double xAxisWidth) {
         // axis labels
-        xAxisLabelText.setTextString(getxAxisLabel());
+        int coordWidth = (int) (coordsysAreaRT.getX() - coordsysAreaLT.getX());
+        int labelWidth = (int) CharacterAtlas.boundsForText(getxAxisLabel().length(), 13, Font.PLAIN).getWidth();
+
+        // shorten Label before displaying to prevent overflow
+        String shortenedLabel = getxAxisLabel();
+        if (labelWidth > coordWidth) {
+            int toSubtract = labelWidth - coordWidth;
+            toSubtract = (int) (toSubtract / CharacterAtlas.boundsForText(1, 13, Font.PLAIN).getWidth());
+            toSubtract = Math.min(toSubtract, getxAxisLabel().length() - 1);
+            shortenedLabel = shortenedLabel.substring(0, shortenedLabel.length() - toSubtract) + "...";
+        }
+        xAxisLabelText.setTextString(shortenedLabel);
         xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth / 2 - xAxisLabelText.getTextSize().width / 2, 4));
     }
 
@@ -929,7 +951,7 @@ public class BarRenderer implements Renderer {
         // x axis
         guides.addSegment(new Point2D.Double(coordsysAreaLB.getX() - 14, coordsysAreaLB.getY()),
                 new TranslatedPoint2D(coordsysAreaLB, xAxisWidth, 0)).setColor(boundaryColor);
-        //y axis
+        // y axis
         guides.addSegment(new Point2D.Double(coordsysAreaLB.getX(), coordsysAreaLB.getY() - 14),
                 new TranslatedPoint2D(coordsysAreaLB, 0, yAxisHeight)).setColor(boundaryColor);
     }
@@ -938,9 +960,9 @@ public class BarRenderer implements Renderer {
     protected Triangles makeBar(final double startPosition, final double row, final BarStack struct, final BarStruct stack) {
         Triangles bar = new Triangles();
         if (this.alignment == AlignmentConstants.HORIZONTAL) {
-            bar.addQuad(new Rectangle2D.Double(startPosition, row - ( barSize / 2 ), stack.length, barSize));
+            bar.addQuad(new Rectangle2D.Double(startPosition, row - (barSize / 2), stack.length, barSize));
         } else if (this.alignment == AlignmentConstants.VERTICAL) {
-            bar.addQuad(new Rectangle2D.Double(row - ( barSize / 2 ), startPosition, barSize, stack.length));
+            bar.addQuad(new Rectangle2D.Double(row - (barSize / 2), startPosition, barSize, stack.length));
         }
         bar.setGlobalAlphaMultiplier(struct.getGlobalAlphaMultiplier());
         bar.setGlobalSaturationMultiplier(struct.getGlobalSaturationMultiplier());
@@ -1051,7 +1073,7 @@ public class BarRenderer implements Renderer {
             int viewPortH = (int) coordsysAreaLB.distance(coordsysAreaLT);
             GL11.glViewport(viewPortX, viewPortY, viewPortW, viewPortH);
             if (content instanceof AdaptableView) {
-                ( (AdaptableView) content ).setView(coordinateView);
+                ((AdaptableView) content).setView(coordinateView);
             }
             content.render(viewPortX, viewPortY, viewPortW, viewPortH);
             if (this.alignment == AlignmentConstants.VERTICAL) {
@@ -1092,6 +1114,10 @@ public class BarRenderer implements Renderer {
         if (!isEnabled()) {
             return;
         }
+
+        // TODO: maybe this has to be passed to renderFallback
+        //System.out.println(w);
+        //System.out.println(h);
         currentViewPort.setRect(0, 0, w, h);
         if (isDirty || viewportwidth != w || viewportheight != h) {
             // update axes
@@ -1109,7 +1135,7 @@ public class BarRenderer implements Renderer {
             int viewPortW = (int) coordsysAreaLB.distance(coordsysAreaRB);
             int viewPortH = (int) coordsysAreaLB.distance(coordsysAreaLT);
             if (content instanceof AdaptableView) {
-                ( (AdaptableView) content ).setView(coordinateView);
+                ((AdaptableView) content).setView(coordinateView);
             }
             // create viewport graphics
             Graphics2D g_ = (Graphics2D) g.create(viewPortX, viewPortY, viewPortW, viewPortH);
@@ -1163,7 +1189,7 @@ public class BarRenderer implements Renderer {
             int viewPortW = (int) coordsysAreaLB.distance(coordsysAreaRB);
             int viewPortH = (int) coordsysAreaLB.distance(coordsysAreaLT);
             if (content instanceof AdaptableView) {
-                ( (AdaptableView) content ).setView(coordinateView);
+                ((AdaptableView) content).setView(coordinateView);
             }
             // create a new group for the content
             Element contentGroup = SVGUtils.createSVGElement(doc, "g");
@@ -1176,7 +1202,7 @@ public class BarRenderer implements Renderer {
             clip.appendChild(SVGUtils.createSVGRect(doc, 0, 0, viewPortW, viewPortH));
             defs.appendChild(clip);
             // transform the group according to the viewport position and clip it
-            contentGroup.setAttributeNS(null, "transform", "translate(" + ( viewPortX ) + "," + ( viewPortY ) + ")");
+            contentGroup.setAttributeNS(null, "transform", "translate(" + (viewPortX) + "," + (viewPortY) + ")");
             contentGroup.setAttributeNS(null, "clip-path", "url(#" + clipDefID + ")");
             // render the content into the group
             content.renderSVG(doc, contentGroup, viewPortW, viewPortH);
@@ -1193,13 +1219,13 @@ public class BarRenderer implements Renderer {
 
             if (this.alignment == AlignmentConstants.VERTICAL) {
                 // transform the group according to the viewport position and clip it
-                xyCondContentGroup.setAttributeNS(null, "transform", "translate(" + ( viewPortX ) + "," + ( 0 ) + ")");
+                xyCondContentGroup.setAttributeNS(null, "transform", "translate(" + (viewPortX) + "," + (0) + ")");
                 xyCondContentGroup.setAttributeNS(null, "clip-path", "url(#" + xyCondClipDefID + ")");
                 xyCondBoundsTextR.renderSVG(doc, xyCondContentGroup, viewPortW, h);
                 xyCondBoundsLinesR.renderSVG(doc, xyCondContentGroup, viewPortW, h);
             } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
                 // transform the group according to the viewport position and clip it
-                xyCondContentGroup.setAttributeNS(null, "transform", "translate(" + ( 0 ) + "," + ( viewPortY ) + ")");
+                xyCondContentGroup.setAttributeNS(null, "transform", "translate(" + (0) + "," + (viewPortY) + ")");
                 xyCondContentGroup.setAttributeNS(null, "clip-path", "url(#" + xyCondClipDefID + ")");
                 xyCondBoundsTextR.renderSVG(doc, xyCondContentGroup, w, viewPortH);
                 xyCondBoundsLinesR.renderSVG(doc, xyCondContentGroup, w, viewPortH);
@@ -1220,7 +1246,7 @@ public class BarRenderer implements Renderer {
             clip.appendChild(SVGUtils.createSVGRect(doc, 0, 0, legendRightViewPort.width, legendRightViewPort.height));
             defs.appendChild(clip);
             // transform the group according to the viewport position and clip it
-            legendGroup.setAttributeNS(null, "transform", "translate(" + ( legendRightViewPort.x ) + "," + ( legendRightViewPort.y ) + ")");
+            legendGroup.setAttributeNS(null, "transform", "translate(" + (legendRightViewPort.x) + "," + (legendRightViewPort.y) + ")");
             legendGroup.setAttributeNS(null, "clip-path", "url(#" + clipDefID + ")");
             // render the content into the group
             legendRight.renderSVG(doc, legendGroup, legendRightViewPort.width, legendRightViewPort.height);
@@ -1237,7 +1263,7 @@ public class BarRenderer implements Renderer {
             clip.appendChild(SVGUtils.createSVGRect(doc, 0, 0, legendBottomViewPort.width, legendBottomViewPort.height));
             defs.appendChild(clip);
             // transform the group according to the viewport position and clip it
-            legendGroup.setAttributeNS(null, "transform", "translate(" + ( legendBottomViewPort.x ) + "," + ( legendBottomViewPort.y ) + ")");
+            legendGroup.setAttributeNS(null, "transform", "translate(" + (legendBottomViewPort.x) + "," + (legendBottomViewPort.y) + ")");
             legendGroup.setAttributeNS(null, "clip-path", "url(#" + clipDefID + ")");
             // render the content into the group
             legendBottom.renderSVG(doc, legendGroup, legendBottomViewPort.width, legendBottomViewPort.height);
@@ -1257,7 +1283,7 @@ public class BarRenderer implements Renderer {
             int viewPortW = (int) coordsysAreaLB.distance(coordsysAreaRB);
             int viewPortH = (int) coordsysAreaLB.distance(coordsysAreaLT);
             if (content instanceof AdaptableView) {
-                ( (AdaptableView) content ).setView(coordinateView);
+                ((AdaptableView) content).setView(coordinateView);
             }
             // render the content into the group
             content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
@@ -1449,8 +1475,8 @@ public class BarRenderer implements Renderer {
         double y = point.getY() - coordSysView.getMinY();
         x /= coordSysView.getWidth();
         y /= coordSysView.getHeight();
-        x = x * ( coordSysArea.getWidth() - 1 ) + coordSysArea.getMinX();
-        y = y * ( coordSysArea.getHeight() - 1 ) + coordSysArea.getMinY();
+        x = x * (coordSysArea.getWidth() - 1) + coordSysArea.getMinX();
+        y = y * (coordSysArea.getHeight() - 1) + coordSysArea.getMinY();
         return new Point2D.Double(x, y);
     }
 
@@ -1524,33 +1550,33 @@ public class BarRenderer implements Renderer {
         double maxY = 1;
         if (this.alignment == AlignmentConstants.HORIZONTAL) {
             minX = groupedBars.parallelStream()
-                    .map(e->e.getBounds(this.alignment))
+                    .map(e -> e.getBounds(this.alignment))
                     .mapToDouble(RectangularShape::getMinX)
                     .min().orElse(0);
             maxY = groupedBars.parallelStream()
-                    .map(e->e.getBounds(this.alignment))
+                    .map(e -> e.getBounds(this.alignment))
                     .mapToDouble(RectangularShape::getHeight)
                     .sum();
             maxX = groupedBars.parallelStream()
-                    .map(e->e.getBounds(this.alignment))
+                    .map(e -> e.getBounds(this.alignment))
                     .mapToDouble(RectangularShape::getWidth)
                     .max().orElse(0);
-            return new Rectangle2D.Double(minX, -barSize, maxX-minX, maxY + barSize*2);
+            return new Rectangle2D.Double(minX, -barSize, maxX - minX, maxY + barSize * 2);
         } else if (this.alignment == AlignmentConstants.VERTICAL) {
             minY = groupedBars.parallelStream()
-                    .map(e->e.getBounds(AlignmentConstants.VERTICAL))
+                    .map(e -> e.getBounds(AlignmentConstants.VERTICAL))
                     .mapToDouble(RectangularShape::getMinY)
                     .min().orElse(0);
             maxX = groupedBars.parallelStream()
-                    .map(e->e.getBounds(AlignmentConstants.VERTICAL))
+                    .map(e -> e.getBounds(AlignmentConstants.VERTICAL))
                     .mapToDouble(RectangularShape::getWidth)
                     .sum();
             maxY = groupedBars.parallelStream()
-                    .map(e->e.getBounds(AlignmentConstants.VERTICAL))
+                    .map(e -> e.getBounds(AlignmentConstants.VERTICAL))
                     .mapToDouble(RectangularShape::getHeight)
                     .max().orElse(0);
-            return new Rectangle2D.Double(-barSize, minY, maxX + barSize*2, maxY - minY);
+            return new Rectangle2D.Double(-barSize, minY, maxX + barSize * 2, maxY - minY);
         }
-        return new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+        return new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY);
     }
 }
