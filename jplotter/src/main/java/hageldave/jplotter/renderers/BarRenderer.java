@@ -601,8 +601,15 @@ public class BarRenderer implements Renderer {
                     String origString = groupLabel.getTextString();
 
                     // prevent subtracting more than the string is long
-                    int toSubtract = Math.min(difference, origString.length() - 1);
-                    String truncatedString = origString.substring(0, origString.length() - toSubtract) + "...";
+                    int toSubtract = difference;
+                    toSubtract = (int) (toSubtract / CharacterAtlas.boundsForText(1, tickfontSize, Font.PLAIN).getWidth());
+                    toSubtract = Math.min(toSubtract, origString.length());
+                    String truncatedString;
+                    if ((origString.length() - toSubtract) > 4) {
+                        truncatedString = origString.substring(0, origString.length() - toSubtract - 4) + "...";
+                    } else {
+                        truncatedString = origString.substring(0, origString.length() - toSubtract) + "...";
+                    }
                     groupLabel.setTextString(truncatedString);
                 }
 
@@ -780,8 +787,16 @@ public class BarRenderer implements Renderer {
                     String origString = groupLabel.getTextString();
 
                     // prevent subtracting more than the string is long
-                    int toSubtract = Math.min(difference, origString.length() - 1);
-                    String truncatedString = origString.substring(0, origString.length() - toSubtract) + "...";
+                    int toSubtract = difference;
+                    toSubtract = (int) (toSubtract / CharacterAtlas.boundsForText(1, tickfontSize, Font.PLAIN).getWidth());
+                    toSubtract = Math.min(toSubtract, origString.length());
+                    String truncatedString;
+                    if ((origString.length() - toSubtract) > 4) {
+                        truncatedString = origString.substring(0, origString.length() - toSubtract - 4) + "...";
+                    } else {
+                        truncatedString = origString.substring(0, origString.length() - toSubtract) + "...";
+                    }
+
                     groupLabel.setTextString(truncatedString);
                 }
 
