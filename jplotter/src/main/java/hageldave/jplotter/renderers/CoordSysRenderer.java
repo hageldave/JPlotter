@@ -527,10 +527,34 @@ public class CoordSysRenderer implements Renderer {
 		for(Text txt: tickMarkLabels){
 			preContentTextR.addItemToRender(txt);
 		}
-		// axis labels
-		xAxisLabelText.setTextString(getxAxisLabel());
+
+		double characterSize = CharacterAtlas.boundsForText(1, 13, Font.PLAIN).getWidth();
+
+		// x axis label
+		int xLabelWidth = (int) CharacterAtlas.boundsForText(getxAxisLabel().length(), 13, Font.PLAIN).getWidth();
+		String shortenedXLabel = getxAxisLabel();
+		// do removing stuff only if the label is "bigger" than the coordsys
+		if (xLabelWidth > xAxisWidth) {
+			// remove the area of the label that is longer than the coordsys
+			int toRemove = (int) ((xLabelWidth - xAxisWidth) / characterSize);
+			// prevent removing more characters than the label is long
+			toRemove = Math.min(toRemove, getxAxisLabel().length() - 1);
+			// remove the overflowing characters from the label
+			shortenedXLabel = shortenedXLabel.substring(0, shortenedXLabel.length() - toRemove) + "...";
+		}
+
+		// y axis label (equivalent to x axis)
+		int yLabelHeight = (int) CharacterAtlas.boundsForText(getyAxisLabel().length(), 13, Font.PLAIN).getWidth();
+		String shortenedYLabel = getyAxisLabel();
+		if (yLabelHeight > yAxisHeight) {
+			int toRemove = (int) ((yLabelHeight - yAxisHeight) / characterSize);
+			toRemove = Math.min(toRemove, getyAxisLabel().length() - 1);
+			shortenedYLabel = shortenedYLabel.substring(0, shortenedYLabel.length() - toRemove) + "...";
+		}
+
+		xAxisLabelText.setTextString(shortenedXLabel);
 		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
-		yAxisLabelText.setTextString(getyAxisLabel());
+		yAxisLabelText.setTextString(shortenedYLabel);
 		yAxisLabelText.setAngle(-(float)Math.PI/2);
 		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 + yAxisLabelText.getTextSize().width/2));
 
