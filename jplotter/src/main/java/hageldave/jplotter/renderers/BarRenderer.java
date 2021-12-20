@@ -518,6 +518,8 @@ public class BarRenderer implements Renderer {
         xyCondTicks.removeAllSegments();
         xyCondGuides.removeAllSegments();
 
+        double grouplblCharSize = CharacterAtlas.boundsForText(1, tickfontSize, Font.PLAIN).getWidth();
+
         setupBars(groupSeparators, xticklabels, xticks);
         // find maximum length of y axis labels
         int maxTickLabelWidth = calcMaxTickWidth(0, yticklabels, xticklabels);
@@ -601,14 +603,13 @@ public class BarRenderer implements Renderer {
                     String origString = groupLabel.getTextString();
 
                     // prevent subtracting more than the string is long
-                    int toSubtract = difference;
-                    toSubtract = (int) (toSubtract / CharacterAtlas.boundsForText(1, tickfontSize, Font.PLAIN).getWidth());
-                    toSubtract = Math.min(toSubtract, origString.length());
+                    int toRemove = (int) (difference / grouplblCharSize);
+                    toRemove = Math.min(toRemove, origString.length());
                     String truncatedString;
-                    if ((origString.length() - toSubtract) > 4) {
-                        truncatedString = origString.substring(0, origString.length() - toSubtract - 4) + "...";
+                    if ((origString.length() - toRemove) > 4) {
+                        truncatedString = origString.substring(0, origString.length() - toRemove - 4) + "...";
                     } else {
-                        truncatedString = origString.substring(0, origString.length() - toSubtract) + "...";
+                        truncatedString = origString.charAt(0) + "...";
                     }
                     groupLabel.setTextString(truncatedString);
                 }
@@ -716,6 +717,8 @@ public class BarRenderer implements Renderer {
 
         setupBars(groupSeparators, yticklabels, yticks);
 
+        double grouplblCharSize = CharacterAtlas.boundsForText(1, tickfontSize, Font.PLAIN).getWidth();
+
         // find maximum length of y axis labels
         int maxTickLabelWidth = calcMaxTickWidth(0, yticklabels, xticklabels);
         int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
@@ -787,16 +790,14 @@ public class BarRenderer implements Renderer {
                     String origString = groupLabel.getTextString();
 
                     // prevent subtracting more than the string is long
-                    int toSubtract = difference;
-                    toSubtract = (int) (toSubtract / CharacterAtlas.boundsForText(1, tickfontSize, Font.PLAIN).getWidth());
-                    toSubtract = Math.min(toSubtract, origString.length());
+                    int toRemove = (int) (difference / grouplblCharSize);
+                    toRemove = Math.min(toRemove, origString.length()-1);
                     String truncatedString;
-                    if ((origString.length() - toSubtract) > 4) {
-                        truncatedString = origString.substring(0, origString.length() - toSubtract - 4) + "...";
+                    if ((origString.length() - toRemove) > 4) {
+                        truncatedString = origString.substring(0, origString.length() - toRemove - 4) + "...";
                     } else {
-                        truncatedString = origString.substring(0, origString.length() - toSubtract) + "...";
+                        truncatedString = origString.charAt(0) + "...";
                     }
-
                     groupLabel.setTextString(truncatedString);
                 }
 
