@@ -927,38 +927,36 @@ public class BarRenderer implements Renderer {
 
     // sets the label on the y axis
     protected void setupYAxisLabel(final double yAxisHeight) {
-        int coordHeight = (int) (coordsysAreaRT.getY() - coordsysAreaRB.getY());
+        double characterSize = CharacterAtlas.boundsForText(1, 13, Font.PLAIN).getWidth();
         int labelWidth = (int) CharacterAtlas.boundsForText(getyAxisLabel().length(), 13, Font.PLAIN).getWidth();
 
         // shorten Label before displaying to prevent overflow
         String shortenedLabel = getyAxisLabel();
-        if (labelWidth > coordHeight) {
-            int toSubtract = labelWidth - coordHeight;
-            toSubtract = (int) (toSubtract / CharacterAtlas.boundsForText(1, 13, Font.PLAIN).getWidth());
-            toSubtract = Math.min(toSubtract, getyAxisLabel().length() - 1);
-            shortenedLabel = shortenedLabel.substring(0, shortenedLabel.length() - toSubtract) + "...";
+        if (labelWidth > yAxisHeight) {
+            int toRemove = (int) ((labelWidth - yAxisHeight) / characterSize);
+            toRemove = Math.min(toRemove, getyAxisLabel().length() - 1);
+            shortenedLabel = shortenedLabel.substring(0, shortenedLabel.length() - toRemove) + "...";
         }
         yAxisLabelText.setTextString(shortenedLabel);
         yAxisLabelText.setAngle(-(float) Math.PI / 2);
-        yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight / 2 + yAxisLabelText.getTextSize().width / 2));
+        yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight / 2 + yAxisLabelText.getTextSize().width / 2 - 4));
     }
 
     // sets the label on the x axis
     protected void setupXAxisLabel(final double xAxisWidth) {
         // axis labels
-        int coordWidth = (int) (coordsysAreaRT.getX() - coordsysAreaLT.getX());
+        double characterSize = CharacterAtlas.boundsForText(1, 13, Font.PLAIN).getWidth();
         int labelWidth = (int) CharacterAtlas.boundsForText(getxAxisLabel().length(), 13, Font.PLAIN).getWidth();
 
         // shorten Label before displaying to prevent overflow
         String shortenedLabel = getxAxisLabel();
-        if (labelWidth > coordWidth) {
-            int toSubtract = labelWidth - coordWidth;
-            toSubtract = (int) (toSubtract / CharacterAtlas.boundsForText(1, 13, Font.PLAIN).getWidth());
-            toSubtract = Math.min(toSubtract, getxAxisLabel().length() - 1);
-            shortenedLabel = shortenedLabel.substring(0, shortenedLabel.length() - toSubtract) + "...";
+        if (labelWidth > xAxisWidth) {
+            int toRemove = (int) ((labelWidth - xAxisWidth) / characterSize);
+            toRemove = Math.min(toRemove, getxAxisLabel().length() - 1);
+            shortenedLabel = shortenedLabel.substring(0, shortenedLabel.length() - toRemove) + "...";
         }
         xAxisLabelText.setTextString(shortenedLabel);
-        xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth / 2 - xAxisLabelText.getTextSize().width / 2, 4));
+        xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth / 2 - xAxisLabelText.getTextSize().width / 2 - 2, 4));
     }
 
     // helper method to add boundaries
