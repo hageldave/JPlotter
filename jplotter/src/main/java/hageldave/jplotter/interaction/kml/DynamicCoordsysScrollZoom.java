@@ -9,6 +9,8 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 
 /**
@@ -46,37 +48,32 @@ public class DynamicCoordsysScrollZoom implements MouseWheelListener, Interactio
     public void mouseWheelMoved(MouseWheelEvent e) {
         if (keyListenerMask.isKeysPressed()) {
             if (!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
-               return;
+                return;
 
-            double posInCoordSysX = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()).getX();
-            double posInCoordSysY = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()).getY();
+            double coordsysPosX = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()).getX();
+            double coordsysPosY = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()).getY();
 
             int wheelRotation = e.getWheelRotation();
-            double zoom = Math.pow(zoomFactor, wheelRotation*0.7);
+            double zoom = Math.pow(zoomFactor, wheelRotation*0.1);
 
-            double centerX = ((coordsys.getCoordinateView().getCenterX() * 0.7) + (posInCoordSysX * 0.3));
-            double centerY = ((coordsys.getCoordinateView().getCenterY() * 0.7) + (posInCoordSysY * 0.3));
+            AffineTransform at = new AffineTransform();
+            at.translate(coordsysPosX, coordsysPosY);
+            at.scale(zoom, zoom);
+            at.translate(-coordsysPosX, -coordsysPosY);
 
-            if (wheelRotation < 0) {
-                centerX = ((coordsys.getCoordinateView().getCenterX() * 0.5) + (posInCoordSysX * 0.5));
-                centerY = ((coordsys.getCoordinateView().getCenterY() * 0.5) + (posInCoordSysY * 0.5));
-            }
-
-
-            double width = coordsys.getCoordinateView().getWidth();
-            double height = coordsys.getCoordinateView().getHeight();
-            if (( axes & X_AXIS ) != 0)
-                width *= zoom;
-            if (( axes & Y_AXIS ) != 0)
-                height *= zoom;
+            Rectangle2D.Double r2d = new Rectangle2D.Double(
+                    coordsys.getCoordinateView().getX(),
+                    coordsys.getCoordinateView().getY(),
+                    coordsys.getCoordinateView().getMaxX()-coordsys.getCoordinateView().getX(),
+                    coordsys.getCoordinateView().getMaxY()-coordsys.getCoordinateView().getY());
+            Shape transformedR2D = at.createTransformedShape(r2d);
 
             coordsys.setCoordinateView(
-                    centerX - width / 2,
-                    centerY - height / 2,
-                    centerX + width / 2,
-                    centerY + height / 2
+                    transformedR2D.getBounds2D().getX(),
+                    transformedR2D.getBounds2D().getY(),
+                    transformedR2D.getBounds2D().getMaxX(),
+                    transformedR2D.getBounds2D().getMaxY()
             );
-
             canvas.repaint();
         }
     }
