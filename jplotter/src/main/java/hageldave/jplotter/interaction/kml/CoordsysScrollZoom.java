@@ -48,6 +48,10 @@ public class CoordsysScrollZoom implements MouseWheelListener, InteractionConsta
         this(canvas, coordsys, new KeyMaskListener(KeyEvent.VK_ALT), false);
     }
 
+    public CoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask) {
+        this(canvas, coordsys, keyListenerMask, false);
+    }
+
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         if (keyListenerMask.isKeysPressed()) {
