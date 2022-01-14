@@ -1,34 +1,13 @@
 package hageldave.jplotter.charts;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
-import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
-import hageldave.jplotter.interaction.kml.DynamicCoordsysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordsysScrollZoom;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
@@ -40,6 +19,15 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.*;
 
 /**
  *
@@ -431,14 +419,14 @@ public class ScatterPlot {
     /**
      * Adds a scroll zoom to the Scatterplot
      *
-     * @return the {@link CoordSysScrollZoom} so that it can be further customized
+     * @return the {@link CoordsysScrollZoom} so that it can be further customized
      */
-    public DynamicCoordsysScrollZoom addScrollZoom() {
-        return new DynamicCoordsysScrollZoom(this.canvas, this.coordsys).register();
+    public CoordsysScrollZoom addScrollZoom() {
+        return new CoordsysScrollZoom(this.canvas, this.coordsys).register();
     }
 
-    public CoordSysScrollZoom addScrollZoom(final KeyMaskListener keyListenerMask) {
-        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
+    public CoordsysScrollZoom addScrollZoom(final KeyMaskListener keyListenerMask) {
+        return new CoordsysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
     }
 
     /**
