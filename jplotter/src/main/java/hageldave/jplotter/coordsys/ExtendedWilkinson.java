@@ -1,11 +1,11 @@
 package hageldave.jplotter.coordsys;
 
-import static java.lang.Math.*;
+import hageldave.jplotter.util.Pair;
 
 import java.util.Arrays;
 import java.util.Locale;
 
-import hageldave.jplotter.util.Pair;
+import static java.lang.Math.*;
 
 /**
  * Implementation of the extended Wilkinson algorithm for tick label positioning.
@@ -220,7 +220,7 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 		return result;
 	}
 
-	static double[] getTicks(double dmin, double dmax, int m, double[] Q, double[] w){
+	protected static double[] getTicks(double dmin, double dmax, int m, double[] Q, double[] w){
 		double[] l = ext_wilk(dmin, dmax, m, 1, Q, w);
 		double lmin  = l[0];
 		//double lmax  = l[1];
