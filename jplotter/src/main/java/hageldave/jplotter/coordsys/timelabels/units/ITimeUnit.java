@@ -8,7 +8,7 @@ public interface ITimeUnit {
 
     LocalDateTime floor(LocalDateTime value);
 
-    LocalDateTime increment(LocalDateTime value, int delta);
+    LocalDateTime increment(LocalDateTime value, double delta);
 
     // TODO: probably unnecessary
     String getLabel(LocalDateTime value, DateStyle dateType);

@@ -15,7 +15,7 @@ public class TimeWilkinson extends ExtendedWilkinson {
         for (int i=0; i<ticks.length; i++) {
             double difference = ticks[i] - min;
             difference *= number2unit;
-            LocalDateTime ldt = timeUnit.increment(referenceDateTime, (int) difference);
+            LocalDateTime ldt = timeUnit.increment(referenceDateTime, difference);
             labels[i] = ldt.format(dateTimeFormatter);
         }
 
