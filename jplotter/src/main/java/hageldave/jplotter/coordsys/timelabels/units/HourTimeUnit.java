@@ -25,4 +25,9 @@ public class HourTimeUnit implements ITimeUnit {
     public String getLabel(LocalDateTime value, DateStyle dateType) {
         return null;
     }
+
+    @Override
+    public String getUnitLabel() {
+        return "h";
+    }
 }

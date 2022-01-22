@@ -26,4 +26,9 @@ public class MonthTimeUnit implements ITimeUnit {
     public String getLabel(LocalDateTime value, DateStyle dateType) {
         return null;
     }
+
+    @Override
+    public String getUnitLabel() {
+        return "mth";
+    }
 }

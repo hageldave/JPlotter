@@ -12,4 +12,6 @@ public interface ITimeUnit {
 
     // TODO: probably unnecessary
     String getLabel(LocalDateTime value, DateStyle dateType);
+
+    String getUnitLabel();
 }

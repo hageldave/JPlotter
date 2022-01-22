@@ -40,4 +40,9 @@ public class MinuteTimeUnit implements ITimeUnit {
     public String getLabel(LocalDateTime value, DateStyle dateType) {
         return floor(value).toString();
     }
+
+    @Override
+    public String getUnitLabel() {
+        return "m";
+    }
 }

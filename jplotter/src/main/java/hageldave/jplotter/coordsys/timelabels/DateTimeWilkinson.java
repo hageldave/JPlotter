@@ -7,7 +7,7 @@ import hageldave.jplotter.util.Pair;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class TimeWilkinson extends ExtendedWilkinson {
+public class DateTimeWilkinson extends ExtendedWilkinson {
 
     protected String[] labelsForTicks(double min, double[] ticks, ITimeUnit timeUnit, double number2unit, LocalDateTime referenceDateTime, DateTimeFormatter dateTimeFormatter) {
         String[] labels = new String[ticks.length];
