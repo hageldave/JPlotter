@@ -515,11 +515,9 @@ public class CoordSysRenderer implements Renderer {
 		}
 		tickMarkLabels.clear();
 
-		if (coordsysAreaLB.getY() > coordsysAreaLT.getY())
-			coordsysAreaLB.y[0] = coordsysAreaRT.y[0] + 1;
-
-		if (coordsysAreaLB.getX() > coordsysAreaRB.getX())
-			coordsysAreaRT.x[0] = coordsysAreaLB.x[0] + 1;
+		// correct the coordsysArea so that it doesn't get inverted
+		coordsysAreaLB.y[0] = Math.min(coordsysAreaRT.y[0] + 1, coordsysAreaLB.y[0]);
+		coordsysAreaRT.x[0] = Math.max(coordsysAreaLB.x[0] + 1, coordsysAreaRT.x[0]);
 
 		// create new stuff
 		double xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
@@ -584,11 +582,9 @@ public class CoordSysRenderer implements Renderer {
 			coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 6 + maxRotatedLabelHeight;
 			coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW - 4 - maxRotatedLabelWidth;
 
-			if (coordsysAreaLB.getY() > coordsysAreaLT.getY())
-				coordsysAreaLB.y[0] = coordsysAreaRT.y[0] + 1;
-
-			if (coordsysAreaLB.getX() > coordsysAreaRB.getX())
-				coordsysAreaRT.x[0] = coordsysAreaLB.x[0] + 1;
+			// correct the coordsysArea so that it doesn't get inverted
+			coordsysAreaLB.y[0] = Math.min(coordsysAreaRT.y[0] + 1, coordsysAreaLB.y[0]);
+			coordsysAreaRT.x[0] = Math.max(coordsysAreaLB.x[0] + 1, coordsysAreaRT.x[0]);
 
 			yAxisHeight = coordsysAreaLB.distance(coordsysAreaLT);
 			xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
