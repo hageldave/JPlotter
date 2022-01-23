@@ -94,7 +94,9 @@ public class CoordSysRenderer implements Renderer {
 
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
-	protected TickMarkGenerator tickMarkGenerator = new ExtendedWilkinson();
+	//protected DateTimeWilkinson tickMarkGenerator = new DateTimeWilkinson();
+	protected TickMarkGenerator xAxisTickMarkGenerator;
+	protected TickMarkGenerator yAxisTickMarkGenerator;
 
 	protected Lines axes = new Lines().setVertexRoundingEnabled(true);
 	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
@@ -140,8 +142,7 @@ public class CoordSysRenderer implements Renderer {
 	 * Sets up a CoordSysRenderer with the default color scheme
 	 */
 	public CoordSysRenderer() {
-		this.colorScheme = DefaultColorScheme.LIGHT.get();
-		setupCoordSysRenderer();
+		this(DefaultColorScheme.LIGHT.get(), new ExtendedWilkinson());
 	}
 
 	/**
@@ -149,8 +150,29 @@ public class CoordSysRenderer implements Renderer {
 	 *
 	 * @param colorScheme the custom color scheme
 	 */
-	public CoordSysRenderer(final ColorScheme colorScheme) {
+	public CoordSysRenderer(ColorScheme colorScheme) {
+		this(colorScheme, new ExtendedWilkinson());
+	}
+
+	public CoordSysRenderer(ExtendedWilkinson tickmarkGenerator) {
+		this(DefaultColorScheme.LIGHT.get(), tickmarkGenerator);
+	}
+
+	public CoordSysRenderer(ExtendedWilkinson xAxisTickmarkGenerator, ExtendedWilkinson yAxisTickMarkGenerator) {
+		this(DefaultColorScheme.LIGHT.get(), xAxisTickmarkGenerator, yAxisTickMarkGenerator);
+	}
+
+	public CoordSysRenderer(ColorScheme colorScheme, ExtendedWilkinson tickmarkGenerator) {
 		this.colorScheme = colorScheme;
+		this.xAxisTickMarkGenerator = tickmarkGenerator;
+		this.yAxisTickMarkGenerator = tickmarkGenerator;
+		setupCoordSysRenderer();
+	}
+
+	public CoordSysRenderer(ColorScheme colorScheme, ExtendedWilkinson xAxisTickmarkGenerator, ExtendedWilkinson yAxisTickMarkGenerator) {
+		this.colorScheme = colorScheme;
+		this.xAxisTickMarkGenerator = xAxisTickmarkGenerator;
+		this.yAxisTickMarkGenerator = yAxisTickMarkGenerator;
 		setupCoordSysRenderer();
 	}
 
@@ -443,16 +465,17 @@ public class CoordSysRenderer implements Renderer {
 	 * </ul>
 	 */
 	protected void setupAndLayout() {
-		Pair<double[],String[]> xticksAndLabels = tickMarkGenerator.genTicksAndLabels(
-				coordinateView.getMinX(), 
-				coordinateView.getMaxX(), 
-				5, 
-				false);
-		Pair<double[],String[]> yticksAndLabels = tickMarkGenerator.genTicksAndLabels(
-				coordinateView.getMinY(), 
-				coordinateView.getMaxY(), 
-				5, 
-				true);
+		Pair<double[],String[]>	xticksAndLabels = xAxisTickMarkGenerator.genTicksAndLabels(
+					coordinateView.getMinX(),
+					coordinateView.getMaxX(),
+					5,
+					false);
+		Pair<double[],String[]>	yticksAndLabels = yAxisTickMarkGenerator.genTicksAndLabels(
+					coordinateView.getMinY(),
+					coordinateView.getMaxY(),
+					5,
+					true);
+
 		this.xticks = xticksAndLabels.first;
 		this.yticks = yticksAndLabels.first;
 		String[] xticklabels = xticksAndLabels.second;
@@ -467,6 +490,9 @@ public class CoordSysRenderer implements Renderer {
 			int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
 			maxYTickLabelWidth = Math.max(maxYTickLabelWidth, labelW);
 		}
+
+		// TODO: as time labels can quite large, we need to check if left/right labels are out of bounds and increase the coordsysarea there
+
 		int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
 		int maxLabelHeight = CharacterAtlas.boundsForText(1, labelfontSize, style).getBounds().height;
 
@@ -492,6 +518,11 @@ public class CoordSysRenderer implements Renderer {
 		// create new stuff
 		double xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
 		double yAxisHeight = coordsysAreaLB.distance(coordsysAreaLT);
+
+		// this var is to save the last maxX of the label to check collision of labels
+		double lastMaxX = Integer.MIN_VALUE;
+		boolean shiftLabels = false;
+
 		// xaxis ticks
 		for(int i=0; i<xticks.length; i++){
 			// tick
@@ -505,10 +536,70 @@ public class CoordSysRenderer implements Renderer {
 			label.setOrigin(new Point2D.Double(
 					(int)(onaxis.getX()-textSize.getWidth()/2.0), 
 					(int)(onaxis.getY()-6-textSize.getHeight())+0.5));
+
+			if (lastMaxX > label.getBounds().getMinX()) {
+				shiftLabels = true;
+				break;
+			}
+			lastMaxX = label.getBounds().getMaxX();
+
 			tickMarkLabels.add(label);
 			// guide
 			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, yAxisHeight)).setColor(guideColor);
 		}
+
+
+		if (shiftLabels) {
+			tickMarkLabels.clear();
+			guides.removeAllSegments();
+			ticks.removeAllSegments();
+
+			// calculate first the new coord view bounds
+			double maxRotatedLabelHeight = 0;
+			double maxRotatedLabelWidth = 0;
+
+			for(int i=0; i<xticks.length; i++){
+				double m = (xticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
+				double x = coordsysAreaLB.getX()+m*xAxisWidth;
+				Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
+				Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor.getAsInt());
+				Dimension textSize = label.getTextSize();
+				label.setOrigin(new Point2D.Double(
+						(int)(onaxis.getX()-textSize.getWidth()/2.0),
+						(int)(onaxis.getY()-6-textSize.getHeight())+0.5));
+
+				label.setAngle(-Math.PI/4);
+
+				maxRotatedLabelHeight = Math.max(maxRotatedLabelHeight, label.getBoundsWithRotation().getHeight());
+				maxRotatedLabelWidth = Math.max(maxRotatedLabelWidth, label.getBoundsWithRotation().getWidth());
+			}
+
+			coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 6 + maxRotatedLabelHeight;
+			coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW - 4 - maxRotatedLabelWidth;
+
+			yAxisHeight = coordsysAreaLB.distance(coordsysAreaLT);
+			xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
+
+			for(int i=0; i<xticks.length; i++){
+				// tick
+				double m = (xticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
+				double x = coordsysAreaLB.getX()+m*xAxisWidth;
+				Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
+				ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
+				// label
+				Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor.getAsInt());
+				Dimension textSize = label.getTextSize();
+				label.setOrigin(new Point2D.Double((int)onaxis.getX(),
+						(int)(onaxis.getY()-6-textSize.getHeight())+0.5));
+
+				label.setAngle(-Math.PI/4);
+
+				tickMarkLabels.add(label);
+				// guide
+				guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, yAxisHeight)).setColor(guideColor);
+			}
+		}
+
 		// yaxis ticks
 		for(int i=0; i<yticks.length; i++){
 			// tick
@@ -598,8 +689,12 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * @return the current {@link TickMarkGenerator} which is {@link ExtendedWilkinson} by default.
 	 */
-	public TickMarkGenerator getTickMarkGenerator() {
-		return tickMarkGenerator;
+	public TickMarkGenerator getxAxisTickMarkGenerator() {
+		return this.xAxisTickMarkGenerator;
+	}
+
+	public TickMarkGenerator getyAxisTickMarkGenerator() {
+		return this.yAxisTickMarkGenerator;
 	}
 
 	/**
@@ -610,11 +705,19 @@ public class CoordSysRenderer implements Renderer {
 	 * @return this for chaining
 	 */
 	public CoordSysRenderer setTickMarkGenerator(TickMarkGenerator tickMarkGenerator) {
-		this.tickMarkGenerator = tickMarkGenerator;
+		this.xAxisTickMarkGenerator = tickMarkGenerator;
+		this.yAxisTickMarkGenerator = tickMarkGenerator;
 		setDirty();
 		return this;
 	}
-	
+
+	public CoordSysRenderer setTickMarkGenerator(TickMarkGenerator xAxisTickMarkGenerator, TickMarkGenerator yAxisTickMarkGenerator) {
+		this.xAxisTickMarkGenerator = xAxisTickMarkGenerator;
+		this.yAxisTickMarkGenerator = yAxisTickMarkGenerator;
+		setDirty();
+		return this;
+	}
+
 	@Override
 	public void glInit() {
 		preContentLinesR.glInit();

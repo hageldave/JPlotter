@@ -6,6 +6,12 @@ import hageldave.jplotter.util.Pair;
 
 public class TimePassedWilkinson extends ExtendedWilkinson {
 
+    protected TimeUnit timeUnit;
+
+    public TimePassedWilkinson(final TimeUnit timeUnit) {
+        this.timeUnit = timeUnit;
+    }
+
     protected String[] labelsForTicks(double[] ticks, ITimeUnit timeUnit) {
         String[] labels = super.labelsForTicks(ticks);
 
@@ -16,7 +22,7 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
         return labels;
     }
 
-    public Pair<double[], String[]> genTicksAndLabels(double min, double max, TimeUnit timeUnit, int desiredNumTicks/*, boolean verticalAxis*/) {
+    public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
         double[] ticks = getTicks(min, max, desiredNumTicks, Q, w);
 
         ITimeUnit tu;

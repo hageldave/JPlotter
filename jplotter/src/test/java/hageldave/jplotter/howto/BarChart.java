@@ -1,14 +1,5 @@
 package hageldave.jplotter.howto;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.geom.Rectangle2D;
-import java.util.function.BiFunction;
-import java.util.stream.IntStream;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
@@ -19,6 +10,12 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
 import hageldave.jplotter.util.Pair;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 
 public class BarChart {
 
@@ -50,7 +47,7 @@ public class BarChart {
 		// set the content renderer of the coordinate system 
 		coordsys.setContent(barRenderer);
 		// we need to change the tick marks labeling for the y axis
-		TickMarkGenerator oldTickGen = coordsys.getTickMarkGenerator();
+		TickMarkGenerator oldTickGen = coordsys.getxAxisTickMarkGenerator();
 		coordsys.setTickMarkGenerator((min,max,desired,vert)->{
 			if(!vert){
 				return oldTickGen.genTicksAndLabels(min,max,desired,vert);
@@ -62,6 +59,9 @@ public class BarChart {
 			// use case names as tick mark labels
 			return Pair.of(ticks, cases);
 		});
+
+
+
 		// set axis labels
 		coordsys.setxAxisLabel("Score");
 		coordsys.setyAxisLabel("");

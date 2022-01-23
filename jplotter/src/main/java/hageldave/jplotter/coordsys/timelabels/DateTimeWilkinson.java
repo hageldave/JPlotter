@@ -9,7 +9,19 @@ import java.time.format.DateTimeFormatter;
 
 public class DateTimeWilkinson extends ExtendedWilkinson {
 
-    protected String[] labelsForTicks(double min, double[] ticks, ITimeUnit timeUnit, double number2unit, LocalDateTime referenceDateTime, DateTimeFormatter dateTimeFormatter) {
+    protected TimeUnit timeUnit;
+    protected double number2unit;
+    protected LocalDateTime referenceDateTime;
+    protected DateTimeFormatter dateTimeFormatter;
+
+    public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime, final DateTimeFormatter dateTimeFormatter) {
+        this.timeUnit = timeUnit;
+        this.number2unit = number2unit;
+        this.referenceDateTime = referenceDateTime;
+        this.dateTimeFormatter = dateTimeFormatter;
+    }
+
+    protected String[] labelsForTicks(double min, double[] ticks, ITimeUnit timeUnit) {
         String[] labels = new String[ticks.length];
 
         for (int i=0; i<ticks.length; i++) {
@@ -22,7 +34,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         return labels;
     }
 
-    public Pair<double[], String[]> genTicksAndLabels(double min, double max, TimeUnit timeUnit, double number2unit, LocalDateTime referenceDateTime, int desiredNumTicks, DateTimeFormatter dateTimeFormatter/*, boolean verticalAxis*/) {
+    public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
         double[] ticks = getTicks(min, max, desiredNumTicks, Q, w);
 
         ITimeUnit tu;
@@ -52,23 +64,8 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
                 tu = null;
         }
 
-        String[] labelsForTicks = labelsForTicks(min, ticks, tu, number2unit, referenceDateTime, dateTimeFormatter);
+        String[] labelsForTicks = labelsForTicks(min, ticks, tu);
         return new Pair<>(ticks, labelsForTicks);
-    }
-
-    /**
-     *
-     * @param min
-     * @param max
-     * @param number2unit - how much should the time/date whatever be incremented with each step: e.g. if
-     *                    the ticks go from 0 to 30, does this mean each int number 0,1,2,3,... means one minute or half-minute steps...
-     * @param timeUnit
-     * @param referenceDateTime
-     * @param desiredNumTicks
-     * @return
-     */
-    public Pair<double[], String[]> genTicksAndLabels(double min, double max, TimeUnit timeUnit, double number2unit, LocalDateTime referenceDateTime, int desiredNumTicks/*, boolean verticalAxis*/) {
-        return genTicksAndLabels(min, max, timeUnit, number2unit, referenceDateTime, desiredNumTicks, DateTimeFormatter.ISO_DATE_TIME);
     }
 }
 
