@@ -1,15 +1,14 @@
 package hageldave.jplotter.coordsys.timelabels.units;
 
-import hageldave.jplotter.coordsys.timelabels.DateStyle;
-
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 public class HourTimeUnit implements ITimeUnit {
     private final static long differenceInMillis = 3600000;
+
     @Override
     public LocalDateTime floor(LocalDateTime value) {
-        return LocalDateTime.of(value.getYear(), value.getMonth(), value.getDayOfMonth(), value.getHour(), 0);
+        return value.truncatedTo(ChronoUnit.HOURS);
     }
 
     @Override
@@ -19,11 +18,6 @@ public class HourTimeUnit implements ITimeUnit {
         } else {
             return value.plus((long) (HourTimeUnit.differenceInMillis * delta), ChronoUnit.MILLIS);
         }
-    }
-
-    @Override
-    public String getLabel(LocalDateTime value, DateStyle dateType) {
-        return null;
     }
 
     @Override
