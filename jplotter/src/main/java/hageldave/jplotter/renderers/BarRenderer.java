@@ -538,6 +538,10 @@ public class BarRenderer implements Renderer {
         coordsysAreaRT.x[0] = viewportwidth - paddingRight - maxLabelHeight - legendRightW - 4;
         coordsysAreaRT.y[0] = viewportheight - paddingTop - maxLabelHeight - 4;
 
+        // correct the coordsysArea so that it doesn't get inverted
+        coordsysAreaLB.y[0] = Math.min(coordsysAreaRT.y[0] + 1, coordsysAreaLB.y[0]);
+        coordsysAreaRT.x[0] = Math.max(coordsysAreaLB.x[0] + 1, coordsysAreaRT.x[0]);
+
         // dispose of old stuff (moved to top)
         clearLabelRenderer();
 
@@ -737,6 +741,10 @@ public class BarRenderer implements Renderer {
         // move opposing corner of coordwindow to have enough display space
         coordsysAreaRT.x[0] = viewportwidth - paddingRight - maxLabelHeight - legendRightW - 4;
         coordsysAreaRT.y[0] = viewportheight - paddingTop - maxLabelHeight - 4;
+
+        // correct the coordsysArea so that it doesn't get inverted
+        coordsysAreaLB.y[0] = Math.min(coordsysAreaRT.y[0] + 1, coordsysAreaLB.y[0]);
+        coordsysAreaRT.x[0] = Math.max(coordsysAreaLB.x[0] + 1, coordsysAreaRT.x[0]);
 
         // dispose of old stuff (moved to top)
         clearLabelRenderer();
