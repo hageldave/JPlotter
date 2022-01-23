@@ -515,9 +515,16 @@ public class CoordSysRenderer implements Renderer {
 		}
 		tickMarkLabels.clear();
 
+		if (coordsysAreaLB.getY() > coordsysAreaLT.getY())
+			coordsysAreaLB.y[0] = coordsysAreaRT.y[0] + 1;
+
+		if (coordsysAreaLB.getX() > coordsysAreaRB.getX())
+			coordsysAreaRT.x[0] = coordsysAreaLB.x[0] + 1;
+
 		// create new stuff
 		double xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
 		double yAxisHeight = coordsysAreaLB.distance(coordsysAreaLT);
+
 
 		// this var is to save the last maxX of the label to check collision of labels
 		double lastMaxX = Integer.MIN_VALUE;
@@ -577,6 +584,12 @@ public class CoordSysRenderer implements Renderer {
 			coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 6 + maxRotatedLabelHeight;
 			coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW - 4 - maxRotatedLabelWidth;
 
+			if (coordsysAreaLB.getY() > coordsysAreaLT.getY())
+				coordsysAreaLB.y[0] = coordsysAreaRT.y[0] + 1;
+
+			if (coordsysAreaLB.getX() > coordsysAreaRB.getX())
+				coordsysAreaRT.x[0] = coordsysAreaLB.x[0] + 1;
+
 			yAxisHeight = coordsysAreaLB.distance(coordsysAreaLT);
 			xAxisWidth = coordsysAreaLB.distance(coordsysAreaRB);
 
@@ -615,6 +628,7 @@ public class CoordSysRenderer implements Renderer {
 			// guide
 			guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, xAxisWidth, 0)).setColor(guideColor);
 		}
+
 		for(Text txt: tickMarkLabels){
 			preContentTextR.addItemToRender(txt);
 		}
