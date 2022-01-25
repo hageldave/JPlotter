@@ -331,9 +331,9 @@ public class PDFUtils {
         PDPage page = new PDPage();
         doc.addPage(page);
         PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
-        page.setMediaBox(new PDRectangle(c.getWidth(), c.getHeight()));
+        page.setMediaBox(new PDRectangle(c.getWidth()+c.getX(), c.getHeight()+c.getY()));
 
-        containerToPDF(c, doc, page, cs);
+        containerToPDF(c, doc, page, cs, 0, 0);
         { // render gui components through PdfBoxGraphics2D
             PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, c.getWidth(), c.getHeight());
             c.paintAll(g2d);
@@ -346,18 +346,17 @@ public class PDFUtils {
         return doc;
     }
 
-
-    private static void containerToPDF(Container c, PDDocument doc, PDPage page, PDPageContentStream cs) throws IOException {
+    private static void containerToPDF(Container c, PDDocument doc, PDPage page, PDPageContentStream cs, int xOffset, int yOffset) throws IOException {
         for(Component comp:c.getComponents()) {
             if (comp instanceof JPlotterCanvas) {
                 JPlotterCanvas canvas = (JPlotterCanvas)comp;
                 if(canvas.isPDFAsImageRenderingEnabled())
                     return; // was already rendered through PdfBoxGraphics2D
-                canvas.paintPDF(doc, page, cs, new Rectangle2D.Double(canvas.asComponent().getX(), canvas.asComponent().getY(),
+                canvas.paintPDF(doc, page, cs, new Rectangle2D.Double(canvas.asComponent().getX()+xOffset, canvas.asComponent().getY()+yOffset,
                         canvas.asComponent().getWidth(), canvas.asComponent().getHeight()));
             } else {
                 if(comp instanceof Container){
-                    containerToPDF((Container)comp, doc, page, cs);
+                    containerToPDF((Container)comp, doc, page, cs, comp.getX(), comp.getY());
                 }
             }
         }

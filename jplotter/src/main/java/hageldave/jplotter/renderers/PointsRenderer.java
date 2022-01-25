@@ -505,9 +505,6 @@ public class PointsRenderer extends GenericRenderer<Points> {
 
 					glyph.createPDFElement(contentStream);
 
-					// restore the graphics state again, after the affine transformation has been applied -> resets content stream transform property
-					contentStream.restoreGraphicsState();
-
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
 					Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, points.getGlobalAlphaMultiplier()), true);
@@ -526,8 +523,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						contentStream.setStrokingColor(new Color(color));
 						contentStream.stroke();
 					}
-
-
+					// restore the graphics state again, after the affine transformation & colors have been applied -> resets content stream transform property
+					contentStream.restoreGraphicsState();
 				}
 			}
 			// restore graphics
