@@ -15,8 +15,6 @@ import org.lwjgl.opengl.*;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
 import org.lwjgl.opengl.awt.PlatformGLCanvas;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import javax.swing.*;
 import java.awt.*;
@@ -65,11 +63,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * GL context is currently active.
  * <br><b> For this to work properly it is essential that all GL calls are happening on the AWT event dispatch
  * thread </b>(see https://docs.oracle.com/javase/tutorial/uiswing/concurrency/dispatch.html).
- * <p>
- * The FBOCanvas also provides the ability of scalable vector graphics (SVG) export with the
- * {@link #paintSVG()} method.
- * An implementing class therefore has to implement the {@link #paintToSVG(Document, Element, int, int)}
- * method when it is able to express its contents in terms of SVG elements.
  * 
  * @author hageldave
  */

@@ -34,6 +34,9 @@ import java.util.Arrays;
  * {@link BlankCanvas} or {@link BlankCanvasFallback}.
  * This way a fallback mode for an application can be easily realized, e.g. for macOS which is not supported by
  * lwjgl3-awt and thus cannot use the OpenGL backed BlankCanvas.
+ * <p>
+ * JPlotterCanvas also provides the ability to export to scalable vector graphics (SVG) 
+ * and portable document format (PDF) with the {@link #paintSVG()} and {@link #paintPDF()} methods.
  * 
  * 
  * @author hageldave

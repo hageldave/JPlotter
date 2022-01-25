@@ -167,7 +167,7 @@ public class PDFUtils {
     /**
      * Fills the output stream with the triangle information.
      *
-     * @param outputStream holds the coordinates & colors of the triangle
+     * @param outputStream holds the coordinates and colors of the triangle
      * @param p0 coordinates of first vertex of the triangle
      * @param p1 coordinates of second vertex of the triangle
      * @param p2 coordinates of third vertex of the triangle
@@ -295,7 +295,7 @@ public class PDFUtils {
 
     /**
      * Creates a polygon in the pdf document.
-     * The x (& y) coordinates will be used counter clockwise.
+     * The x (and y) coordinates will be used counter clockwise.
      *
      * @param cs content stream that the polygon is appended to
      * @param x x coordinates of the polygon

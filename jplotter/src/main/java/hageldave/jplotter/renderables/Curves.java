@@ -60,7 +60,7 @@ public class Curves implements Renderable {
 	
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
-	 * This indicates that an {@link #updateGL()} call is necessary to sync GL resources.
+	 * This indicates that an {@link #updateGL(boolean, double, double, double, double, double, double)} call is necessary to sync GL resources.
 	 * @return this for chaining
 	 */
 	public Curves setDirty() {

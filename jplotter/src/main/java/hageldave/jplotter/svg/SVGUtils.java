@@ -295,11 +295,11 @@ public class SVGUtils {
 	 * an SVG document.
 	 * For this an {@link SVGGraphics2D} object is used that will
 	 * create the SVG DOM for the specified container and its children.
-	 * Instances of {@link FBOCanvas} will be treated separately by
-	 * using their {@link FBOCanvas#paintSVG(Document, Element)} method
+	 * Instances of {@link JPlotterCanvas} will be treated separately by
+	 * using their {@link JPlotterCanvas#paintSVG(Document, Element)} method
 	 * to create their part of the DOM that cannot be generated from {@link SVGGraphics2D}.
 	 * <p>
-	 * For drawing a single FBOCanvas to SVG the method {@link FBOCanvas#paintSVG()} 
+	 * For drawing a single {@link JPlotterCanvas} to SVG the method {@link JPlotterCanvas#paintSVG()} 
 	 * can be used instead of this method.
 	 * 
 	 * @param c container to be converted to SVG

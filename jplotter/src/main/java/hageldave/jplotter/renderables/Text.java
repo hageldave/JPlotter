@@ -341,7 +341,7 @@ public class Text implements Renderable {
 	
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
-	 * This indicates that an {@link #updateGL()} call is necessary to sync GL resources.
+	 * This indicates that an {@link #updateGL(boolean)} call is necessary to sync GL resources.
 	 * @return this for chaining
 	 */
 	public Text setDirty() {
