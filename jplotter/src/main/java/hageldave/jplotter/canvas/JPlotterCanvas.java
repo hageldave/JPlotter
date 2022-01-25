@@ -1,6 +1,7 @@
 package hageldave.jplotter.canvas;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -186,7 +187,7 @@ public interface JPlotterCanvas {
 	 * @throws IOException If there is an error while creating the document.
 	 */
 	public default PDDocument paintPDF() throws IOException {
-		PDDocument document = new PDDocument();
+		PDDocument document = new FontCachedPDDocument();
 		PDPage page = new PDPage();
 		document.addPage(page);
 		paintPDF(document, page);

@@ -140,5 +140,7 @@ fabric.properties
 *.rar
 /target/
 
-# svg test export #
+# svg and pdf test export #
 svgtest.svg
+pdftest.pdf
+

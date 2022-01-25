@@ -229,28 +229,9 @@ public class PDFUtils {
         cs.setNonStrokingColor(color);
         cs.stroke();
         // set correct font
-        PDType0Font font;
-        switch (style) {
-            case Font.BOLD:
-                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_BOLD_RESOURCE));
-                cs.setFont(font, fontSize);
-                break;
-            case Font.ITALIC:
-                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_ITALIC_RESOURCE));
-                cs.setFont(font, fontSize);
-                break;
-            case (Font.BOLD|Font.ITALIC):
-                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_BOLDITALIC_RESOURCE));
-                cs.setFont(font, fontSize);
-                break;
-            case Font.PLAIN:
-                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_PLAIN_RESOURCE));
-                cs.setFont(font, fontSize);
-                break;
-            default:
-            	throw new IllegalArgumentException(
-    					"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
-        }
+        PDType0Font font = (doc instanceof FontCachedPDDocument) ? 
+        		((FontCachedPDDocument)doc).getFont(style) : createPDFont(doc, style);
+        cs.setFont(font, fontSize);
         cs.beginText();
         AffineTransform at = new AffineTransform(1, 0.0, 0.0,
                1, position.getX(), position.getY());
@@ -259,6 +240,22 @@ public class PDFUtils {
         cs.showText(txt);
         cs.endText();
         return cs;
+    }
+    
+    public static PDType0Font createPDFont(PDDocument doc, int style) throws IOException {
+    	switch (style) {
+    	case Font.BOLD:
+    		return PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_BOLD_RESOURCE));
+    	case Font.ITALIC:
+    		return PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_ITALIC_RESOURCE));
+    	case (Font.BOLD|Font.ITALIC):
+    		return PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_BOLDITALIC_RESOURCE));
+    	case Font.PLAIN:
+    		return PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_PLAIN_RESOURCE));
+    	default:
+    		throw new IllegalArgumentException(
+    				"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
+    	}
     }
 
     /**

@@ -74,16 +74,16 @@ public class PDFDemo {
             curve.setGlobalAlphaMultiplier(0.4);
             curve.setGlobalThicknessMultiplier(20);
 
-            CurvesRenderer curveCont = new CurvesRenderer();
-            curveCont.addItemToRender(curve);
+//            CurvesRenderer curveCont = new CurvesRenderer();
+//            curveCont.addItemToRender(curve);
 
-            LinesRenderer lineContent = new LinesRenderer();
+//            LinesRenderer lineContent = new LinesRenderer();
             lineA.setGlobalSaturationMultiplier(0.8);
             lineA.setGlobalAlphaMultiplier(0.8);
             lineA.setGlobalThicknessMultiplier(7);
             lineA.addSegment(new Point2D.Double(20, 20), new Point2D.Double(190, 90))
                     .setThickness(9, 9).setColor0(new Color(0,255,0,30)).setColor1(Color.RED);
-            lineContent.addItemToRender(lineA).addItemToRender(lineB);
+//            lineContent.addItemToRender(lineA).addItemToRender(lineB);
 
             Triangles tri = new Triangles();
             tri.setGlobalAlphaMultiplier(0.9);
@@ -93,22 +93,22 @@ public class PDFDemo {
                     .setColor2(new Color(0,255,0,40));
 
             tri.addQuad(new Rectangle2D.Double(30, 30, 100, 100));
-            TrianglesRenderer renderer2 = new TrianglesRenderer();
-            renderer2.addItemToRender(tri);
+//            TrianglesRenderer renderer2 = new TrianglesRenderer();
+//            renderer2.addItemToRender(tri);
 
-            SplitScreenRenderer splitScreenRenderer = new SplitScreenRenderer();
-            splitScreenRenderer.setR1(renderer2).setR2(lineContent);
-            splitScreenRenderer.setVerticalSplit(true);
-            splitScreenRenderer.setDividerLocation(0.15);
+//            SplitScreenRenderer splitScreenRenderer = new SplitScreenRenderer();
+//            splitScreenRenderer.setR1(renderer2).setR2(lineContent);
+//            splitScreenRenderer.setVerticalSplit(true);
+//            splitScreenRenderer.setDividerLocation(0.15);
 
-            ChainedRenderer chainedRenderer = new ChainedRenderer(lineContent, curveCont);
+//            ChainedRenderer chainedRenderer = new ChainedRenderer(lineContent, curveCont);
 
-            TextRenderer textRenderer = new TextRenderer();
+//            TextRenderer textRenderer = new TextRenderer();
             Text txt = new Text("hallo", 19, 1, new Color(255, 0,0, 50));
             txt.setOrigin(30,30);
             txt.setAngle(2.3);
             txt.setBackground(new Color(0,255,0, 255));
-            textRenderer.addItemToRender(txt);
+//            textRenderer.addItemToRender(txt);
 
 
             Points p = new Points(DefaultGlyph.CIRCLE_F);
@@ -116,11 +116,16 @@ public class PDFDemo {
             p.setGlobalScaling(1.4);
             p.setGlobalSaturationMultiplier(0.2);
             p.addPoint(new Point2D.Double(20, 20)).setColor(Color.RED).setScaling(1.9).setRotation(1.8).setScaling(5);
-            PointsRenderer pr = new PointsRenderer();
-            pr.setGlyphScaling(3);
-            pr.addItemToRender(p);
+//            PointsRenderer pr = new PointsRenderer();
+//            pr.setGlyphScaling(3);
+//            pr.addItemToRender(p);
 
-            compr.addItemToRender(curve).addItemToRender(lineA).addItemToRender(tri).addItemToRender(lineB).addItemToRender(p).addItemToRender(txt);
+            compr.addItemToRender(curve)
+            	.addItemToRender(lineA)
+            	.addItemToRender(tri)
+            	.addItemToRender(lineB)
+            	.addItemToRender(p)
+            	.addItemToRender(txt);
 
 
             CoordSysRenderer renderer = new CoordSysRenderer();
@@ -166,6 +171,6 @@ public class PDFDemo {
 
     public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
         PDFDemo creator = new PDFDemo();
-        creator.create("pdf_test.pdf");
+        creator.create("pdftest.pdf");
     }
 }
