@@ -406,14 +406,14 @@ public class ScatterPlot {
     /**
      * Adds a scroll zoom to the Scatterplot
      *
-     * @return the {@link CoordSysScrollZoom} so that it can be further customized
+     * @return the {@link CoordsysScrollZoom} so that it can be further customized
      */
-    public DynamicCoordsysScrollZoom addScrollZoom() {
-        return new DynamicCoordsysScrollZoom(this.canvas, this.coordsys).register();
+    public CoordsysScrollZoom addScrollZoom() {
+        return new CoordsysScrollZoom(this.canvas, this.coordsys).register();
     }
 
-    public CoordSysScrollZoom addScrollZoom(final KeyMaskListener keyListenerMask) {
-        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
+    public CoordsysScrollZoom addScrollZoom(final KeyMaskListener keyListenerMask) {
+        return new CoordsysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
     }
 
     /**

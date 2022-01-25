@@ -19,7 +19,7 @@ import java.util.Arrays;
  * Intended use: {@code CoordSysScrollZoom zoom = new CoordSysScrollZoom(canvas, coordsys).register(); }
  *
  * @author hageldave
- * @deprecated Replaced by {@link hageldave.jplotter.interaction.kml.CoordSysScrollZoom}
+ * @deprecated Replaced by {@link CoordSysScrollZoom}
  */
 @Deprecated
 public class CoordSysScrollZoom implements MouseWheelListener, InteractionConstants {
