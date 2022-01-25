@@ -181,6 +181,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Helper method to update the colors if the color scheme is changed.
+	 * @return this for chaining
 	 */
 	protected CoordSysRenderer updateColors() {
 		// axes already use a pointer to color scheme and need only to be set dirty

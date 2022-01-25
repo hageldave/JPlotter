@@ -100,8 +100,13 @@ public class Curves implements Renderable {
 	 * <p>
 	 * If {@link #initGL()} has not been called yet or this object has
 	 * already been closed, nothing happens.
+	 * @param useGLDoublePrecision true when rendering with double precision
 	 * @param scaleX scaling of the x coordinate of the current view transform
 	 * @param scaleY scaling of the y coordinate of the current view transform
+	 * @param xmin of current view (is used for clipping)
+	 * @param xmax of current view (is used for clipping)
+	 * @param ymin of current view (is used for clipping)
+	 * @param ymax of current view (is used for clipping)
 	 */
 	@GLContextRequired
 	public void updateGL(boolean useGLDoublePrecision, double scaleX, double scaleY, double xmin, double xmax, double ymin, double ymax){

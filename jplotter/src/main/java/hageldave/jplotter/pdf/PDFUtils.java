@@ -298,7 +298,7 @@ public class PDFUtils {
      * @param x x coordinates of the polygon
      * @param y y coordinates of the polygon
      * @return resulting content stream
-     * @throws IOException If there is an error while creating the polygon
+     * @throws IOException If the content stream could not be written
      */
     public static PDPageContentStream createPDFPolygon(PDPageContentStream cs, double[] x, double[] y) throws IOException {
         if (x.length != y.length) {
@@ -324,10 +324,10 @@ public class PDFUtils {
      *
      * @param c container to be converted to PDF
      * @return PDF document representing the specified container.
-     * @throws IOException
+     * @throws IOException if something goes wrong with writing into the content stream of the PDDocument
      */
     public static PDDocument containerToPDF(Container c) throws IOException {
-        PDDocument doc = new PDDocument();
+        PDDocument doc = new FontCachedPDDocument();
         PDPage page = new PDPage();
         doc.addPage(page);
         PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);

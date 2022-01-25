@@ -52,6 +52,7 @@ public class Text implements Renderable {
 	 * @param fontsize point size of the font
 	 * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
 	 * or bitwise union BOLD|ITALIC.
+	 * @param textcolor color of the text
 	 */
 	public Text(String textstr, int fontsize, int style, Color textcolor) {
 		this.txtStr = textstr;
@@ -62,10 +63,25 @@ public class Text implements Renderable {
 		this.origin = new Point(0, 0);
 	}
 	
+	/**
+	 * Creates a new Text object with the specified string and font configuration.
+	 * @param textstr the text to be displayed
+	 * @param fontsize point size of the font
+	 * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
+	 * or bitwise union BOLD|ITALIC.
+	 * @param textcolor color of the text (integer packed ARGB)
+	 */
 	public Text(String textstr, int fontsize, int style, int textcolor) {
 		this(textstr,fontsize,style, new Color(textcolor, true));
 	}
 
+	/**
+	 * Creates a new Text object with the specified string and font configuration.
+	 * @param textstr the text to be displayed
+	 * @param fontsize point size of the font
+	 * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
+	 * or bitwise union BOLD|ITALIC.
+	 */
 	public Text(String textstr, int fontsize, int style) {
 		this(textstr,fontsize,style, new Color(96, 96, 96));
 	}
