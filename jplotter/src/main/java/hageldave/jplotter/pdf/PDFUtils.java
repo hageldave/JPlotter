@@ -2,6 +2,7 @@ package hageldave.jplotter.pdf;
 
 import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSInteger;
@@ -230,22 +231,25 @@ public class PDFUtils {
         // set correct font
         PDType0Font font;
         switch (style) {
-            case 1:
-                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-B.ttf"));
+            case Font.BOLD:
+                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_BOLD_RESOURCE));
                 cs.setFont(font, fontSize);
                 break;
-            case 2:
-                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-RI.ttf"));
+            case Font.ITALIC:
+                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_ITALIC_RESOURCE));
                 cs.setFont(font, fontSize);
                 break;
-            case (1|2):
-                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-BI.ttf"));
+            case (Font.BOLD|Font.ITALIC):
+                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_BOLDITALIC_RESOURCE));
+                cs.setFont(font, fontSize);
+                break;
+            case Font.PLAIN:
+                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream(FontProvider.UBUNTU_MONO_PLAIN_RESOURCE));
                 cs.setFont(font, fontSize);
                 break;
             default:
-                font = PDType0Font.load(doc, PDFUtils.class.getResourceAsStream("/font/UbuntuMono-R.ttf"));
-                cs.setFont(font, fontSize);
-                break;
+            	throw new IllegalArgumentException(
+    					"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
         }
         cs.beginText();
         AffineTransform at = new AffineTransform(1, 0.0, 0.0,
