@@ -1,27 +1,5 @@
 package hageldave.jplotter;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.MenuItem;
-import java.awt.Point;
-import java.awt.PopupMenu;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
-import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.function.DoubleBinaryOperator;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -33,6 +11,19 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.w3c.dom.Document;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.function.DoubleBinaryOperator;
 
 public class VectorFieldViz {
 	
@@ -149,6 +140,19 @@ public class VectorFieldViz {
 			SVGUtils.documentToXMLFile(svg, new File("vectorfield_export.svg"));
 			System.out.println("exported vectorfield_export.svg");
 		});
+		MenuItem pdfExport = new MenuItem("PDF export");
+		menu.add(pdfExport);
+		pdfExport.addActionListener(e->{
+			try {
+				PDDocument doc = canvas.paintPDF();
+				doc.save("pdf_vectorfield.pdf");
+				doc.close();
+				System.out.println("pdf exported.");
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		});
+
 		canvas.asComponent().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -156,7 +160,7 @@ public class VectorFieldViz {
 					menu.show(canvas.asComponent(), e.getX(), e.getY());
 			}
 		});
-		
+
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

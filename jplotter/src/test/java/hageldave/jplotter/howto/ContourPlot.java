@@ -2,12 +2,16 @@ package hageldave.jplotter.howto;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
@@ -121,12 +125,23 @@ public class ContourPlot {
 		
 		long t=System.currentTimeMillis()+2000;
 		while(t>System.currentTimeMillis());
-		if("false".equals("true"))
+		if("true".equals("true")) {
 			SwingUtilities.invokeLater(()->{
 				Img img = new Img(frame.getSize());
 				img.paint(g2d->frame.paintAll(g2d));
 				ImageSaver.saveImage(img.getRemoteBufferedImage(), "howto_contourplot.png");
 			});
+			SwingUtilities.invokeLater(()->{
+				try (PDDocument doc = canvas.paintPDF())
+				{
+					doc.save(new File("howto_contourplot.pdf"));
+					doc.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				System.out.println("exported pdf");
+			});
+		}
 
 	}
 

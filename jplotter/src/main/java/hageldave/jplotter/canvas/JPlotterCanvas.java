@@ -1,6 +1,7 @@
 package hageldave.jplotter.canvas;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -12,6 +13,7 @@ import org.w3c.dom.Element;
 
 import java.awt.*;
 import java.awt.event.WindowListener;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -33,6 +35,9 @@ import java.util.Arrays;
  * {@link BlankCanvas} or {@link BlankCanvasFallback}.
  * This way a fallback mode for an application can be easily realized, e.g. for macOS which is not supported by
  * lwjgl3-awt and thus cannot use the OpenGL backed BlankCanvas.
+ * <p>
+ * JPlotterCanvas also provides the ability to export to scalable vector graphics (SVG) 
+ * and portable document format (PDF) with the {@link #paintSVG()} and {@link #paintPDF()} methods.
  * 
  * 
  * @author hageldave
@@ -78,7 +83,14 @@ public interface JPlotterCanvas {
 	 * @see #enableSvgAsImageRendering(boolean)
 	 */
 	public boolean isSvgAsImageRenderingEnabled();
-	
+
+	// TODO add documentation
+	public void enablePDFAsImageRendering(boolean enable);
+
+	// TODO add documentation
+	public boolean isPDFAsImageRenderingEnabled();
+
+
 	/**
 	 * Fetches the current contents of the framebuffer and returns them as an {@link Img}.
 	 * @return image of the current framebuffer.
@@ -166,14 +178,31 @@ public interface JPlotterCanvas {
 			renderer.renderSVG(doc, parent, w, h);
 	}
 
+	/**
+	 * Creates a new PDF document {@link PDDocument} and renders this canvas on the PDF document.
+	 * Will call {@link #paintPDF()} after creating
+	 * the document and the first page.
+	 *
+	 * @return the resulting pdf document with all the rendered content
+	 * @throws IOException If there is an error while creating the document.
+	 */
 	public default PDDocument paintPDF() throws IOException {
-		PDDocument document = new PDDocument();
+		PDDocument document = new FontCachedPDDocument();
 		PDPage page = new PDPage();
 		document.addPage(page);
 		paintPDF(document, page);
 		return document;
 	}
 
+	/**
+	 * Sets up the PDF document (size, background color, ...).
+	 * Will call {@link #paintToPDF(PDDocument, PDPage, int, int)} after setting up
+	 * the document and creating the initial elements.
+	 *
+	 * @param document PDF document holding the page
+	 * @param page Page in the document to create PDF elements in
+	 * @throws IOException If there is an error while creating the document.
+	 */
 	public default void paintPDF(PDDocument document, PDPage page) throws IOException {
 		int w,h;
 		if ((w=asComponent().getWidth()) > 0 && (h=asComponent().getHeight()) > 0) {
@@ -188,6 +217,35 @@ public interface JPlotterCanvas {
 		}
 	}
 
+
+	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream contentStream, Rectangle2D renderLoc) throws IOException {
+		contentStream.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
+		contentStream.setNonStrokingColor(asComponent().getBackground());
+		contentStream.fill();
+		paintToPDF(document, page, renderLoc);
+	}
+
+
+	public default void paintToPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) {
+		Renderer renderer = getRenderer();
+		if(renderer != null) {
+			renderer.renderPDF(document, page,
+					(int) renderLoc.getX(),
+					(int) (page.getMediaBox().getHeight()-renderLoc.getMaxY()),
+					(int) renderLoc.getMaxX(),
+					(int) (page.getMediaBox().getHeight()-renderLoc.getY()));
+		}
+	}
+
+	/**
+	 * Renders this {@link JPlotterCanvas} in terms of PDF elements
+	 * to the specified page of the specified PDF document.
+	 *
+	 * @param document PDF document holding the page
+	 * @param page page in the document to create PDF elements in
+	 * @param w width of the page
+	 * @param h height of the page
+	 */
 	public default void paintToPDF(PDDocument document, PDPage page, int w, int h) {
 		Renderer renderer = getRenderer();
 		if(renderer != null)

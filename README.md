@@ -11,7 +11,8 @@ Most likely you want to set a `CoordSysRenderer` that displays a coordinate syst
 Within that coordinate system you may want to display points or lines, which you can do by again using a `Renderer` (or multiple) as content.
 A `PointsRenderer` can be used to draw points as in a scatter plot, or a `LinesRenderer` can be used to make a line chart or contour plot.
 
-JPlotter is also capable of exporting plots as Scalable Vector Graphics (SVG) through [Apache Batik](https://xmlgraphics.apache.org/batik/).
+JPlotter is also capable of exporting plots as Scalable Vector Graphics (SVG) through [Apache Batik](https://xmlgraphics.apache.org/batik/)
+as well as exporting to portable document format (PDF) through [Apache PDFBox](https://pdfbox.apache.org/).
 
 More details and information can be found in the **[Wiki](https://github.com/hageldave/JPlotter/wiki)**.
 
@@ -21,7 +22,7 @@ JPlotter is available as Maven artifact at the Central Maven Repository.
 <dependency>
   <groupId>com.github.hageldave.jplotter</groupId>
   <artifactId>jplotter</artifactId>
-  <version>0.5.0</version>
+  <version>0.6.1</version>
 </dependency>
 ```
 

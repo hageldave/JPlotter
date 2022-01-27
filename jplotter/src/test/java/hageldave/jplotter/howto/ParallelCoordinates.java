@@ -1,18 +1,5 @@
 package hageldave.jplotter.howto;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -21,6 +8,18 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
+import org.apache.pdfbox.pdmodel.PDDocument;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ParallelCoordinates {
 
@@ -130,6 +129,22 @@ public class ParallelCoordinates {
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);
+		});
+
+		canvas.asComponent().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(SwingUtilities.isRightMouseButton(e)){
+					try {
+						PDDocument doc = canvas.paintPDF();
+						doc.save("parallel_coords.pdf");
+						doc.close();
+						System.out.println("exported parallel_coords.pdf");
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			}
 		});
 
 	}

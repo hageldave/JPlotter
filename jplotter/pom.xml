@@ -4,7 +4,7 @@
 
 	<groupId>com.github.hageldave.jplotter</groupId>
 	<artifactId>jplotter</artifactId>
-	<version>0.5.1-SNAPSHOT</version>
+	<version>0.6.2-SNAPSHOT</version>
 
 	<name>JPlotter</name>
 	<url>https://github.com/hageldave/JPlotter</url>
@@ -32,7 +32,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -58,15 +58,20 @@
 		<dependency>
 			<groupId>org.apache.xmlgraphics</groupId>
 			<artifactId>batik-all</artifactId>
-			<version>1.11</version>
+			<version>1.14</version>
 		</dependency>
 		<!-- Render PDFs -->
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>2.0.24</version>
+			<version>2.0.25</version>
 		</dependency>
-
+		<!-- PDF bridge -->
+		<dependency>
+			<groupId>de.rototor.pdfbox</groupId>
+			<artifactId>graphics2d</artifactId>
+			<version>0.34</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>
@@ -94,7 +99,10 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.2.0</version>
+						<version>3.3.1</version>
+						<configuration>
+							<source>8</source>
+						</configuration>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>
@@ -158,6 +166,10 @@
 			<id>hageldave</id>
 			<name>David Hägele</name>
 			<email>haegele.david@gmail.com</email>
+		</developer>
+		<developer>
+			<id>lvcarx</id>
+			<name>Luca Reichmann</name>
 		</developer>
 	</developers>
 

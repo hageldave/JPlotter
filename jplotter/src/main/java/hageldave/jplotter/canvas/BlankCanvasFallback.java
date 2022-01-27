@@ -1,5 +1,6 @@
 package hageldave.jplotter.canvas;
 
+import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
@@ -30,6 +31,7 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	protected Img displayBuffer = new Img(0,0);
 	protected Renderer renderer;
 	protected boolean isRenderSvgAsImage = false;
+	protected boolean isRenderPDFAsImage = false;
 	
 	/**
 	 * Creates a new {@link BlankCanvasFallback} instance.
@@ -122,6 +124,9 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 		if(g instanceof SVGGraphics2D && !isSvgAsImageRenderingEnabled()){
 			return;
 		}
+		if (g instanceof PdfBoxGraphics2D && !isPDFAsImageRenderingEnabled()) {
+			return;
+		}
 		
 		g.clearRect(0, 0, getWidth(), getHeight());
 		int w=mainRenderBuffer.getWidth();
@@ -142,6 +147,16 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	@Override
 	public boolean isSvgAsImageRenderingEnabled(){
 		return isRenderSvgAsImage;
+	}
+
+	@Override
+	public void enablePDFAsImageRendering(boolean enable) {
+		this.isRenderPDFAsImage = enable;
+	}
+
+	@Override
+	public boolean isPDFAsImageRenderingEnabled() {
+		return isRenderPDFAsImage;
 	}
 
 	@Override

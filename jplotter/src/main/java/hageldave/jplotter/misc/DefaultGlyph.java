@@ -181,7 +181,7 @@ public enum DefaultGlyph implements Glyph {
 
 	static PDPageContentStream mkCirclePDF(PDPageContentStream contentStream, Integer pixelSize) {
 		try {
-			PDFUtils.createPDFPoint(contentStream, new Point2D.Double(0,0), pixelSize/2);
+			PDFUtils.createPDFPoint(contentStream, 0,0, pixelSize/2);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -229,7 +229,7 @@ public enum DefaultGlyph implements Glyph {
 
 	static PDPageContentStream mkSquarePDF(PDPageContentStream contentStream, Integer pixelSize) {
 		try {
-			return PDFUtils.createPDFRect(contentStream, (-.5*pixelSize), (-.5*pixelSize), pixelSize, pixelSize);
+			contentStream.addRect((float) -.5*pixelSize, (float) -.5*pixelSize, pixelSize, pixelSize);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
