@@ -1,23 +1,5 @@
 package hageldave.jplotter;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.DoubleBinaryOperator;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -35,6 +17,19 @@ import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.w3c.dom.Document;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.DoubleBinaryOperator;
 
 public class IsolinesViz {
 	
@@ -51,7 +46,7 @@ public class IsolinesViz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 450));
-		JPlotterCanvas canvas = mkCanvas(useFallback(args));
+		JPlotterCanvas canvas = mkCanvas(true);
 		CoordSysRenderer coordsys = new CoordSysRenderer();
 		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
@@ -146,6 +141,22 @@ public class IsolinesViz {
 					Document doc = canvas.paintSVG();
 					SVGUtils.documentToXMLFile(doc, new File("svgtest.svg"));
 					System.out.println("svg exported.");
+				}
+			}
+		});
+
+		canvas.asComponent().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(SwingUtilities.isMiddleMouseButton(e)){
+					try {
+						PDDocument doc = canvas.paintPDF();
+						doc.save("pdf_isolinesViz.pdf");
+						doc.close();
+						System.out.println("pdf exported.");
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
 				}
 			}
 		});

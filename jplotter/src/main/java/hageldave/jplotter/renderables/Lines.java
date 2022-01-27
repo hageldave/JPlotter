@@ -67,7 +67,7 @@ public class Lines implements Renderable {
 
 	/**
 	 * Sets the {@link #isDirty()} state of this renderable to true.
-	 * This indicates that an {@link #updateGL()} call is necessary to sync GL resources.
+	 * This indicates that an {@link #updateGL(boolean, double, double)} call is necessary to sync GL resources.
 	 * @return this for chaining
 	 */
 	public Lines setDirty() {
@@ -656,6 +656,15 @@ public class Lines implements Renderable {
 	}
 	
 
+	/**
+	 * Updates the vertex array to be in sync with this lines object.
+	 * This sets the {@link #isDirty()} state to false.
+	 * If {@link #initGL()} has not been called yet or this object has
+	 * already been closed, nothing happens
+	 * @param useGLDoublePrecision true when rendering with double precision
+	 * @param scaleX scaling of the x coordinate of the current view transform
+	 * @param scaleY scaling of the y coordinate of the current view transform
+	 */
 	@GLContextRequired
 	public void updateGL(boolean useGLDoublePrecision, double scaleX, double scaleY){
 		if (useGLDoublePrecision) // SFM

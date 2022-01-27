@@ -1,23 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.geom.CubicCurve2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL40;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorOperations;
 import hageldave.jplotter.gl.Shader;
@@ -30,13 +12,25 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
-
-import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL40;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.geom.CubicCurve2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * The CurvesRenderer is an implementation of the {@link GenericRenderer}
@@ -774,33 +768,16 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
         double scaleY = Objects.isNull(view) ? 1 : h / view.getHeight();
 
         try {
-            PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
-            for (Curves curves : getItemsToRender()) {
+            PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
 
-
+			contentStream.saveGraphicsState();
+			contentStream.addRect(x, y, w, h);
+			contentStream.clip();
+			for (Curves curves : getItemsToRender()) {
                 if (curves.isHidden() || curves.getStrokePattern() == 0 || curves.numCurves() == 0) {
                     // line is invisible
                     continue;
                 }
-
-                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                graphicsState.setStrokingAlphaConstant(curves.getGlobalAlphaMultiplier());
-                cs.setGraphicsStateParameters(graphicsState);
-
-                PDDocument glyphDoc = new PDDocument();
-                PDPage rectPage = new PDPage();
-                glyphDoc.addPage(rectPage);
-                PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
-                rectCont.addRect(x, y, w, h);
-                LayerUtility layerUtility = new LayerUtility(doc);
-                rectCont.close();
-                PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
-                glyphDoc.close();
-
-                cs.saveGraphicsState();
-                cs.drawForm(rectForm);
-                cs.closePath();
-                cs.clip();
 
                 for (CurveDetails details : curves.getCurveDetails()) {
                     double x1, y1, x2, y2, cp0x, cp0y, cp1x, cp1y;
@@ -841,26 +818,30 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
                             real[i] = Float.parseFloat(splited[i]);
                         }
 
-                        int color =
-                                ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());
+						PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+						int color = ColorOperations.changeSaturation(details.color.getAsInt(), curves.getGlobalSaturationMultiplier());
+						Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, curves.getGlobalAlphaMultiplier()), true);
+						graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+						graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+						contentStream.setGraphicsStateParameters(graphicsState);
 
-                        PDFUtils.createPDFCurve(cs, new Point2D.Double(x1 + x, y1 + y),
+                        PDFUtils.createPDFCurve(contentStream, new Point2D.Double(x1 + x, y1 + y),
                                 new Point2D.Double(cp0x + x, cp0y + y),
                                 new Point2D.Double(cp1x + x, cp1y + y),
                                 new Point2D.Double(x2 + x, y2 + y));
-                        cs.setLineDashPattern(real, 0);
-                        cs.setStrokingColor(new Color(color));
-                        cs.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
-                        cs.stroke();
+                        contentStream.setLineDashPattern(real, 0);
+                        contentStream.setStrokingColor(new Color(color));
+                        contentStream.setLineWidth((float) details.thickness.getAsDouble()*curves.getGlobalThicknessMultiplier());
+                        contentStream.stroke();
 
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-                // restore graphics
-                cs.restoreGraphicsState();
             }
-            cs.close();
+			// restore graphics
+			contentStream.restoreGraphicsState();
+            contentStream.close();
         } catch (IOException e) {
             throw new RuntimeException("Error occurred!");
         }
