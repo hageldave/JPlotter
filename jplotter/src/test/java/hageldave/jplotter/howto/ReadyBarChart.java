@@ -8,10 +8,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.stream.IntStream;
 
+@Deprecated(/*still in development, don't use this yet*/)
 public class ReadyBarChart {
 
 
-    public static void main(String[] args) {
+    @SuppressWarnings("unused"/*still in development so we don't care about warnings here*/)
+	public static void main(String[] args) {
         String[] cases = {"A","B","C","D1","D2*"};
         double[] scores = IntStream.range(0, cases.length)
                 .mapToDouble(i->Math.random()).toArray();

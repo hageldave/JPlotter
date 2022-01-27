@@ -10,11 +10,9 @@ import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.ShaderRegistry;
-import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
@@ -462,34 +460,17 @@ public class PointsRenderer extends GenericRenderer<Points> {
 			PDPageContentStream contentStream = new PDPageContentStream(doc, page,
 					PDPageContentStream.AppendMode.APPEND, false);
 
+			// clipping area
+			contentStream.saveGraphicsState();
+			contentStream.addRect(x,y,w,h);
+			contentStream.clip();
+
 			for (Points points : getItemsToRender()) {
 				if (points.isHidden()) {
 					continue;
 				}
+
 				Glyph glyph = points.getGlyph();
-
-				PDDocument glyphDoc = new PDDocument();
-				PDPage glyphPage = new PDPage();
-				PDPage rectPage = new PDPage();
-				glyphDoc.addPage(glyphPage);
-				glyphDoc.addPage(rectPage);
-				PDPageContentStream glyphCont = new PDPageContentStream(glyphDoc, glyphPage);
-				PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
-
-				glyph.createPDFElement(glyphCont);
-				rectCont.addRect(x, y, w, h);
-
-				LayerUtility layerUtility = new LayerUtility(doc);
-				rectCont.close();
-				glyphCont.close();
-				PDFormXObject glyphForm = layerUtility.importPageAsForm(glyphDoc, 0);
-				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 1);
-				glyphDoc.close();
-
-				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-				graphicsState.setStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
-				graphicsState.setNonStrokingAlphaConstant(points.getGlobalAlphaMultiplier());
-				contentStream.setGraphicsStateParameters(graphicsState);
 
 				for (PointDetails point : points.getPointDetails()) {
 					double x1, y1;
@@ -509,12 +490,8 @@ public class PointsRenderer extends GenericRenderer<Points> {
 						continue;
 					}
 
-					// clipping area
+					// save graphics state
 					contentStream.saveGraphicsState();
-					contentStream.drawForm(rectForm);
-					contentStream.closePath();
-					contentStream.clip();
-
 					// transform
 					contentStream.transform(new Matrix(1, 0, 0, 1, (float) x1 + x, (float) y1 + y));
 					if(point.rot.getAsDouble() != 0){
@@ -526,22 +503,32 @@ public class PointsRenderer extends GenericRenderer<Points> {
 					contentStream.transform(new Matrix((float) (glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0,
 						(float) (glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble()), 0, 0));
 
-					contentStream.drawForm(glyphForm);
+					glyph.createPDFElement(contentStream);
 
+					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					int color = ColorOperations.changeSaturation(point.color.getAsInt(), points.getGlobalSaturationMultiplier());
+					Color scaledColor = new Color(ColorOperations.scaleColorAlpha(color, points.getGlobalAlphaMultiplier()), true);
+					graphicsState.setStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+					graphicsState.setNonStrokingAlphaConstant(scaledColor.getAlpha()/255F);
+					contentStream.setGraphicsStateParameters(graphicsState);
 
 					if(glyph.isFilled()){
 						contentStream.setNonStrokingColor(new Color(color));
 						contentStream.fill();
 					} else {
-						contentStream.setLineWidth((float) (1/(glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble())));
+						contentStream.setLineWidth(0);
+						if ((glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble()) != 0) {
+							contentStream.setLineWidth((float) (1/(glyphScaling*points.getGlobalScaling()*point.scale.getAsDouble())));
+						}
 						contentStream.setStrokingColor(new Color(color));
 						contentStream.stroke();
 					}
-					// restore graphics
+					// restore the graphics state again, after the affine transformation & colors have been applied -> resets content stream transform property
 					contentStream.restoreGraphicsState();
 				}
 			}
+			// restore graphics
+			contentStream.restoreGraphicsState();
 			contentStream.close();
 		} catch (IOException e) {
 			throw new RuntimeException("Error occurred!");

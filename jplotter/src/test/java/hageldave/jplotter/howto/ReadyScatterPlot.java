@@ -3,7 +3,7 @@ package hageldave.jplotter.howto;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.IOException;
@@ -33,7 +33,6 @@ import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel.ScatterPlotDat
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotVisualMapping;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
-import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
@@ -102,9 +101,13 @@ public class ReadyScatterPlot {
         plot.placeLegendOnBottom();
         
         // basic coordinate system interaction schemes
-        plot.addPanning().setKeyListenerMask(new KeyMaskListener(KeyEvent.VK_W));
+        plot.addPanning();
         plot.addRectangleSelectionZoom();
         plot.addScrollZoom();
+        plot.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
+        	@Override /* get focus for key events whenever mouse enters this component */
+        	public void mouseEntered(MouseEvent e) {plot.getCanvas().asComponent().requestFocus();}
+		});
         
         // create a table that uses the plot's data model 
         JTable datasetTable = new JTable(new TableModel() {
@@ -224,6 +227,10 @@ public class ReadyScatterPlot {
         	Points pointHighlight;
         	boolean chunkHighlighted=false;
         	{
+        		init();
+        	}
+        	@SuppressWarnings("resource")
+        	private void init() {
         		pointHighlight = new Points(DefaultGlyph.CIRCLE_F);
 				plot.getContentLayer2().points.addItemToRender(pointHighlight);
         	}

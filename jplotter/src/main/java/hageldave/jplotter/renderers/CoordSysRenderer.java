@@ -179,6 +179,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Helper method to update the colors if the color scheme is changed.
+	 * @return this for chaining
 	 */
 	protected CoordSysRenderer updateColors() {
 		// axes already use a pointer to color scheme and need only to be set dirty
@@ -525,10 +526,34 @@ public class CoordSysRenderer implements Renderer {
 		for(Text txt: tickMarkLabels){
 			preContentTextR.addItemToRender(txt);
 		}
-		// axis labels
-		xAxisLabelText.setTextString(getxAxisLabel());
+
+		double characterSize = CharacterAtlas.boundsForText(1, 13, Font.PLAIN).getWidth();
+
+		// x axis label
+		int xLabelWidth = (int) CharacterAtlas.boundsForText(getxAxisLabel().length(), 13, Font.PLAIN).getWidth();
+		String shortenedXLabel = getxAxisLabel();
+		// do removing stuff only if the label is "bigger" than the coordsys
+		if (xLabelWidth > xAxisWidth) {
+			// remove the area of the label that is longer than the coordsys
+			int toRemove = (int) ((xLabelWidth - xAxisWidth) / characterSize);
+			// prevent removing more characters than the label is long
+			toRemove = Math.min(toRemove, getxAxisLabel().length() - 1);
+			// remove the overflowing characters from the label
+			shortenedXLabel = shortenedXLabel.substring(0, shortenedXLabel.length() - toRemove) + "...";
+		}
+
+		// y axis label (equivalent to x axis)
+		int yLabelHeight = (int) CharacterAtlas.boundsForText(getyAxisLabel().length(), 13, Font.PLAIN).getWidth();
+		String shortenedYLabel = getyAxisLabel();
+		if (yLabelHeight > yAxisHeight) {
+			int toRemove = (int) ((yLabelHeight - yAxisHeight) / characterSize);
+			toRemove = Math.min(toRemove, getyAxisLabel().length() - 1);
+			shortenedYLabel = shortenedYLabel.substring(0, shortenedYLabel.length() - toRemove) + "...";
+		}
+
+		xAxisLabelText.setTextString(shortenedXLabel);
 		xAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaLT, xAxisWidth/2 - xAxisLabelText.getTextSize().width/2, 4));
-		yAxisLabelText.setTextString(getyAxisLabel());
+		yAxisLabelText.setTextString(shortenedYLabel);
 		yAxisLabelText.setAngle(-(float)Math.PI/2);
 		yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 4, yAxisHeight/2 + yAxisLabelText.getTextSize().width/2));
 
@@ -808,11 +833,11 @@ public class CoordSysRenderer implements Renderer {
 		if(!isEnabled()){
 			return;
 		}
-		preContentLinesR.renderPDF(doc, page, 0, 0, w, h);
-		preContentTextR.renderPDF(doc, page, 0,0, w, h);
+		preContentLinesR.renderPDF(doc, page, x, y, w, h);
+		preContentTextR.renderPDF(doc, page, x,y, w, h);
 		if(content != null){
-			int viewPortX = (int)coordsysAreaLB.getX();
-			int viewPortY = (int)coordsysAreaLB.getY();
+			int viewPortX = (int)(coordsysAreaLB.getX()+x);
+			int viewPortY = (int)(coordsysAreaLB.getY()+y);
 			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
 			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
 			if(content instanceof AdaptableView){
@@ -821,8 +846,8 @@ public class CoordSysRenderer implements Renderer {
 			// render the content into the group
 			content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
 		}
-		postContentLinesR.renderPDF(doc, page, 0, 0, w, h);
-		postContentTextR.renderPDF(doc, page, 0, 0, w, h);
+		postContentLinesR.renderPDF(doc, page, x, y, w, h);
+		postContentTextR.renderPDF(doc, page, x, y, w, h);
 		if(Objects.nonNull(legendRight)){
 			legendRight.renderPDF(doc, page, legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
 		}

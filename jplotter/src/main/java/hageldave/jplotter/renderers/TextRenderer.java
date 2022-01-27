@@ -494,19 +494,21 @@ public class TextRenderer extends GenericRenderer<Text> {
 					if (y1 + txt.getTextSize().width < 0 || y1 - txt.getTextSize().width > h) {
 						continue;
 					}
-
+					float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
+					float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
 					if(txt.getBackground().getRGB() != 0){
 						contentStream.saveGraphicsState();
+						contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x), ((float) y1+y)));
 						contentStream.transform(new Matrix((float) Math.cos(-txt.getAngle()),(float) -Math.sin(-txt.getAngle()),
-								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), (float) txt.getBounds().getX(), (float) txt.getBounds().getY()));
+								(float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), 0, 0));
 
 						PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 						graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha())/255);
 						contentStream.setGraphicsStateParameters(graphicsState);
 
 						PDFUtils.createPDFPolygon(contentStream,
-								new double[]{-1.5, txt.getBounds().getWidth(), txt.getBounds().getWidth(), -1.5},
-								new double[]{0, 0, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
+								new double[]{-rightPadding, txt.getBounds().getWidth()+rightPadding, txt.getBounds().getWidth()+rightPadding, -rightPadding},
+								new double[]{-topPadding, -topPadding, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
 
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
@@ -516,7 +518,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 					// clipping area
 					contentStream.saveGraphicsState();
 					contentStream.addRect(x, y, w, h);
-					contentStream.closePath();
 					contentStream.clip();
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
@@ -525,7 +526,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 
 					if (txt.getAngle()==0) {
 						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
-								txt.getColor(), txt.getTextSize(), txt.fontsize, txt.style);
+								txt.getColor(), txt.fontsize, txt.style);
 					} else {
 						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
 								txt.getColor(), txt.fontsize, txt.style, txt.getAngle());

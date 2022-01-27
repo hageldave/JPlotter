@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-
+@Deprecated(/*still in development, don't use this yet*/)
 public class BarChart {
     // renderedGroups has to be passed to renderer somehow, so that it knows when to add lines
 

@@ -37,7 +37,7 @@ import java.util.function.Supplier;
  * and a line break happens, then positioning continues in the next row.
  * A slight difference is that glyph labels are always first in order and followed by
  * line labels.
- * Layouting happens on {@link #updateGL()}.
+ * Layouting happens on {@link #updateGL(boolean)}.
  * 
  * @author hageldave
  */
@@ -157,7 +157,7 @@ public class Legend implements Renderable, Renderer {
 
 	/**
 	 * Sets the {@link #isDirty()} state of this legend to true.
-	 * This indicates that a call to {@link #updateGL()} is necessary
+	 * This indicates that a call to {@link #updateGL(boolean)} is necessary
 	 * to sync GL resources with this legends state.
 	 * @return this for chaining
 	 */
