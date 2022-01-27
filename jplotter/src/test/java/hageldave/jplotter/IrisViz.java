@@ -13,6 +13,7 @@ import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
+import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
@@ -20,6 +21,8 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
 
 import javax.swing.*;
@@ -353,6 +356,20 @@ public class IrisViz {
 				SVGUtils.documentToXMLFile(svg, new File("iris_export.svg"));
 				System.out.println("exported iris_export.svg");
 			});
+
+			MenuItem pdfExport = new MenuItem("PDF export");
+			menu.add(pdfExport);
+			pdfExport.addActionListener(e->{
+				try {
+					PDDocument doc = PDFUtils.containerToPDF(frame.getContentPane());
+					doc.save("iris_export.pdf");
+					doc.close();
+					System.out.println("exported iris_export.pdf");
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			});
+
 			cnvs.asComponent().add(menu);
 			cnvs.asComponent().addMouseListener(new MouseAdapter() {
 				@Override

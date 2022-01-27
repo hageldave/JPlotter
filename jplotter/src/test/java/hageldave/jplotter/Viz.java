@@ -5,7 +5,7 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
-import hageldave.jplotter.interaction.CoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 
 import hageldave.jplotter.renderables.*;

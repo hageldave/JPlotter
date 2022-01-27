@@ -21,18 +21,23 @@ import java.net.URL;
  * @author hageldave
  */
 public final class FontProvider {
+	
+	public static final String UBUNTU_MONO_PLAIN_RESOURCE = "/font/UbuntuMono-R.ttf";
+	public static final String UBUNTU_MONO_BOLD_RESOURCE = "/font/UbuntuMono-B.ttf";
+	public static final String UBUNTU_MONO_ITALIC_RESOURCE = "/font/UbuntuMono-RI.ttf";
+	public static final String UBUNTU_MONO_BOLDITALIC_RESOURCE = "/font/UbuntuMono-BI.ttf";
 
 	public static final Font UBUNTU_MONO_PLAIN = registerTrueTypeFont(
-			FontProvider.class.getResource("/font/UbuntuMono-R.ttf"));
+			FontProvider.class.getResource(UBUNTU_MONO_PLAIN_RESOURCE));
 	
 	public static final Font UBUNTU_MONO_BOLD = registerTrueTypeFont(
-			FontProvider.class.getResource("/font/UbuntuMono-B.ttf"));
+			FontProvider.class.getResource(UBUNTU_MONO_BOLD_RESOURCE));
 	
 	public static final Font UBUNTU_MONO_ITALIC = registerTrueTypeFont(
-			FontProvider.class.getResource("/font/UbuntuMono-RI.ttf"));
+			FontProvider.class.getResource(UBUNTU_MONO_ITALIC_RESOURCE));
 	
 	public static final Font UBUNTU_MONO_BOLDITALIC = registerTrueTypeFont(
-			FontProvider.class.getResource("/font/UbuntuMono-BI.ttf"));
+			FontProvider.class.getResource(UBUNTU_MONO_BOLDITALIC_RESOURCE));
 	
 	/**
 	 * Loads a true type font (ttf) from the specified source

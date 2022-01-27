@@ -1,19 +1,18 @@
 package hageldave.jplotter;
 
-import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.svg.SVGUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.w3c.dom.Document;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
 
 public class SVGTest {
 
@@ -44,6 +43,16 @@ public class SVGTest {
 					SVGUtils.documentToXMLFile(doc, new File("svgtest.svg"));
 					System.out.println("svg exported:");
 					System.out.println(SVGUtils.documentToXMLString(doc));
+				}
+				if(SwingUtilities.isMiddleMouseButton(e)){
+					try {
+						PDDocument doc = bc.paintPDF();
+						doc.save("pdftest.pdf");
+						doc.close();
+						System.out.println("pdf exported.");
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
 				}
 			}
 		});

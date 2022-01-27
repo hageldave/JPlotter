@@ -12,22 +12,31 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.BarycentricGradientPaint;
 import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.multipdf.LayerUtility;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDTransparencyGroup;
+import org.apache.pdfbox.pdmodel.graphics.form.PDTransparencyGroupAttributes;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL40;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
@@ -171,7 +180,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		closeAllItems();
 	}
 
-	// TODO implement saturation multiplier
 	/**
 	 * Disables {@link GL11#GL_DEPTH_TEST},
 	 * enables {@link GL11#GL_BLEND}
@@ -324,7 +332,6 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 				x0*=scaleX; x1*=scaleX; x2*=scaleX;
 				y0*=scaleY; y1*=scaleY; y2*=scaleY;
 
-				// TODO neeeds further testing
 				int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
 				// not needed: alpha multiplier is passed via SVGTriangleRendering - c0 = ColorOperations.scaleColorAlpha(c0, tris.getGlobalAlphaMultiplier());
 				int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
@@ -383,41 +390,38 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 		if(!isEnabled()){
 			return;
 		}
-	
+
+		double factor;
+		int maxValue;
+
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
-	
+
 		try {
 			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
+
+			double minX = 0.0;
+			double minY = 0.0;
+			double maxX = w;
+			double maxY = h;
+
+			contentStream.saveGraphicsState();
+			// clipping
+			contentStream.addRect(x, y, w, h);
+			contentStream.clip();
+
+			ArrayList<Triangles> allTriangles = new ArrayList<>(getItemsToRender().size());
 			for(Triangles tris : getItemsToRender()){
 				if(tris.isHidden()){
 					continue;
 				}
-	
-				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
-				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
-				contentStream.setGraphicsStateParameters(graphicsState);
-	
-				PDDocument glyphDoc = new PDDocument();
-				PDPage rectPage = new PDPage();
-				glyphDoc.addPage(rectPage);
-				PDPageContentStream rectCont = new PDPageContentStream(glyphDoc, rectPage);
-				rectCont.addRect(x, y, w, h);
-				LayerUtility layerUtility = new LayerUtility(doc);
-				rectCont.close();
-				PDFormXObject rectForm = layerUtility.importPageAsForm(glyphDoc, 0);
-				glyphDoc.close();
-	
-				// clipping area
-				contentStream.saveGraphicsState();
-				contentStream.drawForm(rectForm);
-				contentStream.closePath();
-				contentStream.clip();
-	
-				for(TriangleDetails tri : tris.getTriangleDetails()){
+				Triangles modifiedTriangle = new Triangles();
+				modifiedTriangle.setGlobalAlphaMultiplier(tris.getGlobalAlphaMultiplier());
+				modifiedTriangle.setGlobalSaturationMultiplier(tris.getGlobalSaturationMultiplier());
+
+				for(TriangleDetails tri : tris.getTriangleDetails()) {
 					double x0,y0, x1,y1, x2,y2;
 					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
 					x0-=translateX; x1-=translateX; x2-=translateX;
@@ -425,22 +429,186 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 					x0*=scaleX; x1*=scaleX; x2*=scaleX;
 					y0*=scaleY; y1*=scaleY; y2*=scaleY;
 					x0=x0+x; y0=y0+y; x1=x1+x; y1=y1+y; x2=x2+x; y2=y2+y;
-					int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
-					c0 = ColorOperations.scaleColorAlpha(c0, tris.getGlobalAlphaMultiplier());
-					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
-					c1 = ColorOperations.scaleColorAlpha(c1, tris.getGlobalAlphaMultiplier());
-					int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
-					c2 = ColorOperations.scaleColorAlpha(c2, tris.getGlobalAlphaMultiplier());
+					TriangleDetails triangleDetails = tri.clone();
+					triangleDetails.p0 = new Point2D.Double(x0, y0);
+					triangleDetails.p1 = new Point2D.Double(x1, y1);
+					triangleDetails.p2 = new Point2D.Double(x2, y2);
+					modifiedTriangle.getTriangleDetails().add(triangleDetails);
+				}
+				allTriangles.add(modifiedTriangle);
+			}
 
-					PDFUtils.createPDFShadedTriangle(contentStream, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
+			// remove all triangles details and add intersecting triangles back
+			for(Triangles tris : allTriangles) {
+				ArrayList<TriangleDetails> list = new ArrayList<>(tris.getIntersectingTriangles(new Rectangle2D.Double(x, y, w, h)));
+				tris.removeAllTriangles();
+				for (TriangleDetails details : list)
+					tris.getTriangleDetails().add(details);
+			}
+
+			// calculate the min/max values (the bounds) of all triangles
+			for(Triangles tris : allTriangles){
+				for(TriangleDetails tri : tris.getTriangleDetails()) {
+					double x0,y0, x1,y1, x2,y2;
+					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
+					// first get min/max vertex x/y value of triangle (Math.min(Math.min(x0, x1), x2))
+					// then update min/max values if necessary
+					minX = Math.min(Math.min(Math.min(x0, x1), x2), minX);
+					minY = Math.min(Math.min(Math.min(y0, y1), y2), minY);
+					maxX = Math.max(Math.max(Math.max(x0, x1), x2), maxX);
+					maxY = Math.max(Math.max(Math.max(y0, y1), y2), maxY);
+				}
+			}
+			
+			/* The gouraud shading for triangle meshes expects integer valued coordinates
+			 * in range from [0 .. 2^16-1] (16 bits) which are then transformed to floating
+			 * point coordinates in range of [0,maxValue] (maxValue also integer valued). 
+			 * We want to choose maxValue in a way so that we get the highest level of precision 
+			 * for the 16 bits available per coordinate.
+			 * We already know that our triangle vertices are in range [minX,maxX] x [minY,maxY],
+			 * so we want to map the larger range (maxX-minX) or (maxY-minY) to 2^16-1
+			 * and scale our current coordinates accordingly (which will then be rescaled back
+			 * through the gouraud shading object by the PDF renderer).
+			 */
+			double range = Math.ceil(Math.max(maxX-minX, maxY-minY));
+			factor = 0xFFFF / range; // (2^16 -1) / range
+			maxValue = (int) range;
+
+			for(Triangles tris : allTriangles){
+				PDShadingType4 gouraudShading = new PDShadingType4(doc.getDocument().createCOSStream());
+				gouraudShading.setShadingType(PDShading.SHADING_TYPE4);
+				gouraudShading.setBitsPerFlag(8);
+				gouraudShading.setBitsPerCoordinate(16);
+				gouraudShading.setBitsPerComponent(8);
+
+				COSArray decodeArray = new COSArray();
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.get(maxValue));
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.get(maxValue));
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.ONE);
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.ONE);
+				decodeArray.add(COSInteger.ZERO);
+				decodeArray.add(COSInteger.ONE);
+				gouraudShading.setDecodeValues(decodeArray);
+				gouraudShading.setColorSpace(PDDeviceRGB.INSTANCE);
+
+				OutputStream os = ((COSStream) gouraudShading.getCOSObject()).createOutputStream();
+				MemoryCacheImageOutputStream mcos = new MemoryCacheImageOutputStream(os);
+
+				// soft masking for triangle transparency
+				PDDocument maskDoc = new PDDocument();
+				PDPage maskPage = new PDPage();
+				maskDoc.addPage(maskPage);
+				maskPage.setMediaBox(new PDRectangle(w+x, h+y));
+				PDPageContentStream maskCS = new PDPageContentStream(maskDoc, maskPage, PDPageContentStream.AppendMode.APPEND, false);
+
+				PDShadingType4 gouraudShadingMask = new PDShadingType4(doc.getDocument().createCOSStream());
+				gouraudShadingMask.setShadingType(PDShading.SHADING_TYPE4);
+				gouraudShadingMask.setBitsPerFlag(8);
+				gouraudShadingMask.setBitsPerCoordinate(16);
+				gouraudShadingMask.setBitsPerComponent(8);
+
+				COSArray decodeArrayMask = new COSArray();
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.get(maxValue));
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.get(maxValue));
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.ONE);
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.ONE);
+				decodeArrayMask.add(COSInteger.ZERO);
+				decodeArrayMask.add(COSInteger.ONE);
+				gouraudShadingMask.setDecodeValues(decodeArrayMask);
+				gouraudShadingMask.setColorSpace(PDDeviceRGB.INSTANCE);
+
+				OutputStream osMask = ((COSStream) gouraudShadingMask.getCOSObject()).createOutputStream();
+				MemoryCacheImageOutputStream mcosMask = new MemoryCacheImageOutputStream(osMask);
+
+				PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+				graphicsState.setNonStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+				graphicsState.setStrokingAlphaConstant(tris.getGlobalAlphaMultiplier());
+				contentStream.setGraphicsStateParameters(graphicsState);
+
+				for(TriangleDetails tri : tris.getTriangleDetails()){
+					double x0,y0, x1,y1, x2,y2;
+					x0=tri.p0.getX(); y0=tri.p0.getY(); x1=tri.p1.getX(); y1=tri.p1.getY(); x2=tri.p2.getX(); y2=tri.p2.getY();
+
+					// shift and rescale x,y coordinates
+					x0 -= minX; x1 -= minX; x2 -= minX;
+					y0 -= minY; y1 -= minY; y2 -= minY;
+					x0 *= factor; x1 *= factor; x2 *= factor;
+					y0 *= factor; y1 *= factor; y2 *= factor;
+
+					int c0 = ColorOperations.changeSaturation(tri.c0.getAsInt(), tris.getGlobalSaturationMultiplier());
+					int c1 = ColorOperations.changeSaturation(tri.c1.getAsInt(), tris.getGlobalSaturationMultiplier());
+					int c2 = ColorOperations.changeSaturation(tri.c2.getAsInt(), tris.getGlobalSaturationMultiplier());
+
+					int c02 = new Color(tri.c0.getAsInt(), true).getAlpha();
+					int c12 = new Color(tri.c1.getAsInt(), true).getAlpha();
+					int c22 = new Color(tri.c2.getAsInt(), true).getAlpha();
+
+					// write shaded triangle to mask stream
+					PDFUtils.writeShadedTriangle(mcosMask,
+							new Point2D.Double(x0, y0),
+							new Point2D.Double(x1,y1),
+							new Point2D.Double(x2, y2),
+							new Color(c02, c02, c02),
+							new Color(c12, c12, c12),
+							new Color(c22, c22, c22));
+
+					// write shaded (colored) triangle to normal stream
+					PDFUtils.writeShadedTriangle(mcos, new Point2D.Double(x0, y0), new Point2D.Double(x1,y1),
 							new Point2D.Double(x2, y2), new Color(c0), new Color(c1), new Color(c2));
 				}
+
+				maskCS.saveGraphicsState();
+				maskCS.transform(new Matrix(1,0,0,1, (float) minX, (float) minY));
+				maskCS.shadingFill(gouraudShadingMask);
+				maskCS.restoreGraphicsState();
+				mcosMask.close();
+				osMask.close();
+				maskCS.close();
+				// import b/w triangle as a mask
+				LayerUtility maskLayer = new LayerUtility(doc);
+				PDFormXObject maskForm = maskLayer.importPageAsForm(maskDoc, 0);
+				maskDoc.close();
+
+				PDTransparencyGroupAttributes transparencyGroupAttributes = new PDTransparencyGroupAttributes();
+				transparencyGroupAttributes.getCOSObject().setItem(COSName.CS, COSName.DEVICEGRAY);
+
+				PDTransparencyGroup transparencyGroup = new PDTransparencyGroup(doc);
+				transparencyGroup.setBBox(new PDRectangle(w+x, h+y));
+				transparencyGroup.setResources(new PDResources());
+				transparencyGroup.getCOSObject().setItem(COSName.GROUP, transparencyGroupAttributes);
+				try (PDFormContentStream canvas = new PDFormContentStream(transparencyGroup)) {
+					canvas.drawForm(maskForm);
+				}
+
+				COSDictionary softMaskDictionary = new COSDictionary();
+				softMaskDictionary.setItem(COSName.S, COSName.LUMINOSITY);
+				softMaskDictionary.setItem(COSName.G, transparencyGroup);
+
+				PDExtendedGraphicsState extendedGraphicsState = new PDExtendedGraphicsState();
+				extendedGraphicsState.getCOSObject().setItem(COSName.SMASK, softMaskDictionary);
+
+				contentStream.saveGraphicsState();
+				contentStream.setGraphicsStateParameters(extendedGraphicsState);
+				contentStream.transform(new Matrix(1,0,0,1, (float) minX, (float) minY));
+				contentStream.shadingFill(gouraudShading);
 				contentStream.restoreGraphicsState();
+
+				mcos.close();
+				os.close();
 			}
+			contentStream.restoreGraphicsState();
 			contentStream.close();
 		} catch (IOException e) {
+			System.out.println(e);
 			throw new RuntimeException("Error occurred!");
 		}
 	}
-
 }

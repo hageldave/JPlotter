@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.BlankCanvas;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordsysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Lines;
@@ -33,7 +33,7 @@ public class PrecisionTest {
 		canvas.setRenderer(csr);
 		CompleteRenderer content = new CompleteRenderer();
 		csr.setContent(content);
-		new CoordSysScrollZoom(canvas, csr).register();
+		new CoordsysScrollZoom(canvas, csr).register();
 		
 		JCheckBox cbxDoublePrecision = new JCheckBox("GL double precision");
 		cbxDoublePrecision.addChangeListener(e->{

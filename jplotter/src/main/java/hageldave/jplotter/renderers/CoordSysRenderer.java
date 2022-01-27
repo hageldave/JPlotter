@@ -179,6 +179,7 @@ public class CoordSysRenderer implements Renderer {
 
 	/**
 	 * Helper method to update the colors if the color scheme is changed.
+	 * @return this for chaining
 	 */
 	protected CoordSysRenderer updateColors() {
 		// axes already use a pointer to color scheme and need only to be set dirty
@@ -832,11 +833,11 @@ public class CoordSysRenderer implements Renderer {
 		if(!isEnabled()){
 			return;
 		}
-		preContentLinesR.renderPDF(doc, page, 0, 0, w, h);
-		preContentTextR.renderPDF(doc, page, 0,0, w, h);
+		preContentLinesR.renderPDF(doc, page, x, y, w, h);
+		preContentTextR.renderPDF(doc, page, x,y, w, h);
 		if(content != null){
-			int viewPortX = (int)coordsysAreaLB.getX();
-			int viewPortY = (int)coordsysAreaLB.getY();
+			int viewPortX = (int)(coordsysAreaLB.getX()+x);
+			int viewPortY = (int)(coordsysAreaLB.getY()+y);
 			int viewPortW = (int)coordsysAreaLB.distance(coordsysAreaRB);
 			int viewPortH = (int)coordsysAreaLB.distance(coordsysAreaLT);
 			if(content instanceof AdaptableView){
@@ -845,8 +846,8 @@ public class CoordSysRenderer implements Renderer {
 			// render the content into the group
 			content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
 		}
-		postContentLinesR.renderPDF(doc, page, 0, 0, w, h);
-		postContentTextR.renderPDF(doc, page, 0, 0, w, h);
+		postContentLinesR.renderPDF(doc, page, x, y, w, h);
+		postContentTextR.renderPDF(doc, page, x, y, w, h);
 		if(Objects.nonNull(legendRight)){
 			legendRight.renderPDF(doc, page, legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
 		}
