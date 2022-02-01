@@ -25,7 +25,7 @@ import java.util.Arrays;
  * @author hageldave
  *
  */
-public class CoordsysScrollZoom implements MouseWheelListener, InteractionConstants {
+public class CoordSysScrollZoom implements MouseWheelListener, InteractionConstants {
     protected Component canvas;
     protected CoordSysRenderer coordsys;
     protected double zoomFactor = 1.7;
@@ -33,22 +33,22 @@ public class CoordsysScrollZoom implements MouseWheelListener, InteractionConsta
     protected KeyMaskListener keyListenerMask;
     protected boolean mouseFocusedZoom;
 
-    public CoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask, boolean mouseFocusedZoom) {
+    public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask, boolean mouseFocusedZoom) {
         this.canvas = canvas.asComponent();
         this.coordsys = coordsys;
         this.keyListenerMask = keyListenerMask;
         this.mouseFocusedZoom = mouseFocusedZoom;
     }
 
-    public CoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, boolean mouseFocusedZoom) {
+    public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, boolean mouseFocusedZoom) {
         this(canvas, coordsys, new KeyMaskListener(KeyEvent.VK_ALT), mouseFocusedZoom);
     }
 
-    public CoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+    public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
         this(canvas, coordsys, new KeyMaskListener(KeyEvent.VK_ALT), false);
     }
 
-    public CoordsysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask) {
+    public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask) {
         this(canvas, coordsys, keyListenerMask, false);
     }
 
@@ -105,13 +105,13 @@ public class CoordsysScrollZoom implements MouseWheelListener, InteractionConsta
     }
 
     /**
-     * Sets the zoom factor of this {@link CoordsysScrollZoom}.
+     * Sets the zoom factor of this {@link CoordSysScrollZoom}.
      * The default value is 2.0.
      * Using a value in ]0,1[ will reverse the zoom direction.
      * @param zoomFactor to be set
      * @return this for chaining
      */
-    public CoordsysScrollZoom setZoomFactor(double zoomFactor) {
+    public CoordSysScrollZoom setZoomFactor(double zoomFactor) {
         this.zoomFactor = zoomFactor;
         return this;
     }
@@ -121,10 +121,10 @@ public class CoordsysScrollZoom implements MouseWheelListener, InteractionConsta
     }
 
     /**
-     * Adds this {@link CoordsysScrollZoom} as {@link MouseWheelListener} to the associated canvas.
+     * Adds this {@link CoordSysScrollZoom} as {@link MouseWheelListener} to the associated canvas.
      * @return this for chaining
      */
-    public CoordsysScrollZoom register(){
+    public CoordSysScrollZoom register(){
         if( ! Arrays.asList(canvas.getMouseWheelListeners()).contains(this))
             canvas.addMouseWheelListener(this);
         if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
@@ -138,7 +138,7 @@ public class CoordsysScrollZoom implements MouseWheelListener, InteractionConsta
      * @param axes {@link InteractionConstants#X_AXIS}, {@link InteractionConstants#Y_AXIS} or {@code X_AXIS|Y_AXIS}
      * @return this for chaining
      */
-    public CoordsysScrollZoom setZoomedAxes(int axes){
+    public CoordSysScrollZoom setZoomedAxes(int axes){
         this.axes = axes;
         return this;
     }
@@ -155,7 +155,7 @@ public class CoordsysScrollZoom implements MouseWheelListener, InteractionConsta
         return mouseFocusedZoom;
     }
 
-    public CoordsysScrollZoom setMouseFocusedZoom(boolean mouseFocusedZoom) {
+    public CoordSysScrollZoom setMouseFocusedZoom(boolean mouseFocusedZoom) {
         this.mouseFocusedZoom = mouseFocusedZoom;
         return this;
     }
@@ -168,11 +168,11 @@ public class CoordsysScrollZoom implements MouseWheelListener, InteractionConsta
     }
 
     /**
-     * Removes this {@link CoordsysScrollZoom} from the associated canvas'
+     * Removes this {@link CoordSysScrollZoom} from the associated canvas'
      * mouse wheel listeners.
      * @return this for chaining
      */
-    public CoordsysScrollZoom deRegister(){
+    public CoordSysScrollZoom deRegister(){
         canvas.removeMouseWheelListener(this);
         canvas.removeKeyListener(this.keyListenerMask);
         return this;

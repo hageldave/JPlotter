@@ -9,7 +9,7 @@ import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
 import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
-import hageldave.jplotter.interaction.kml.CoordsysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Lines;
@@ -239,7 +239,7 @@ public class BezierDemo {
 				.withAppended(	new CurvesRenderer().addItemToRender(curves)));
 		timecurvesCoordsys.setCoordinateView(points.getBounds());
 		new CoordSysPanning(timeCurveCanvas,timecurvesCoordsys).register();
-		new CoordsysScrollZoom(timeCurveCanvas, timecurvesCoordsys).register();
+		new CoordSysScrollZoom(timeCurveCanvas, timecurvesCoordsys).register();
 		new CoordSysViewSelector(timeCurveCanvas,timecurvesCoordsys) {
 			@Override
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {

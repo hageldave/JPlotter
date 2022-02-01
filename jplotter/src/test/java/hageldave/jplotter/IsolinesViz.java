@@ -6,7 +6,7 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
-import hageldave.jplotter.interaction.kml.CoordsysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.misc.Contours;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
@@ -100,7 +100,7 @@ public class IsolinesViz {
 		content.addItemToRender(contourlines).addItemToRender(contourbands);
 		contourlines.setGlobalThicknessMultiplier(1);
 		contourbands.setGlobalAlphaMultiplier(0.3);
-		new CoordsysScrollZoom(canvas, coordsys).register();
+		new CoordSysScrollZoom(canvas, coordsys).register();
 		new CoordSysPanning(canvas, coordsys).register();
 		coordsys.setCoordinateView(-2.5, -1.5, 0.5, 1.5);
 		

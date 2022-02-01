@@ -6,7 +6,7 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.kml.CoordsysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
@@ -72,7 +72,7 @@ public class ScatterPlot {
 			frame.setVisible(true);
 		});
 		// use mouse focused zoom
-		new CoordsysScrollZoom(canvas, coordsys, true).register();
+		new CoordSysScrollZoom(canvas, coordsys, true).register();
 
 		long t=System.currentTimeMillis()+2000;
 		while(t>System.currentTimeMillis());

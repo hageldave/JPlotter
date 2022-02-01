@@ -7,7 +7,7 @@ import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
 import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
-import hageldave.jplotter.interaction.kml.CoordsysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
@@ -419,14 +419,14 @@ public class ScatterPlot {
     /**
      * Adds a scroll zoom to the Scatterplot
      *
-     * @return the {@link CoordsysScrollZoom} so that it can be further customized
+     * @return the {@link CoordSysScrollZoom} so that it can be further customized
      */
-    public CoordsysScrollZoom addScrollZoom() {
-        return new CoordsysScrollZoom(this.canvas, this.coordsys).register();
+    public CoordSysScrollZoom addScrollZoom() {
+        return new CoordSysScrollZoom(this.canvas, this.coordsys).register();
     }
 
-    public CoordsysScrollZoom addScrollZoom(final KeyMaskListener keyListenerMask) {
-        return new CoordsysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
+    public CoordSysScrollZoom addScrollZoom(final KeyMaskListener keyListenerMask) {
+        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
     }
 
     /**
