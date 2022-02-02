@@ -1,7 +1,10 @@
 package hageldave.jplotter.coordsys.timelabels.units;
 
+import hageldave.jplotter.util.Pair;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MilliTimeUnit implements ITimeUnit {
 
@@ -15,6 +18,10 @@ public class MilliTimeUnit implements ITimeUnit {
         long milli2nano = (long) (delta * 1000000);
 
         return value.plusNanos(milli2nano);
+    }
+
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier) {
+        return new Pair<>(new double[]{}, "");
     }
 
     @Override
