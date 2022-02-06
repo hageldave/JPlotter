@@ -20,8 +20,24 @@ public class MilliTimeUnit implements ITimeUnit {
         return value.plusNanos(milli2nano);
     }
 
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier) {
-        return new Pair<>(new double[]{}, "");
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
+        double difference = ticks[1]-ticks[0];
+        double[] convertedTicks = new double[ticks.length];
+        String unitLabel;
+
+        if (difference > switchConstants.millies_up) {
+            for (int i = 0; i < ticks.length; i++)
+                convertedTicks[i] = ticks[i]/1000.0;
+            timeUnit = new SecondTimeUnit();
+            multiplier.set(multiplier.get()*1000.0);
+            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
+            return new Pair<>(convertedTickPair.first, convertedTickPair.second);
+        } else {
+            convertedTicks = ticks;
+            unitLabel = timeUnit.getUnitLabel();
+        }
+
+        return new Pair<>(convertedTicks, unitLabel);
     }
 
     @Override

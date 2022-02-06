@@ -10,9 +10,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MonthTimeUnit implements ITimeUnit {
     private final static long differenceInMillis = 2678400000L;
 
-    private final static int upperDifferenceLimit = 48;
-    private final static double lowerDifferenceLimit = 0.05;
-
     @Override
     public LocalDateTime floor(LocalDateTime value) {
         return value.truncatedTo(ChronoUnit.MONTHS);
@@ -28,25 +25,25 @@ public class MonthTimeUnit implements ITimeUnit {
     }
 
 
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier) {
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
         double difference = ticks[1]-ticks[0];
         double[] convertedTicks = new double[ticks.length];
         String unitLabel;
 
-        if (difference > upperDifferenceLimit) {
+        if (difference > switchConstants.months_up) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]/12.0;
             timeUnit = new YearTimeUnit();
             multiplier.set(multiplier.get()*12.0);
-            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier);
+            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
 
-        } else if (difference < lowerDifferenceLimit) {
+        } else if (difference < switchConstants.months_down) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]*30.0;
             timeUnit = new DayTimeUnit();
             multiplier.set(multiplier.get()/30.0);
-            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier);
+            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
 
         } else {

@@ -9,8 +9,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class YearTimeUnit implements ITimeUnit {
     private final static long differenceInMillis = 31536000000L;
 
-    private final static double lowerDifferenceLimit = 0.05;
-
     @Override
     public LocalDateTime floor(LocalDateTime value) {
         return value.truncatedTo(ChronoUnit.YEARS);
@@ -26,19 +24,18 @@ public class YearTimeUnit implements ITimeUnit {
     }
 
 
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier) {
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
         double difference = ticks[1]-ticks[0];
         double[] convertedTicks = new double[ticks.length];
         String unitLabel;
 
-        if (difference < lowerDifferenceLimit) {
+        if (difference < switchConstants.years_down) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]*360.0;
-            timeUnit = new HourTimeUnit();
+            timeUnit = new MonthTimeUnit();
             multiplier.set(multiplier.get()/360.0);
-            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier);
+            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
-
         } else {
             convertedTicks = ticks;
             unitLabel = timeUnit.getUnitLabel();

@@ -11,7 +11,7 @@ public interface ITimeUnit {
 
     LocalDateTime increment(LocalDateTime value, double delta);
 
-    Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier);
+    Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants);
 
     String getUnitLabel();
 }

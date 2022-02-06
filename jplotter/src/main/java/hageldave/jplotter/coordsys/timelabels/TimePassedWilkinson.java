@@ -7,19 +7,25 @@ import hageldave.jplotter.util.Pair;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
-// TODO: we need some sort of mechanism to let the developer pass the switching points between the time unit (e.g. switch from hour -> day, if the difference between each tick is 30h)
 public class TimePassedWilkinson extends ExtendedWilkinson {
 
     protected TimeUnit timeUnit;
+    protected UnitSwitchConstants unitSwitchConstants;
+
+    public TimePassedWilkinson(final TimeUnit timeUnit, final UnitSwitchConstants unitSwitchConstants) {
+        this.timeUnit = timeUnit;
+        this.unitSwitchConstants = unitSwitchConstants;
+    }
 
     public TimePassedWilkinson(final TimeUnit timeUnit) {
         this.timeUnit = timeUnit;
+        this.unitSwitchConstants = new UnitSwitchConstants();
     }
 
     // TODO: rename this
     protected Pair<double[], String[]> labelsForTicks(double[] ticks, ITimeUnit timeUnit, int desiredNumTicks) {
         AtomicReference<Double> multiplier = new AtomicReference<>(1.0);
-        Pair<double[], String> convertedStuff = timeUnit.convertTicks(timeUnit, ticks, multiplier);
+        Pair<double[], String> convertedStuff = timeUnit.convertTicks(timeUnit, ticks, multiplier, unitSwitchConstants);
 
         // after the ticks are converted we want "nice" labels again
         ticks = getTicks(convertedStuff.first[0], convertedStuff.first[convertedStuff.first.length-1], desiredNumTicks, Q, w);
@@ -27,7 +33,6 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
         double[] ticksForLabels = Arrays.copyOf(ticks, ticks.length);
         for (int j = 0; j < ticks.length; j++)
             ticks[j] *= multiplier.get();
-
 
         String[] labels = new String[ticks.length];
         for (int i = 0; i < ticks.length; i++)

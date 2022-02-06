@@ -25,9 +25,33 @@ public class SecondTimeUnit implements ITimeUnit {
     }
 
 
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier) {
-        timeUnit = new SecondTimeUnit();
-        return new Pair<>(ticks, timeUnit.getUnitLabel());
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
+        double difference = ticks[1]-ticks[0];
+        double[] convertedTicks = new double[ticks.length];
+        String unitLabel;
+
+        if (difference > switchConstants.seconds_up) {
+            for (int i = 0; i < ticks.length; i++)
+                convertedTicks[i] = ticks[i]/60.0;
+            timeUnit = new MinuteTimeUnit();
+            multiplier.set(multiplier.get()*60.0);
+            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
+            return new Pair<>(convertedTickPair.first, convertedTickPair.second);
+
+        } else if (difference < switchConstants.seconds_down) {
+            for (int i = 0; i < ticks.length; i++)
+                convertedTicks[i] = ticks[i]*1000;
+            timeUnit = new MilliTimeUnit();
+            multiplier.set(multiplier.get()/1000);
+            Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
+            return new Pair<>(convertedTickPair.first, convertedTickPair.second);
+
+        } else {
+            convertedTicks = ticks;
+            unitLabel = timeUnit.getUnitLabel();
+        }
+
+        return new Pair<>(convertedTicks, unitLabel);
     }
 
     @Override
