@@ -22,13 +22,12 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
         this.unitSwitchConstants = new UnitSwitchConstants();
     }
 
-    // TODO: rename this
-    protected Pair<double[], String[]> labelsForTicks(double[] ticks, ITimeUnit timeUnit, int desiredNumTicks) {
+    protected Pair<double[], String[]> labelsForConvertedTicks(double[] ticks, ITimeUnit timeUnit, int desiredNumTicks) {
         AtomicReference<Double> multiplier = new AtomicReference<>(1.0);
-        Pair<double[], String> convertedStuff = timeUnit.convertTicks(timeUnit, ticks, multiplier, unitSwitchConstants);
+        Pair<double[], String> convertedTicks = timeUnit.convertTicks(timeUnit, ticks, multiplier, unitSwitchConstants);
 
         // after the ticks are converted we want "nice" labels again
-        ticks = getTicks(convertedStuff.first[0], convertedStuff.first[convertedStuff.first.length-1], desiredNumTicks, Q, w);
+        ticks = getTicks(convertedTicks.first[0], convertedTicks.first[convertedTicks.first.length-1], desiredNumTicks, super.Q, super.w);
 
         double[] ticksForLabels = Arrays.copyOf(ticks, ticks.length);
         for (int j = 0; j < ticks.length; j++)
@@ -37,7 +36,7 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
         String[] labels = super.labelsForTicks(ticksForLabels);
 
         for (int i = 0; i < ticks.length; i++)
-            labels[i] = labels[i] + convertedStuff.second;
+            labels[i] = labels[i] + convertedTicks.second;
 
         return new Pair<>(ticks, labels);
     }
@@ -73,7 +72,7 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
                 tu = null;
         }
 
-        Pair<double[], String[]> generatedTicksAndLabels = labelsForTicks(ticks, tu, desiredNumTicks);
+        Pair<double[], String[]> generatedTicksAndLabels = labelsForConvertedTicks(ticks, tu, desiredNumTicks);
         return new Pair<>(generatedTicksAndLabels.first, generatedTicksAndLabels.second);
     }
 }

@@ -35,7 +35,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     }
 
     public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
-        double[] ticks = getTicks(min, max, desiredNumTicks, Q, w);
+        double[] ticks = getTicks(min, max, desiredNumTicks, super.Q, super.w);
 
         ITimeUnit tu;
         switch (timeUnit) {

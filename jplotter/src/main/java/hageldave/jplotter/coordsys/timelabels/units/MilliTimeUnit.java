@@ -20,6 +20,7 @@ public class MilliTimeUnit implements ITimeUnit {
         return value.plusNanos(milli2nano);
     }
 
+    @Override
     public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
         double difference = ticks[1]-ticks[0];
         double[] convertedTicks = new double[ticks.length];
