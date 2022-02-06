@@ -94,7 +94,6 @@ public class CoordSysRenderer implements Renderer {
 
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
-	//protected DateTimeWilkinson tickMarkGenerator = new DateTimeWilkinson();
 	protected TickMarkGenerator xAxisTickMarkGenerator;
 	protected TickMarkGenerator yAxisTickMarkGenerator;
 
@@ -746,7 +745,18 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	public CoordSysRenderer setTickMarkGenerator(TickMarkGenerator xAxisTickMarkGenerator, TickMarkGenerator yAxisTickMarkGenerator) {
+		setXAxisTickMarkGenerator(xAxisTickMarkGenerator);
+		setYAxisTickMarkGenerator(yAxisTickMarkGenerator);
+		return this;
+	}
+
+	public CoordSysRenderer setXAxisTickMarkGenerator(TickMarkGenerator xAxisTickMarkGenerator) {
 		this.xAxisTickMarkGenerator = xAxisTickMarkGenerator;
+		setDirty();
+		return this;
+	}
+
+	public CoordSysRenderer setYAxisTickMarkGenerator(TickMarkGenerator yAxisTickMarkGenerator) {
 		this.yAxisTickMarkGenerator = yAxisTickMarkGenerator;
 		setDirty();
 		return this;
