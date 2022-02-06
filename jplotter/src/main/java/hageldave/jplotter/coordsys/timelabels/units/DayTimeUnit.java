@@ -7,7 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DayTimeUnit implements ITimeUnit {
-    private final static long differenceInMillis = 86400000;
+    public final static long differenceInMillis = 86400000;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {

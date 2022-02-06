@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 // TODO: Month might be difficult, bc of 29,30,31,...
 public class MonthTimeUnit implements ITimeUnit {
-    private final static long differenceInMillis = 2678400000L;
+    public final static long differenceInMillis = 2678400000L;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {

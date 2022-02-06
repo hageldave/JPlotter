@@ -7,7 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SecondTimeUnit implements ITimeUnit {
-    private final static long differenceInMillis = 1000;
+    public final static long differenceInMillis = 1000;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {

@@ -7,7 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class YearTimeUnit implements ITimeUnit {
-    private final static long differenceInMillis = 31536000000L;
+    public final static long differenceInMillis = 31536000000L;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {
