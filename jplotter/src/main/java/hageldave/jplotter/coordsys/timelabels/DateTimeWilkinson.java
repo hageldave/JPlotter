@@ -8,27 +8,26 @@ import hageldave.jplotter.util.Pair;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 import java.util.function.BiFunction;
 
 public class DateTimeWilkinson extends ExtendedWilkinson {
     protected TimeUnit timeUnit;
     protected double number2unit;
     protected LocalDateTime referenceDateTime;
-    protected BiFunction<LocalDateTime, Double, String> dateTimeFormatter;
+    protected BiFunction<LocalDateTime, Double, String> formattingFunction;
 
-    public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime, final BiFunction<LocalDateTime, Double, String> dateTimeFormatter) {
+    public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime, final BiFunction<LocalDateTime, Double, String> formattingFunction) {
         this.timeUnit = timeUnit;
         this.number2unit = number2unit;
         this.referenceDateTime = referenceDateTime;
-        this.dateTimeFormatter = dateTimeFormatter;
+        this.formattingFunction = formattingFunction;
     }
 
     public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime) {
         this.timeUnit = timeUnit;
         this.number2unit = number2unit;
         this.referenceDateTime = referenceDateTime;
-        this.dateTimeFormatter = this::switchFormat;
+        this.formattingFunction = this::switchFormat;
     }
 
     protected String[] labelsForTicks(double min, double[] ticks, ITimeUnit timeUnit) {
@@ -39,7 +38,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
             double difference = ticks[i] - min;
             difference *= number2unit;
             LocalDateTime ldt = timeUnit.increment(referenceDateTime, difference);
-            labels[i] = dateTimeFormatter.apply(ldt, tickDiff);
+            labels[i] = formattingFunction.apply(ldt, tickDiff);
         }
 
         return labels;
@@ -49,6 +48,15 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         double[] ticks = getTicks(min, max, desiredNumTicks, super.Q, super.w);
         String[] labelsForTicks = labelsForTicks(min, ticks, ITimeUnit.getInterface(timeUnit));
         return new Pair<>(ticks, labelsForTicks);
+    }
+
+
+    public BiFunction<LocalDateTime, Double, String> getFormattingFunction() {
+        return formattingFunction;
+    }
+
+    public void setFormattingFunction(BiFunction<LocalDateTime, Double, String> formattingFunction) {
+        this.formattingFunction = formattingFunction;
     }
 
     public String getDateTime(LocalDateTime localDateTime, Double duration) {
@@ -68,7 +76,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     public String switchFormat(LocalDateTime localDateTime, Double duration) {
         ITimeUnit tu = ITimeUnit.getInterface(timeUnit);
         LocalDateTime LocalDateTimeCopy = LocalDateTime.from(localDateTime);
-        LocalDateTime ldt = Objects.requireNonNull(tu).increment(LocalDateTimeCopy, duration);
+        LocalDateTime ldt = tu.increment(LocalDateTimeCopy, duration);
 
         long millisCurrentTick = localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
         long millisNextTick = ldt.toInstant(ZoneOffset.UTC).toEpochMilli();
