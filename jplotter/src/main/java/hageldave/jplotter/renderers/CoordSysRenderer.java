@@ -489,7 +489,7 @@ public class CoordSysRenderer implements Renderer {
 		int adjustmentPaddingV = 6;
 
 		// find maximum dimensions of y axis labels
-		Rectangle2D yLblBounds = getMaxBoundsOfAllLabels(yticklabels, 1, tickfontSize, style);
+		Rectangle2D yLblBounds = getMaxBoundsOfAllLabels(yticklabels, 0, tickfontSize, style);
 
 		// get x dimension of first and last label to check if the coordsysarea has to be moved to make room for them
 		int firstXLabelLength = CharacterAtlas.boundsForText(xticklabels[0].length(), labelfontSize, style).getBounds().width;
@@ -502,12 +502,11 @@ public class CoordSysRenderer implements Renderer {
 		int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
 
 		// move coordwindow origin so that labels have enough display space
-		coordsysAreaLB.x[0] = Math.max(yLblBounds.getWidth(), firstXLabelLength/2.0)+paddingLeft+ adjustmentPaddingH;
-
-		coordsysAreaLB.y[0] = maxXTickHeight+paddingBot+legendBotH+ adjustmentPaddingV;
+		coordsysAreaLB.x[0] = Math.max(yLblBounds.getWidth(), firstXLabelLength/2.0)+paddingLeft+adjustmentPaddingH;
+		coordsysAreaLB.y[0] = maxXTickHeight+paddingBot+legendBotH+adjustmentPaddingV;
 		// move opposing corner of coordwindow to have enough display space -> either add the height of the y axis label or the half width of the last label (not both)
-		coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW- adjustmentPaddingH;
-		coordsysAreaRT.y[0] = viewportheight-paddingTop-maxLabelHeight- adjustmentPaddingV;
+		coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW-adjustmentPaddingH;
+		coordsysAreaRT.y[0] = viewportheight-paddingTop-maxLabelHeight-adjustmentPaddingV;
 
 		for(Text txt:tickMarkLabels){
 			preContentTextR.removeItemToRender(txt);
