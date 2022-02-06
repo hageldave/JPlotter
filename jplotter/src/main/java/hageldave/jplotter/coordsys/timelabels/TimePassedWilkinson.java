@@ -1,7 +1,8 @@
 package hageldave.jplotter.coordsys.timelabels;
 
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
-import hageldave.jplotter.coordsys.timelabels.units.*;
+import hageldave.jplotter.coordsys.timelabels.units.ITimeUnit;
+import hageldave.jplotter.coordsys.timelabels.units.UnitSwitchConstants;
 import hageldave.jplotter.util.Pair;
 
 import java.util.Arrays;
@@ -44,35 +45,7 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
     @Override
     public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
         double[] ticks = getTicks(min, max, desiredNumTicks, super.Q, super.w);
-
-        ITimeUnit tu;
-        switch (timeUnit) {
-            case Year:
-                tu = new YearTimeUnit();
-                break;
-            case Month:
-                tu = new MonthTimeUnit();
-                break;
-            case Day:
-                tu = new DayTimeUnit();
-                break;
-            case Hour:
-                tu = new HourTimeUnit();
-                break;
-            case Minute:
-                tu = new MinuteTimeUnit();
-                break;
-            case Second:
-                tu = new SecondTimeUnit();
-                break;
-            case Millisecond:
-                tu = new MilliTimeUnit();
-                break;
-            default:
-                tu = null;
-        }
-
-        Pair<double[], String[]> generatedTicksAndLabels = labelsForConvertedTicks(ticks, tu, desiredNumTicks);
+        Pair<double[], String[]> generatedTicksAndLabels = labelsForConvertedTicks(ticks, ITimeUnit.getInterface(timeUnit), desiredNumTicks);
         return new Pair<>(generatedTicksAndLabels.first, generatedTicksAndLabels.second);
     }
 }

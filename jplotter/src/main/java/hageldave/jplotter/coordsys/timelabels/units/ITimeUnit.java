@@ -30,10 +30,8 @@ public interface ITimeUnit {
                 return new MinuteTimeUnit();
             case Second:
                 return new SecondTimeUnit();
-            case Millisecond:
-                return new MilliTimeUnit();
             default:
-                return null;
+                return new MilliTimeUnit();
         }
     }
 }
