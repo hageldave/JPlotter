@@ -45,7 +45,7 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
     @Override
     public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
         double[] ticks = getTicks(min, max, desiredNumTicks, super.Q, super.w);
-        Pair<double[], String[]> generatedTicksAndLabels = labelsForConvertedTicks(ticks, ITimeUnit.getInterface(timeUnit), desiredNumTicks);
+        Pair<double[], String[]> generatedTicksAndLabels = labelsForConvertedTicks(ticks, timeUnit, desiredNumTicks);
         return new Pair<>(generatedTicksAndLabels.first, generatedTicksAndLabels.second);
     }
 }

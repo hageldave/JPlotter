@@ -46,7 +46,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
 
     public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
         double[] ticks = getTicks(min, max, desiredNumTicks, super.Q, super.w);
-        String[] labelsForTicks = labelsForTicks(min, ticks, ITimeUnit.getInterface(timeUnit));
+        String[] labelsForTicks = labelsForTicks(min, ticks, timeUnit);
         return new Pair<>(ticks, labelsForTicks);
     }
 
@@ -74,7 +74,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     }
 
     public String switchFormat(LocalDateTime localDateTime, Double duration) {
-        ITimeUnit tu = ITimeUnit.getInterface(timeUnit);
+        ITimeUnit tu = timeUnit;
         LocalDateTime LocalDateTimeCopy = LocalDateTime.from(localDateTime);
         LocalDateTime ldt = tu.increment(LocalDateTimeCopy, duration);
 
