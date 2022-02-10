@@ -2,6 +2,7 @@ package hageldave.jplotter.coordsys.timelabels;
 
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.timelabels.units.ITimeUnit;
+import hageldave.jplotter.coordsys.timelabels.units.TimeUnit;
 import hageldave.jplotter.coordsys.timelabels.units.UnitSwitchConstants;
 import hageldave.jplotter.util.Pair;
 

@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class YearTimeUnit implements ITimeUnit {
-    public final static long differenceInMillis = 31536000000L;
+class YearTimeUnit implements ITimeUnit {
+    public final static long durationInMillis = 31536000000L;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {
@@ -19,7 +19,7 @@ public class YearTimeUnit implements ITimeUnit {
         if (delta % 1 == 0) {
             return value.plusYears((long) delta);
         } else {
-            return value.plus((long) (YearTimeUnit.differenceInMillis * delta), ChronoUnit.MILLIS);
+            return value.plus((long) (YearTimeUnit.durationInMillis * delta), ChronoUnit.MILLIS);
         }
     }
 
@@ -31,9 +31,9 @@ public class YearTimeUnit implements ITimeUnit {
 
         if (difference < switchConstants.years_down) {
             for (int i = 0; i < ticks.length; i++)
-                convertedTicks[i] = ticks[i]*360.0;
-            timeUnit = new MonthTimeUnit();
-            multiplier.set(multiplier.get()/360.0);
+                convertedTicks[i] = ticks[i]*52.0;
+            timeUnit = new WeekTimeUnit();
+            multiplier.set(multiplier.get()/52.0);
             Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
         } else {

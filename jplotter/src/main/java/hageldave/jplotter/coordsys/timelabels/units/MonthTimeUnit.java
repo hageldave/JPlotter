@@ -7,8 +7,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 // TODO: Month might be difficult, bc of 29,30,31,...
-public class MonthTimeUnit implements ITimeUnit {
-    public final static long differenceInMillis = 2678400000L;
+class MonthTimeUnit implements ITimeUnit {
+    public final static long durationInMillis = 2678400000L;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {
@@ -20,7 +20,7 @@ public class MonthTimeUnit implements ITimeUnit {
         if (delta % 1 == 0) {
             return value.plusMonths((long) delta);
         } else {
-            return value.plus((long) (MonthTimeUnit.differenceInMillis * delta), ChronoUnit.MILLIS);
+            return value.plus((long) (MonthTimeUnit.durationInMillis * delta), ChronoUnit.MILLIS);
         }
     }
 

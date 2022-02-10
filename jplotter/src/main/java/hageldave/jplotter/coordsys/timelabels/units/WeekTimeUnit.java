@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class WeekTimeUnit implements ITimeUnit {
-    public final static long durationInMillis = 604800000;
+class WeekTimeUnit implements ITimeUnit {
+    public final static long durationInMillis = 604800000L;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {

@@ -1,8 +1,8 @@
 package hageldave.jplotter.coordsys.timelabels;
 
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
-import hageldave.jplotter.coordsys.timelabels.units.DayTimeUnit;
 import hageldave.jplotter.coordsys.timelabels.units.ITimeUnit;
+import hageldave.jplotter.coordsys.timelabels.units.TimeUnit;
 import hageldave.jplotter.util.Pair;
 
 import java.time.LocalDateTime;
@@ -83,7 +83,8 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         long differenceInMillis = millisNextTick - millisCurrentTick;
 
         DateTimeFormatter formatter;
-        if (differenceInMillis > DayTimeUnit.differenceInMillis) {
+        // Duration of 1 day in millis
+        if (differenceInMillis > 86400000) {
             formatter = DateTimeFormatter.ISO_DATE;
         } else {
             formatter = DateTimeFormatter.ISO_TIME;

@@ -1,6 +1,5 @@
-package hageldave.jplotter.coordsys.timelabels;
+package hageldave.jplotter.coordsys.timelabels.units;
 
-import hageldave.jplotter.coordsys.timelabels.units.*;
 import hageldave.jplotter.util.Pair;
 
 import java.time.LocalDateTime;

@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class HourTimeUnit implements ITimeUnit {
-    public final static long differenceInMillis = 3600000;
+class HourTimeUnit implements ITimeUnit {
+    public final static long durationInMillis = 3600000;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {
@@ -19,7 +19,7 @@ public class HourTimeUnit implements ITimeUnit {
         if (delta % 1 == 0) {
             return value.plusHours((long) delta);
         } else {
-            return value.plus((long) (HourTimeUnit.differenceInMillis * delta), ChronoUnit.MILLIS);
+            return value.plus((long) (HourTimeUnit.durationInMillis * delta), ChronoUnit.MILLIS);
         }
     }
 

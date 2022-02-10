@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class MilliTimeUnit implements ITimeUnit {
+class MilliTimeUnit implements ITimeUnit {
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {
