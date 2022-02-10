@@ -1,23 +1,16 @@
 package hageldave.jplotter.coordsys.timelabels;
 
+import hageldave.jplotter.coordsys.timelabels.units.*;
+import hageldave.jplotter.util.Pair;
+
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
-
-import hageldave.jplotter.coordsys.timelabels.units.DayTimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.HourTimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.ITimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.MilliTimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.MinuteTimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.MonthTimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.SecondTimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.UnitSwitchConstants;
-import hageldave.jplotter.coordsys.timelabels.units.YearTimeUnit;
-import hageldave.jplotter.util.Pair;
 
 public enum TimeUnit implements ITimeUnit {
 	
     Year(new YearTimeUnit()),
     Month(new MonthTimeUnit()),
+    Week(new WeekTimeUnit()),
     Day(new DayTimeUnit()),
     Hour(new HourTimeUnit()),
     Minute(new MinuteTimeUnit()),

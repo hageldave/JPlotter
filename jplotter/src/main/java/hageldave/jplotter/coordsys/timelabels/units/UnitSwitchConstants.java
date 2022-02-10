@@ -15,6 +15,9 @@ public class UnitSwitchConstants {
     public double days_up = 120;
     public double days_down = 0.05;
 
+    public double week_up = 100;
+    public double week_down = 0.05;
+
     public double months_up = 48;
     public double months_down = 0.05;
 

@@ -6,20 +6,20 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class DayTimeUnit implements ITimeUnit {
-    public final static long differenceInMillis = 86400000;
+public class WeekTimeUnit implements ITimeUnit {
+    public final static long durationInMillis = 604800000;
 
     @Override
     public LocalDateTime floor(LocalDateTime value) {
-        return value.truncatedTo(ChronoUnit.DAYS);
+        return value.truncatedTo(ChronoUnit.WEEKS);
     }
 
     @Override
     public LocalDateTime increment(LocalDateTime value, double delta) {
         if (delta % 1 == 0) {
-            return value.plusDays((long) delta);
+            return value.plusWeeks((long) delta);
         } else {
-            return value.plus((long) (DayTimeUnit.differenceInMillis * delta), ChronoUnit.MILLIS);
+            return value.plus((long) (WeekTimeUnit.durationInMillis * delta), ChronoUnit.MILLIS);
         }
     }
 
@@ -29,19 +29,19 @@ public class DayTimeUnit implements ITimeUnit {
         double[] convertedTicks = new double[ticks.length];
         String unitLabel;
 
-        if (difference > switchConstants.days_up) {
+        if (difference > switchConstants.week_up) {
             for (int i = 0; i < ticks.length; i++)
-                convertedTicks[i] = ticks[i]/7.0;
-            timeUnit = new WeekTimeUnit();
-            multiplier.set(multiplier.get()*7.0);
+                convertedTicks[i] = ticks[i]/52.0;
+            timeUnit = new YearTimeUnit();
+            multiplier.set(multiplier.get()*52);
             Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
 
-        } else if (difference < switchConstants.days_down) {
+        } else if (difference < switchConstants.week_down) {
             for (int i = 0; i < ticks.length; i++)
-                convertedTicks[i] = ticks[i]*24.0;
-            timeUnit = new HourTimeUnit();
-            multiplier.set(multiplier.get()/24.0);
+                convertedTicks[i] = ticks[i]*7.0;
+            timeUnit = new DayTimeUnit();
+            multiplier.set(multiplier.get()/7.0);
             Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
 
@@ -55,6 +55,6 @@ public class DayTimeUnit implements ITimeUnit {
 
     @Override
     public String getUnitLabel() {
-        return "d";
+        return "wk";
     }
 }
