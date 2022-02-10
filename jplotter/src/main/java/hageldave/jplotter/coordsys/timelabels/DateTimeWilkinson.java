@@ -5,6 +5,7 @@ import hageldave.jplotter.coordsys.timelabels.units.ITimeUnit;
 import hageldave.jplotter.coordsys.timelabels.units.TimeUnit;
 import hageldave.jplotter.util.Pair;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -14,9 +15,9 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     protected TimeUnit timeUnit;
     protected double number2unit;
     protected LocalDateTime referenceDateTime;
-    protected BiFunction<LocalDateTime, Double, String> formattingFunction;
+    protected BiFunction<LocalDateTime, Duration, String> formattingFunction;
 
-    public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime, final BiFunction<LocalDateTime, Double, String> formattingFunction) {
+    public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime, final BiFunction<LocalDateTime, Duration, String> formattingFunction) {
         this.timeUnit = timeUnit;
         this.number2unit = number2unit;
         this.referenceDateTime = referenceDateTime;
@@ -33,12 +34,14 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     protected String[] labelsForTicks(double min, double[] ticks, ITimeUnit timeUnit) {
         String[] labels = new String[ticks.length];
 
-        double tickDiff = ticks[ticks.length-1] - ticks[ticks.length-2];
-        for (int i=0; i<ticks.length; i++) {
+        LocalDateTime tempDateTime = referenceDateTime;
+        for (int i = 0; i < ticks.length; i++) {
             double difference = ticks[i] - min;
             difference *= number2unit;
             LocalDateTime ldt = timeUnit.increment(referenceDateTime, difference);
-            labels[i] = formattingFunction.apply(ldt, tickDiff);
+            Duration duration = Duration.between(tempDateTime, ldt);
+            tempDateTime = ldt;
+            labels[i] = formattingFunction.apply(ldt, duration);
         }
 
         return labels;
@@ -51,11 +54,11 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     }
 
 
-    public BiFunction<LocalDateTime, Double, String> getFormattingFunction() {
+    public BiFunction<LocalDateTime, Duration, String> getFormattingFunction() {
         return formattingFunction;
     }
 
-    public void setFormattingFunction(BiFunction<LocalDateTime, Double, String> formattingFunction) {
+    public void setFormattingFunction(BiFunction<LocalDateTime, Duration, String> formattingFunction) {
         this.formattingFunction = formattingFunction;
     }
 
@@ -63,24 +66,25 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         return localDateTime.toString();
     }
 
-    public String getDate(LocalDateTime localDateTime, Double duration) {
+    public String getDate(LocalDateTime localDateTime, Duration duration) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
         return formatter.format(localDateTime);
     }
 
-    public String getTime(LocalDateTime localDateTime, Double duration) {
+    public String getTime(LocalDateTime localDateTime, Duration duration) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_TIME;
         return formatter.format(localDateTime);
     }
 
-    public String switchFormat(LocalDateTime localDateTime, Double duration) {
+    public String switchFormat(LocalDateTime localDateTime, Duration duration) {
         ITimeUnit tu = timeUnit;
-        LocalDateTime LocalDateTimeCopy = LocalDateTime.from(localDateTime);
-        LocalDateTime ldt = tu.increment(LocalDateTimeCopy, duration);
+        LocalDateTime localDateTimeCopy = LocalDateTime.from(localDateTime);
+        LocalDateTime ldt = localDateTimeCopy.plus(duration);
 
         long millisCurrentTick = localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
         long millisNextTick = ldt.toInstant(ZoneOffset.UTC).toEpochMilli();
         long differenceInMillis = millisNextTick - millisCurrentTick;
+
 
         DateTimeFormatter formatter;
         // Duration of 1 day in millis
