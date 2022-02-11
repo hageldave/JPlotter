@@ -119,14 +119,14 @@ public class ParallelCoordsRenderer implements Renderer {
      * Helper method to setup the ParallelCoordsRenderer
      */
     protected void setupParallelCoordsRenderer() {
-        this.preContentLinesR
+        this.postContentLinesR
                 .addItemToRender(guides)
                 .addItemToRender(ticks);
         this.preContentTextR
                 .addItemToRender(xAxisLabelText)
                 .addItemToRender(yAxisLabelText);
 
-        this.guideColor = ()->getColorScheme().getColor4();
+        this.guideColor = ()->getColorScheme().getColor3();
         this.tickColor = ()->getColorScheme().getColor3();
         this.textColor = ()->getColorScheme().getColorText();
 
@@ -211,6 +211,11 @@ public class ParallelCoordsRenderer implements Renderer {
 
     public ParallelCoordsRenderer addFeature(Feature feature) {
         this.features.add(feature);
+        return this;
+    }
+
+    public ParallelCoordsRenderer addFeature(Feature... features) {
+        this.features.addAll(Arrays.asList(features));
         return this;
     }
 
@@ -410,7 +415,6 @@ public class ParallelCoordsRenderer implements Renderer {
     protected void setupAndLayout() {
         final int tickfontSize = 11;
         final int yLabelfontSize = 12;
-        //final int xLabelfontSize = 12;
         final int style = Font.PLAIN;
 
         // find maximum length of y axis labels of first feature
@@ -562,7 +566,7 @@ public class ParallelCoordsRenderer implements Renderer {
         }
 
         for(Text txt: tickMarkLabels){
-            preContentTextR.addItemToRender(txt);
+            postContentTextR.addItemToRender(txt);
         }
 
         // axis labels
@@ -601,7 +605,7 @@ public class ParallelCoordsRenderer implements Renderer {
 
     private void clearCoordSysBuildingBlocks() {
         for(Text txt:tickMarkLabels){
-            preContentTextR.removeItemToRender(txt);
+            postContentTextR.removeItemToRender(txt);
             txt.close();
         }
         tickMarkLabels.clear();
