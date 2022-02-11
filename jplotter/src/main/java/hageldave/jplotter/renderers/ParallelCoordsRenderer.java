@@ -30,9 +30,8 @@ import org.w3c.dom.Node;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Objects;
+import java.util.List;
+import java.util.*;
 import java.util.function.IntSupplier;
 
 public class ParallelCoordsRenderer implements Renderer {
@@ -416,6 +415,7 @@ public class ParallelCoordsRenderer implements Renderer {
         final int tickfontSize = 11;
         final int yLabelfontSize = 12;
         final int style = Font.PLAIN;
+        final int tickCount = 4;
 
         // find maximum length of y axis labels of first feature
         int maxYTickLabelWidth = 0;
@@ -452,6 +452,7 @@ public class ParallelCoordsRenderer implements Renderer {
         // xaxis feature guides
         int index = 0;
         for (Feature feature : features) {
+            // TODO: we propably need to replace the wilkinson algo with fixed min/max values
             Pair<double[],String[]> featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(feature.min, feature.max, 5, true);
 
             // tick
@@ -477,17 +478,61 @@ public class ParallelCoordsRenderer implements Renderer {
             // feature guide
             guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
 
-            double[] yticks = featTicksAndLabels.first;
-            String[] yticklabels = featTicksAndLabels.second;
+            double[] yticks2 = featTicksAndLabels.first;
+            String[] yticklabels2 = featTicksAndLabels.second;
 
             // get max of the ticks to normalize them to the 0-1 area
-            double maxValue = Arrays.stream(yticks).max().orElse(1.0);
-            double minValue = Arrays.stream(yticks).min().orElse(0.0);
+            //double maxValue = Arrays.stream(yticks).max().orElse(1.0);
+            //double minValue = Arrays.stream(yticks).min().orElse(0.0);
+            double[] yticks = Arrays.copyOf(yticks2, yticks2.length);
+            String[] yticklabels = Arrays.copyOf(yticklabels2, yticklabels2.length);
+
+
+            if (Arrays.stream(yticks2).noneMatch(e->e==feature.max)) {
+                List<Double> ytickList = new ArrayList<>();
+                List<String> yticklabelList = new ArrayList<>();
+
+                for (int i = 0; i < yticks.length; i++) {
+                    ytickList.add(yticks[i]);
+                    yticklabelList.add(String.valueOf(yticklabels[i]));
+                }
+                ytickList.add(feature.max);
+                yticklabelList.add(String.valueOf(feature.max));
+
+                yticks = new double[ytickList.size()];
+                yticklabels = new String[ytickList.size()];
+                for (int i = 0; i < yticks.length; i++) {
+                    yticks[i] = ytickList.get(i);
+                    yticklabels[i] = yticklabelList.get(i);
+                }
+            }
+            if (Arrays.stream(yticks2).noneMatch(e->e==feature.min)) {
+                List<Double> ytickList = new ArrayList<>();
+                List<String> yticklabelList = new ArrayList<>();
+
+                for (int i = 0; i < yticks.length; i++) {
+                    ytickList.add(yticks[i]);
+                    yticklabelList.add(String.valueOf(yticklabels[i]));
+                }
+                ytickList.add(0, feature.min);
+                yticklabelList.add(0, String.valueOf(feature.min));
+
+                yticks = new double[ytickList.size()];
+                yticklabels = new String[ytickList.size()];
+                for (int i = 0; i < yticks.length; i++) {
+                    yticks[i] = ytickList.get(i);
+                    yticklabels[i] = yticklabelList.get(i);
+                }
+            }
+
+
 
             // yaxis ticks
             for(int i=0; i<yticks.length; i++){
                 // tick
-                double y_m = (yticks[i]-minValue)/(maxValue-minValue);
+                double y_m = (yticks[i]-feature.min)/(feature.max-feature.min);
+                //y_m = (y_m-minValue)/(maxValue-minValue);
+
                 double y = y_m*axisDimensions.getHeight();
                 Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
                 ticks.addSegment(onYaxis, new TranslatedPoint2D(onYaxis, -4, 0)).setColor(tickColor);
@@ -544,12 +589,13 @@ public class ParallelCoordsRenderer implements Renderer {
                 String[] yticklabels = featTicksAndLabels.second;
 
                 // get max of the ticks to normalize them to the 0-1 area
-                double maxValue = Arrays.stream(yticks).max().orElse(1.0);
-                double minValue = Arrays.stream(yticks).min().orElse(0.0);
+                //double maxValue = Arrays.stream(yticks).max().orElse(1.0);
+                //double minValue = Arrays.stream(yticks).min().orElse(0.0);
 
                 for(int i=0; i<yticks.length; i++){
                     // tick
-                    double y_m = (yticks[i]-minValue)/(maxValue-minValue);
+                    //double y_m = (yticks[i]-minValue)/(maxValue-minValue);
+                    double y_m = (yticks[i]-feature.min)/(feature.max-feature.min);
                     double y = y_m*axisDimensions.getHeight();
                     Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
                     ticks.addSegment(onYaxis, new TranslatedPoint2D(onYaxis, -4, 0)).setColor(tickColor);
@@ -761,6 +807,7 @@ public class ParallelCoordsRenderer implements Renderer {
             // create viewport graphics
             Graphics2D g_ = (Graphics2D)g.create(viewPortX, viewPortY, viewPortW, viewPortH);
             Graphics2D p_ = (Graphics2D)p.create(viewPortX, viewPortY, viewPortW, viewPortH);
+            // TODO: normalize values here: viewportH/xyz
             content.renderFallback(g_, p_, viewPortW, viewPortH);
         }
         postContentLinesR.renderFallback(g, p, w, h);

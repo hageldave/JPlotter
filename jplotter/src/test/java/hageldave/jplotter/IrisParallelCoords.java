@@ -6,6 +6,7 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.ParallelCoordsRenderer;
@@ -28,6 +29,13 @@ public class IrisParallelCoords {
         ParallelCoordsRenderer.Feature pl = new ParallelCoordsRenderer.Feature(1.0,6.9, "petal length");
         ParallelCoordsRenderer.Feature pw = new ParallelCoordsRenderer.Feature(0.1,2.5, "petal width");
         parallelCoords.addFeature(sl, sw, pl, pw);
+
+        parallelCoords.setLegendRight(
+                new Legend()
+                        .addLineLabel(1, DefaultColorMap.Q_8_ACCENT.getColor(0), "Iris setosa")
+                        .addLineLabel(1, DefaultColorMap.Q_8_ACCENT.getColor(1), "Iris versicolor")
+                        .addLineLabel(1, DefaultColorMap.Q_8_ACCENT.getColor(2), "Iris virginica")
+        );
 
         LinesRenderer lines = new LinesRenderer();
         parallelCoords.setContent(lines);
