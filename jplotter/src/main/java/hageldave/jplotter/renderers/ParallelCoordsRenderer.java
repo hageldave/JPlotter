@@ -438,7 +438,7 @@ public class ParallelCoordsRenderer implements Renderer {
         int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
 
         // move coordwindow origin so that labels have enough display space
-        coordsysAreaLB.x[0] = Math.max(firstXLabelLength/2.0, maxYTickLabelWidth) + paddingLeft + 7;
+        coordsysAreaLB.x[0] = Math.max(firstXLabelLength/2.0, maxYTickLabelWidth) + paddingLeft + 10;
         coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 12;
         // move opposing corner of coordwindow to have enough display space
         coordsysAreaRT.x[0] = viewportwidth-paddingRight-(lastXLabelLength/2.0)-legendRightW-10;
@@ -514,7 +514,7 @@ public class ParallelCoordsRenderer implements Renderer {
                 Pair<double[],String[]> featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(feature.min, feature.max, 5, true);
 
                 // calculate first the new coord view bounds
-                String[] allLabels = new String[features.size()-1];
+                String[] allLabels = new String[features.size()];
                 for (int i = 0; i < allLabels.length; i++)
                     allLabels[i] = features.get(i).label;
 
