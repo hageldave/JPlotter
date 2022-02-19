@@ -51,13 +51,13 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (keyListenerMask.isKeysPressed())
+		if (keyListenerMask.areKeysPressed())
 			this.startPoint = e.getPoint();
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(startPoint!= null && keyListenerMask.isKeysPressed()){
+		if(startPoint!= null && keyListenerMask.areKeysPressed()){
 			Point dragPoint = e.getPoint();
 			double mouseTx = 0;
 			double mouseTy = 0;

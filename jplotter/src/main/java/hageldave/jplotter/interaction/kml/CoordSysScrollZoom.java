@@ -54,7 +54,7 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if (keyListenerMask.isKeysPressed()) {
+        if (keyListenerMask.areKeysPressed()) {
             if (!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
                 return;
 
