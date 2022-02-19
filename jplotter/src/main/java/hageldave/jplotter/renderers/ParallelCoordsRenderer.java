@@ -415,17 +415,22 @@ public class ParallelCoordsRenderer implements Renderer {
         final int tickfontSize = 11;
         final int yLabelfontSize = 12;
         final int style = Font.PLAIN;
-        final int tickCount = 4;
 
         // find maximum length of y axis labels of first feature
         int maxYTickLabelWidth = 0;
         if (!features.isEmpty()) {
             Pair<double[],String[]> featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(features.getFirst().min, features.getFirst().max, 5, true);
-            for(String label : featTicksAndLabels.second){
+
+            for(String label : featTicksAndLabels.second) {
                 int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
                 maxYTickLabelWidth = Math.max(maxYTickLabelWidth, labelW);
             }
         }
+
+        // get x dimension of first and last label to check if the coordsysarea has to be moved to make room for them
+        int firstXLabelLength = CharacterAtlas.boundsForText(features.getFirst().label.length(), tickfontSize, Font.BOLD).getBounds().width;
+        int lastXLabelLength = CharacterAtlas.boundsForText(features.getLast().label.length(), tickfontSize, Font.BOLD).getBounds().width;;
+
         int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
         int maxLabelHeight = CharacterAtlas.boundsForText(1, yLabelfontSize, style).getBounds().height;
 
@@ -433,10 +438,10 @@ public class ParallelCoordsRenderer implements Renderer {
         int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
 
         // move coordwindow origin so that labels have enough display space
-        coordsysAreaLB.x[0] = maxYTickLabelWidth + paddingLeft + 7;
+        coordsysAreaLB.x[0] = Math.max(firstXLabelLength/2.0, maxYTickLabelWidth) + paddingLeft + 7;
         coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 12;
         // move opposing corner of coordwindow to have enough display space
-        coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW-10;
+        coordsysAreaRT.x[0] = viewportwidth-paddingRight-(lastXLabelLength/2.0)-legendRightW-10;
         coordsysAreaRT.y[0] = viewportheight-paddingTop-maxLabelHeight-4;
 
         // dispose of old stuff
@@ -478,60 +483,15 @@ public class ParallelCoordsRenderer implements Renderer {
             // feature guide
             guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
 
-            double[] yticks2 = featTicksAndLabels.first;
-            String[] yticklabels2 = featTicksAndLabels.second;
-
-            // get max of the ticks to normalize them to the 0-1 area
-            //double maxValue = Arrays.stream(yticks).max().orElse(1.0);
-            //double minValue = Arrays.stream(yticks).min().orElse(0.0);
-            double[] yticks = Arrays.copyOf(yticks2, yticks2.length);
-            String[] yticklabels = Arrays.copyOf(yticklabels2, yticklabels2.length);
-
-
-            if (Arrays.stream(yticks2).noneMatch(e->e==feature.max)) {
-                List<Double> ytickList = new ArrayList<>();
-                List<String> yticklabelList = new ArrayList<>();
-
-                for (int i = 0; i < yticks.length; i++) {
-                    ytickList.add(yticks[i]);
-                    yticklabelList.add(String.valueOf(yticklabels[i]));
-                }
-                ytickList.add(feature.max);
-                yticklabelList.add(String.valueOf(feature.max));
-
-                yticks = new double[ytickList.size()];
-                yticklabels = new String[ytickList.size()];
-                for (int i = 0; i < yticks.length; i++) {
-                    yticks[i] = ytickList.get(i);
-                    yticklabels[i] = yticklabelList.get(i);
-                }
-            }
-            if (Arrays.stream(yticks2).noneMatch(e->e==feature.min)) {
-                List<Double> ytickList = new ArrayList<>();
-                List<String> yticklabelList = new ArrayList<>();
-
-                for (int i = 0; i < yticks.length; i++) {
-                    ytickList.add(yticks[i]);
-                    yticklabelList.add(String.valueOf(yticklabels[i]));
-                }
-                ytickList.add(0, feature.min);
-                yticklabelList.add(0, String.valueOf(feature.min));
-
-                yticks = new double[ytickList.size()];
-                yticklabels = new String[ytickList.size()];
-                for (int i = 0; i < yticks.length; i++) {
-                    yticks[i] = ytickList.get(i);
-                    yticklabels[i] = yticklabelList.get(i);
-                }
-            }
-
-
+            Pair<Double[], String[]> tickLabels = insertTicksPrim(featTicksAndLabels, feature.max, featTicksAndLabels.first.length);
+            tickLabels = insertTicks(tickLabels, feature.min, 0);
+            Double[] yticks = tickLabels.first;
+            String[] yticklabels = tickLabels.second;
 
             // yaxis ticks
             for(int i=0; i<yticks.length; i++){
                 // tick
                 double y_m = (yticks[i]-feature.min)/(feature.max-feature.min);
-                //y_m = (y_m-minValue)/(maxValue-minValue);
 
                 double y = y_m*axisDimensions.getHeight();
                 Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
@@ -561,10 +521,14 @@ public class ParallelCoordsRenderer implements Renderer {
                 // calculate first the new coord view bounds
                 Rectangle2D rotatedXLblBounds = getMaxBoundsOfAllLabels(allLabels, Math.PI/4, tickfontSize, style);
 
+                Text firstLabel = new Text(features.getFirst().label, tickfontSize, style, this.textColor.getAsInt());
+                firstLabel.setAngle(Math.PI/4);
+                double labelWidth = firstLabel.getBoundsWithRotation().getWidth();
+
                 // add rotated label height to the y padding
                 coordsysAreaLB.y[0] = paddingBot+legendBotH+rotatedXLblBounds.getHeight()+ 8;
                 // check if y or x label is larger and add that size to the padding
-                coordsysAreaLB.x[0] = Math.max(0, (int) rotatedXLblBounds.getWidth())+paddingLeft+ 8;
+                coordsysAreaLB.x[0] = Math.max(maxYTickLabelWidth, (int) labelWidth)+paddingLeft+ 8;
                 coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW- 8;
 
                 // correct the coordsysArea so that it doesn't get inverted
@@ -585,16 +549,14 @@ public class ParallelCoordsRenderer implements Renderer {
                 guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
 
                 // yaxis ticks
-                double[] yticks = featTicksAndLabels.first;
-                String[] yticklabels = featTicksAndLabels.second;
+                Pair<Double[], String[]> tickLabels = insertTicksPrim(featTicksAndLabels, feature.max, featTicksAndLabels.first.length);
+                tickLabels = insertTicks(tickLabels, feature.min, 0);
+                Double[] yticks = tickLabels.first;
+                String[] yticklabels = tickLabels.second;
 
                 // get max of the ticks to normalize them to the 0-1 area
-                //double maxValue = Arrays.stream(yticks).max().orElse(1.0);
-                //double minValue = Arrays.stream(yticks).min().orElse(0.0);
-
                 for(int i=0; i<yticks.length; i++){
                     // tick
-                    //double y_m = (yticks[i]-minValue)/(maxValue-minValue);
                     double y_m = (yticks[i]-feature.min)/(feature.max-feature.min);
                     double y = y_m*axisDimensions.getHeight();
                     Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
@@ -614,11 +576,6 @@ public class ParallelCoordsRenderer implements Renderer {
         for(Text txt: tickMarkLabels){
             postContentTextR.addItemToRender(txt);
         }
-
-        // axis labels
-        yAxisLabelText.setTextString(getyAxisLabel());
-        yAxisLabelText.setAngle(-(float)Math.PI/2);
-        yAxisLabelText.setOrigin(new TranslatedPoint2D(coordsysAreaRB, 12, axisDimensions.getHeight()/2 + yAxisLabelText.getTextSize().width/2));
 
         // setup legend areas (this will stay the same)
         if(Objects.nonNull(legendRight)){
@@ -668,6 +625,41 @@ public class ParallelCoordsRenderer implements Renderer {
             maxRotatedLabelWidth = Math.max(maxRotatedLabelWidth, label.getBoundsWithRotation().getWidth());
         }
         return new Rectangle2D.Double(0, 0, maxRotatedLabelWidth, maxRotatedLabelHeight);
+    }
+
+    protected Pair<Double[], String[]> insertTicksPrim(Pair<double[], String[]> generatedTicks, double toInsert, int index) {
+        // get max of the ticks to normalize them to the 0-1 area
+        double[] ticks = generatedTicks.first;
+        String[] tickLabels = generatedTicks.second;
+
+        Double[] copiedTicks = new Double[ticks.length];
+        for (int i = 0; i< ticks.length; i++)
+            copiedTicks[i] = ticks[i];
+
+        String[] copiedTickLabels = Arrays.copyOf(tickLabels, tickLabels.length);
+
+        if (Arrays.stream(ticks).noneMatch(e->e==toInsert)) {
+            List<Double> tickList = new ArrayList<>(Arrays.asList(copiedTicks));
+            tickList.add(index, toInsert);
+            copiedTicks = tickList.toArray(copiedTicks);
+
+            List<String> yticklabelList = new ArrayList<>(Arrays.asList(copiedTickLabels));
+            yticklabelList.add(index, String.valueOf(toInsert));
+            copiedTickLabels = yticklabelList.toArray(copiedTickLabels);
+        }
+
+        return new Pair<>(copiedTicks, copiedTickLabels);
+    }
+
+    protected Pair<Double[], String[]> insertTicks(Pair<Double[], String[]> generatedTicks, double toInsert, int index) {
+        // get max of the ticks to normalize them to the 0-1 area
+        Double[] ticks = generatedTicks.first;
+        double[] primTicks = new double[ticks.length];
+        for (int i = 0; i < ticks.length; i++) {
+            primTicks[i] = ticks[i];
+        }
+
+        return insertTicksPrim(new Pair<>(primTicks, generatedTicks.second), toInsert, index);
     }
 
     /**
