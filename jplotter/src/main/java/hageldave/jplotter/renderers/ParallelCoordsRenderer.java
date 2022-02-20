@@ -62,9 +62,6 @@ public class ParallelCoordsRenderer implements Renderer {
     protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
     protected Lines guides = new Lines().setVertexRoundingEnabled(true);
     protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
-    protected Text xAxisLabelText = new Text("", 13, Font.PLAIN);
-    protected Text yAxisLabelText = new Text("", 13, Font.PLAIN);
-
 
     protected LinkedList<Feature> features = new LinkedList<>();
 
@@ -89,8 +86,6 @@ public class ParallelCoordsRenderer implements Renderer {
     protected PointeredPoint2D coordsysAreaLT = new PointeredPoint2D(coordsysAreaLB.x, coordsysAreaRT.y);
     @Annotations.GLCoordinates
     protected PointeredPoint2D coordsysAreaRB = new PointeredPoint2D(coordsysAreaRT.x, coordsysAreaLB.y);
-
-    protected String yAxisLabel = null;
 
     protected boolean isEnabled=true;
 
@@ -121,9 +116,6 @@ public class ParallelCoordsRenderer implements Renderer {
         this.postContentLinesR
                 .addItemToRender(guides)
                 .addItemToRender(ticks);
-        this.preContentTextR
-                .addItemToRender(xAxisLabelText)
-                .addItemToRender(yAxisLabelText);
 
         this.guideColor = ()->getColorScheme().getColor3();
         this.tickColor = ()->getColorScheme().getColor3();
@@ -137,9 +129,6 @@ public class ParallelCoordsRenderer implements Renderer {
      * @return this for chaining
      */
     protected ParallelCoordsRenderer updateColors() {
-        this.xAxisLabelText.setColor(this.textColor.getAsInt());
-        this.yAxisLabelText.setColor(this.textColor.getAsInt());
-
         updateLegendColorScheme(legendBottom);
         updateLegendColorScheme(legendRight);
 
@@ -425,178 +414,177 @@ public class ParallelCoordsRenderer implements Renderer {
                 int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
                 maxYTickLabelWidth = Math.max(maxYTickLabelWidth, labelW);
             }
-        }
 
-        // get x dimension of first and last label to check if the coordsysarea has to be moved to make room for them
-        int firstXLabelLength = CharacterAtlas.boundsForText(features.getFirst().label.length(), tickfontSize, Font.BOLD).getBounds().width;
-        int lastXLabelLength = CharacterAtlas.boundsForText(features.getLast().label.length(), tickfontSize, Font.BOLD).getBounds().width;;
+            // get x dimension of first and last label to check if the coordsysarea has to be moved to make room for them
+            int firstXLabelLength = CharacterAtlas.boundsForText(features.getFirst().label.length(), tickfontSize, Font.BOLD).getBounds().width;
+            int lastXLabelLength = CharacterAtlas.boundsForText(features.getLast().label.length(), tickfontSize, Font.BOLD).getBounds().width;
 
-        int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
-        int maxLabelHeight = CharacterAtlas.boundsForText(1, yLabelfontSize, style).getBounds().height;
+            int maxXTickLabelHeight = CharacterAtlas.boundsForText(1, tickfontSize, style).getBounds().height;
+            int maxLabelHeight = CharacterAtlas.boundsForText(1, yLabelfontSize, style).getBounds().height;
 
-        int legendRightW = Objects.nonNull(legendRight) ? legendRightWidth+4:0;
-        int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight+4:0;
+            int legendRightW = Objects.nonNull(legendRight) ? legendRightWidth + 4 : 0;
+            int legendBotH = Objects.nonNull(legendBottom) ? legendBottomHeight + 4 : 0;
 
-        // move coordwindow origin so that labels have enough display space
-        coordsysAreaLB.x[0] = Math.max(firstXLabelLength/2.0, maxYTickLabelWidth) + paddingLeft + 10;
-        coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 12;
-        // move opposing corner of coordwindow to have enough display space
-        coordsysAreaRT.x[0] = viewportwidth-paddingRight-(lastXLabelLength/2.0)-legendRightW-10;
-        coordsysAreaRT.y[0] = viewportheight-paddingTop-maxLabelHeight-4;
+            // move coordwindow origin so that labels have enough display space
+            coordsysAreaLB.x[0] = Math.max(firstXLabelLength / 2.0, maxYTickLabelWidth) + paddingLeft + 10;
+            coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 12;
+            // move opposing corner of coordwindow to have enough display space
+            coordsysAreaRT.x[0] = viewportwidth - paddingRight - Math.max(lastXLabelLength / 2.0, legendRightW)  - 10;
+            coordsysAreaRT.y[0] = viewportheight - paddingTop - maxLabelHeight - 4;
 
-        // dispose of old stuff
-        clearCoordSysBuildingBlocks();
-
-        // create new stuff
-        Rectangle2D axisDimensions = preventCoordSysInversion();
-
-        // should labels be shifted?
-        boolean shiftLabels = false;
-        double lastMaxX = Integer.MIN_VALUE;
-
-        // xaxis feature guides
-        int index = 0;
-        for (Feature feature : features) {
-            // TODO: we propably need to replace the wilkinson algo with fixed min/max values
-            Pair<double[],String[]> featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(feature.min, feature.max, 5, true);
-
-            // tick
-            double m = (double) index / (features.size()-1);
-            double x = coordsysAreaLB.getX()+m*axisDimensions.getWidth();
-            Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
-
-            // label
-            Text label = new Text(feature.label, tickfontSize, Font.BOLD, this.textColor.getAsInt());
-            Dimension textSize = label.getTextSize();
-            label.setOrigin(new Point2D.Double(
-                    (int)(onaxis.getX()-textSize.getWidth()/2.0),
-                    (int)(onaxis.getY()-12-textSize.getHeight())+0.5));
-
-            if (lastMaxX > label.getBounds().getMinX()) {
-                shiftLabels = true;
-                break;
-            }
-
-            lastMaxX = label.getBounds().getMaxX();
-            tickMarkLabels.add(label);
-
-            // feature guide
-            guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
-
-            Pair<Double[], String[]> tickLabels = insertTicksPrim(featTicksAndLabels, feature.max, featTicksAndLabels.first.length);
-            tickLabels = insertTicks(tickLabels, feature.min, 0);
-            Double[] yticks = tickLabels.first;
-            String[] yticklabels = tickLabels.second;
-
-            // yaxis ticks
-            for(int i=0; i<yticks.length; i++){
-                // tick
-                double y_m = (yticks[i]-feature.min)/(feature.max-feature.min);
-
-                double y = y_m*axisDimensions.getHeight();
-                Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
-                ticks.addSegment(onYaxis, new TranslatedPoint2D(onYaxis, -4, 0)).setColor(tickColor);
-                // label
-                Text yLabel = new Text(yticklabels[i], tickfontSize, style, this.textColor.getAsInt());
-                Dimension yTextSize = yLabel.getTextSize();
-                yLabel.setOrigin(new TranslatedPoint2D(onYaxis, -7-yTextSize.getWidth(), -Math.round(yTextSize.getHeight()/2.0)+0.5));
-
-                // we need to use a different one here, as tickMarkLabels get cleared when labels have to be shifted
-                tickMarkLabels.add(yLabel);
-            }
-            index++;
-        }
-
-        if (shiftLabels) {
+            // dispose of old stuff
             clearCoordSysBuildingBlocks();
-            index=0;
+
+            // create new stuff
+            Rectangle2D axisDimensions = preventCoordSysInversion();
+
+            // should labels be shifted?
+            boolean shiftLabels = false;
+            double lastMaxX = Integer.MIN_VALUE;
+
+            // xaxis feature guides
+            int index = 0;
             for (Feature feature : features) {
-                Pair<double[],String[]> featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(feature.min, feature.max, 5, true);
+                featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(feature.min, feature.max, 5, true);
 
-                // calculate first the new coord view bounds
-                String[] allLabels = new String[features.size()];
-                for (int i = 0; i < allLabels.length; i++)
-                    allLabels[i] = features.get(i).label;
-
-                // calculate first the new coord view bounds
-                Rectangle2D rotatedXLblBounds = getMaxBoundsOfAllLabels(allLabels, Math.PI/4, tickfontSize, style);
-
-                Text firstLabel = new Text(features.getFirst().label, tickfontSize, style, this.textColor.getAsInt());
-                firstLabel.setAngle(Math.PI/4);
-                double labelWidth = firstLabel.getBoundsWithRotation().getWidth();
-
-                // add rotated label height to the y padding
-                coordsysAreaLB.y[0] = paddingBot+legendBotH+rotatedXLblBounds.getHeight()+ 8;
-                // check if y or x label is larger and add that size to the padding
-                coordsysAreaLB.x[0] = Math.max(maxYTickLabelWidth, (int) labelWidth)+paddingLeft+ 8;
-                coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW- 8;
-
-                // correct the coordsysArea so that it doesn't get inverted
-                axisDimensions = preventCoordSysInversion();
-
-                // now really put it into renderer
-                double m = (double) index / (features.size()-1);
+                // tick
+                double m = (double) index / (features.size() - 1);
                 double x = coordsysAreaLB.getX() + m * axisDimensions.getWidth();
                 Point2D onaxis = new Point2D.Double(Math.round(x), coordsysAreaLB.getY());
-                Text label = new Text(feature.label, tickfontSize, Font.BOLD, this.textColor.getAsInt());
-                label.setAngle(Math.PI/4);
-                label.setOrigin(new Point2D.Double(
-                        (int) onaxis.getX()-label.getBoundsWithRotation().getWidth()+12,
-                        (int) onaxis.getY()-label.getBoundsWithRotation().getHeight()-7));
 
+                // label
+                Text label = new Text(feature.label, tickfontSize, Font.BOLD, this.textColor.getAsInt());
+                Dimension textSize = label.getTextSize();
+                label.setOrigin(new Point2D.Double(
+                        (int) (onaxis.getX() - textSize.getWidth() / 2.0),
+                        (int) (onaxis.getY() - 12 - textSize.getHeight()) + 0.5));
+
+                if (lastMaxX > label.getBounds().getMinX()) {
+                    shiftLabels = true;
+                    break;
+                }
+
+                lastMaxX = label.getBounds().getMaxX();
                 tickMarkLabels.add(label);
-                // guide
+
+                // feature guide
                 guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
 
-                // yaxis ticks
                 Pair<Double[], String[]> tickLabels = insertTicksPrim(featTicksAndLabels, feature.max, featTicksAndLabels.first.length);
                 tickLabels = insertTicks(tickLabels, feature.min, 0);
                 Double[] yticks = tickLabels.first;
                 String[] yticklabels = tickLabels.second;
 
-                // get max of the ticks to normalize them to the 0-1 area
-                for(int i=0; i<yticks.length; i++){
+                // yaxis ticks
+                for (int i = 0; i < yticks.length; i++) {
                     // tick
-                    double y_m = (yticks[i]-feature.min)/(feature.max-feature.min);
-                    double y = y_m*axisDimensions.getHeight();
+                    double y_m = (yticks[i] - feature.min) / (feature.max - feature.min);
+
+                    double y = y_m * axisDimensions.getHeight();
                     Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
                     ticks.addSegment(onYaxis, new TranslatedPoint2D(onYaxis, -4, 0)).setColor(tickColor);
                     // label
                     Text yLabel = new Text(yticklabels[i], tickfontSize, style, this.textColor.getAsInt());
                     Dimension yTextSize = yLabel.getTextSize();
-                    yLabel.setOrigin(new TranslatedPoint2D(onYaxis, -7-yTextSize.getWidth(), -Math.round(yTextSize.getHeight()/2.0)+0.5));
+                    yLabel.setOrigin(new TranslatedPoint2D(onYaxis, -7 - yTextSize.getWidth(), -Math.round(yTextSize.getHeight() / 2.0) + 0.5));
 
                     // we need to use a different one here, as tickMarkLabels get cleared when labels have to be shifted
                     tickMarkLabels.add(yLabel);
                 }
                 index++;
             }
-        }
 
-        for(Text txt: tickMarkLabels){
-            postContentTextR.addItemToRender(txt);
-        }
+            if (shiftLabels) {
+                clearCoordSysBuildingBlocks();
+                index = 0;
+                for (Feature feature : features) {
+                    featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(feature.min, feature.max, 5, true);
 
-        // setup legend areas (this will stay the same)
-        if(Objects.nonNull(legendRight)){
-            legendRightViewPort.setBounds(
-                    (int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4),
-                    paddingBot,
-                    legendRightWidth,
-                    (int)(coordsysAreaRT.getY()-paddingBot)
-            );
-        } else {
-            legendRightViewPort.setBounds(0, 0, 0, 0);
-        }
-        if(Objects.nonNull(legendBottom)){
-            legendBottomViewPort.setBounds(
-                    (int)coordsysAreaLB.getX(),
-                    paddingBot,
-                    (int)(coordsysAreaLB.distance(coordsysAreaRB)),
-                    legendBottomHeight
-            );
-        } else {
-            legendBottomViewPort.setBounds(0, 0, 0, 0);
+                    // calculate first the new coord view bounds
+                    String[] allLabels = new String[features.size()];
+                    for (int i = 0; i < allLabels.length; i++)
+                        allLabels[i] = features.get(i).label;
+
+                    // calculate first the new coord view bounds
+                    Rectangle2D rotatedXLblBounds = getMaxBoundsOfAllLabels(allLabels, Math.PI / 4, tickfontSize, style);
+
+                    Text firstLabel = new Text(features.getFirst().label, tickfontSize, style, this.textColor.getAsInt());
+                    firstLabel.setAngle(Math.PI / 4);
+                    double labelWidth = firstLabel.getBoundsWithRotation().getWidth();
+
+                    // add rotated label height to the y padding
+                    coordsysAreaLB.y[0] = paddingBot + legendBotH + rotatedXLblBounds.getHeight() + 8;
+                    // check if y or x label is larger and add that size to the padding
+                    coordsysAreaLB.x[0] = Math.max(maxYTickLabelWidth, (int) labelWidth) + paddingLeft + 8;
+                    coordsysAreaRT.x[0] = viewportwidth - paddingRight - maxLabelHeight - legendRightW - 8;
+
+                    // correct the coordsysArea so that it doesn't get inverted
+                    axisDimensions = preventCoordSysInversion();
+
+                    // now really put it into renderer
+                    double m = (double) index / (features.size() - 1);
+                    double x = coordsysAreaLB.getX() + m * axisDimensions.getWidth();
+                    Point2D onaxis = new Point2D.Double(Math.round(x), coordsysAreaLB.getY());
+                    Text label = new Text(feature.label, tickfontSize, Font.BOLD, this.textColor.getAsInt());
+                    label.setAngle(Math.PI / 4);
+                    label.setOrigin(new Point2D.Double(
+                            (int) onaxis.getX() - label.getBoundsWithRotation().getWidth() + 12,
+                            (int) onaxis.getY() - label.getBoundsWithRotation().getHeight() - 7));
+
+                    tickMarkLabels.add(label);
+                    // guide
+                    guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
+
+                    // yaxis ticks
+                    Pair<Double[], String[]> tickLabels = insertTicksPrim(featTicksAndLabels, feature.max, featTicksAndLabels.first.length);
+                    tickLabels = insertTicks(tickLabels, feature.min, 0);
+                    Double[] yticks = tickLabels.first;
+                    String[] yticklabels = tickLabels.second;
+
+                    // get max of the ticks to normalize them to the 0-1 area
+                    for (int i = 0; i < yticks.length; i++) {
+                        // tick
+                        double y_m = (yticks[i] - feature.min) / (feature.max - feature.min);
+                        double y = y_m * axisDimensions.getHeight();
+                        Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
+                        ticks.addSegment(onYaxis, new TranslatedPoint2D(onYaxis, -4, 0)).setColor(tickColor);
+                        // label
+                        Text yLabel = new Text(yticklabels[i], tickfontSize, style, this.textColor.getAsInt());
+                        Dimension yTextSize = yLabel.getTextSize();
+                        yLabel.setOrigin(new TranslatedPoint2D(onYaxis, -7 - yTextSize.getWidth(), -Math.round(yTextSize.getHeight() / 2.0) + 0.5));
+
+                        // we need to use a different one here, as tickMarkLabels get cleared when labels have to be shifted
+                        tickMarkLabels.add(yLabel);
+                    }
+                    index++;
+                }
+            }
+
+            for (Text txt : tickMarkLabels) {
+                postContentTextR.addItemToRender(txt);
+            }
+
+            // setup legend areas (this will stay the same)
+            if (Objects.nonNull(legendRight)) {
+                legendRightViewPort.setBounds(
+                        (int) coordsysAreaRT.x[0]+paddingRight+4,
+                        paddingBot,
+                        legendRightWidth,
+                        (int) (coordsysAreaRT.getY() - paddingBot)
+                );
+            } else {
+                legendRightViewPort.setBounds(0, 0, 0, 0);
+            }
+            if (Objects.nonNull(legendBottom)) {
+                legendBottomViewPort.setBounds(
+                        (int) coordsysAreaLB.getX(),
+                        paddingBot,
+                        (int) (coordsysAreaLB.distance(coordsysAreaRB)),
+                        legendBottomHeight
+                );
+            } else {
+                legendBottomViewPort.setBounds(0, 0, 0, 0);
+            }
         }
     }
 
@@ -660,27 +648,6 @@ public class ParallelCoordsRenderer implements Renderer {
         }
 
         return insertTicksPrim(new Pair<>(primTicks, generatedTicks.second), toInsert, index);
-    }
-
-    /**
-     * @return "Y" if {@link #yAxisLabel} is null or the actual axis label.
-     */
-    public String getyAxisLabel() {
-        return yAxisLabel == null ? "Y":yAxisLabel;
-    }
-
-
-
-    /**
-     * Sets the specified string as the y axis label which appears to the right of the coordinate system.
-     * Sets the {@link #isDirty} state of this {@link ParallelCoordsRenderer} to true.
-     * @param yAxisLabel to set
-     * @return this for chaining
-     */
-    public ParallelCoordsRenderer setyAxisLabel(String yAxisLabel) {
-        this.yAxisLabel = yAxisLabel;
-        setDirty();
-        return this;
     }
 
     /**
