@@ -427,7 +427,7 @@ public class ParallelCoordsRenderer implements Renderer {
 
             // move coordwindow origin so that labels have enough display space
             coordsysAreaLB.x[0] = Math.max(firstXLabelLength / 2.0, maxYTickLabelWidth) + paddingLeft + 10;
-            coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 12;
+            coordsysAreaLB.y[0] = maxXTickLabelHeight + paddingBot + legendBotH + 20;
             // move opposing corner of coordwindow to have enough display space
             coordsysAreaRT.x[0] = viewportwidth - paddingRight - Math.max(lastXLabelLength / 2.0, legendRightW)  - 10;
             coordsysAreaRT.y[0] = viewportheight - paddingTop - maxLabelHeight - 4;
@@ -513,7 +513,7 @@ public class ParallelCoordsRenderer implements Renderer {
                     double labelWidth = firstLabel.getBoundsWithRotation().getWidth();
 
                     // add rotated label height to the y padding
-                    coordsysAreaLB.y[0] = paddingBot + legendBotH + rotatedXLblBounds.getHeight() + 8;
+                    coordsysAreaLB.y[0] = paddingBot + legendBotH + rotatedXLblBounds.getHeight() + 20;
                     // check if y or x label is larger and add that size to the padding
                     coordsysAreaLB.x[0] = Math.max(maxYTickLabelWidth, (int) labelWidth) + paddingLeft + 8;
                     coordsysAreaRT.x[0] = viewportwidth - paddingRight - maxLabelHeight - legendRightW - 8;
