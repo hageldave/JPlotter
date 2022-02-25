@@ -30,8 +30,9 @@ import org.w3c.dom.Node;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.List;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Objects;
 import java.util.function.IntSupplier;
 
 public class ParallelCoordsRenderer implements Renderer {
@@ -408,9 +409,10 @@ public class ParallelCoordsRenderer implements Renderer {
         // find maximum length of y axis labels of first feature
         int maxYTickLabelWidth = 0;
         if (!features.isEmpty()) {
-            Pair<double[],String[]> featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(features.getFirst().min, features.getFirst().max, 5, true);
+            Pair<double[], String[]> firstFeatTicksAndLabels = new Pair<>(new double[]{features.getFirst().min, features.getFirst().max},
+                    new String[]{String.valueOf(features.getFirst().min), String.valueOf(features.getFirst().max)});
 
-            for(String label : featTicksAndLabels.second) {
+            for(String label : firstFeatTicksAndLabels.second) {
                 int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
                 maxYTickLabelWidth = Math.max(maxYTickLabelWidth, labelW);
             }
@@ -445,8 +447,6 @@ public class ParallelCoordsRenderer implements Renderer {
             // xaxis feature guides
             int index = 0;
             for (Feature feature : features) {
-                featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(feature.min, feature.max, 5, true);
-
                 // tick
                 double m = (double) index / (features.size() - 1);
                 double x = coordsysAreaLB.getX() + m * axisDimensions.getWidth();
@@ -470,8 +470,9 @@ public class ParallelCoordsRenderer implements Renderer {
                 // feature guide
                 guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
 
-                Pair<Double[], String[]> tickLabels = insertTicksPrim(featTicksAndLabels, feature.max, featTicksAndLabels.first.length);
-                tickLabels = insertTicks(tickLabels, feature.min, 0);
+                Pair<Double[], String[]> tickLabels = new Pair<>(new Double[]{feature.min, feature.max},
+                        new String[]{String.valueOf(feature.min), String.valueOf(feature.max)});
+
                 Double[] yticks = tickLabels.first;
                 String[] yticklabels = tickLabels.second;
 
@@ -491,6 +492,7 @@ public class ParallelCoordsRenderer implements Renderer {
                     // we need to use a different one here, as tickMarkLabels get cleared when labels have to be shifted
                     tickMarkLabels.add(yLabel);
                 }
+
                 index++;
             }
 
@@ -498,7 +500,6 @@ public class ParallelCoordsRenderer implements Renderer {
                 clearCoordSysBuildingBlocks();
                 index = 0;
                 for (Feature feature : features) {
-                    featTicksAndLabels = tickMarkGenerator.genTicksAndLabels(feature.min, feature.max, 5, true);
 
                     // calculate first the new coord view bounds
                     String[] allLabels = new String[features.size()];
@@ -536,8 +537,9 @@ public class ParallelCoordsRenderer implements Renderer {
                     guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
 
                     // yaxis ticks
-                    Pair<Double[], String[]> tickLabels = insertTicksPrim(featTicksAndLabels, feature.max, featTicksAndLabels.first.length);
-                    tickLabels = insertTicks(tickLabels, feature.min, 0);
+                    Pair<Double[], String[]> tickLabels = new Pair<>(new Double[]{feature.min, feature.max},
+                            new String[]{String.valueOf(feature.min), String.valueOf(feature.max)});
+
                     Double[] yticks = tickLabels.first;
                     String[] yticklabels = tickLabels.second;
 
@@ -613,41 +615,6 @@ public class ParallelCoordsRenderer implements Renderer {
             maxRotatedLabelWidth = Math.max(maxRotatedLabelWidth, label.getBoundsWithRotation().getWidth());
         }
         return new Rectangle2D.Double(0, 0, maxRotatedLabelWidth, maxRotatedLabelHeight);
-    }
-
-    protected Pair<Double[], String[]> insertTicksPrim(Pair<double[], String[]> generatedTicks, double toInsert, int index) {
-        // get max of the ticks to normalize them to the 0-1 area
-        double[] ticks = generatedTicks.first;
-        String[] tickLabels = generatedTicks.second;
-
-        Double[] copiedTicks = new Double[ticks.length];
-        for (int i = 0; i< ticks.length; i++)
-            copiedTicks[i] = ticks[i];
-
-        String[] copiedTickLabels = Arrays.copyOf(tickLabels, tickLabels.length);
-
-        if (Arrays.stream(ticks).noneMatch(e->e==toInsert)) {
-            List<Double> tickList = new ArrayList<>(Arrays.asList(copiedTicks));
-            tickList.add(index, toInsert);
-            copiedTicks = tickList.toArray(copiedTicks);
-
-            List<String> yticklabelList = new ArrayList<>(Arrays.asList(copiedTickLabels));
-            yticklabelList.add(index, String.valueOf(toInsert));
-            copiedTickLabels = yticklabelList.toArray(copiedTickLabels);
-        }
-
-        return new Pair<>(copiedTicks, copiedTickLabels);
-    }
-
-    protected Pair<Double[], String[]> insertTicks(Pair<Double[], String[]> generatedTicks, double toInsert, int index) {
-        // get max of the ticks to normalize them to the 0-1 area
-        Double[] ticks = generatedTicks.first;
-        double[] primTicks = new double[ticks.length];
-        for (int i = 0; i < ticks.length; i++) {
-            primTicks[i] = ticks[i];
-        }
-
-        return insertTicksPrim(new Pair<>(primTicks, generatedTicks.second), toInsert, index);
     }
 
     /**
@@ -908,6 +875,94 @@ public class ParallelCoordsRenderer implements Renderer {
         if(Objects.nonNull(overlay))
             overlay.close();
     }
+
+    /**
+     * @return the area of this renderer in which the coordinate system contents are rendered.
+     * It is the viewPort for the {@link #content} renderer which is enclosed by
+     * the coordinate system axes.
+     */
+    @Annotations.GLCoordinates
+    public Rectangle2D getCoordSysArea() {
+        return new Rectangle2D.Double(
+                coordsysAreaLB.getX()+currentViewPort.x,
+                coordsysAreaLB.getY()+currentViewPort.y,
+                coordsysAreaLB.distance(coordsysAreaRB),
+                coordsysAreaLB.distance(coordsysAreaLT)
+        );
+    }
+
+    /**
+     * @return the viewport which this CoordSysRenderer was last rendered into
+     */
+    @Annotations.GLCoordinates
+    public Rectangle getCurrentViewPort() {
+        return currentViewPort;
+    }
+
+    /**
+     * Transforms a location in AWT coordinates (y axis extends to bottom)
+     * on this renderer to the corresponding coordinates in the coordinate
+     * system view (in GL coords).
+     * @param awtPoint to be transformed
+     * @param canvasheight height of the canvas this {@link CoordSysRenderer} is drawn to
+     * @return transformed location
+     */
+    public Point2D transformAWT2CoordSys(Point2D awtPoint, int canvasheight){
+        Point2D glp = Utils.swapYAxis(awtPoint, canvasheight);
+        return transformGL2CoordSys(glp);
+    }
+
+    /**
+     * Transforms a location in GL coordinates on this renderer to the
+     * corresponding coordinates in the coordinate system view.
+     * @param point to be transformed
+     * @return transformed location
+     */
+    @Annotations.GLCoordinates
+    public Point2D transformGL2CoordSys(Point2D point){
+        Rectangle2D coordSysArea = getCoordSysArea();
+        Rectangle2D coordinateView = new Rectangle2D.Double(0, 0, 1, 1);
+        double x = point.getX()-coordSysArea.getMinX();
+        double y = point.getY()-coordSysArea.getMinY();
+        x /= coordSysArea.getWidth()-1;
+        y /= coordSysArea.getHeight()-1;
+        x = x*coordinateView.getWidth()+coordinateView.getMinX();
+        y = y*coordinateView.getHeight()+coordinateView.getMinY();
+        return new Point2D.Double(x, y);
+    }
+
+    /**
+     * Transforms a location in coordinates of the current coordinate view
+     * to corresponding coordinates of this renderer (in GL coords).
+     * @param point to be transformed
+     * @return transformed location
+     */
+    @Annotations.GLCoordinates
+    public Point2D transformCoordSys2GL(Point2D point){
+        Rectangle2D coordSysArea = getCoordSysArea();
+        Rectangle2D coordSysView = new Rectangle2D.Double(0, 0, 1, 1);
+        double x = point.getX()-coordSysView.getMinX();
+        double y = point.getY()-coordSysView.getMinY();
+        x /= coordSysView.getWidth();
+        y /= coordSysView.getHeight();
+        x = x*(coordSysArea.getWidth()-1)+coordSysArea.getMinX();
+        y = y*(coordSysArea.getHeight()-1)+coordSysArea.getMinY();
+        return new Point2D.Double(x, y);
+    }
+
+    /**
+     * Transforms a location in coordinates of the current coordinate view
+     * to corresponding coordinates of this renderer's canvas in AWT coordinates
+     * (where y axis extends to bottom).
+     * @param point to be transformed
+     * @param canvasheight height of the canvas this {@link CoordSysRenderer} is drawn to
+     * @return transformed location
+     */
+    public Point2D transformCoordSys2AWT(Point2D point, int canvasheight){
+        Point2D glPoint = transformCoordSys2GL(point);
+        return Utils.swapYAxis(glPoint, canvasheight);
+    }
+
     @Override
     public void setEnabled(boolean enable) {
         this.isEnabled = enable;
