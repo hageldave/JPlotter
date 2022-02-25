@@ -380,5 +380,20 @@ public class Utils {
 
 		return initialPair;
 	}
+
+	public static Pair<double[], String[]> convergeToLimits(double definedMin, double definedMax, int desiredNumTicks) {
+		ExtendedWilkinson extendedWilkinson = new ExtendedWilkinson();
+		Pair<double[], String[]> initialPair = extendedWilkinson.genTicksAndLabels(definedMin, definedMax, desiredNumTicks, true);
+
+		double tempMin = definedMin;
+		double tempMax = definedMax;
+
+		double stepSize = (definedMax - definedMin) / 100;
+		while ((initialPair.first[0] > definedMin) || (initialPair.first[initialPair.first.length-1] < definedMax)) {
+			initialPair = extendedWilkinson.genTicksAndLabels(tempMin -= stepSize, tempMax += stepSize, desiredNumTicks, true);
+		}
+
+		return initialPair;
+	}
 }
 
