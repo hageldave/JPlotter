@@ -212,6 +212,25 @@ public class ParallelCoordsRenderer implements Renderer {
         return this.addFeature(new Feature(min, max, label));
     }
 
+    public ParallelCoordsRenderer addFeature(int xIndex, Feature feature) {
+        this.features.add(xIndex, feature);
+        return this;
+    }
+
+    public ParallelCoordsRenderer addFeature(int[] xIndex, Feature... features) {
+        if (xIndex.length != features.length) {
+            throw new IllegalArgumentException("Both arrays have to be of equal length");
+        }
+        for (int i = 0; i < xIndex.length; i++) {
+            this.features.add(xIndex[i], features[i]);
+        }
+        return this;
+    }
+
+    public ParallelCoordsRenderer addFeature(int xIndex, double min, double max, String label) {
+        return this.addFeature(xIndex, new Feature(min, max, label));
+    }
+
     /**
      * @param legend color scheme of the legend will be updated if it is from type {@link Legend}
      */
