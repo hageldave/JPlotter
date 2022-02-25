@@ -505,7 +505,7 @@ public class CoordSysRenderer implements Renderer {
 		coordsysAreaLB.x[0] = Math.max(yLblBounds.getWidth(), firstXLabelLength/2.0)+paddingLeft+adjustmentPaddingH;
 		coordsysAreaLB.y[0] = maxXTickHeight+paddingBot+legendBotH+adjustmentPaddingV;
 		// move opposing corner of coordwindow to have enough display space -> either add the height of the y axis label or the half width of the last label (not both)
-		coordsysAreaRT.x[0] = viewportwidth-paddingRight-maxLabelHeight-legendRightW-adjustmentPaddingH;
+		coordsysAreaRT.x[0] = viewportwidth-paddingRight-Math.max(maxLabelHeight, (int) (lastXLabelLength/2.0)) -legendRightW-adjustmentPaddingH;
 		coordsysAreaRT.y[0] = viewportheight-paddingTop-maxLabelHeight-adjustmentPaddingV;
 
 		for(Text txt:tickMarkLabels){
@@ -576,31 +576,6 @@ public class CoordSysRenderer implements Renderer {
 				label.setOrigin(
 						new Point2D.Double((int) onaxis.getX()-label.getBoundsWithRotation().getWidth()+12,
 						(int) onaxis.getY()-label.getBoundsWithRotation().getHeight()-4));
-
-				tickMarkLabels.add(label);
-				// guide
-				guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
-			}
-			// if the last label is larger than the coordsys we have to make room for the label
-		} else if (lastMaxX > axisDimensions.getWidth()+coordsysAreaLB.getX()) {
-			clearCoordSysBuildingBlocks();
-
-			coordsysAreaRT.x[0] = viewportwidth-paddingRight-Math.max(maxLabelHeight, (int) (lastXLabelLength/2.0))-legendRightW- adjustmentPaddingV;
-			axisDimensions.setRect(0, 0, coordsysAreaLB.distance(coordsysAreaRB), axisDimensions.getHeight());
-
-			// xaxis ticks
-			for(int i=0; i<xticks.length; i++){
-				// tick
-				double m = (xticks[i]-coordinateView.getMinX())/coordinateView.getWidth();
-				double x = coordsysAreaLB.getX()+m*axisDimensions.getWidth();
-				Point2D onaxis = new Point2D.Double(Math.round(x),coordsysAreaLB.getY());
-				ticks.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0,-4)).setColor(tickColor);
-				// label
-				Text label = new Text(xticklabels[i], tickfontSize, style, this.textColor.getAsInt());
-				Dimension textSize = label.getTextSize();
-				label.setOrigin(new Point2D.Double(
-						(int)(onaxis.getX()-textSize.getWidth()/2.0),
-						(int)(onaxis.getY()-6-textSize.getHeight())+0.5));
 
 				tickMarkLabels.add(label);
 				// guide
