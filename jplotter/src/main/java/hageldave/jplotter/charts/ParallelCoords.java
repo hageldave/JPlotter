@@ -47,10 +47,10 @@ public class ParallelCoords {
     protected HashMap<String, SimpleSelectionModel<Pair<Integer, Integer>>> cueSelectionModels = new HashMap<>();
 
     public ParallelCoords(final boolean useOpenGL) {
-        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), "X", "Y");
+        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback());
     }
 
-    public ParallelCoords(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
+    public ParallelCoords(final JPlotterCanvas canvas) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
@@ -73,8 +73,8 @@ public class ParallelCoords {
             }
 
             @Override
-            public void dataChanged(int chunkIdx, Pair<double[][], int[]> chunkData) {
-                // TODO: To implement
+            public void dataChanged(int chunkIdx, Pair<double[][], int[]> chunkData, int xIdx) {
+                onDataChanged(chunkIdx, chunkData, xIdx);
             }
         });
 
@@ -142,7 +142,11 @@ public class ParallelCoords {
     protected synchronized void onFeatureAdded(ParallelCoordsRenderer.Feature feature, int featureXPos) {
         this.parallelCoordsys.addFeature(featureXPos, feature);
 
-        //
+        // repaint all the line stuff
+        for (int i = 0; i < getDataModel().dataChunks.size(); i++) {
+            onDataChanged(i, getDataModel().dataChunks.get(i), dataModel.getFeatureCount());
+        }
+
         this.canvas.scheduleRepaint();
     }
 
@@ -158,8 +162,8 @@ public class ParallelCoords {
             for (int j = 0; j < datapoint.length-1; j++) {
                 Lines.SegmentDetails segmentDetails =
                         lines.addSegment(new Point2D.Double(
-                                (double) j / (featureCount-1), normalizeValue(datapoint[indices[j]], getDataModel().getFeature(j))),
-                                new Point2D.Double((double) (j+1) / (featureCount-1), normalizeValue(datapoint[indices[j+1]], getDataModel().getFeature(j+1))));
+                                (double) indices[j] / (featureCount-1), normalizeValue(datapoint[j], getDataModel().getFeature(j))),
+                                new Point2D.Double((double) indices[j+1] / (featureCount-1), normalizeValue(datapoint[j+1], getDataModel().getFeature(j+1))));
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                 segmentDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx, j}));
             }
@@ -167,6 +171,34 @@ public class ParallelCoords {
         // create a picking ID for use in legend for this data chunk
         this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
         visualMapping.createLegendElementForChunk(legend, chunkIdx, chunkDescription, legendElementPickIds.get(chunkIdx));
+        this.canvas.scheduleRepaint();
+    }
+
+    protected synchronized void onDataChanged(int chunkIdx, Pair<double[][], int[]> dataChunk, int featureCount) {
+        Lines lines = linesPerDataChunk.get(chunkIdx);
+        for(Lines.SegmentDetails pd:lines.getSegments()) {
+            int pickId = pd.pickColor;
+            if(pickId != 0) {
+                deregisterFromPickingRegistry(pickId);
+            }
+        }
+        lines.removeAllSegments();
+
+        for(int i=0; i<dataChunk.first.length; i++) {
+            //int i_=i;
+            double[] datapoint = dataChunk.first[i];
+            int[] indices = dataChunk.second;
+
+            for (int j = 0; j < datapoint.length-1; j++) {
+                Lines.SegmentDetails segmentDetails =
+                        lines.addSegment(new Point2D.Double(
+                                        (double) indices[j] / (featureCount-1), normalizeValue(datapoint[j], getDataModel().getFeature(indices[j]))),
+                                new Point2D.Double((double) indices[j+1] / (featureCount-1), normalizeValue(datapoint[j+1], getDataModel().getFeature(indices[j+1]))));
+                segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
+                segmentDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx, j}));
+            }
+        }
+
         this.canvas.scheduleRepaint();
     }
 
@@ -187,28 +219,25 @@ public class ParallelCoords {
 
             public void dataAdded(int chunkIdx, Pair<double[][], int[]> chunkData, String chunkDescription, int xIdx);
 
-            public void dataChanged(int chunkIdx, Pair<double[][], int[]> chunkData);
+            public void dataChanged(int chunkIdx, Pair<double[][], int[]> chunkData, int xIdx);
         }
 
         public synchronized ParallelCoordsDataModel addFeature(double min, double max, String label) {
             ParallelCoordsRenderer.Feature feature = new ParallelCoordsRenderer.Feature(min, max, label);
             features.add(feature);
-
-
-            notifyFeatureAdded(feature, features.size());
-
-            // TODO: on feature added the data has to be adapted to the new feature size (e.g. shift x coords)
-
+            notifyFeatureAdded(feature, features.size()-1);
             return this;
         }
 
         public synchronized ParallelCoordsDataModel addFeature(double min, double max, String label, int xMapping) {
             ParallelCoordsRenderer.Feature feature = new ParallelCoordsRenderer.Feature(min, max, label);
+
+            for (int i = features.size()-1; i < xMapping-1; i++) {
+                features.add(new ParallelCoordsRenderer.Feature(0, 1, ""));
+            }
+
             features.add(xMapping, feature);
             notifyFeatureAdded(feature, xMapping);
-
-            // TODO: on feature added the data has to be adapted to the new feature size (e.g. shift x coords)
-
             return this;
         }
 
@@ -222,14 +251,15 @@ public class ParallelCoords {
                 throw new IllegalArgumentException("Both arrays have to be of equal length");
             }
             for (int i = 0; i < xMappings.length-1; i++) {
-                this.features.add(xMappings[i], features[i]);
+                this.features.set(xMappings[i], features[i]);
             }
             return this;
         }
 
         public synchronized void addData(double[][] dataChunk, String chunkDescription) {
             // TODO: first check if there are enough features already set
-            int[] defaultXMapping = new int[dataChunk.length];
+            int[] defaultXMapping = new int[dataChunk[0].length];
+
             for (int i = 0; i < defaultXMapping.length; i++)
                 defaultXMapping[i] = i;
 
@@ -241,12 +271,9 @@ public class ParallelCoords {
         }
 
         public synchronized void addData(double[][] dataChunk, int[] xMapping, String chunkDescription) {
-            // TODO: first check if there are enough features already set
-
             int chunkIdx = this.dataChunks.size();
             this.dataChunks.add(new Pair<>(dataChunk, xMapping));
             this.descriptionPerChunk.add(chunkDescription);
-
             notifyDataAdded(chunkIdx);
         }
 
@@ -345,7 +372,7 @@ public class ParallelCoords {
 
         public synchronized void notifyDataChanged(int chunkIdx) {
             for(ParallelCoordsDataModelListener l:listeners)
-                l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
+                l.dataChanged(chunkIdx, getDataChunk(chunkIdx), getFeatureCount());
         }
     }
 

@@ -213,6 +213,11 @@ public class ParallelCoordsRenderer implements Renderer {
     }
 
     public ParallelCoordsRenderer addFeature(int xIndex, Feature feature) {
+
+        for (int i = features.size()-1; i < xIndex-1; i++) {
+            features.add(new ParallelCoordsRenderer.Feature(0, 1, ""));
+        }
+
         this.features.add(xIndex, feature);
         return this;
     }
