@@ -1,25 +1,20 @@
 package hageldave.jplotter.util;
 
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.color.ColorMap;
+import hageldave.jplotter.coordsys.ExtendedWilkinson;
+import hageldave.jplotter.renderables.Triangles;
+
+import javax.swing.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.DirectColorModel;
-import java.awt.image.ImageObserver;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
+import java.awt.image.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.Stream;
-
-import javax.swing.SwingUtilities;
-
-import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.Pixel;
-import hageldave.jplotter.color.ColorMap;
-import hageldave.jplotter.renderables.Triangles;
 
 /**
  * Class containing utility methods
@@ -367,7 +362,23 @@ public class Utils {
 	public static ImageObserver imageObserver(int flags) {
 		return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
 	}
-	
-	
+
+	/*
+	 Converges to the defined min/max values from outside
+	 */
+	public static Pair<double[], String[]> convergeToLimits(double definedMin, double definedMax, double stepSize, int desiredNumTicks) {
+		ExtendedWilkinson extendedWilkinson = new ExtendedWilkinson();
+		Pair<double[], String[]> initialPair = extendedWilkinson.genTicksAndLabels(definedMin, definedMax, desiredNumTicks, true);
+
+		// first try to get to lower border
+		double tempMin = definedMin;
+		double tempMax = definedMax;
+
+		while ((initialPair.first[0] > definedMin) || (initialPair.first[initialPair.first.length-1] < definedMax)) {
+			initialPair = extendedWilkinson.genTicksAndLabels(tempMin -= stepSize, tempMax += stepSize, desiredNumTicks, true);
+		}
+
+		return initialPair;
+	}
 }
 
