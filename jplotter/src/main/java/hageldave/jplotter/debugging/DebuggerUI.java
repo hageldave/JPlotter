@@ -55,7 +55,7 @@ public class DebuggerUI {
         controlArea.add(informationContainer);
 
         JSplitPane splitpane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        splitpane.setBottomComponent(controlArea);
+        splitpane.setBottomComponent(new JScrollPane(controlArea));
         splitpane.setTopComponent(new JScrollPane(tree));
 
         frame.getContentPane().add(splitpane);

@@ -12,13 +12,15 @@ import java.util.Collections;
 
 public class Debugger {
     protected static TreeNode getAllRenderersOnCanvas(JPlotterCanvas canvas) throws IllegalAccessException {
-        // canvas get renderer
         Renderer ren = canvas.getRenderer();
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode(ren);
-        constructTree(ren, root);
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode(canvas.getClass());
+        DefaultMutableTreeNode firstRendererN = new DefaultMutableTreeNode(ren);
+        root.add(firstRendererN);
+        constructTree(ren, firstRendererN);
         return root;
     }
 
+    // TODO: prevent renderables being shown twice as property of coordsys ren and as property of the child renderers
     protected static TreeNode constructTree(Renderer ren, DefaultMutableTreeNode node) throws IllegalAccessException {
         Class<? extends Renderer> class1 = ren.getClass();
         //Class<?>[] interfaces = class1.getInterfaces();
@@ -70,6 +72,10 @@ public class Debugger {
             }
         }
         return node;
+    }
+
+    protected static void cleanTree(DefaultMutableTreeNode root) {
+        // TODO: remove duplicated entries
     }
 }
 
