@@ -4,6 +4,7 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Text;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
@@ -12,11 +13,12 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.function.DoubleSupplier;
 
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
     final protected JTree tree = new JTree();
-    final protected Container informationContainer = new Container();
+    final protected JPanel informationContainer = new JPanel();
     final protected JPlotterCanvas canvas;
 
     public DebuggerUI(JPlotterCanvas canvas) {
@@ -39,15 +41,24 @@ public class DebuggerUI {
         DefaultTreeModel treeModel = new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas));
         tree.setModel(treeModel);
 
-        Container c = new Container();
-        c.setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
-        c.add(new JScrollPane(tree));
+        informationContainer.setLayout(new BoxLayout(informationContainer, BoxLayout.PAGE_AXIS));
+        informationContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
+        informationContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        informationContainer.setLayout(new BoxLayout(informationContainer, BoxLayout.Y_AXIS));
-        informationContainer.add(new JLabel("Control Area"));
-        c.add(informationContainer);
+        JLabel header = new JLabel("Control Area");
+        header.setFont(new Font(header.getFont().getName(), Font.PLAIN, 14));
 
-        frame.getContentPane().add(c);
+        JPanel controlArea = new JPanel();
+        controlArea.setLayout(new BoxLayout(controlArea, BoxLayout.PAGE_AXIS));
+        controlArea.setBorder(new EmptyBorder(10, 10, 10, 10));
+        controlArea.add(header);
+        controlArea.add(informationContainer);
+
+        JSplitPane splitpane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitpane.setBottomComponent(controlArea);
+        splitpane.setTopComponent(new JScrollPane(tree));
+
+        frame.getContentPane().add(splitpane);
         frame.pack();
         frame.setVisible(true);
     }
@@ -59,17 +70,21 @@ public class DebuggerUI {
     protected void fillInformation(Field[] fields, Object obj) throws IllegalAccessException {
         for (Field field : fields) {
             field.setAccessible(true);
-
-            Container labelContainer = new Container();
-            labelContainer.setLayout(new FlowLayout());
+            JPanel labelContainer = new JPanel();
+            labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.LINE_AXIS));
+            labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
             Object fieldValue = field.get(obj);
             if (fieldValue != null) {
                 labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
                 labelContainer.add(new JLabel((field.getName()) + ": "));
-                labelContainer.add(new JLabel(String.valueOf(fieldValue)));
+                if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
+                    DoubleSupplier dSup = (DoubleSupplier) fieldValue;
+                    labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
+                } else {
+                    labelContainer.add(new JLabel(String.valueOf(fieldValue)));
+                }
             }
-
             informationContainer.add(labelContainer);
         }
         frame.revalidate();
