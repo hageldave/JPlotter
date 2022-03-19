@@ -176,8 +176,10 @@ public class ParallelCoords {
         Lines lines = new Lines();
         linesPerDataChunk.add(lines);
         getContent().addItemToRender(lines);
+
         for (int i=0; i<dataChunk.length; i++) {
             double[] datapoint = dataChunk[i];
+            int pickColor = registerInPickingRegistry(new int[]{chunkIdx, i});
 
             for (int j = 0; j < datapoint.length-1; j++) {
                 int firstIndex = getDataModel().axesMap.get(j);
@@ -188,7 +190,7 @@ public class ParallelCoords {
                                 (double) j / (featureCount-1), normalizeValue(datapoint[firstIndex], getDataModel().getFeature(firstIndex))),
                                 new Point2D.Double((double) (j+1) / (featureCount-1), normalizeValue(datapoint[secondIndex], getDataModel().getFeature(secondIndex))));
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
-                segmentDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx, j}));
+                segmentDetails.setPickColor(pickColor);
             }
         }
         // create a picking ID for use in legend for this data chunk
@@ -209,6 +211,7 @@ public class ParallelCoords {
 
         for(int i=0; i<dataChunk.length; i++) {
             double[] datapoint = dataChunk[i];
+            int pickColor = registerInPickingRegistry(new int[]{chunkIdx, i});
 
             for (int j = 0; j < datapoint.length-1; j++) {
                 int firstIndex = getDataModel().axesMap.get(j);
@@ -219,7 +222,7 @@ public class ParallelCoords {
                                         (double) j / (featureCount-1), normalizeValue(datapoint[firstIndex], getDataModel().getFeature(firstIndex))),
                                 new Point2D.Double((double) (j+1) / (featureCount-1), normalizeValue(datapoint[secondIndex], getDataModel().getFeature(secondIndex))));
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
-                segmentDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx, j}));
+                segmentDetails.setPickColor(pickColor);
             }
         }
 
@@ -567,10 +570,9 @@ public class ParallelCoords {
         selectionModel.setSelection(toEmphasize);
     }
 
-    //@SafeVarargs
-    // TODO: Pair is propably not enough
-    public final void highlight(int chunkIdx, int lineIdx, int segmentIdx) {
-        //highlight(Arrays.asList(toHighlight));
+    @SafeVarargs
+    public final void highlight(Pair<Integer, Integer> ... toHighlight) {
+        highlight(Arrays.asList(toHighlight));
     }
 
     public void highlight(Iterable<Pair<Integer, Integer>> toHighlight) {
@@ -589,13 +591,18 @@ public class ParallelCoords {
                 // emphasis: show point in top layer with outline
                 for(Pair<Integer, Integer> instance : instancesToCue) {
                     Lines lines = getLinesForChunk(instance.first);
-                    if (instance.second <= lines.getSegments().size()-1) {
-                        Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                    Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.getFeatureCount()-1];
+
+                    for (int i = 0; i < segments.length; i++) {
+                        segments[i] = lines.getSegments().get(i + instance.second*segments.length);
+                    }
+
+                    for (Lines.SegmentDetails l : segments) {
                         Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
                         Color c = new Color(this.parallelCoordsys.getColorScheme().getColor1());
                         front.addSegment(l.p0, l.p1).setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 0.75f))
-                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2*lines.getGlobalThicknessMultiplier() + 1.5,
-                                        l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2*lines.getGlobalThicknessMultiplier() + 1.5);
+                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2 * lines.getGlobalThicknessMultiplier() + 1.5,
+                                        l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2 * lines.getGlobalThicknessMultiplier() + 1.5);
                         front.setStrokePattern(lines.getStrokePattern());
                         front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
                                 .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() * 1.05, l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() * 1.05);
@@ -608,8 +615,13 @@ public class ParallelCoords {
                 // accentuation: show enlarged point in top layer
                 for(Pair<Integer, Integer> instance : instancesToCue) {
                     Lines lines = getLinesForChunk(instance.first);
-                    if (instance.second <= lines.getSegments().size()-1) {
-                        Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                    Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.getFeatureCount()-1];
+
+                    for (int i = 0; i < segments.length; i++) {
+                        segments[i] = lines.getSegments().get(i + instance.second*segments.length);
+                    }
+
+                    for (Lines.SegmentDetails l : segments) {
                         Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
                         front.setStrokePattern(lines.getStrokePattern());
                         front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
@@ -629,16 +641,15 @@ public class ParallelCoords {
 
                     for(Pair<Integer, Integer> instance : instancesToCue) {
                         Lines lines = getLinesForChunk(instance.first);
+                        Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.getFeatureCount()-1];
 
-                        if (instance.second <= lines.getSegments().size()-1) {
-                            Lines.SegmentDetails l = lines.getSegments().get(instance.second);
+                        for (int i = 0; i < segments.length; i++) {
+                            segments[i] = lines.getSegments().get(i + instance.second*segments.length);
+                        }
+
+                        for (Lines.SegmentDetails l : segments) {
                             Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
                             front.setStrokePattern(lines.getStrokePattern());
-
-                            System.out.println(l.p0);
-                            System.out.println(l.p1);
-                            System.out.println(l);
-
 
                             front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
                                     .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier());
