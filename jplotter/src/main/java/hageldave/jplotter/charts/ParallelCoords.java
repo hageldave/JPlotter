@@ -157,7 +157,6 @@ public class ParallelCoords {
     }
 
     protected synchronized void onFeatureOrderChanged() {
-        // TODO
         this.parallelCoordsys.getFeatures().clear();
 
         for (int i = 0; i < getDataModel().features.size(); i++) {
@@ -168,7 +167,6 @@ public class ParallelCoords {
         for (int i = 0; i < getDataModel().dataChunks.size(); i++) {
             onDataChanged(i, getDataModel().dataChunks.get(i), dataModel.getFeatureCount());
         }
-
         this.canvas.scheduleRepaint();
     }
 
@@ -333,16 +331,18 @@ public class ParallelCoords {
         public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area){
             // naive search for contained points
             // TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
-            /*int xIdx = getXIdx();
-            int yIdx = getYIdx(chunkIdx);
             double[][] data = getDataChunk(chunkIdx);
             TreeSet<Integer> containedPointIndices = new TreeSet<>();
             for(int i=0; i<data.length; i++) {
-                if(area.contains(data[i][xIdx], data[i][yIdx]))
-                    containedPointIndices.add(i);
+                for (int j = 0; j < data[i].length; j++) {
+                    double xCoord = (double) j / (getFeatureCount()-1);
+
+                    if(area.contains(xCoord, data[i][j]))
+                        // TODO: this might not be correct
+                        containedPointIndices.add(i);
+                }
             }
-            return containedPointIndices;*/
-            return null;
+            return containedPointIndices;
         }
 
         public int getGlobalIndex(int chunkIdx, int idx) {
@@ -473,12 +473,12 @@ public class ParallelCoords {
                     if((pixel & 0x00ffffff) == 0) {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {
-                        Object pointLocalizer = pickingRegistry.lookup(pixel);
+                        Object segmentLocalizer = pickingRegistry.lookup(pixel);
 
-                        if(pointLocalizer instanceof int[]) {
-                            int chunkIdx = ((int[])pointLocalizer)[0];
-                            int lineIdx = ((int[])pointLocalizer)[1];
-                            notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, lineIdx);
+                        if(segmentLocalizer instanceof int[]) {
+                            int chunkIdx = ((int[])segmentLocalizer)[0];
+                            int segmentIdx = ((int[])segmentLocalizer)[1];
+                            notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, segmentIdx);
                         }
                     }
                 } else {
@@ -506,9 +506,9 @@ public class ParallelCoords {
             l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
 
-    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
+    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int segmentIdx) {
         for(ParallelCoordsMouseEventListener l:mouseEventListeners)
-            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, pointIdx);
+            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, segmentIdx);
     }
 
     protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
@@ -530,7 +530,7 @@ public class ParallelCoords {
 
         public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
 
-        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {}
+        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int segmentIdx) {}
 
         public default void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {}
 
@@ -674,7 +674,6 @@ public class ParallelCoords {
     private Lines getOrCreateCueLinesForGlyph(String cue, Color c, int strokePattern) {
         HashMap<Pair<Color, Integer>, Lines> cp2lines = this.cp2linesMaps.get(cue);
         if(!cp2lines.containsKey(new Pair<>(c, strokePattern))) {
-            //Points points = new Points(g);
             Lines lines = new Lines();
             cp2lines.put(new Pair<>(c, strokePattern), lines);
             switch (cue) {
