@@ -3,7 +3,6 @@ package hageldave.jplotter.coordsys;
 import static java.lang.Math.*;
 
 import java.util.Arrays;
-import java.util.Locale;
 
 import hageldave.jplotter.util.Pair;
 
@@ -31,6 +30,7 @@ import hageldave.jplotter.util.Pair;
  */
 public class ExtendedWilkinson implements TickMarkGenerator {
 
+
 	/** preference-decreasing ordered set of nice increments */
 	protected double[] Q = new double[]{1, 5, 2, 2.5, 4, 3, 1.5, 6, 8};
 	/** weights for simplicity, coverage, density and legibility */
@@ -43,55 +43,16 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 	 * {@link String#format(String, Object...)} '%g' option, all values will use scientific
 	 * notation, otherwise decimal is used.
 	 * 
-	 * @param ticks to be labeled
 	 * @return String[] of labels corresponding to specified tick values
 	 */
-	protected String[] labelsForTicks(double[] ticks){
-		String str1 = String.format(Locale.US, "%g", ticks[0]);
-		String str2 = String.format(Locale.US, "%g", ticks[ticks.length-1]);
-		String[] labels = new String[ticks.length];
-		if(str1.contains("e") || str2.contains("e")){
-			for(int i=0; i<ticks.length; i++){
-				String l = String.format(Locale.US, "%e", ticks[i]);
-				String[] Esplit = l.split("e", -2);
-				String[] dotsplit = Esplit[0].split("\\.",-2);
-				dotsplit[1] = ('#'+dotsplit[1])
-						.replaceAll("0", " ")
-						.trim()
-						.replaceAll(" ", "0")
-						.replaceAll("#", "");
-				dotsplit[1] = dotsplit[1].isEmpty() ? "0":dotsplit[1];
-				l = dotsplit[0]+'.'+dotsplit[1]+'e'+Esplit[1];
-				labels[i] = l;
-			}
-		} else {
-			for(int i=0; i<ticks.length; i++){
-				String l = String.format(Locale.US, "%f", ticks[i]);
-				if(l.contains(".")){
-					String[] dotsplit = l.split("\\.",-2);
-					dotsplit[1] = ('#'+dotsplit[1])
-							.replaceAll("0", " ")
-							.trim()
-							.replaceAll(" ", "0")
-							.replaceAll("#", "");
-					if(dotsplit[1].isEmpty()){
-						l = dotsplit[0];
-					} else {
-						l = dotsplit[0]+'.'+dotsplit[1];
-					}
-				}
-				labels[i] = l;
-			}
-		}
-		return labels;
-	}
+
 
 
 	@Override
 	public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks,
 			boolean verticalAxis) {
-		double[] ticks = getTicks(min, max, desiredNumTicks, this.Q, this.w);
-		String[] labelsForTicks = labelsForTicks(ticks);
+		double[] ticks = LabelsForTicks.getTicks(min, max, desiredNumTicks, this.Q, this.w);
+		String[] labelsForTicks = LabelsForTicks.labelsForTicks(ticks);
 		return new Pair<double[], String[]>(ticks, labelsForTicks);
 	}
 
@@ -218,23 +179,6 @@ public class ExtendedWilkinson implements TickMarkGenerator {
 			j++;
 		}
 		return result;
-	}
-
-	static double[] getTicks(double dmin, double dmax, int m, double[] Q, double[] w){
-		double[] l = ext_wilk(dmin, dmax, m, 1, Q, w);
-		double lmin  = l[0];
-		//double lmax  = l[1];
-		double lstep = l[2];
-		//int    j =(int)l[3];
-		//double q     = l[4];
-		int    k =(int)l[5];
-		//double scr   = l[6];
-
-		double[] ticks = new double[k];
-		for(int i=0; i < k; i++){
-			ticks[i] = lmin + i*lstep;
-		}
-		return ticks;
 	}
 
 }

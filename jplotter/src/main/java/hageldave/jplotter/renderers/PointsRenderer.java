@@ -225,17 +225,6 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	 * It also deletes (closes) all {@link Points} contained in this
 	 * renderer.
 	 */
-	@Override
-	@GLContextRequired
-	public void close() {
-		if(Objects.nonNull(shaderF))
-			ShaderRegistry.handbackShader(shaderF);
-		shaderF = null;
-		if(Objects.nonNull(shaderD))
-			ShaderRegistry.handbackShader(shaderD);
-		shaderD = null;
-		closeAllItems();
-	}
 
 	/**
 	 * Disables {@link GL11#GL_DEPTH_TEST},

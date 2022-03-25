@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  *
  * @author hageldave
  */
-public class CurvesRenderer extends GenericRenderer<Curves> {
+public class  CurvesRenderer extends GenericRenderer<Curves> {
 
 	protected static final char NL = '\n';
 	
@@ -526,18 +526,6 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	 * It also deletes (closes) all {@link Lines} contained in this
 	 * renderer.
 	 */
-	@Override
-	@GLContextRequired
-	public void close() {
-		if(Objects.nonNull(shaderF))
-			ShaderRegistry.handbackShader(shaderF);
-		shaderF = null;
-		if(Objects.nonNull(shaderD))
-			ShaderRegistry.handbackShader(shaderD);
-		shaderD = null;
-		closeAllItems();
-	}
-	
 
     @Override
     public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {

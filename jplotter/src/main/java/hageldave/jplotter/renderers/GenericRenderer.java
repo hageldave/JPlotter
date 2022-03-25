@@ -8,6 +8,7 @@ import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
+import hageldave.jplotter.util.ShaderRegistry;
 import hageldave.jplotter.util.Utils;
 
 /**
@@ -152,6 +153,17 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	 */
 	public boolean removeItemToRender(T item){
 		return itemsToRender.remove(item);
+	}
+	@Override
+	@GLContextRequired
+	public void close() {
+		if(Objects.nonNull(shaderF))
+			ShaderRegistry.handbackShader(shaderF);
+		shaderF = null;
+		if(Objects.nonNull(shaderD))
+			ShaderRegistry.handbackShader(shaderD);
+		shaderD = null;
+		closeAllItems();
 	}
 	
 	/**

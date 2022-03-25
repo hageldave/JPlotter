@@ -286,20 +286,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 	 * It also deletes (closes) all {@link Text}s contained in this
 	 * renderer.
 	 */
-	@Override
-	@GLContextRequired
-	public void close() {
-		if(Objects.nonNull(shaderF))
-			ShaderRegistry.handbackShader(shaderF);
-		shaderF = null;
-		if(Objects.nonNull(shaderD))
-			ShaderRegistry.handbackShader(shaderD);
-		shaderD = null;
-		if(Objects.nonNull(vaTextBackground))
-			vaTextBackground.close();
-		vaTextBackground = null;
-		closeAllItems();
-	}
 	
 	@Override
 	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {

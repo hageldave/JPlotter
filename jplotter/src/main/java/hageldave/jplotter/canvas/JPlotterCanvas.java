@@ -140,9 +140,9 @@ public interface JPlotterCanvas {
 		int w,h;
 		if((w=asComponent().getWidth()) >0 && (h=asComponent().getHeight()) >0){
 			if(SVGUtils.getDefs(document) == null){
-				Element defs = SVGUtils.createSVGElement(document, "defs");
-				defs.setAttributeNS(null, "id", "JPlotterDefs");
-				document.getDocumentElement().appendChild(defs);
+				Element elementOfDocument = SVGUtils.createSVGElement(document, "elementOfDocument");
+				elementOfDocument.setAttributeNS(null, "id", "JPlotterDefs");
+				document.getDocumentElement().appendChild(elementOfDocument);
 			}
 			
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
@@ -321,9 +321,9 @@ public interface JPlotterCanvas {
 	 */
 	public default WindowListener addCleanupOnWindowClosingListener(Window window) {
 		if(this instanceof FBOCanvas) {
-			WindowListener l = ((FBOCanvas)this).createCleanupOnWindowClosingListener();
-			window.addWindowListener(l);
-			return l;
+			WindowListener listener = ((FBOCanvas)this).createCleanupOnWindowClosingListener();
+			window.addWindowListener(listener);
+			return listener;
 		}
 		return null;
 	}

@@ -38,52 +38,15 @@ public class Shader implements AutoCloseable {
 	 * @throws GLRuntimeException if shader compilation or linking fails.
 	 */
 	@GLContextRequired
-	public Shader(CharSequence vertsh_src, CharSequence geomsh_src, CharSequence fragsh_src){
-		vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-		{
-			glShaderSource(vertexShaderID, vertsh_src);
-			glCompileShader(vertexShaderID);
-			int compileStatus = glGetShaderi(vertexShaderID, GL_COMPILE_STATUS);
-			String shaderInfoLog = glGetShaderInfoLog(vertexShaderID);
-			if(compileStatus == 0){
-				throw new GLUtils.GLRuntimeException(
-						"GL Error: GL_COMPILE_STATUS = 0 for vertex shader.\n" 
-						+ shaderInfoLog + '\n' + vertsh_src
-				);
-			}
-			if(alwaysPrintInfoLogsAndShaders)
-				printInfoLogAndShader(System.out, shaderInfoLog, vertsh_src);
-		}
-		geometryShaderID = Objects.isNull(geomsh_src) ? 0:glCreateShader(GL_GEOMETRY_SHADER);
-		if(geometryShaderID != 0){
-			glShaderSource(geometryShaderID, geomsh_src);
-			glCompileShader(geometryShaderID);
-			int compileStatus = glGetShaderi(geometryShaderID, GL_COMPILE_STATUS);
-			String shaderInfoLog = glGetShaderInfoLog(geometryShaderID);
-			if(compileStatus == 0){
-				throw new GLUtils.GLRuntimeException(
-						"GL Error: GL_COMPILE_STATUS = 0 for geometry shader.\n" 
-						+ shaderInfoLog + '\n' + geomsh_src
-				);
-			}
-			if(alwaysPrintInfoLogsAndShaders)
-				printInfoLogAndShader(System.out, shaderInfoLog, geomsh_src);
-		}
-		fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-		{
-			glShaderSource(fragmentShaderID, fragsh_src);
-			glCompileShader(fragmentShaderID);
-			int compileStatus = glGetShaderi(fragmentShaderID, GL_COMPILE_STATUS);
-			String shaderInfoLog = glGetShaderInfoLog(fragmentShaderID);
-			if(compileStatus == 0){
-				throw new GLUtils.GLRuntimeException(
-						"GL Error: GL_COMPILE_STATUS = 0 for fragment shader.\n" 
-						+ shaderInfoLog + '\n' + fragsh_src
-				);
-			}
-			if(alwaysPrintInfoLogsAndShaders)
-				printInfoLogAndShader(System.out, shaderInfoLog, fragsh_src);
-		}
+	public Shader(CharSequence vertsh_src, CharSequence geomsh_src, CharSequence fragsh_src)
+	{
+		vertexShaderID(vertsh_src);
+		geometryShaderID(geomsh_src);
+		fragmentShaderID(fragsh_src);
+		shaderProgID(vertsh_src, geomsh_src, fragsh_src);
+	}
+
+	private void shaderProgID(CharSequence vertsh_src, CharSequence geomsh_src, CharSequence fragsh_src) {
 		shaderProgID = glCreateProgram();
 		{
 			glAttachShader(shaderProgID, vertexShaderID);
@@ -95,11 +58,11 @@ public class Shader implements AutoCloseable {
 			int linkStatus = glGetProgrami(shaderProgID, GL_LINK_STATUS);
 			String programInfoLog = glGetProgramInfoLog(shaderProgID);
 			if(linkStatus == 0){
-				throw new GLUtils.GLRuntimeException(
-						"GL Error: GL_LINK_STATUS = 0.\n" 
-						+ programInfoLog + '\n' 
+				throw new GLRuntimeException(
+						"GL Error: GL_LINK_STATUS = 0.\n"
+						+ programInfoLog + '\n'
 						+ vertsh_src + '\n'
-						+ (Objects.nonNull(geomsh_src) ? geomsh_src:"") + '\n'
+						+ (Objects.nonNull(geomsh_src) ? geomsh_src :"") + '\n'
 						+ fragsh_src
 				);
 			}
@@ -107,7 +70,61 @@ public class Shader implements AutoCloseable {
 				printInfoLogAndShader(System.out, programInfoLog, "");
 		}
 	}
-	
+
+	private void fragmentShaderID(CharSequence fragsh_src) {
+		fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+		{
+			glShaderSource(fragmentShaderID, fragsh_src);
+			glCompileShader(fragmentShaderID);
+			int compileStatus = glGetShaderi(fragmentShaderID, GL_COMPILE_STATUS);
+			String shaderInfoLog = glGetShaderInfoLog(fragmentShaderID);
+			if(compileStatus == 0){
+				throw new GLRuntimeException(
+						"GL Error: GL_COMPILE_STATUS = 0 for fragment shader.\n"
+						+ shaderInfoLog + '\n' + fragsh_src
+				);
+			}
+			if(alwaysPrintInfoLogsAndShaders)
+				printInfoLogAndShader(System.out, shaderInfoLog, fragsh_src);
+		}
+	}
+
+	private void geometryShaderID(CharSequence geomsh_src) {
+		geometryShaderID = Objects.isNull(geomsh_src) ? 0:glCreateShader(GL_GEOMETRY_SHADER);
+		if(geometryShaderID != 0){
+			glShaderSource(geometryShaderID, geomsh_src);
+			glCompileShader(geometryShaderID);
+			int compileStatus = glGetShaderi(geometryShaderID, GL_COMPILE_STATUS);
+			String shaderInfoLog = glGetShaderInfoLog(geometryShaderID);
+			if(compileStatus == 0){
+				throw new GLRuntimeException(
+						"GL Error: GL_COMPILE_STATUS = 0 for geometry shader.\n"
+						+ shaderInfoLog + '\n' + geomsh_src
+				);
+			}
+			if(alwaysPrintInfoLogsAndShaders)
+				printInfoLogAndShader(System.out, shaderInfoLog, geomsh_src);
+		}
+	}
+
+	private void vertexShaderID(CharSequence vertsh_src) {
+		vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+		{
+			glShaderSource(vertexShaderID, vertsh_src);
+			glCompileShader(vertexShaderID);
+			int compileStatus = glGetShaderi(vertexShaderID, GL_COMPILE_STATUS);
+			String shaderInfoLog = glGetShaderInfoLog(vertexShaderID);
+			if(compileStatus == 0){
+				throw new GLRuntimeException(
+						"GL Error: GL_COMPILE_STATUS = 0 for vertex shader.\n"
+						+ shaderInfoLog + '\n' + vertsh_src
+				);
+			}
+			if(alwaysPrintInfoLogsAndShaders)
+				printInfoLogAndShader(System.out, shaderInfoLog, vertsh_src);
+		}
+	}
+
 	/**
 	 * Calls {@link Shader#Shader(CharSequence, CharSequence, CharSequence)} with null geometry shader source.
 	 * @param vertsh_src source code of the vertex shader

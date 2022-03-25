@@ -342,5 +342,20 @@ public class SignedDistanceCharacters {
 			e.printStackTrace();
 		}
 	}
-	
+
+    protected float getTexCoordXForCharLeft(int idx){
+        return leftBounds[idx]*1f/(texImg.getWidth()-1);
+    }
+
+	protected float getTexCoordXForCharRight(int idx){
+		return rightBounds[idx]*1f/(texImg.getWidth()-1);
+	}
+
+	protected float getTexCoordYForCharTop(int idx){
+		return topBounds[idx]*1f/(texImg.getHeight()-1);
+	}
+
+	protected float getTexCoordYForCharBot(int idx){
+		return botBounds[idx]*1f/(texImg.getHeight()-1);
+	}
 }

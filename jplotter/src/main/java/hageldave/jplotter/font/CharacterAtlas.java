@@ -182,22 +182,6 @@ public class CharacterAtlas implements AutoCloseable {
 		return Arrays.binarySearch(CHARACTERS, c);
 	}
 
-	protected float getTexCoordXForCharLeft(int idx){
-		return sdChars.leftBounds[idx]*1f/(sdChars.texImg.getWidth()-1);
-	}
-	
-	protected float getTexCoordXForCharRight(int idx){
-		return sdChars.rightBounds[idx]*1f/(sdChars.texImg.getWidth()-1);
-	}
-	
-	protected float getTexCoordYForCharTop(int idx){
-		return sdChars.topBounds[idx]*1f/(sdChars.texImg.getHeight()-1);
-	}
-	
-	protected float getTexCoordYForCharBot(int idx){
-		return sdChars.botBounds[idx]*1f/(sdChars.texImg.getHeight()-1);
-	}
-
 	/**
 	 * @return the font of this character atlas
 	 */
@@ -310,10 +294,10 @@ public class CharacterAtlas implements AutoCloseable {
 			int charIDX = indexForChar(chars[i]);
 			charIDX = charIDX < 0 ? 0:charIDX;
 			// y is flipped due to texture coordinates being upside down
-			float x0 = getTexCoordXForCharLeft(charIDX);
-			float x1 = getTexCoordXForCharRight(charIDX);
-			float y0 = getTexCoordYForCharBot(charIDX);
-			float y1 = getTexCoordYForCharTop(charIDX);
+			float x0 = sdChars.getTexCoordXForCharLeft(charIDX);
+			float x1 = sdChars.getTexCoordXForCharRight(charIDX);
+			float y0 = sdChars.getTexCoordYForCharBot(charIDX);
+			float y1 = sdChars.getTexCoordYForCharTop(charIDX);
 			// apply padding
 			float width = x1-x0;
 			float height = y0-y1;
