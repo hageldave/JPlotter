@@ -2,7 +2,6 @@ package hageldave.jplotter.debugging.controlHandler;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderers.GenericRenderer;
-import hageldave.jplotter.renderers.Renderer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,14 +12,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.DoubleSupplier;
 
-public class RendererHandler {
+public class RendererFieldHandler {
     public static JPanel handleRendererField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
             return handleGenericRendererSub(canvas, obj, field);
-        } else if (Renderer.class.isAssignableFrom(obj.getClass())) {
-            return handleRendererSub(canvas, obj, field);
         }
-        return new JPanel();
+        return handleRendererSub(canvas, obj, field);
     }
 
     protected static JPanel handleGenericRendererSub(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -30,7 +27,6 @@ public class RendererHandler {
         Object fieldValue = field.get(obj);
 
         if (field.getName().equals("isEnabled")) {
-
             Class<?> rendererClass = obj.getClass();
             Method isEnabled = rendererClass.getSuperclass().getDeclaredMethod("isEnabled");
             Method setEnabled = rendererClass.getSuperclass().getDeclaredMethod("setEnabled", boolean.class);
@@ -99,10 +95,8 @@ public class RendererHandler {
             labelContainer.add(fieldValLabel);
         } else {
             if (fieldValue != null) {
-
                 labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
                 labelContainer.add(new JLabel((field.getName()) + ": "));
-
                 if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
                     DoubleSupplier dSup = (DoubleSupplier) fieldValue;
                     labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));

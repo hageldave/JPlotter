@@ -1,7 +1,8 @@
 package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.debugging.controlHandler.RendererHandler;
+import hageldave.jplotter.debugging.controlHandler.RenderableFieldHandler;
+import hageldave.jplotter.debugging.controlHandler.RendererFieldHandler;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderers.GenericRenderer;
 import hageldave.jplotter.renderers.Renderer;
@@ -18,7 +19,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.function.DoubleSupplier;
 
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
@@ -73,17 +73,8 @@ public class DebuggerUI {
     }
 
 
-    protected void fillInformation(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        if (Renderer.class.isAssignableFrom(obj.getClass())) {
-            handleRenderer(obj);
-        } else if (Renderable.class.isAssignableFrom(obj.getClass())) {
-            handleRenderable(obj);
-        }
-    }
-
     protected void handleRenderer(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         HashSet<Field> set = new HashSet<>();
-
         // superclass generic Renderer?
         if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
             set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
@@ -97,7 +88,7 @@ public class DebuggerUI {
 
         for (Field field : fields) {
             field.setAccessible(true);
-            JPanel panel = RendererHandler.handleRendererField(canvas, obj, field);
+            JPanel panel = RendererFieldHandler.handleRendererField(canvas, obj, field);
             informationContainer.add(panel);
         }
         frame.revalidate();
@@ -112,22 +103,8 @@ public class DebuggerUI {
 
         for (Field field : fields) {
             field.setAccessible(true);
-            JPanel labelContainer = new JPanel();
-            labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.LINE_AXIS));
-            labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-            Object fieldValue = field.get(obj);
-            if (fieldValue != null) {
-                labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-                labelContainer.add(new JLabel((field.getName()) + ": "));
-                if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
-                    DoubleSupplier dSup = (DoubleSupplier) fieldValue;
-                    labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
-                } else {
-                    labelContainer.add(new JLabel(String.valueOf(fieldValue)));
-                }
-            }
-            informationContainer.add(labelContainer);
+            JPanel panel = RenderableFieldHandler.handleRenderableField(canvas, obj, field);
+            informationContainer.add(panel);
         }
         frame.revalidate();
         frame.repaint();
@@ -147,10 +124,12 @@ public class DebuggerUI {
             }
             Object obj = method.invoke(tp.getLastPathComponent());
 
-            if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
-                fillInformation(obj);
-                canvas.scheduleRepaint();
+            if (Renderer.class.isAssignableFrom(obj.getClass())) {
+                handleRenderer(obj);
+            } else if (Renderable.class.isAssignableFrom(obj.getClass())) {
+                handleRenderable(obj);
             }
+            canvas.scheduleRepaint();
         }
     }
 }
