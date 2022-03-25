@@ -10,4 +10,12 @@ public class DebuggerMutableTreeNode extends DefaultMutableTreeNode {
         super(userObject, true);
         this.backObject = backObject;
     }
+
+    public Object getBackObject() {
+        return backObject;
+    }
+
+    public void setBackObject(Object backObject) {
+        this.backObject = backObject;
+    }
 }

@@ -1,7 +1,8 @@
 package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.renderables.Text;
+import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.renderers.Renderer;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,6 +14,7 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 
 public class DebuggerUI {
@@ -94,20 +96,22 @@ public class DebuggerUI {
     protected void onMouseClick(MouseEvent mouseEvent) throws NoSuchFieldException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         clearInformation();
         TreePath tp = tree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
+
+        Method method;
         if (tp != null) {
             Class<?> class1 = tp.getLastPathComponent().getClass();
-            Method method = class1.getMethod("getUserObject");
+            if (Arrays.stream(class1.getMethods()).anyMatch(e->e.getName().equals("getBackObject"))) {
+                method = class1.getMethod("getBackObject");
+            } else {
+                method = class1.getMethod("getUserObject");
+            }
             Object obj = method.invoke(tp.getLastPathComponent());
             Field[] fields = obj.getClass().getDeclaredFields();
 
-            // TODO: testing connection between debugger ui & canvas
-            if (Text.class.isAssignableFrom(obj.getClass())) {
-                Text txtobj = (Text) obj;
-                txtobj.setTextString("new Text!");
+            if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
+                fillInformation(fields, obj);
+                canvas.scheduleRepaint();
             }
-
-            fillInformation(fields, obj);
-            canvas.scheduleRepaint();
         }
     }
 }
