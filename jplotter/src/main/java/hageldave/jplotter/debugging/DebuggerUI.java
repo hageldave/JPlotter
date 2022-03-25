@@ -1,7 +1,9 @@
 package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.debugging.controlHandler.RendererHandler;
 import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.renderers.GenericRenderer;
 import hageldave.jplotter.renderers.Renderer;
 
 import javax.swing.*;
@@ -15,6 +17,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.function.DoubleSupplier;
 
 public class DebuggerUI {
@@ -69,7 +72,43 @@ public class DebuggerUI {
         informationContainer.removeAll();
     }
 
-    protected void fillInformation(Field[] fields, Object obj) throws IllegalAccessException {
+
+    protected void fillInformation(Object obj) throws IllegalAccessException {
+        if (Renderer.class.isAssignableFrom(obj.getClass())) {
+            handleRenderer(obj);
+        } else if (Renderable.class.isAssignableFrom(obj.getClass())) {
+            handleRenderable(obj);
+        }
+    }
+
+    protected void handleRenderer(Object obj) throws IllegalAccessException {
+        HashSet<Field> set = new HashSet<>();
+
+        // superclass generic Renderer?
+        if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
+            set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
+            set.addAll(Arrays.asList(obj.getClass().getSuperclass().getDeclaredFields()));
+        } else {
+            set.addAll(Arrays.asList(obj.getClass().getFields()));
+            set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
+        }
+
+        Field[] fields = set.toArray(new Field[0]);
+        for (Field field : fields) {
+            field.setAccessible(true);
+            JPanel panel = RendererHandler.handleRendererField(canvas, obj, field);
+            informationContainer.add(panel);
+        }
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    protected void handleRenderable(Object obj) throws IllegalAccessException {
+        HashSet<Field> set = new HashSet<>();
+        set.addAll(Arrays.asList(obj.getClass().getFields()));
+        set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
+        Field[] fields = set.toArray(new Field[0]);
+
         for (Field field : fields) {
             field.setAccessible(true);
             JPanel labelContainer = new JPanel();
@@ -106,10 +145,9 @@ public class DebuggerUI {
                 method = class1.getMethod("getUserObject");
             }
             Object obj = method.invoke(tp.getLastPathComponent());
-            Field[] fields = obj.getClass().getDeclaredFields();
 
             if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
-                fillInformation(fields, obj);
+                fillInformation(obj);
                 canvas.scheduleRepaint();
             }
         }
