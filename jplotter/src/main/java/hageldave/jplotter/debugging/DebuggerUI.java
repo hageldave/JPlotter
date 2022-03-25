@@ -73,7 +73,7 @@ public class DebuggerUI {
     }
 
 
-    protected void fillInformation(Object obj) throws IllegalAccessException {
+    protected void fillInformation(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         if (Renderer.class.isAssignableFrom(obj.getClass())) {
             handleRenderer(obj);
         } else if (Renderable.class.isAssignableFrom(obj.getClass())) {
@@ -81,7 +81,7 @@ public class DebuggerUI {
         }
     }
 
-    protected void handleRenderer(Object obj) throws IllegalAccessException {
+    protected void handleRenderer(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         HashSet<Field> set = new HashSet<>();
 
         // superclass generic Renderer?
@@ -94,6 +94,7 @@ public class DebuggerUI {
         }
 
         Field[] fields = set.toArray(new Field[0]);
+
         for (Field field : fields) {
             field.setAccessible(true);
             JPanel panel = RendererHandler.handleRendererField(canvas, obj, field);
