@@ -21,36 +21,12 @@ public class RendererFieldHandler {
         labelContainer.setBorder(new EmptyBorder(4, 0, 4, 0));
         Object fieldValue = field.get(obj);
 
-        if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
-            return handleGenericRendererSub(canvas, obj, field, fieldValue, labelContainer);
-        }
-        return handleRendererSub(canvas, obj, field, fieldValue, labelContainer);
-    }
-
-    protected static JPanel handleGenericRendererSub(JPlotterCanvas canvas, Object obj, Field field, Object fieldValue, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         if (field.getName().equals("isEnabled")) {
-            Class<?> rendererClass = obj.getClass();
-            Method isEnabled = rendererClass.getSuperclass().getDeclaredMethod("isEnabled");
-            Method setEnabled = rendererClass.getSuperclass().getDeclaredMethod("setEnabled", boolean.class);
-
-            labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-            labelContainer.add(new JLabel((field.getName()) + ": "));
-
-            JLabel fieldValLabel = new JLabel(String.valueOf(isEnabled.invoke(obj)));
-            fieldValLabel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    super.mouseClicked(e);
-                    try {
-                        changeValue(obj, setEnabled, isEnabled);
-                        fieldValLabel.setText(String.valueOf(isEnabled.invoke(obj)));
-                    } catch (IllegalAccessException | InvocationTargetException ex) {
-                        ex.printStackTrace();
-                    }
-                    canvas.scheduleRepaint();
-                }
-            });
-            labelContainer.add(fieldValLabel);
+            if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
+                handleGenericRendererEnabled(canvas, obj, field, labelContainer);
+            } else {
+                handleRendererEnabled(canvas, obj, field, labelContainer);
+            }
         } else {
             labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
             labelContainer.add(new JLabel((field.getName()) + ": "));
@@ -64,40 +40,55 @@ public class RendererFieldHandler {
         return labelContainer;
     }
 
-    protected static JPanel handleRendererSub(JPlotterCanvas canvas, Object obj, Field field, Object fieldValue, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        if (field.getName().equals("isEnabled")) {
-            Class<?> rendererClass = obj.getClass();
-            Method isEnabled = rendererClass.getDeclaredMethod("isEnabled");
-            Method setEnabled = rendererClass.getDeclaredMethod("setEnabled", boolean.class);
+    protected static JPanel handleGenericRendererEnabled(JPlotterCanvas canvas, Object obj, Field field, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        Class<?> rendererClass = obj.getClass();
+        Method isEnabled = rendererClass.getSuperclass().getDeclaredMethod("isEnabled");
+        Method setEnabled = rendererClass.getSuperclass().getDeclaredMethod("setEnabled", boolean.class);
 
-            labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-            labelContainer.add(new JLabel((field.getName()) + ": "));
+        labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
+        labelContainer.add(new JLabel((field.getName()) + ": "));
 
-            JLabel fieldValLabel = new JLabel(String.valueOf(isEnabled.invoke(obj)));
-            fieldValLabel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    super.mouseClicked(e);
-                    try {
-                        changeValue(obj, setEnabled, isEnabled);
-                        fieldValLabel.setText(String.valueOf(isEnabled.invoke(obj)));
-                    } catch (IllegalAccessException | InvocationTargetException ex) {
-                        ex.printStackTrace();
-                    }
-                    canvas.scheduleRepaint();
+        JLabel fieldValLabel = new JLabel(String.valueOf(isEnabled.invoke(obj)));
+        fieldValLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                try {
+                    changeValue(obj, setEnabled, isEnabled);
+                    fieldValLabel.setText(String.valueOf(isEnabled.invoke(obj)));
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    ex.printStackTrace();
                 }
-            });
-            labelContainer.add(fieldValLabel);
-        } else {
-            labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-            labelContainer.add(new JLabel((field.getName()) + ": "));
-            if (DoubleSupplier.class.isAssignableFrom(field.getType())) {
-                DoubleSupplier dSup = (DoubleSupplier) fieldValue;
-                labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
-            } else {
-                labelContainer.add(new JLabel(String.valueOf(fieldValue)));
+                canvas.scheduleRepaint();
             }
-        }
+        });
+        labelContainer.add(fieldValLabel);
+        return labelContainer;
+    }
+
+    protected static JPanel handleRendererEnabled(JPlotterCanvas canvas, Object obj, Field field, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        Class<?> rendererClass = obj.getClass();
+        Method isEnabled = rendererClass.getDeclaredMethod("isEnabled");
+        Method setEnabled = rendererClass.getDeclaredMethod("setEnabled", boolean.class);
+
+        labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
+        labelContainer.add(new JLabel((field.getName()) + ": "));
+
+        JLabel fieldValLabel = new JLabel(String.valueOf(isEnabled.invoke(obj)));
+        fieldValLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                try {
+                    changeValue(obj, setEnabled, isEnabled);
+                    fieldValLabel.setText(String.valueOf(isEnabled.invoke(obj)));
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    ex.printStackTrace();
+                }
+                canvas.scheduleRepaint();
+            }
+        });
+        labelContainer.add(fieldValLabel);
         return labelContainer;
     }
 
