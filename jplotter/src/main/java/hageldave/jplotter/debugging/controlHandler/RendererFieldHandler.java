@@ -4,6 +4,7 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderers.GenericRenderer;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -24,6 +25,7 @@ public class RendererFieldHandler {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.LINE_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        labelContainer.setBorder(new EmptyBorder(4, 0, 4, 0));
         Object fieldValue = field.get(obj);
 
         if (field.getName().equals("isEnabled")) {
@@ -50,15 +52,17 @@ public class RendererFieldHandler {
             });
             labelContainer.add(fieldValLabel);
         } else {
+            labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
+            labelContainer.add(new JLabel((field.getName()) + ": "));
             if (fieldValue != null) {
-                labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-                labelContainer.add(new JLabel((field.getName()) + ": "));
                 if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
                     DoubleSupplier dSup = (DoubleSupplier) fieldValue;
                     labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
                 } else {
                     labelContainer.add(new JLabel(String.valueOf(fieldValue)));
                 }
+            } else {
+                labelContainer.add(new JLabel("null"));
             }
         }
         return labelContainer;
@@ -68,6 +72,7 @@ public class RendererFieldHandler {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.LINE_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        labelContainer.setBorder(new EmptyBorder(4, 0, 4, 0));
         Object fieldValue = field.get(obj);
 
         Class<?> rendererClass = obj.getClass();
@@ -94,15 +99,17 @@ public class RendererFieldHandler {
             });
             labelContainer.add(fieldValLabel);
         } else {
+            labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
+            labelContainer.add(new JLabel((field.getName()) + ": "));
             if (fieldValue != null) {
-                labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-                labelContainer.add(new JLabel((field.getName()) + ": "));
                 if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
                     DoubleSupplier dSup = (DoubleSupplier) fieldValue;
                     labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
                 } else {
                     labelContainer.add(new JLabel(String.valueOf(fieldValue)));
                 }
+            } else {
+                labelContainer.add(new JLabel("null"));
             }
         }
         return labelContainer;
