@@ -15,19 +15,19 @@ import java.util.function.DoubleSupplier;
 
 public class RendererFieldHandler {
     public static JPanel handleRendererField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
-            return handleGenericRendererSub(canvas, obj, field);
-        }
-        return handleRendererSub(canvas, obj, field);
-    }
-
-    protected static JPanel handleGenericRendererSub(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.LINE_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
         labelContainer.setBorder(new EmptyBorder(4, 0, 4, 0));
         Object fieldValue = field.get(obj);
 
+        if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
+            return handleGenericRendererSub(canvas, obj, field, fieldValue, labelContainer);
+        }
+        return handleRendererSub(canvas, obj, field, fieldValue, labelContainer);
+    }
+
+    protected static JPanel handleGenericRendererSub(JPlotterCanvas canvas, Object obj, Field field, Object fieldValue, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         if (field.getName().equals("isEnabled")) {
             Class<?> rendererClass = obj.getClass();
             Method isEnabled = rendererClass.getSuperclass().getDeclaredMethod("isEnabled");
@@ -54,32 +54,22 @@ public class RendererFieldHandler {
         } else {
             labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
             labelContainer.add(new JLabel((field.getName()) + ": "));
-            if (fieldValue != null) {
-                if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
-                    DoubleSupplier dSup = (DoubleSupplier) fieldValue;
-                    labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
-                } else {
-                    labelContainer.add(new JLabel(String.valueOf(fieldValue)));
-                }
+            if (DoubleSupplier.class.isAssignableFrom(field.getType())) {
+                DoubleSupplier dSup = (DoubleSupplier) fieldValue;
+                labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
             } else {
-                labelContainer.add(new JLabel("null"));
+                labelContainer.add(new JLabel(String.valueOf(fieldValue)));
             }
         }
         return labelContainer;
     }
 
-    protected static JPanel handleRendererSub(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        JPanel labelContainer = new JPanel();
-        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.LINE_AXIS));
-        labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        labelContainer.setBorder(new EmptyBorder(4, 0, 4, 0));
-        Object fieldValue = field.get(obj);
-
-        Class<?> rendererClass = obj.getClass();
-        Method isEnabled = rendererClass.getDeclaredMethod("isEnabled");
-        Method setEnabled = rendererClass.getDeclaredMethod("setEnabled", boolean.class);
-
+    protected static JPanel handleRendererSub(JPlotterCanvas canvas, Object obj, Field field, Object fieldValue, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         if (field.getName().equals("isEnabled")) {
+            Class<?> rendererClass = obj.getClass();
+            Method isEnabled = rendererClass.getDeclaredMethod("isEnabled");
+            Method setEnabled = rendererClass.getDeclaredMethod("setEnabled", boolean.class);
+
             labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
             labelContainer.add(new JLabel((field.getName()) + ": "));
 
@@ -101,15 +91,11 @@ public class RendererFieldHandler {
         } else {
             labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
             labelContainer.add(new JLabel((field.getName()) + ": "));
-            if (fieldValue != null) {
-                if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
-                    DoubleSupplier dSup = (DoubleSupplier) fieldValue;
-                    labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
-                } else {
-                    labelContainer.add(new JLabel(String.valueOf(fieldValue)));
-                }
+            if (DoubleSupplier.class.isAssignableFrom(field.getType())) {
+                DoubleSupplier dSup = (DoubleSupplier) fieldValue;
+                labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
             } else {
-                labelContainer.add(new JLabel("null"));
+                labelContainer.add(new JLabel(String.valueOf(fieldValue)));
             }
         }
         return labelContainer;
