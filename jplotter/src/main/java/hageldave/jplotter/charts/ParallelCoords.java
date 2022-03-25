@@ -69,18 +69,18 @@ public class ParallelCoords {
             }
 
             @Override
-            public void featureAdded(ParallelCoordsRenderer.Feature feature, int featureXPos) {
-                onFeatureAdded(feature, featureXPos);
+            public void featureAdded(ParallelCoordsRenderer.Feature feature) {
+                onFeatureAdded(feature);
             }
 
             @Override
-            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx) {
-                onDataAdded(chunkIdx, chunkData, chunkDescription, xIdx);
+            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription) {
+                onDataAdded(chunkIdx, chunkData, chunkDescription);
             }
 
             @Override
-            public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx) {
-                onDataChanged(chunkIdx, chunkData, xIdx);
+            public void dataChanged(int chunkIdx, double[][] chunkData) {
+                onDataChanged(chunkIdx, chunkData);
             }
         });
 
@@ -145,12 +145,12 @@ public class ParallelCoords {
         return contentLayer2;
     }
 
-    protected synchronized void onFeatureAdded(ParallelCoordsRenderer.Feature feature, int featureXPos) {
-        this.parallelCoordsys.addFeature(featureXPos, feature);
+    protected synchronized void onFeatureAdded(ParallelCoordsRenderer.Feature feature) {
+        this.parallelCoordsys.addFeature(feature);
 
         // repaint all the line stuff
         for (int i = 0; i < getDataModel().dataChunks.size(); i++) {
-            onDataChanged(i, getDataModel().dataChunks.get(i), dataModel.getFeatureCount());
+            getDataModel().notifyDataChanged(i);
         }
 
         this.canvas.scheduleRepaint();
@@ -159,18 +159,23 @@ public class ParallelCoords {
     protected synchronized void onFeatureOrderChanged() {
         this.parallelCoordsys.getFeatures().clear();
 
-        for (int i = 0; i < getDataModel().features.size(); i++) {
+        for (int i = 0; i < getDataModel().axesMap.size(); i++) {
             this.parallelCoordsys.addFeature(getDataModel().getFeature(getDataModel().axesMap.get(i)));
         }
 
         // repaint all the line stuff
         for (int i = 0; i < getDataModel().dataChunks.size(); i++) {
-            onDataChanged(i, getDataModel().dataChunks.get(i), dataModel.getFeatureCount());
+            getDataModel().notifyDataChanged(i);
         }
         this.canvas.scheduleRepaint();
     }
 
-    protected synchronized void onDataAdded(int chunkIdx, double[][] dataChunk, String chunkDescription, int featureCount) {
+    protected synchronized void onDataAdded(int chunkIdx, double[][] dataChunk, String chunkDescription) {
+        this.parallelCoordsys.getFeatures().clear();
+
+        for (Integer value : getDataModel().axesMap)
+            this.parallelCoordsys.addFeature(getDataModel().feature2dataIndex.get(value));
+
         Lines lines = new Lines();
         linesPerDataChunk.add(lines);
         getContent().addItemToRender(lines);
@@ -179,14 +184,15 @@ public class ParallelCoords {
             double[] datapoint = dataChunk[i];
             int pickColor = registerInPickingRegistry(new int[]{chunkIdx, i});
 
-            for (int j = 0; j < datapoint.length-1; j++) {
+            int numberAxes = getDataModel().axesMap.size()-1;
+            for (int j = 0; j < numberAxes; j++) {
                 int firstIndex = getDataModel().axesMap.get(j);
                 int secondIndex = getDataModel().axesMap.get(j+1);
 
                 Lines.SegmentDetails segmentDetails =
                         lines.addSegment(new Point2D.Double(
-                                (double) j / (featureCount-1), normalizeValue(datapoint[firstIndex], getDataModel().getFeature(firstIndex))),
-                                new Point2D.Double((double) (j+1) / (featureCount-1), normalizeValue(datapoint[secondIndex], getDataModel().getFeature(secondIndex))));
+                                (double) j / numberAxes, normalizeValue(datapoint[firstIndex], getDataModel().feature2dataIndex.get(firstIndex))),
+                                new Point2D.Double((double) (j+1) / numberAxes, normalizeValue(datapoint[secondIndex], getDataModel().feature2dataIndex.get(secondIndex))));
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                 segmentDetails.setPickColor(pickColor);
             }
@@ -197,7 +203,12 @@ public class ParallelCoords {
         this.canvas.scheduleRepaint();
     }
 
-    protected synchronized void onDataChanged(int chunkIdx, double[][] dataChunk, int featureCount) {
+    protected synchronized void onDataChanged(int chunkIdx, double[][] dataChunk) {
+        this.parallelCoordsys.getFeatures().clear();
+
+        for (Integer value : getDataModel().axesMap)
+            this.parallelCoordsys.addFeature(getDataModel().feature2dataIndex.get(value));
+
         Lines lines = linesPerDataChunk.get(chunkIdx);
         for(Lines.SegmentDetails pd:lines.getSegments()) {
             int pickId = pd.pickColor;
@@ -210,20 +221,24 @@ public class ParallelCoords {
         for(int i=0; i<dataChunk.length; i++) {
             double[] datapoint = dataChunk[i];
             int pickColor = registerInPickingRegistry(new int[]{chunkIdx, i});
+            int numberAxes = getDataModel().axesMap.size()-1;
 
-            for (int j = 0; j < datapoint.length-1; j++) {
+            for (int j = 0; j < numberAxes; j++) {
                 int firstIndex = getDataModel().axesMap.get(j);
                 int secondIndex = getDataModel().axesMap.get(j+1);
 
+                if (firstIndex >= datapoint.length || secondIndex >= datapoint.length) {
+                    throw new RuntimeException("Data index is larger than dataset.");
+                }
+
                 Lines.SegmentDetails segmentDetails =
                         lines.addSegment(new Point2D.Double(
-                                        (double) j / (featureCount-1), normalizeValue(datapoint[firstIndex], getDataModel().getFeature(firstIndex))),
-                                new Point2D.Double((double) (j+1) / (featureCount-1), normalizeValue(datapoint[secondIndex], getDataModel().getFeature(secondIndex))));
+                                        (double) j / numberAxes, normalizeValue(datapoint[firstIndex], getDataModel().feature2dataIndex.get(firstIndex))),
+                                new Point2D.Double((double) (j+1) / numberAxes, normalizeValue(datapoint[secondIndex], getDataModel().feature2dataIndex.get(secondIndex))));
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                 segmentDetails.setPickColor(pickColor);
             }
         }
-
         this.canvas.scheduleRepaint();
     }
 
@@ -234,9 +249,9 @@ public class ParallelCoords {
     public static class ParallelCoordsDataModel {
         protected ArrayList<double[][]> dataChunks = new ArrayList<>();
         protected ArrayList<ParallelCoordsRenderer.Feature> features = new ArrayList<>();
+        protected HashMap<Integer, ParallelCoordsRenderer.Feature> feature2dataIndex = new HashMap<>();
 
         protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
-
         protected LinkedList<ParallelCoordsDataModelListener> listeners = new LinkedList<>();
 
         protected List<Integer> axesMap = new ArrayList<>();
@@ -244,44 +259,39 @@ public class ParallelCoords {
         public static interface ParallelCoordsDataModelListener {
             public void featureOrderChanged();
 
-            public void featureAdded(ParallelCoordsRenderer.Feature feature, int featureXPos);
+            public void featureAdded(ParallelCoordsRenderer.Feature feature);
 
-            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx);
+            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription);
 
-            public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx);
+            public void dataChanged(int chunkIdx, double[][] chunkData);
         }
 
-        public synchronized ParallelCoordsDataModel addFeature(double min, double max, String label) {
-            ParallelCoordsRenderer.Feature feature = new ParallelCoordsRenderer.Feature(min, max, label);
+        public synchronized ParallelCoordsDataModel addFeature(int dataIndex, ParallelCoordsRenderer.Feature feature) {
             features.add(feature);
-            axesMap.add(axesMap.size());
-            notifyFeatureAdded(feature, features.size()-1);
+            axesMap.add(dataIndex);
+            feature2dataIndex.put(dataIndex, feature);
+            notifyFeatureAdded(feature);
             return this;
         }
 
-        public synchronized ParallelCoordsDataModel addFeature(ParallelCoordsRenderer.Feature... features) {
-            this.features.addAll(Arrays.asList(features));
+        public synchronized ParallelCoordsDataModel addFeature(int[] dataIndices , ParallelCoordsRenderer.Feature[] features) {
+            if (dataIndices.length != features.length) {
+                throw new IllegalArgumentException("Arrays have to be of equal length");
+            }
+            for (int i = 0; i < dataIndices.length; i++) {
+                addFeature(dataIndices[i], features[i]);
+            }
             return this;
         }
 
         public synchronized void addData(double[][] dataChunk, String chunkDescription) {
-            // TODO: first check if there are enough features already set
             int chunkIdx = this.dataChunks.size();
             this.dataChunks.add(dataChunk);
             this.descriptionPerChunk.add(chunkDescription);
             notifyDataAdded(chunkIdx);
         }
 
-        public synchronized void changeAxisOrder(int oldPos, int newPos) {
-            // TODO: use modulo for out of bounds access
-            Integer oldValue = axesMap.remove(oldPos);
-            axesMap.add(newPos, oldValue);
-
-            notifyFeatureOrderChanged();
-        }
-
-        public synchronized void setAxisOrder(int[] indicesOrder) {
-            // TODO: what if there are more indices than axes?
+        public synchronized void setDataIndicesOrder(int[] indicesOrder) {
             axesMap.clear();
             for (int i = 0; i < indicesOrder.length; i++) {
                 axesMap.add(indicesOrder[i]);
@@ -305,7 +315,7 @@ public class ParallelCoords {
             return getDataChunk(chunkIdx).length;
         }
 
-        public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk, int[] xMapping){
+        public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
             if(chunkIdx >= numChunks())
                 throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
             this.dataChunks.set(chunkIdx, dataChunk);
@@ -383,19 +393,19 @@ public class ParallelCoords {
                 l.featureOrderChanged();
         }
 
-        public synchronized void notifyFeatureAdded(ParallelCoordsRenderer.Feature feature, int featureXPos) {
+        public synchronized void notifyFeatureAdded(ParallelCoordsRenderer.Feature feature) {
             for(ParallelCoordsDataModelListener l:listeners)
-                l.featureAdded(feature, featureXPos);
+                l.featureAdded(feature);
         }
 
         public synchronized void notifyDataAdded(int chunkIdx) {
             for(ParallelCoordsDataModelListener l:listeners)
-                l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx), getFeatureCount());
+                l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx));
         }
 
         public synchronized void notifyDataChanged(int chunkIdx) {
             for(ParallelCoordsDataModelListener l:listeners)
-                l.dataChanged(chunkIdx, getDataChunk(chunkIdx), getFeatureCount());
+                l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
         }
     }
 
@@ -591,7 +601,7 @@ public class ParallelCoords {
                 // emphasis: show point in top layer with outline
                 for(Pair<Integer, Integer> instance : instancesToCue) {
                     Lines lines = getLinesForChunk(instance.first);
-                    Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.getFeatureCount()-1];
+                    Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size()-1];
 
                     for (int i = 0; i < segments.length; i++) {
                         segments[i] = lines.getSegments().get(i + instance.second*segments.length);
@@ -615,7 +625,7 @@ public class ParallelCoords {
                 // accentuation: show enlarged point in top layer
                 for(Pair<Integer, Integer> instance : instancesToCue) {
                     Lines lines = getLinesForChunk(instance.first);
-                    Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.getFeatureCount()-1];
+                    Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size()-1];
 
                     for (int i = 0; i < segments.length; i++) {
                         segments[i] = lines.getSegments().get(i + instance.second*segments.length);
@@ -641,7 +651,7 @@ public class ParallelCoords {
 
                     for(Pair<Integer, Integer> instance : instancesToCue) {
                         Lines lines = getLinesForChunk(instance.first);
-                        Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.getFeatureCount()-1];
+                        Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size()-1];
 
                         for (int i = 0; i < segments.length; i++) {
                             segments[i] = lines.getSegments().get(i + instance.second*segments.length);
