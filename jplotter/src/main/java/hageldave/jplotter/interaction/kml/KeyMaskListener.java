@@ -34,24 +34,19 @@ public class KeyMaskListener extends KeyAdapter {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (!noMasking) {
-            keyPressedMap.put(e.getKeyCode(), true);
-            areKeysPressed = this.keysToPress.equals(getPressedKeys());
-        }
+        keyPressedMap.put(e.getKeyCode(), true);
+        areKeysPressed = this.keysToPress.equals(getPressedKeys());
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (!noMasking) {
-            keyPressedMap.put(e.getKeyCode(), false);
-            areKeysPressed = this.keysToPress.equals(getPressedKeys());
-        }
+        keyPressedMap.put(e.getKeyCode(), false);
+        areKeysPressed = this.keysToPress.equals(getPressedKeys());
     }
 
     public boolean areKeysPressed() {
-        if (noMasking) {
-            return true;
-        }
+        if (noMasking)
+            return getPressedKeys().size() <= 0;
         return areKeysPressed;
     }
 
