@@ -65,6 +65,7 @@ public class ParallelCoordsRenderer implements Renderer {
     protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
 
     protected LinkedList<Feature> features = new LinkedList<>();
+    protected Pair<Integer, Feature> highlightedFeature = null;
 
     protected int viewportwidth=0;
     protected int viewportheight=0;
@@ -234,6 +235,19 @@ public class ParallelCoordsRenderer implements Renderer {
 
     public ParallelCoordsRenderer addFeature(int xIndex, double min, double max, String label) {
         return this.addFeature(xIndex, new Feature(min, max, label));
+    }
+
+    public Pair<Integer, Feature> getHighlightedFeature() {
+        return highlightedFeature;
+    }
+
+    public void setHighlightedFeature(Pair<Integer, Feature> highlightedFeature) {
+        this.highlightedFeature = highlightedFeature;
+        this.setDirty();
+    }
+
+    public void setHighlightedFeature() {
+        this.highlightedFeature = null;
     }
 
     /**
@@ -590,6 +604,21 @@ public class ParallelCoordsRenderer implements Renderer {
                 postContentTextR.addItemToRender(txt);
             }
 
+            if (Objects.nonNull(highlightedFeature)) {
+                // TODO: clip lines at feature min/max
+
+                axisDimensions = preventCoordSysInversion();
+                double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).max-features.get(highlightedFeature.first).min);
+                double minValue = y * (highlightedFeature.second.min - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
+                double maxValue = y * (highlightedFeature.second.max - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
+
+                double m = (double) highlightedFeature.first / (features.size() - 1);
+                double x = coordsysAreaLB.getX() + m * axisDimensions.getWidth();
+
+                // feature guide
+                guides.addSegment(new Point2D.Double(Math.round(x+0.5), minValue), new Point2D.Double(Math.round(x+0.5), maxValue)).setColor(Color.RED).setThickness(1.1);
+            }
+
             // setup legend areas (this will stay the same)
             if (Objects.nonNull(legendRight)) {
                 legendRightViewPort.setBounds(
@@ -757,7 +786,6 @@ public class ParallelCoordsRenderer implements Renderer {
             // create viewport graphics
             Graphics2D g_ = (Graphics2D)g.create(viewPortX, viewPortY, viewPortW, viewPortH);
             Graphics2D p_ = (Graphics2D)p.create(viewPortX, viewPortY, viewPortW, viewPortH);
-            // TODO: normalize values here: viewportH/xyz
             content.renderFallback(g_, p_, viewPortW, viewPortH);
         }
         postContentLinesR.renderFallback(g, p, w, h);
