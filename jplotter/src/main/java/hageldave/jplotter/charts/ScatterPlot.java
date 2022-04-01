@@ -6,8 +6,8 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
-import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
 import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
@@ -40,21 +40,6 @@ import java.util.*;
  * To add a Dataset to the pointMap, an ID has to be defined as a key.
  * With this ID the Dataset can be removed later on.
  * <p>
- *
- * CHANGELOG
- * - legend now also has a interaction interface (+ its elements are added to registry, etc. pp)
- * - KeylistenerMask has now its own class and is implemented in all interaction interfaces
- * - KeylistenerMask now can store > 1 keys
- * - ExtendedPointDetails stores now its label and Points
- * - update legend automatically if data is added
- * - Continued working on Scatterplot demo class
- *
- * Changelog
- *  - Barchart Implemenation
- *  - Bug mit Legenden items und focus gefixt - Registry reduziert
- *  - neue DataAdd Methode
- *  - Verbesserungen bei InteractionInterface
- *
  * @author lucareichmann
  */
 public class ScatterPlot {
@@ -425,8 +410,8 @@ public class ScatterPlot {
         return new CoordSysScrollZoom(this.canvas, this.coordsys).register();
     }
 
-    public CoordSysScrollZoom addScrollZoom(final KeyMaskListener keyListenerMask) {
-        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyListenerMask).register();
+    public CoordSysScrollZoom addScrollZoom(final KeyMaskListener keyMaskListener) {
+        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyMaskListener).register();
     }
 
     /**
@@ -439,8 +424,8 @@ public class ScatterPlot {
         return new CoordSysPanning(this.canvas, this.coordsys).register();
     }
 
-    public CoordSysPanning addPanning(final KeyMaskListener keyListenerMask) {
-        return new CoordSysPanning(this.canvas, this.coordsys, keyListenerMask).register();
+    public CoordSysPanning addPanning(final KeyMaskListener keyMaskListener) {
+        return new CoordSysPanning(this.canvas, this.coordsys, keyMaskListener).register();
     }
 
     /**
@@ -457,8 +442,8 @@ public class ScatterPlot {
         }.register();
     }
 
-    public CoordSysViewSelector addRectangleSelectionZoom(final KeyMaskListener keyListenerMask) {
-        return new CoordSysViewSelector(this.canvas, this.coordsys, keyListenerMask) {
+    public CoordSysViewSelector addRectangleSelectionZoom(final KeyMaskListener keyMaskListener) {
+        return new CoordSysViewSelector(this.canvas, this.coordsys, keyMaskListener) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);

@@ -31,7 +31,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	protected Point startPoint;
 	protected Component canvas;
 	protected CoordSysRenderer coordsys;
-	protected KeyMaskListener keyListenerMask;
+	protected KeyMaskListener keyMaskListener;
 	protected int axes = X_AXIS | Y_AXIS;
 
 	/**
@@ -39,10 +39,10 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	 * @param canvas displaying the coordsys
 	 * @param coordsys the coordinate system to apply the panning in
 	 */
-	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask) {
+	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
-		this.keyListenerMask = keyListenerMask;
+		this.keyMaskListener = keyMaskListener;
 	}
 
 	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
@@ -51,13 +51,13 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (keyListenerMask.areKeysPressed())
+		if (keyMaskListener.areKeysPressed())
 			this.startPoint = e.getPoint();
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(startPoint!= null && keyListenerMask.areKeysPressed()){
+		if(startPoint!= null && keyMaskListener.areKeysPressed()){
 			Point dragPoint = e.getPoint();
 			double mouseTx = 0;
 			double mouseTy = 0;
@@ -106,11 +106,11 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 		return axes;
 	}
 
-	public void setKeyListenerMask(KeyMaskListener keyListenerMask) {
-		canvas.removeKeyListener(this.keyListenerMask);
-		this.keyListenerMask = keyListenerMask;
-		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
-			canvas.addKeyListener(this.keyListenerMask);
+	public void setKeyMaskListener(KeyMaskListener keyMaskListener) {
+		canvas.removeKeyListener(this.keyMaskListener);
+		this.keyMaskListener = keyMaskListener;
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+			canvas.addKeyListener(this.keyMaskListener);
 	}
 
 	/**
@@ -123,8 +123,8 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 			canvas.addMouseListener(this);
 		if( ! Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
 			canvas.addMouseMotionListener(this);
-		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
-			canvas.addKeyListener(this.keyListenerMask);
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+			canvas.addKeyListener(this.keyMaskListener);
 		return this;
 	}
 	
@@ -136,7 +136,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	public CoordSysPanning deRegister(){
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
-		canvas.removeKeyListener(this.keyListenerMask);
+		canvas.removeKeyListener(this.keyMaskListener);
 		return this;
 	}
 	

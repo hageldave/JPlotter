@@ -30,13 +30,13 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
     protected CoordSysRenderer coordsys;
     protected double zoomFactor = 1.7;
     protected int axes = X_AXIS | Y_AXIS;
-    protected KeyMaskListener keyListenerMask;
+    protected KeyMaskListener keyMaskListener;
     protected boolean mouseFocusedZoom;
 
-    public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask, boolean mouseFocusedZoom) {
+    public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener, boolean mouseFocusedZoom) {
         this.canvas = canvas.asComponent();
         this.coordsys = coordsys;
-        this.keyListenerMask = keyListenerMask;
+        this.keyMaskListener = keyMaskListener;
         this.mouseFocusedZoom = mouseFocusedZoom;
     }
 
@@ -48,13 +48,13 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
         this(canvas, coordsys, new KeyMaskListener(KeyEvent.VK_ALT), false);
     }
 
-    public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask) {
-        this(canvas, coordsys, keyListenerMask, false);
+    public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
+        this(canvas, coordsys, keyMaskListener, false);
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if (keyListenerMask.areKeysPressed()) {
+        if (keyMaskListener.areKeysPressed()) {
             if (!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
                 return;
 
@@ -127,8 +127,8 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
     public CoordSysScrollZoom register(){
         if( ! Arrays.asList(canvas.getMouseWheelListeners()).contains(this))
             canvas.addMouseWheelListener(this);
-        if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
-            canvas.addKeyListener(this.keyListenerMask);
+        if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+            canvas.addKeyListener(this.keyMaskListener);
         return this;
     }
 
@@ -160,11 +160,11 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
         return this;
     }
 
-    public void setKeyListenerMask(KeyMaskListener keyListenerMask) {
-        canvas.removeKeyListener(this.keyListenerMask);
-        this.keyListenerMask = keyListenerMask;
-        if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
-            canvas.addKeyListener(this.keyListenerMask);
+    public void setKeyMaskListener(KeyMaskListener keyMaskListener) {
+        canvas.removeKeyListener(this.keyMaskListener);
+        this.keyMaskListener = keyMaskListener;
+        if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+            canvas.addKeyListener(this.keyMaskListener);
     }
 
     /**
@@ -174,7 +174,7 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
      */
     public CoordSysScrollZoom deRegister(){
         canvas.removeMouseWheelListener(this);
-        canvas.removeKeyListener(this.keyListenerMask);
+        canvas.removeKeyListener(this.keyMaskListener);
         return this;
     }
 

@@ -60,12 +60,12 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
-	protected KeyMaskListener keyListenerMask;
+	protected KeyMaskListener keyMaskListener;
 
-	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyListenerMask) {
+	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
-		this.keyListenerMask = keyListenerMask;
+		this.keyMaskListener = keyMaskListener;
 		Renderer presentRenderer;
 		if((presentRenderer = coordsys.getOverlay()) == null){
 			coordsys.setOverlay(this.overlay = new CompleteRenderer());
@@ -84,7 +84,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (this.keyListenerMask.areKeysPressed()) {
+		if (this.keyMaskListener.areKeysPressed()) {
 			start = e.getPoint();
 			overlay.addItemToRender(areaBorder);
 		}
@@ -92,7 +92,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(start == null || !this.keyListenerMask.areKeysPressed()){
+		if(start == null || !this.keyMaskListener.areKeysPressed()){
 			return;
 		}
 		{
@@ -148,11 +148,11 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		end = null;
 	}
 
-	public void setKeyListenerMask(KeyMaskListener keyListenerMask) {
-		canvas.removeKeyListener(this.keyListenerMask);
-		this.keyListenerMask = keyListenerMask;
-		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
-			canvas.addKeyListener(this.keyListenerMask);
+	public void setKeyMaskListener(KeyMaskListener keyMaskListener) {
+		canvas.removeKeyListener(this.keyMaskListener);
+		this.keyMaskListener = keyMaskListener;
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+			canvas.addKeyListener(this.keyMaskListener);
 	}
 
 	/**
@@ -165,8 +165,8 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			canvas.addMouseListener(this);
 		if( ! Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
 			canvas.addMouseMotionListener(this);
-		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
-			canvas.addKeyListener(this.keyListenerMask);
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+			canvas.addKeyListener(this.keyMaskListener);
 		return this;
 	}
 	
@@ -178,7 +178,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	public CoordSysViewSelector deRegister(){
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
-		canvas.removeKeyListener(this.keyListenerMask);
+		canvas.removeKeyListener(this.keyMaskListener);
 		return this;
 	}
 	
