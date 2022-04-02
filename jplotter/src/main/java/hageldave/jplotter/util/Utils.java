@@ -1,25 +1,21 @@
 package hageldave.jplotter.util;
 
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.DirectColorModel;
-import java.awt.image.ImageObserver;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.stream.Stream;
-
-import javax.swing.SwingUtilities;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.renderables.Triangles;
+
+import javax.swing.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
+import java.awt.image.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Class containing utility methods
@@ -368,6 +364,31 @@ public class Utils {
 		return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
 	}
 	
-	
+	public static Method searchReflectionMethod(Class<?> toSearch, String methodName, Class<?>... params) {
+		if (Objects.nonNull(toSearch)) {
+			if (Arrays.stream(toSearch.getDeclaredMethods()).anyMatch(e -> e.getName().equals(methodName))) {
+				try {
+					return toSearch.getDeclaredMethod(methodName, params);
+				} catch (NoSuchMethodException e) {
+					e.printStackTrace();
+				}
+			}
+
+			if (Objects.nonNull(toSearch.getSuperclass())) {
+				Method superclassMethod = searchReflectionMethod(toSearch.getSuperclass(), methodName, params);
+				if (Objects.nonNull(superclassMethod)) {
+					return superclassMethod;
+				}
+			}
+
+			for (Class<?> interfaceClass : toSearch.getInterfaces()) {
+				Method interfaceMethod = searchReflectionMethod(interfaceClass, methodName, params);
+				if (Objects.nonNull(interfaceMethod)) {
+					return interfaceMethod;
+				}
+			}
+		}
+		return null;
+	}
 }
 
