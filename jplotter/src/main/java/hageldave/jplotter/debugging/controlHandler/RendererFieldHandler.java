@@ -1,7 +1,6 @@
 package hageldave.jplotter.debugging.controlHandler;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.renderers.GenericRenderer;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,11 +21,7 @@ public class RendererFieldHandler {
         Object fieldValue = field.get(obj);
 
         if (field.getName().equals("isEnabled")) {
-            if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
-                handleGenericRendererEnabled(canvas, obj, field, labelContainer);
-            } else {
-                handleRendererEnabled(canvas, obj, field, labelContainer);
-            }
+            handleIsEnabled(canvas, obj, field, labelContainer);
         } else {
             labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
             labelContainer.add(new JLabel((field.getName()) + ": "));
@@ -40,36 +35,10 @@ public class RendererFieldHandler {
         return labelContainer;
     }
 
-    protected static JPanel handleGenericRendererEnabled(JPlotterCanvas canvas, Object obj, Field field, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    protected static JPanel handleIsEnabled(JPlotterCanvas canvas, Object obj, Field field, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Class<?> rendererClass = obj.getClass();
-        Method isEnabled = rendererClass.getSuperclass().getDeclaredMethod("isEnabled");
-        Method setEnabled = rendererClass.getSuperclass().getDeclaredMethod("setEnabled", boolean.class);
-
-        labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-        labelContainer.add(new JLabel((field.getName()) + ": "));
-
-        JLabel fieldValLabel = new JLabel(String.valueOf(isEnabled.invoke(obj)));
-        fieldValLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                try {
-                    changeValue(obj, setEnabled, isEnabled);
-                    fieldValLabel.setText(String.valueOf(isEnabled.invoke(obj)));
-                } catch (IllegalAccessException | InvocationTargetException ex) {
-                    ex.printStackTrace();
-                }
-                canvas.scheduleRepaint();
-            }
-        });
-        labelContainer.add(fieldValLabel);
-        return labelContainer;
-    }
-
-    protected static JPanel handleRendererEnabled(JPlotterCanvas canvas, Object obj, Field field, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Class<?> rendererClass = obj.getClass();
-        Method isEnabled = rendererClass.getDeclaredMethod("isEnabled");
-        Method setEnabled = rendererClass.getDeclaredMethod("setEnabled", boolean.class);
+        Method isEnabled = rendererClass.getMethod("isEnabled");
+        Method setEnabled = rendererClass.getMethod("setEnabled", boolean.class);
 
         labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
         labelContainer.add(new JLabel((field.getName()) + ": "));
