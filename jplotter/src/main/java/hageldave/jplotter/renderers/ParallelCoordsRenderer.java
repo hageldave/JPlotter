@@ -605,12 +605,14 @@ public class ParallelCoordsRenderer implements Renderer {
             }
 
             if (Objects.nonNull(highlightedFeature)) {
-                // TODO: clip lines at feature min/max
-
                 axisDimensions = preventCoordSysInversion();
                 double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).max-features.get(highlightedFeature.first).min);
-                double minValue = y * (highlightedFeature.second.min - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
-                double maxValue = y * (highlightedFeature.second.max - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
+
+                double clipMin = Math.max(highlightedFeature.second.min, features.get(highlightedFeature.first).min);
+                double clipMax = Math.min(highlightedFeature.second.max, features.get(highlightedFeature.first).max);
+
+                double minValue = y * (clipMin - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
+                double maxValue = y * (clipMax - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
 
                 double m = (double) highlightedFeature.first / (features.size() - 1);
                 double x = coordsysAreaLB.getX() + m * axisDimensions.getWidth();

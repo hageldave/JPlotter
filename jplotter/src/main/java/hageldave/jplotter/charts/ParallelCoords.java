@@ -18,9 +18,10 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ParallelCoords {
     protected JPlotterCanvas canvas;
@@ -246,6 +247,11 @@ public class ParallelCoords {
         return (value - feature.min)/(feature.max - feature.min);
     }
 
+    protected static double denormalizeValue(double value, ParallelCoordsRenderer.Feature feature) {
+        double diff = feature.max - feature.min;
+        return diff * value + feature.min;
+    }
+
     public static class ParallelCoordsDataModel {
         protected ArrayList<double[][]> dataChunks = new ArrayList<>();
         protected ArrayList<ParallelCoordsRenderer.Feature> features = new ArrayList<>();
@@ -274,7 +280,7 @@ public class ParallelCoords {
             return this;
         }
 
-        public synchronized ParallelCoordsDataModel addFeature(int[] dataIndices , ParallelCoordsRenderer.Feature[] features) {
+        public synchronized ParallelCoordsDataModel addFeature(int[] dataIndices, ParallelCoordsRenderer.Feature[] features) {
             if (dataIndices.length != features.length) {
                 throw new IllegalArgumentException("Arrays have to be of equal length");
             }
@@ -338,19 +344,15 @@ public class ParallelCoords {
             return descriptionPerChunk.get(chunkIdx);
         }
 
-        public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area){
+        // return data indices in between min/max
+        public TreeSet<Integer> getIndicesOfSegmentsInRange(int chunkIdx, int featureIndex, double min, double max) {
             // naive search for contained points
             // TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
             double[][] data = getDataChunk(chunkIdx);
             TreeSet<Integer> containedPointIndices = new TreeSet<>();
-            for(int i=0; i<data.length; i++) {
-                for (int j = 0; j < data[i].length; j++) {
-                    double xCoord = (double) j / (getFeatureCount()-1);
-
-                    if(area.contains(xCoord, data[i][j]))
-                        // TODO: this might not be correct
-                        containedPointIndices.add(i);
-                }
+            for (int i = 0; i < data.length; i++) {
+                if (min <= data[i][axesMap.get(featureIndex)] && data[i][axesMap.get(featureIndex)] <= max)
+                    containedPointIndices.add(i);
             }
             return containedPointIndices;
         }
@@ -454,6 +456,9 @@ public class ParallelCoords {
 
     protected void createMouseEventHandler() {
         MouseAdapter mouseEventHandler = new MouseAdapter() {
+            final AtomicReference<Double> startPos = new AtomicReference<>(0.0);
+            final AtomicBoolean mouseDragged = new AtomicBoolean(false);
+
             @Override
             public void mouseMoved(MouseEvent e) { mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_MOVED, e); }
 
@@ -475,12 +480,37 @@ public class ParallelCoords {
                  * to figure out if the mouse event is being handled by them. If not handled by any of them
                  * then go on with the following.
                  */
-                if(Utils.swapYAxis(parallelCoordsys.getCoordSysArea(),canvas.asComponent().getHeight()).contains(e.getPoint())) {
 
+                if (Utils.swapYAxis(parallelCoordsys.getCoordSysArea(), canvas.asComponent().getHeight()).contains(e.getPoint())) {
                     Point2D coordsysPoint = parallelCoordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
-                    if((pixel & 0x00ffffff) == 0) {
+
+                    // START Axis highlighting //
+                    // TODO: possible performance improvement: call listener only when either new values are added or mouse press is released
+                    boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);
+                    if ((coordsysPoint.getX() % (1.0 / (2 * (dataModel.getFeatureCount() - 1)))) < 0.10 && isEventTypeDragged) {
+                        int featureIndex = (int) Math.round(coordsysPoint.getX() / (1.0 / (dataModel.getFeatureCount() - 1)));
+                        double currentValue = denormalizeValue(coordsysPoint.getY(), dataModel.getFeature(featureIndex));
+
+                        if (!mouseDragged.get()) {
+                            startPos.set(currentValue);
+                        } else {
+                            double min = Math.min(startPos.get(), currentValue);
+                            double max = Math.max(startPos.get(), currentValue);
+
+                            if (min != max)
+                                notifyFeatureAxisDragged(eventType, e, featureIndex, min, max);
+                        }
+                        mouseDragged.set(true);
+
+                    } else if (!isEventTypeDragged) {
+                        mouseDragged.set(false);
+                        notifyFeatureAxisNone(eventType, e);
+                    }
+                    // END Axis highlighting //
+
+                    if ((pixel & 0x00ffffff) == 0) {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
                     } else {
                         Object segmentLocalizer = pickingRegistry.lookup(pixel);
@@ -531,6 +561,18 @@ public class ParallelCoords {
             l.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
     }
 
+
+    protected synchronized void notifyFeatureAxisDragged(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {
+        for (ParallelCoordsMouseEventListener l : mouseEventListeners) {
+            l.notifyInsideMouseEventFeature(mouseEventType, e, featureIndex, min, max);
+        }
+        highlightFeatureAxis(featureIndex, min, max);
+    }
+
+    protected synchronized void notifyFeatureAxisNone(String mouseEventType, MouseEvent e) {
+        highlightFeatureAxis();
+    }
+
     public static interface ParallelCoordsMouseEventListener {
         static final String MOUSE_EVENT_TYPE_MOVED="moved";
         static final String MOUSE_EVENT_TYPE_CLICKED="clicked";
@@ -545,14 +587,16 @@ public class ParallelCoords {
         public default void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {}
 
         public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {}
+
+        public default void notifyInsideMouseEventFeature(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {}
     }
 
-    public synchronized ParallelCoordsMouseEventListener addScatterPlotMouseEventListener(ParallelCoordsMouseEventListener l) {
+    public synchronized ParallelCoordsMouseEventListener addParallelCoordsMouseEventListener(ParallelCoordsMouseEventListener l) {
         this.mouseEventListeners.add(l);
         return l;
     }
 
-    public synchronized boolean removeScatterPlotMouseEventListener(ParallelCoordsMouseEventListener l) {
+    public synchronized boolean removeParallelCoordsMouseEventListener(ParallelCoordsMouseEventListener l) {
         return this.mouseEventListeners.remove(l);
     }
 
@@ -680,7 +724,6 @@ public class ParallelCoords {
         getLinesForChunk(chunkIdx).setGlobalSaturationMultiplier(factor).setGlobalAlphaMultiplier(factor);
     }
 
-
     private Lines getOrCreateCueLinesForGlyph(String cue, Color c, int strokePattern) {
         HashMap<Pair<Color, Integer>, Lines> cp2lines = this.cp2linesMaps.get(cue);
         if(!cp2lines.containsKey(new Pair<>(c, strokePattern))) {
@@ -711,9 +754,18 @@ public class ParallelCoords {
         cp2lines.values().forEach(Lines::removeAllSegments);
     }
 
+    protected void highlightFeatureAxis() {
+        this.parallelCoordsys.setHighlightedFeature(null);
+    }
+
+    protected void highlightFeatureAxis(int featureIndex, double min, double max) {
+        this.parallelCoordsys.setHighlightedFeature(new Pair<>(featureIndex, new ParallelCoordsRenderer.Feature(min, max, null)));
+    }
+
     /**
      * Sets up JFrame boilerplate, puts this plot into it, and sets the
      * frame visible on the AWT event dispatch thread.
+     *
      * @param title of the window
      * @return the JFrame
      */
