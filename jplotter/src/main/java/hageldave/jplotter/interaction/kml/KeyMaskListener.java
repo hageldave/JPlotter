@@ -16,8 +16,11 @@ public class KeyMaskListener extends KeyAdapter {
     final protected HashMap<Integer, Boolean> keyPressedMap = new HashMap<>();
     final protected ArrayList<Integer> keysToPress = new ArrayList<>();
 
-    public KeyMaskListener(final int... extModifierMask) {
-        for (int j : extModifierMask) {
+    public KeyMaskListener(final int... keys) {
+        if (keys.length == 0) {
+            this.noMasking = true;
+        }
+        for (int j : keys) {
             this.keysToPress.add(j);
         }
         Collections.sort(this.keysToPress);
