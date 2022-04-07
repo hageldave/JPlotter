@@ -356,8 +356,8 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				}
 			}
 			// offscreen
-			GL11.glClearColor(0, 0, 0, 0);
 			setRenderTargetsColorAndPicking(w, h);
+			GL11.glClearColor(0, 0, 0, 0);
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			/* we need to first draw a viewport filling quad that fills the buffer with the clear color
 			 * in order to resolve issue #4 (https://github.com/hageldave/JPlotter/issues/4)
@@ -379,7 +379,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			// now draw the other stuff to the fbo
 			paintToFBO(w, h);
 
-			/* if we're using a multisampled FBO manually (=with a shader) blit to normal FBO
+			/* if we're using a multisampled FBO, manually (=with a shader) blit to normal FBO.
 			 * we need to do this manually because the picking colors are not to be anti aliased
 			 */
 			if(Objects.nonNull(fboMS)){
@@ -417,6 +417,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			}
 
 			// onscreen
+			// TODO: instead of w,h use framebufferwidth and height for render target and blit destination (to account for dpi scaling)
 			setRenderTargets(0, w, h, GL11.GL_BACK);
 			GL11.glClearColor( screenClearColor.getRed()/255f, screenClearColor.getGreen()/255f, screenClearColor.getBlue()/255f, screenClearColor.getAlpha()/255f );
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
