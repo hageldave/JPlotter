@@ -20,8 +20,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ParallelCoords {
     protected JPlotterCanvas canvas;
@@ -47,6 +45,8 @@ public class ParallelCoords {
 
     protected HashMap<String, HashMap<Pair<Color, Integer>, Lines>> cp2linesMaps = new HashMap<>();
     protected HashMap<String, SimpleSelectionModel<Pair<Integer, Integer>>> cueSelectionModels = new HashMap<>();
+
+    protected boolean axisHighlighting = false;
 
     public ParallelCoords(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback());
@@ -454,10 +454,16 @@ public class ParallelCoords {
         }
     }
 
+    public void setAxisHighlighting(boolean toHighlight) {
+        this.axisHighlighting = toHighlight;
+    }
+
     protected void createMouseEventHandler() {
         MouseAdapter mouseEventHandler = new MouseAdapter() {
-            final AtomicReference<Double> startPos = new AtomicReference<>(0.0);
-            final AtomicBoolean mouseDragged = new AtomicBoolean(false);
+            double yPos = 0.0;
+            boolean isMouseDragged = false;
+            boolean isDragRegistered = false;
+            int featureIndex = -1;
 
             @Override
             public void mouseMoved(MouseEvent e) { mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_MOVED, e); }
@@ -480,35 +486,46 @@ public class ParallelCoords {
                  * to figure out if the mouse event is being handled by them. If not handled by any of them
                  * then go on with the following.
                  */
-
                 if (Utils.swapYAxis(parallelCoordsys.getCoordSysArea(), canvas.asComponent().getHeight()).contains(e.getPoint())) {
                     Point2D coordsysPoint = parallelCoordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
 
                     // START Axis highlighting //
-                    // TODO: possible performance improvement: call listener only when either new values are added or mouse press is released
-                    boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);
-                    if ((coordsysPoint.getX() % (1.0 / (2 * (dataModel.getFeatureCount() - 1)))) < 0.10 && isEventTypeDragged) {
-                        int featureIndex = (int) Math.round(coordsysPoint.getX() / (1.0 / (dataModel.getFeatureCount() - 1)));
-                        double currentValue = denormalizeValue(coordsysPoint.getY(), dataModel.getFeature(featureIndex));
+                    if (axisHighlighting) {
+                        boolean isEventTypeKeyPressed = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED);
+                        boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);
+                        boolean isEventTypeMoved = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_MOVED);
+                        boolean isEventTypeReleased = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_RELEASED);
 
-                        if (!mouseDragged.get()) {
-                            startPos.set(currentValue);
-                        } else {
-                            double min = Math.min(startPos.get(), currentValue);
-                            double max = Math.max(startPos.get(), currentValue);
+                        double distToAxis = coordsysPoint.getX() % (1.0 / (2 * (dataModel.getFeatureCount() - 1)));
+                        double allowedAxisDist = 0.03;
 
-                            if (min != max)
-                                notifyFeatureAxisDragged(eventType, e, featureIndex, min, max);
+                        if (!isDragRegistered)
+                            isDragRegistered = distToAxis < allowedAxisDist && isEventTypeKeyPressed;
+
+                        if (coordsysPoint.getX() % distToAxis < allowedAxisDist && isEventTypeDragged && isDragRegistered) {
+                            if (featureIndex == -1)
+                                featureIndex = (int) Math.round(coordsysPoint.getX() / (1.0 / (dataModel.getFeatureCount() - 1)));
+                            double currentValue = denormalizeValue(coordsysPoint.getY(), dataModel.getFeature(featureIndex));
+
+                            if (!isMouseDragged) {
+                                yPos = currentValue;
+                            } else {
+                                double min = Math.min(yPos, currentValue);
+                                double max = Math.max(yPos, currentValue);
+                                if (min != max)
+                                    notifyFeatureAxisDragged(eventType, e, featureIndex, min, max);
+                            }
+                            isMouseDragged = true;
+                        } else if (isEventTypeMoved || isEventTypeReleased) {
+                            isMouseDragged = false;
+                            isDragRegistered = false;
+                            featureIndex = -1;
+                            notifyFeatureAxisNone(eventType, e);
                         }
-                        mouseDragged.set(true);
-
-                    } else if (!isEventTypeDragged) {
-                        mouseDragged.set(false);
-                        notifyFeatureAxisNone(eventType, e);
+                        // END Axis highlighting //
                     }
-                    // END Axis highlighting //
 
                     if ((pixel & 0x00ffffff) == 0) {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
@@ -756,10 +773,12 @@ public class ParallelCoords {
 
     protected void highlightFeatureAxis() {
         this.parallelCoordsys.setHighlightedFeature(null);
+        this.getCanvas().scheduleRepaint();
     }
 
     protected void highlightFeatureAxis(int featureIndex, double min, double max) {
         this.parallelCoordsys.setHighlightedFeature(new Pair<>(featureIndex, new ParallelCoordsRenderer.Feature(min, max, null)));
+        this.getCanvas().scheduleRepaint();
     }
 
     /**
