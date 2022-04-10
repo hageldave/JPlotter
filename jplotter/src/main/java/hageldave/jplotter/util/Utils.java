@@ -12,9 +12,7 @@ import java.awt.geom.RectangularShape;
 import java.awt.image.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -390,5 +388,21 @@ public class Utils {
 		}
 		return null;
 	}
-}
 
+
+	public static List<Method> getReflectionMethods(Class<?> toSearch, Class<?> returnType, Class<?>... params) {
+		List<Method> toFill = new LinkedList<>();
+		if (Objects.nonNull(toSearch)) {
+			Method[] sameReturnType = Arrays.stream(toSearch.getDeclaredMethods()).filter(e -> e.getReturnType().equals(returnType)).toArray(Method[]::new);
+			Method[] sameReturnParamTypes = Arrays.stream(sameReturnType).filter(e -> Arrays.equals(e.getParameterTypes(), params)).toArray(Method[]::new);
+			Collections.addAll(toFill, sameReturnParamTypes);
+
+			if (Objects.nonNull(toSearch.getSuperclass()))
+				toFill.addAll(getReflectionMethods(toSearch.getSuperclass(), returnType, params));
+
+			for (Class<?> interfaceClass : toSearch.getInterfaces())
+				toFill.addAll(getReflectionMethods(interfaceClass, returnType, params));
+		}
+		return toFill;
+	}
+}
