@@ -23,7 +23,8 @@ import java.util.HashSet;
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
     final protected JTree tree = new JTree();
-    final protected JPanel informationContainer = new JPanel();
+    final protected JPanel controlContainer = new JPanel();
+    final protected JPanel infoContainer = new JPanel();
     final protected JPlotterCanvas canvas;
 
     public DebuggerUI(JPlotterCanvas canvas) {
@@ -46,22 +47,42 @@ public class DebuggerUI {
         DefaultTreeModel treeModel = new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas));
         tree.setModel(treeModel);
 
-        informationContainer.setLayout(new BoxLayout(informationContainer, BoxLayout.PAGE_AXIS));
-        informationContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
-        informationContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // start control container
+        controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.PAGE_AXIS));
+        controlContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
+        controlContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel header = new JLabel("Control Area");
-        header.setFont(new Font(header.getFont().getName(), Font.PLAIN, 14));
+        JLabel controlHeader = new JLabel("Control Area");
+        controlHeader.setFont(new Font(controlHeader.getFont().getName(), Font.PLAIN, 14));
 
         JPanel controlArea = new JPanel();
         controlArea.setLayout(new BoxLayout(controlArea, BoxLayout.PAGE_AXIS));
         controlArea.setBorder(new EmptyBorder(10, 10, 10, 10));
-        controlArea.add(header);
-        controlArea.add(informationContainer);
+        controlArea.add(controlHeader);
+        controlArea.add(controlContainer);
 
-        JSplitPane splitpane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        splitpane.setBottomComponent(new JScrollPane(controlArea));
-        splitpane.setTopComponent(new JScrollPane(tree));
+        // start info container
+        infoContainer.setLayout(new BoxLayout(infoContainer, BoxLayout.PAGE_AXIS));
+        infoContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
+        infoContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel infoHeader = new JLabel("Information Area");
+        infoHeader.setFont(new Font(infoHeader.getFont().getName(), Font.PLAIN, 14));
+
+        JPanel infoArea = new JPanel();
+        infoArea.setLayout(new BoxLayout(infoArea, BoxLayout.PAGE_AXIS));
+        infoArea.setBorder(new EmptyBorder(10, 10, 10, 10));
+        infoArea.add(infoHeader);
+        infoArea.add(infoContainer);
+
+        JPanel infoControlWrap = new JPanel();
+        infoControlWrap.setLayout(new BoxLayout(infoControlWrap, BoxLayout.PAGE_AXIS));
+        infoControlWrap.add(controlArea);
+        infoControlWrap.add(infoArea);
+
+        JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitpane.setRightComponent(new JScrollPane(infoControlWrap));
+        splitpane.setLeftComponent(new JScrollPane(tree));
 
         frame.getContentPane().add(splitpane);
         frame.pack();
@@ -69,13 +90,12 @@ public class DebuggerUI {
     }
 
     protected void clearInformation() {
-        informationContainer.removeAll();
+        controlContainer.removeAll();
+        infoContainer.removeAll();
     }
-
 
     protected void handleRenderer(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         HashSet<Field> set = new HashSet<>();
-        // superclass generic Renderer?
         if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
             set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
             set.addAll(Arrays.asList(obj.getClass().getSuperclass().getDeclaredFields()));
@@ -89,13 +109,17 @@ public class DebuggerUI {
         for (Field field : fields) {
             field.setAccessible(true);
             JPanel panel = RendererFieldHandler.handleRendererField(canvas, obj, field);
-            informationContainer.add(panel);
+
+            if (RendererFieldHandler.displayInControlArea(field.getName()))
+                controlContainer.add(panel);
+            else
+                infoContainer.add(panel);
         }
         frame.revalidate();
         frame.repaint();
     }
 
-    protected void handleRenderable(Object obj) throws IllegalAccessException {
+    protected void handleRenderable(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         HashSet<Field> set = new HashSet<>();
         set.addAll(Arrays.asList(obj.getClass().getFields()));
         set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
@@ -104,7 +128,11 @@ public class DebuggerUI {
         for (Field field : fields) {
             field.setAccessible(true);
             JPanel panel = RenderableFieldHandler.handleRenderableField(canvas, obj, field);
-            informationContainer.add(panel);
+
+            if (RenderableFieldHandler.displayInControlArea(field.getName()))
+                controlContainer.add(panel);
+            else
+                infoContainer.add(panel);
         }
         frame.revalidate();
         frame.repaint();
@@ -117,8 +145,8 @@ public class DebuggerUI {
         Method method;
         if (tp != null) {
             Class<?> class1 = tp.getLastPathComponent().getClass();
-            if (Arrays.stream(class1.getMethods()).anyMatch(e->e.getName().equals("getBackObject"))) {
-                method = class1.getMethod("getBackObject");
+            if (Arrays.stream(class1.getMethods()).anyMatch(e->e.getName().equals("getHiddenObject"))) {
+                method = class1.getMethod("getHiddenObject");
             } else {
                 method = class1.getMethod("getUserObject");
             }

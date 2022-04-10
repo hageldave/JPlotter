@@ -4,18 +4,18 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 public class DebuggerMutableTreeNode extends DefaultMutableTreeNode {
 
-    protected Object backObject;
+    protected Object hiddenObject;
 
-    public DebuggerMutableTreeNode(Object userObject, Object backObject) {
+    public DebuggerMutableTreeNode(Object userObject, Object hiddenObject) {
         super(userObject, true);
-        this.backObject = backObject;
+        this.hiddenObject = hiddenObject;
     }
 
-    public Object getBackObject() {
-        return backObject;
+    public Object getHiddenObject() {
+        return hiddenObject;
     }
 
-    public void setBackObject(Object backObject) {
-        this.backObject = backObject;
+    public void setHiddenObject(Object hiddenObject) {
+        this.hiddenObject = hiddenObject;
     }
 }

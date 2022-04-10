@@ -10,9 +10,12 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 
 public class RendererFieldHandler {
+    final static String[] toControl = new String[]{"isEnabled"};
+
     public static JPanel handleRendererField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.LINE_AXIS));
@@ -64,5 +67,9 @@ public class RendererFieldHandler {
     protected static void changeValue(Object obj, Method setEnabled, Method isEnabled) throws InvocationTargetException, IllegalAccessException {
         boolean invoked = (boolean) isEnabled.invoke(obj);
         setEnabled.invoke(obj, !invoked);
+    }
+
+    public static boolean displayInControlArea(String fieldName) {
+        return Arrays.asList(toControl).contains(fieldName);
     }
 }
