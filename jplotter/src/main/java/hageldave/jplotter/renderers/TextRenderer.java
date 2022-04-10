@@ -207,8 +207,10 @@ public class TextRenderer extends GenericRenderer<Text> {
 	@Override
 	@GLContextRequired
 	protected void renderItem(Text txt, Shader shader) {
-		int loc;
+		if(txt.getTextString().isEmpty())
+			return;
 		
+		int loc;
 		boolean useDoublePrecision = shader == shaderD;
 		// draw background if bg color is not 0
 		if(txt.getBackground().getRGB() !=0){
@@ -313,7 +315,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 		Rectangle vpRect = new Rectangle(w, h);
 		
 		for(Text txt: getItemsToRender()){
-			if(txt.isHidden()){
+			if(txt.isHidden() || txt.getTextString().isEmpty()){
 				continue;
 			}
 			{
@@ -399,7 +401,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 		double scaleY = Objects.isNull(view) ? 1:h/view.getHeight();
 
 		for(Text txt: getItemsToRender()){
-			if(txt.isHidden()){
+			if(txt.isHidden() || txt.getTextString().isEmpty()){
 				continue;
 			}
 			{
@@ -473,7 +475,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 		try {
 			PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
 			for(Text txt: getItemsToRender()){
-				if(txt.isHidden()){
+				if(txt.isHidden() || txt.getTextString().isEmpty()){
 					continue;
 				}
 				{
