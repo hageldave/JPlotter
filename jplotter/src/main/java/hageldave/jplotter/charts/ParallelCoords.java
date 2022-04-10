@@ -486,46 +486,10 @@ public class ParallelCoords {
                  * to figure out if the mouse event is being handled by them. If not handled by any of them
                  * then go on with the following.
                  */
+                Point2D coordsysPoint = parallelCoordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
                 if (Utils.swapYAxis(parallelCoordsys.getCoordSysArea(), canvas.asComponent().getHeight()).contains(e.getPoint())) {
-                    Point2D coordsysPoint = parallelCoordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
-
-                    // START Axis highlighting //
-                    if (axisHighlighting) {
-                        boolean isEventTypeKeyPressed = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED);
-                        boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);
-                        boolean isEventTypeMoved = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_MOVED);
-                        boolean isEventTypeReleased = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_RELEASED);
-
-                        double distToAxis = coordsysPoint.getX() % (1.0 / (2 * (dataModel.getFeatureCount() - 1)));
-                        double allowedAxisDist = 0.03;
-
-                        if (!isDragRegistered)
-                            isDragRegistered = distToAxis < allowedAxisDist && isEventTypeKeyPressed;
-
-                        if (coordsysPoint.getX() % distToAxis < allowedAxisDist && isEventTypeDragged && isDragRegistered) {
-                            if (featureIndex == -1)
-                                featureIndex = (int) Math.round(coordsysPoint.getX() / (1.0 / (dataModel.getFeatureCount() - 1)));
-                            double currentValue = denormalizeValue(coordsysPoint.getY(), dataModel.getFeature(featureIndex));
-
-                            if (!isMouseDragged) {
-                                yPos = currentValue;
-                            } else {
-                                double min = Math.min(yPos, currentValue);
-                                double max = Math.max(yPos, currentValue);
-                                if (min != max)
-                                    notifyFeatureAxisDragged(eventType, e, featureIndex, min, max);
-                            }
-                            isMouseDragged = true;
-                        } else if (isEventTypeMoved || isEventTypeReleased) {
-                            isMouseDragged = false;
-                            isDragRegistered = false;
-                            featureIndex = -1;
-                            notifyFeatureAxisNone(eventType, e);
-                        }
-                        // END Axis highlighting //
-                    }
 
                     if ((pixel & 0x00ffffff) == 0) {
                         notifyInsideMouseEventNone(eventType, e, coordsysPoint);
@@ -551,8 +515,46 @@ public class ParallelCoords {
                         }
                     }
                 }
-            }
 
+                // START Axis highlighting //
+                if (axisHighlighting) {
+                    boolean isEventTypeKeyPressed = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED);
+                    boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);
+                    boolean isEventTypeMoved = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_MOVED);
+                    boolean isEventTypeReleased = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_RELEASED);
+
+                    double featureProportion = 1.0 / ((dataModel.getFeatureCount() - 1));
+                    double modFP = coordsysPoint.getX() % featureProportion;
+
+                    double distToAxis = Math.min(featureProportion-modFP, modFP);
+                    double allowedAxisDist = 0.03;
+
+                    if (!isDragRegistered)
+                        isDragRegistered = distToAxis < allowedAxisDist && isEventTypeKeyPressed;
+
+                    if (coordsysPoint.getX() % distToAxis < allowedAxisDist && isEventTypeDragged && isDragRegistered) {
+                        if (featureIndex == -1)
+                            featureIndex = (int) Math.round(coordsysPoint.getX() / (1.0 / (dataModel.getFeatureCount() - 1)));
+                        double currentValue = denormalizeValue(coordsysPoint.getY(), dataModel.getFeature(featureIndex));
+
+                        if (!isMouseDragged) {
+                            yPos = currentValue;
+                        } else {
+                            double min = Math.min(yPos, currentValue);
+                            double max = Math.max(yPos, currentValue);
+                            if (min != max)
+                                notifyFeatureAxisDragged(eventType, e, featureIndex, min, max);
+                        }
+                        isMouseDragged = true;
+                    } else if (isEventTypeMoved || isEventTypeReleased) {
+                        isMouseDragged = false;
+                        isDragRegistered = false;
+                        featureIndex = -1;
+                        notifyFeatureAxisNone(eventType, e);
+                    }
+                }
+                // END Axis highlighting //
+            }
         };
         this.canvas.asComponent().addMouseListener(mouseEventHandler);
         this.canvas.asComponent().addMouseMotionListener(mouseEventHandler);
