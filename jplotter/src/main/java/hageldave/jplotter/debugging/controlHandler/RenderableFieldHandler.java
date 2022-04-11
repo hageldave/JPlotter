@@ -19,49 +19,46 @@ public class RenderableFieldHandler {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new FlowLayout(FlowLayout.LEFT));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         Object fieldValue = field.get(obj);
-
-        if (field.getName().equals("globalSaturationMultiplier")) {
-            handleGlobalMultiplier(canvas, obj, field, labelContainer, "getGlobalSaturationMultiplier", "setGlobalSaturationMultiplier");
-        } else if (field.getName().equals("globalThicknessMultiplier")) {
-            handleGlobalMultiplier(canvas, obj, field, labelContainer, "getGlobalThicknessMultiplier", "setGlobalThicknessMultiplier");
-        } else if (field.getName().equals("globalAlphaMultiplier")) {
-            handleGlobalMultiplier(canvas, obj, field, labelContainer, "getGlobalAlphaMultiplier", "setGlobalAlphaMultiplier");
-        } else if (field.getName().equals("hidden")) {
-            handleHideRenderable(canvas, obj, field, labelContainer);
-        } else {
-            if (fieldValue != null) {
-                labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-
-                JLabel fieldName = new JLabel((field.getName()) + ": ");
-                fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
-                labelContainer.add(fieldName);
-                if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
-                    DoubleSupplier dSup = (DoubleSupplier) fieldValue;
-                    labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
-                } else {
-                    labelContainer.add(new JLabel(String.valueOf(fieldValue)));
-                }
-            }
-        }
-
-        Dimension d = labelContainer.getPreferredSize();
-        d.height = 1;
-        labelContainer.setPreferredSize(d);
-
-        return labelContainer;
-    }
-
-    protected static JPanel handleGlobalMultiplier(JPlotterCanvas canvas, Object obj, Field field, JPanel labelContainer, String getter, String setter) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Class<?> renderableClass = obj.getClass();
-        Method setGlobalSaturationMultiplier = renderableClass.getMethod(setter, double.class);
-        Method getGlobalSaturationMultiplier = renderableClass.getMethod(getter);
 
         labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
         JLabel fieldName = new JLabel((field.getName()) + ": ");
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
         labelContainer.add(fieldName);
+
+        switch (field.getName()) {
+            case "globalSaturationMultiplier":
+                createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalSaturationMultiplier", "setGlobalSaturationMultiplier");
+                break;
+            case "globalThicknessMultiplier":
+                createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalThicknessMultiplier", "setGlobalThicknessMultiplier");
+                break;
+            case "globalAlphaMultiplier":
+                createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalAlphaMultiplier", "setGlobalAlphaMultiplier");
+                break;
+            case "hidden":
+                createHideUIRenderableElements(canvas, obj, labelContainer);
+                break;
+            default:
+                if (fieldValue != null) {
+                    if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
+                        DoubleSupplier dSup = (DoubleSupplier) fieldValue;
+                        labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
+                    } else {
+                        labelContainer.add(new JLabel(String.valueOf(fieldValue)));
+                    }
+                }
+                break;
+        }
+
+        labelContainer.setPreferredSize(new Dimension((int) labelContainer.getPreferredSize().getWidth(), 1));
+        return labelContainer;
+    }
+
+    protected static JPanel createGlobalMultiplierUIElements(JPlotterCanvas canvas, Object obj, JPanel labelContainer, String getter, String setter) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        Class<?> renderableClass = obj.getClass();
+        Method setGlobalSaturationMultiplier = renderableClass.getMethod(setter, double.class);
+        Method getGlobalSaturationMultiplier = renderableClass.getMethod(getter);
 
         JLabel valueLabel = new JLabel(getGlobalSaturationMultiplier.invoke(obj).toString());
         float initValue = (Float) getGlobalSaturationMultiplier.invoke(obj)*100;
@@ -77,20 +74,16 @@ public class RenderableFieldHandler {
             }
             canvas.scheduleRepaint();
         });
+
         labelContainer.add(valueLabel);
         labelContainer.add(slider);
         return labelContainer;
     }
 
-    protected static JPanel handleHideRenderable(JPlotterCanvas canvas, Object obj, Field field, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    protected static JPanel createHideUIRenderableElements(JPlotterCanvas canvas, Object obj, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Class<?> renderableClass = obj.getClass();
         Method hide = renderableClass.getMethod("hide", boolean.class);
         Method isHidden = renderableClass.getMethod("isHidden");
-
-        labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-        JLabel fieldName = new JLabel((field.getName()) + ": ");
-        fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
-        labelContainer.add(fieldName);
 
         JLabel fieldValLabel = new JLabel(String.valueOf(isHidden.invoke(obj)));
         fieldValLabel.addMouseListener(new MouseAdapter() {
@@ -106,8 +99,8 @@ public class RenderableFieldHandler {
                 canvas.scheduleRepaint();
             }
         });
-        labelContainer.add(fieldValLabel);
 
+        labelContainer.add(fieldValLabel);
         return labelContainer;
     }
 
