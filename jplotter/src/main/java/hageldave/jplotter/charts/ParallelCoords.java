@@ -461,6 +461,7 @@ public class ParallelCoords {
     protected void createMouseEventHandler() {
         MouseAdapter mouseEventHandler = new MouseAdapter() {
             double yPos = 0.0;
+            double currentValue = 0.0;
             boolean isMouseDragged = false;
             boolean isDragRegistered = false;
             int featureIndex = -1;
@@ -487,6 +488,7 @@ public class ParallelCoords {
                  * then go on with the following.
                  */
                 Point2D coordsysPoint = parallelCoordsys.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
+
                 if (Utils.swapYAxis(parallelCoordsys.getCoordSysArea(), canvas.asComponent().getHeight()).contains(e.getPoint())) {
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
@@ -499,7 +501,7 @@ public class ParallelCoords {
                         if(segmentLocalizer instanceof int[]) {
                             int chunkIdx = ((int[])segmentLocalizer)[0];
                             int segmentIdx = ((int[])segmentLocalizer)[1];
-                            notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, segmentIdx);
+                            notifyInsideMouseEventSegment(eventType, e, coordsysPoint, chunkIdx, segmentIdx);
                         }
                     }
                 } else {
@@ -535,22 +537,36 @@ public class ParallelCoords {
                     if (coordsysPoint.getX() % distToAxis < allowedAxisDist && isEventTypeDragged && isDragRegistered) {
                         if (featureIndex == -1)
                             featureIndex = (int) Math.round(coordsysPoint.getX() / (1.0 / (dataModel.getFeatureCount() - 1)));
-                        double currentValue = denormalizeValue(coordsysPoint.getY(), dataModel.getFeature(featureIndex));
+                        currentValue = denormalizeValue(coordsysPoint.getY(), dataModel.getFeature(featureIndex));
 
                         if (!isMouseDragged) {
                             yPos = currentValue;
                         } else {
                             double min = Math.min(yPos, currentValue);
                             double max = Math.max(yPos, currentValue);
-                            if (min != max)
-                                notifyFeatureAxisDragged(eventType, e, featureIndex, min, max);
+                            if (min != max) {
+                                notifyMouseEventOnFeatureAxis(eventType, e, featureIndex, min, max);
+                            }
                         }
                         isMouseDragged = true;
-                    } else if (isEventTypeMoved || isEventTypeReleased) {
+                    } else if (isEventTypeReleased) {
+                        if (featureIndex != -1) {
+                            double min = Math.min(yPos, currentValue);
+                            double max = Math.max(yPos, currentValue);
+                            notifyMouseEventOnFeatureAxis(eventType, e, featureIndex, min, max);
+                            highlightFeatureAxis();
+                        } else {
+                            notifyMouseEventOffFeatureAxis(eventType, e);
+                        }
+                    } else if (isEventTypeMoved || !isDragRegistered) {
+                        notifyMouseEventOffFeatureAxis(eventType, e);
+                    }
+
+                    if (isEventTypeMoved || isEventTypeReleased || !isDragRegistered) {
                         isMouseDragged = false;
                         isDragRegistered = false;
                         featureIndex = -1;
-                        notifyFeatureAxisNone(eventType, e);
+                        currentValue = 0.0;
                     }
                 }
                 // END Axis highlighting //
@@ -565,7 +581,7 @@ public class ParallelCoords {
             l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
 
-    protected synchronized void notifyInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int segmentIdx) {
+    protected synchronized void notifyInsideMouseEventSegment(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int segmentIdx) {
         for(ParallelCoordsMouseEventListener l:mouseEventListeners)
             l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, segmentIdx);
     }
@@ -580,15 +596,17 @@ public class ParallelCoords {
             l.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
     }
 
-
-    protected synchronized void notifyFeatureAxisDragged(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {
+    protected synchronized void notifyMouseEventOnFeatureAxis(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {
         for (ParallelCoordsMouseEventListener l : mouseEventListeners) {
-            l.notifyInsideMouseEventFeature(mouseEventType, e, featureIndex, min, max);
+            l.notifyMouseEventOnFeature(mouseEventType, e, featureIndex, min, max);
         }
         highlightFeatureAxis(featureIndex, min, max);
     }
 
-    protected synchronized void notifyFeatureAxisNone(String mouseEventType, MouseEvent e) {
+    protected synchronized void notifyMouseEventOffFeatureAxis(String mouseEventType, MouseEvent e) {
+        for (ParallelCoordsMouseEventListener l : mouseEventListeners) {
+            l.notifyMouseEventOffFeature(mouseEventType, e);
+        }
         highlightFeatureAxis();
     }
 
@@ -607,7 +625,9 @@ public class ParallelCoords {
 
         public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {}
 
-        public default void notifyInsideMouseEventFeature(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {}
+        public default void notifyMouseEventOnFeature(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {}
+
+        public default void notifyMouseEventOffFeature(String mouseEventType, MouseEvent e) {}
     }
 
     public synchronized ParallelCoordsMouseEventListener addParallelCoordsMouseEventListener(ParallelCoordsMouseEventListener l) {
