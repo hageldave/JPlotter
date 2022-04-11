@@ -25,6 +25,10 @@ public class DebuggerUI {
     final protected JTree tree = new JTree();
     final protected JPanel controlContainer = new JPanel();
     final protected JPanel infoContainer = new JPanel();
+
+    final protected JLabel controlHeader = new JLabel();
+    final protected JLabel infoHeader = new JLabel();
+
     final protected JPlotterCanvas canvas;
 
     public DebuggerUI(JPlotterCanvas canvas) {
@@ -52,7 +56,6 @@ public class DebuggerUI {
         controlContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
         controlContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel controlHeader = new JLabel("Control Area");
         controlHeader.setFont(new Font(controlHeader.getFont().getName(), Font.PLAIN, 14));
 
         JPanel controlArea = new JPanel();
@@ -66,7 +69,6 @@ public class DebuggerUI {
         infoContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
         infoContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel infoHeader = new JLabel("Information Area");
         infoHeader.setFont(new Font(infoHeader.getFont().getName(), Font.PLAIN, 14));
 
         JPanel infoArea = new JPanel();
@@ -90,6 +92,8 @@ public class DebuggerUI {
     }
 
     protected void clearInformation() {
+        controlHeader.setText("");
+        infoHeader.setText("");
         controlContainer.removeAll();
         infoContainer.removeAll();
     }
@@ -105,6 +109,9 @@ public class DebuggerUI {
         }
 
         Field[] fields = set.toArray(new Field[0]);
+
+        controlHeader.setText("Control Area");
+        infoHeader.setText("Information Area");
 
         for (Field field : fields) {
             field.setAccessible(true);
@@ -124,6 +131,9 @@ public class DebuggerUI {
         set.addAll(Arrays.asList(obj.getClass().getFields()));
         set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
         Field[] fields = set.toArray(new Field[0]);
+
+        controlHeader.setText("Control Area");
+        infoHeader.setText("Information Area");
 
         for (Field field : fields) {
             field.setAccessible(true);

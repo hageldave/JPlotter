@@ -27,7 +27,10 @@ public class RendererFieldHandler {
             handleIsEnabled(canvas, obj, field, labelContainer);
         } else {
             labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-            labelContainer.add(new JLabel((field.getName()) + ": "));
+
+            JLabel fieldName = new JLabel((field.getName()) + ": ");
+            fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+            labelContainer.add(fieldName);
             if (DoubleSupplier.class.isAssignableFrom(field.getType())) {
                 DoubleSupplier dSup = (DoubleSupplier) fieldValue;
                 labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
@@ -44,7 +47,10 @@ public class RendererFieldHandler {
         Method setEnabled = rendererClass.getMethod("setEnabled", boolean.class);
 
         labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
-        labelContainer.add(new JLabel((field.getName()) + ": "));
+
+        JLabel fieldName = new JLabel((field.getName()) + ": ");
+        fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+        labelContainer.add(fieldName);
 
         JLabel fieldValLabel = new JLabel(String.valueOf(isEnabled.invoke(obj)));
         fieldValLabel.addMouseListener(new MouseAdapter() {
