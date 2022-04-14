@@ -10,6 +10,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.awt.image.*;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -389,7 +390,6 @@ public class Utils {
 		return null;
 	}
 
-
 	public static List<Method> getReflectionMethods(Class<?> toSearch, Class<?> returnType, Class<?>... params) {
 		List<Method> toFill = new LinkedList<>();
 		if (Objects.nonNull(toSearch)) {
@@ -402,6 +402,20 @@ public class Utils {
 
 			for (Class<?> interfaceClass : toSearch.getInterfaces())
 				toFill.addAll(getReflectionMethods(interfaceClass, returnType, params));
+		}
+		return toFill;
+	}
+
+	public static List<Field> getReflectionFields(Class<?> toSearch) {
+		List<Field> toFill = new LinkedList<>();
+		if (Objects.nonNull(toSearch)) {
+			Collections.addAll(toFill, Arrays.stream(toSearch.getDeclaredFields()).toArray(Field[]::new));
+
+			if (Objects.nonNull(toSearch.getSuperclass()))
+				toFill.addAll(getReflectionFields(toSearch.getSuperclass()));
+
+			for (Class<?> interfaceClass : toSearch.getInterfaces())
+				toFill.addAll(getReflectionFields(interfaceClass));
 		}
 		return toFill;
 	}

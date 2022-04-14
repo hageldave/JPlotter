@@ -3,10 +3,7 @@ package hageldave.jplotter.debugging.controlHandler;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -18,17 +15,23 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 
-public class RendererFieldHandler {
-    final static String[] toControl = new String[]{"isEnabled", "paddingLeft", "paddingRight", "paddingTop", "paddingBot", "legendRightWidth", "legendBottomHeight", "guideColor", "tickColor", "textColor"};
-    final static String[] toDisplay = new String[]{"strokePattern", "view", "itemToRender", "isGLDoublePrecisionEnabled", "orthoMX", "coordsysAreaRT", "coordsysAreaRB", "coordsysAreaLT", "coordsysAreaLB", "currentViewPort", "tickMarkLabels", "tickMarkGenerator", "colorScheme", "renderOrder"};
+public class FieldHandler {
+    // TODO: Merge these if possible / or if merging causes problems (if we want to control stroke pattern of renderable, but not of renderer for example) the split it completely, by using polymorphy
+    final static String[] toControlRenderable = new String[]{"globalThicknessMultiplier", "globalSaturationMultiplier", "globalAlphaMultiplier", "hidden", "globalScaling", "glyph", "strokeLength", "strokePattern", "txtStr", "color", "background", "origin", "angle"};
+    final static String[] toControlRenderer = new String[]{"isEnabled", "paddingLeft", "paddingRight", "paddingTop", "paddingBot", "legendRightWidth", "legendBottomHeight", "guideColor", "tickColor", "textColor"};
+
+    final static String[] toDisplayRenderable = new String[]{"isDirty", "useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG", "numEffectiveSegments", "pickColor", "textSize", "fontsize", "style", "segments", "points", "triangles", "curves"};
+    final static String[] toDisplayRenderer = new String[]{"strokePattern", "view", "itemToRender", "isGLDoublePrecisionEnabled", "orthoMX", "coordsysAreaRT", "coordsysAreaRB", "coordsysAreaLT", "coordsysAreaLB", "currentViewPort", "tickMarkLabels", "tickMarkGenerator", "colorScheme", "renderOrder"};
 
     HashMap<String, Method> field2guiElementMethod = new HashMap<>();
 
-    public JPanel handleRendererField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    // TODO: all fields should land here (without prefiltering before), if the field is in field2guiEL then draw the gui elements
+    // TODO: if it isn't look if it should be drawn at all
+    // TODO: only do that later when all GUI elements are created (so we have a demo how it will look later)
+    public JPanel handleField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         JPanel labelContainer = new JPanel();
-        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.LINE_AXIS));
+        labelContainer.setLayout(new FlowLayout(FlowLayout.LEFT));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        labelContainer.setBorder(new EmptyBorder(4, 0, 4, 0));
         Object fieldValue = field.get(obj);
 
         labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
@@ -36,11 +39,12 @@ public class RendererFieldHandler {
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
         labelContainer.add(fieldName);
 
-        if (field.getName().equals("isEnabled")) {
-            createIsEnabledUIElements(canvas, obj, labelContainer);
+        if (field2guiElementMethod.containsKey(field.getName())) {
+            Method m = field2guiElementMethod.get(field.getName());
+            m.invoke(null, canvas, obj, labelContainer);
         } else {
             if (Objects.nonNull(fieldValue)) {
-                if (DoubleSupplier.class.isAssignableFrom(field.getType())) {
+                if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
                     labelContainer.add(new JLabel(String.valueOf(((DoubleSupplier) fieldValue).getAsDouble())));
                 } else if (IntSupplier.class.isAssignableFrom(field.getType())) {
                     labelContainer.add(new JLabel(String.valueOf(((IntSupplier) fieldValue).getAsInt())));
@@ -50,7 +54,7 @@ public class RendererFieldHandler {
                     int arrLen = Array.getLength(fieldValue);
                     if (arrLen < 6) {
                         StringBuilder allArrElements = new StringBuilder();
-                        for (int i = 0; i < arrLen; i ++) {
+                        for (int i = 0; i < arrLen; i++) {
                             allArrElements.append(Array.get(fieldValue, i)).append(", ");
                         }
                         labelContainer.add(new JLabel(allArrElements.toString()));
@@ -60,47 +64,23 @@ public class RendererFieldHandler {
                 } else {
                     labelContainer.add(new JLabel(String.valueOf(fieldValue)));
                 }
-            } else {
-                labelContainer.add(new JLabel("null"));
             }
         }
+
+        labelContainer.setPreferredSize(new Dimension((int) labelContainer.getPreferredSize().getWidth(), 1));
         return labelContainer;
     }
 
-    public static JPanel createIsEnabledUIElements(JPlotterCanvas canvas, Object obj, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Class<?> rendererClass = obj.getClass();
-        Method isEnabled = rendererClass.getMethod("isEnabled");
-        Method setEnabled = rendererClass.getMethod("setEnabled", boolean.class);
-
-        JLabel fieldValLabel = new JLabel(String.valueOf(isEnabled.invoke(obj)));
-        fieldValLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                try {
-                    boolean invoked = (boolean) isEnabled.invoke(obj);
-                    setEnabled.invoke(obj, !invoked);
-
-                    fieldValLabel.setText(String.valueOf(isEnabled.invoke(obj)));
-                } catch (IllegalAccessException | InvocationTargetException ex) {
-                    ex.printStackTrace();
-                }
-                canvas.scheduleRepaint();
-            }
-        });
-        labelContainer.add(fieldValLabel);
-        return labelContainer;
-    }
 
     public void registerGUIElement(String field, Method m) {
         this.field2guiElementMethod.put(field, m);
     }
 
     public static boolean displayInControlArea(String fieldName) {
-        return Arrays.asList(toControl).contains(fieldName);
+        return Arrays.asList(toControlRenderable).contains(fieldName) || Arrays.asList(toControlRenderer).contains(fieldName);
     }
 
     public static boolean displayInInformationArea(String fieldName) {
-        return Arrays.asList(toDisplay).contains(fieldName);
+        return Arrays.asList(toDisplayRenderable).contains(fieldName) || Arrays.asList(toDisplayRenderer).contains(fieldName);
     }
 }

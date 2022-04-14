@@ -1,11 +1,10 @@
 package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.debugging.controlHandler.RenderableFieldHandler;
-import hageldave.jplotter.debugging.controlHandler.RendererFieldHandler;
-import hageldave.jplotter.renderables.Renderable;
-import hageldave.jplotter.renderers.GenericRenderer;
-import hageldave.jplotter.renderers.Renderer;
+import hageldave.jplotter.debugging.controlHandler.FieldHandler;
+import hageldave.jplotter.debugging.controlHandler.renderableFields.RenderableFields;
+import hageldave.jplotter.debugging.controlHandler.rendererFields.RendererFields;
+import hageldave.jplotter.util.Utils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -29,6 +28,9 @@ public class DebuggerUI {
     final protected JLabel controlHeader = new JLabel();
     final protected JLabel infoHeader = new JLabel();
 
+    // TODO: improve fieldHandler management, how can the developer register its own components?
+    FieldHandler renFHandler = new FieldHandler();
+
     final protected JPlotterCanvas canvas;
 
     public DebuggerUI(JPlotterCanvas canvas) {
@@ -42,13 +44,17 @@ public class DebuggerUI {
                 }
             }
         });
+
     }
 
-    public void display() throws IllegalAccessException, ClassNotFoundException {
+    public void display() throws IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // set constructed tree as tree model
         tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
+
+        // register components here
+        registerInternalComponents();
 
         // start control container
         controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.PAGE_AXIS));
@@ -97,54 +103,41 @@ public class DebuggerUI {
         infoContainer.removeAll();
     }
 
-    protected void handleRenderer(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        HashSet<Field> set = new HashSet<>();
-        if (GenericRenderer.class.isAssignableFrom(obj.getClass())) {
-            set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
-            set.addAll(Arrays.asList(obj.getClass().getSuperclass().getDeclaredFields()));
-        } else {
-            set.addAll(Arrays.asList(obj.getClass().getFields()));
-            set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
-        }
-
-        Field[] fields = set.toArray(new Field[0]);
+    protected void handleField(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        HashSet<Field> fieldSet = new HashSet<>(Utils.getReflectionFields(obj.getClass()));
 
         controlHeader.setText("Control Area");
         infoHeader.setText("Information Area");
 
-        for (Field field : fields) {
+        for (Field field : fieldSet) {
             field.setAccessible(true);
-            JPanel panel = RendererFieldHandler.handleRendererField(canvas, obj, field);
+            JPanel panel = renFHandler.handleField(canvas, obj, field);
 
-            if (RendererFieldHandler.displayInControlArea(field.getName()))
+            if (FieldHandler.displayInControlArea(field.getName())) {
                 controlContainer.add(panel);
-            else if (RendererFieldHandler.displayInInformationArea(field.getName()))
+            } else if (FieldHandler.displayInInformationArea(field.getName())) {
                 infoContainer.add(panel);
+            }
         }
         frame.revalidate();
         frame.repaint();
     }
 
-    protected void handleRenderable(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        HashSet<Field> set = new HashSet<>();
-        set.addAll(Arrays.asList(obj.getClass().getFields()));
-        set.addAll(Arrays.asList(obj.getClass().getDeclaredFields()));
-        Field[] fields = set.toArray(new Field[0]);
-
-        controlHeader.setText("Control Area");
-        infoHeader.setText("Information Area");
-
-        for (Field field : fields) {
-            field.setAccessible(true);
-            JPanel panel = RenderableFieldHandler.handleRenderableField(canvas, obj, field);
-
-            if (RenderableFieldHandler.displayInControlArea(field.getName()))
-                controlContainer.add(panel);
-            else if (RenderableFieldHandler.displayInInformationArea(field.getName()))
-                infoContainer.add(panel);
-        }
-        frame.revalidate();
-        frame.repaint();
+    protected void registerInternalComponents() throws NoSuchMethodException {
+        this.renFHandler.registerGUIElement(
+                "isEnabled", RendererFields.class.getMethod("createIsEnabledUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
+        this.renFHandler.registerGUIElement(
+                "hidden", RenderableFields.class.getMethod("createHideUIRenderableElements", JPlotterCanvas.class, Object.class, JPanel.class));
+        this.renFHandler.registerGUIElement(
+                "globalThicknessMultiplier", RenderableFields.class.getMethod("createGlobalThicknessMultiplierUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
+        this.renFHandler.registerGUIElement(
+                "globalSaturationMultiplier", RenderableFields.class.getMethod("createGlobalSaturationMultiplierUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
+        this.renFHandler.registerGUIElement(
+                "globalAlphaMultiplier", RenderableFields.class.getMethod("createGlobalAlphaMultiplierUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
+        this.renFHandler.registerGUIElement(
+                "angle", RenderableFields.class.getMethod("createAngleUIRenderableElements", JPlotterCanvas.class, Object.class, JPanel.class));
+        this.renFHandler.registerGUIElement(
+                "txtStr", RenderableFields.class.getMethod("createTextStrUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
     }
 
     protected void onMouseClick(MouseEvent mouseEvent) throws NoSuchFieldException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -161,11 +154,7 @@ public class DebuggerUI {
             }
             Object obj = method.invoke(tp.getLastPathComponent());
 
-            if (Renderer.class.isAssignableFrom(obj.getClass())) {
-                handleRenderer(obj);
-            } else if (Renderable.class.isAssignableFrom(obj.getClass())) {
-                handleRenderable(obj);
-            }
+            handleField(obj);
             canvas.scheduleRepaint();
         }
     }

@@ -4,22 +4,27 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 
-public class RenderableFieldHandler {
-    final static String[] toControl = new String[]{"globalThicknessMultiplier", "globalSaturationMultiplier", "globalAlphaMultiplier", "hidden", "globalScaling", "glyph", "strokeLength", "strokePattern", "txtStr", "color", "background", "origin", "fontsize", "angle", "style"};
-    final static String[] toDisplay = new String[]{"isDirty", "useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG", "numEffectiveSegments", "pickColor", "textSize", "segments", "points", "triangles", "curves"};
+import static hageldave.jplotter.debugging.controlHandler.renderableFields.RenderableFields.createAngleUIRenderableElements;
+import static hageldave.jplotter.debugging.controlHandler.renderableFields.RenderableFields.createHideUIRenderableElements;
 
-    public static JPanel handleRenderableField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+public class RenderableFieldHandler {
+    final static String[] toControl = new String[]{"globalThicknessMultiplier", "globalSaturationMultiplier", "globalAlphaMultiplier", "hidden", "globalScaling", "glyph", "strokeLength", "strokePattern", "txtStr", "color", "background", "origin", "angle"};
+    final static String[] toDisplay = new String[]{"isDirty", "useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG", "numEffectiveSegments", "pickColor", "textSize", "fontsize", "style", "segments", "points", "triangles", "curves"};
+
+    HashMap<String, Method> field2guiElementMethod = new HashMap<>();
+
+    public JPanel handleRenderableField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new FlowLayout(FlowLayout.LEFT));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -32,16 +37,19 @@ public class RenderableFieldHandler {
 
         switch (field.getName()) {
             case "globalSaturationMultiplier":
-                createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalSaturationMultiplier", "setGlobalSaturationMultiplier");
+                //createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalSaturationMultiplier", "setGlobalSaturationMultiplier");
                 break;
             case "globalThicknessMultiplier":
-                createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalThicknessMultiplier", "setGlobalThicknessMultiplier");
+                //createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalThicknessMultiplier", "setGlobalThicknessMultiplier");
                 break;
             case "globalAlphaMultiplier":
-                createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalAlphaMultiplier", "setGlobalAlphaMultiplier");
+                //createGlobalMultiplierUIElements(canvas, obj, labelContainer, "getGlobalAlphaMultiplier", "setGlobalAlphaMultiplier");
                 break;
             case "hidden":
                 createHideUIRenderableElements(canvas, obj, labelContainer);
+                break;
+            case "angle":
+                createAngleUIRenderableElements(canvas, obj, labelContainer);
                 break;
             default:
                 if (Objects.nonNull(fieldValue)) {
@@ -51,64 +59,58 @@ public class RenderableFieldHandler {
                         labelContainer.add(new JLabel(String.valueOf(((IntSupplier) fieldValue).getAsInt())));
                     } else if (Collection.class.isAssignableFrom(fieldValue.getClass())) {
                         labelContainer.add(new JLabel(((Collection<?>) fieldValue).size() + " element(s)"));
+                    } else if (fieldValue.getClass().isArray()) {
+                        int arrLen = Array.getLength(fieldValue);
+                        if (arrLen < 6) {
+                            StringBuilder allArrElements = new StringBuilder();
+                            for (int i = 0; i < arrLen; i ++) {
+                                allArrElements.append(Array.get(fieldValue, i)).append(", ");
+                            }
+                            labelContainer.add(new JLabel(allArrElements.toString()));
+                        } else {
+                            labelContainer.add(new JLabel(String.valueOf((Array.getLength(fieldValue)))));
+                        }
                     } else {
                         labelContainer.add(new JLabel(String.valueOf(fieldValue)));
                     }
                 }
                 break;
         }
+        if (field2guiElementMethod.containsKey(field.getName())) {
+            Method m = field2guiElementMethod.get(field.getName());
+            m.invoke(null, canvas, obj, labelContainer);
+        } else {
+            if (Objects.nonNull(fieldValue)) {
+                if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
+                    labelContainer.add(new JLabel(String.valueOf(((DoubleSupplier) fieldValue).getAsDouble())));
+                } else if (IntSupplier.class.isAssignableFrom(field.getType())) {
+                    labelContainer.add(new JLabel(String.valueOf(((IntSupplier) fieldValue).getAsInt())));
+                } else if (Collection.class.isAssignableFrom(fieldValue.getClass())) {
+                    labelContainer.add(new JLabel(((Collection<?>) fieldValue).size() + " element(s)"));
+                } else if (fieldValue.getClass().isArray()) {
+                    int arrLen = Array.getLength(fieldValue);
+                    if (arrLen < 6) {
+                        StringBuilder allArrElements = new StringBuilder();
+                        for (int i = 0; i < arrLen; i ++) {
+                            allArrElements.append(Array.get(fieldValue, i)).append(", ");
+                        }
+                        labelContainer.add(new JLabel(allArrElements.toString()));
+                    } else {
+                        labelContainer.add(new JLabel(String.valueOf((Array.getLength(fieldValue)))));
+                    }
+                } else {
+                    labelContainer.add(new JLabel(String.valueOf(fieldValue)));
+                }
+            }
+            //break;
+        }
 
         labelContainer.setPreferredSize(new Dimension((int) labelContainer.getPreferredSize().getWidth(), 1));
         return labelContainer;
     }
 
-    protected static JPanel createGlobalMultiplierUIElements(JPlotterCanvas canvas, Object obj, JPanel labelContainer, String getter, String setter) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Class<?> renderableClass = obj.getClass();
-        Method setGlobalSaturationMultiplier = renderableClass.getMethod(setter, double.class);
-        Method getGlobalSaturationMultiplier = renderableClass.getMethod(getter);
-
-        JLabel valueLabel = new JLabel(getGlobalSaturationMultiplier.invoke(obj).toString());
-        float initValue = (Float) getGlobalSaturationMultiplier.invoke(obj)*100;
-        JSlider slider = new JSlider(0, 100, (int) initValue);
-
-        slider.addChangeListener(e -> {
-            try {
-                slider.setValue(slider.getValue());
-                setGlobalSaturationMultiplier.invoke(obj, (double) slider.getValue()/100);
-                valueLabel.setText(getGlobalSaturationMultiplier.invoke(obj).toString());
-            } catch (IllegalAccessException | InvocationTargetException ex) {
-                ex.printStackTrace();
-            }
-            canvas.scheduleRepaint();
-        });
-
-        labelContainer.add(valueLabel);
-        labelContainer.add(slider);
-        return labelContainer;
-    }
-
-    protected static JPanel createHideUIRenderableElements(JPlotterCanvas canvas, Object obj, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Class<?> renderableClass = obj.getClass();
-        Method hide = renderableClass.getMethod("hide", boolean.class);
-        Method isHidden = renderableClass.getMethod("isHidden");
-
-        JLabel fieldValLabel = new JLabel(String.valueOf(isHidden.invoke(obj)));
-        fieldValLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                try {
-                    hide.invoke(obj, ! (boolean) (isHidden.invoke(obj)));
-                    fieldValLabel.setText(String.valueOf(isHidden.invoke(obj)));
-                } catch (IllegalAccessException | InvocationTargetException ex) {
-                    ex.printStackTrace();
-                }
-                canvas.scheduleRepaint();
-            }
-        });
-
-        labelContainer.add(fieldValLabel);
-        return labelContainer;
+    public void registerGUIElement(String field, Method m) {
+        this.field2guiElementMethod.put(field, m);
     }
 
     public static boolean displayInControlArea(String fieldName) {
