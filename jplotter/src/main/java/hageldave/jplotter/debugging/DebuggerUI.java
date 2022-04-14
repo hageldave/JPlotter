@@ -48,8 +48,7 @@ public class DebuggerUI {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // set constructed tree as tree model
-        DefaultTreeModel treeModel = new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas));
-        tree.setModel(treeModel);
+        tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
 
         // start control container
         controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.PAGE_AXIS));
@@ -169,5 +168,9 @@ public class DebuggerUI {
             }
             canvas.scheduleRepaint();
         }
+    }
+
+    public void refresh() throws IllegalAccessException {
+        tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
     }
 }
