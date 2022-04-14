@@ -24,7 +24,7 @@ public class Debugger {
             boolean rendererAssignable = Renderer.class.isAssignableFrom(type);
 
             if (rendererAssignable) {
-                DebuggerMutableTreeNode firstRendererN = new DebuggerMutableTreeNode(field.getName(), ren);
+                DebuggerMutableTreeNode firstRendererN = new DebuggerMutableTreeNode("(" + ren.getClass().getSimpleName() + ") " + field.getName(), ren);
                 root.add(firstRendererN);
                 constructTree(ren, firstRendererN);
             }
@@ -55,13 +55,13 @@ public class Debugger {
                 Renderer nested = (Renderer) field.get(ren);
                 // null check, as renderers might be null in coordsysrenderer
                 if (nested != null) {
-                    DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(Renderer) " + field.getName(), nested);
+                    DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(" + nested.getClass().getSimpleName() + ") " + field.getName(), nested);
                     node.add(newNode);
                     constructTree(nested, newNode);
                 }
             } else if (renderableAssignable) {
                 Renderable nested = (Renderable) field.get(ren);
-                DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(Renderable) " + field.getName(), nested);
+                DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(" + nested.getClass().getSimpleName() + ") " + field.getName(), nested);
                 node.add(newNode);
             } else if (isIterable) {
                 java.util.List<?> iterableField = (java.util.List<?>) field.get(ren);
@@ -71,7 +71,7 @@ public class Debugger {
                     for (Object iteratedObject : iterableField) {
                         Class<?> iteratedClass = iteratedObject.getClass();
                         if (Renderable.class.isAssignableFrom(iteratedClass)) {
-                            DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(Renderable) " + iteratedObject, iteratedObject);
+                            DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(" + iteratedClass.getSimpleName() + ") " + iteratedObject, iteratedObject);
                             listNode.add(newNode);
                         }
                     }
