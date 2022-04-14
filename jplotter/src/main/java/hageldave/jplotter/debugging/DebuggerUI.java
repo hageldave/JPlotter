@@ -18,6 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
@@ -25,6 +26,7 @@ public class DebuggerUI {
     final protected JPanel controlContainer = new JPanel();
     final protected JPanel infoContainer = new JPanel();
 
+    final protected JLabel title = new JLabel();
     final protected JLabel controlHeader = new JLabel();
     final protected JLabel infoHeader = new JLabel();
 
@@ -56,6 +58,13 @@ public class DebuggerUI {
         // register components here
         registerInternalComponents();
 
+        // start title container
+        JPanel titleArea = new JPanel();
+        titleArea.setLayout(new BoxLayout(titleArea, BoxLayout.PAGE_AXIS));
+        titleArea.setBorder(new EmptyBorder(10, 10, 10, 10));
+        title.setFont(new Font(title.getFont().getName(), Font.BOLD, 17));
+        titleArea.add(title);
+
         // start control container
         controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.PAGE_AXIS));
         controlContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
@@ -84,6 +93,8 @@ public class DebuggerUI {
 
         JPanel infoControlWrap = new JPanel();
         infoControlWrap.setLayout(new BoxLayout(infoControlWrap, BoxLayout.PAGE_AXIS));
+
+        infoControlWrap.add(titleArea);
         infoControlWrap.add(controlArea);
         infoControlWrap.add(infoArea);
 
@@ -97,14 +108,17 @@ public class DebuggerUI {
     }
 
     protected void clearInformation() {
+        title.setText("");
         controlHeader.setText("");
         infoHeader.setText("");
         controlContainer.removeAll();
         infoContainer.removeAll();
     }
 
-    protected void handleField(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    protected void handleObjectFields(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         HashSet<Field> fieldSet = new HashSet<>(Utils.getReflectionFields(obj.getClass()));
+
+        title.setText(obj.getClass().getSimpleName());
 
         controlHeader.setText("Control Area");
         infoHeader.setText("Information Area");
@@ -145,7 +159,7 @@ public class DebuggerUI {
         TreePath tp = tree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
 
         Method method;
-        if (tp != null) {
+        if (Objects.nonNull(tp)) {
             Class<?> class1 = tp.getLastPathComponent().getClass();
             if (Arrays.stream(class1.getMethods()).anyMatch(e->e.getName().equals("getHiddenObject"))) {
                 method = class1.getMethod("getHiddenObject");
@@ -154,7 +168,7 @@ public class DebuggerUI {
             }
             Object obj = method.invoke(tp.getLastPathComponent());
 
-            handleField(obj);
+            this.handleObjectFields(obj);
             canvas.scheduleRepaint();
         }
     }
