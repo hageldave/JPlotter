@@ -118,7 +118,7 @@ public class DebuggerUI {
 
             if (RendererFieldHandler.displayInControlArea(field.getName()))
                 controlContainer.add(panel);
-            else
+            else if (RendererFieldHandler.displayInInformationArea(field.getName()))
                 infoContainer.add(panel);
         }
         frame.revalidate();
@@ -140,7 +140,7 @@ public class DebuggerUI {
 
             if (RenderableFieldHandler.displayInControlArea(field.getName()))
                 controlContainer.add(panel);
-            else
+            else if (RenderableFieldHandler.displayInInformationArea(field.getName()))
                 infoContainer.add(panel);
         }
         frame.revalidate();

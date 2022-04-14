@@ -10,10 +10,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.function.DoubleSupplier;
+import java.util.function.IntSupplier;
 
 public class RenderableFieldHandler {
-    final static String[] toControl = new String[]{"globalThicknessMultiplier", "globalSaturationMultiplier", "globalAlphaMultiplier", "hidden"};
+    final static String[] toControl = new String[]{"globalThicknessMultiplier", "globalSaturationMultiplier", "globalAlphaMultiplier", "hidden", "globalScaling", "glyph", "strokeLength", "strokePattern", "txtStr", "color", "background", "origin", "fontsize", "angle", "style"};
+    final static String[] toDisplay = new String[]{"isDirty", "useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG", "numEffectiveSegments", "pickColor", "textSize", "segments", "points", "triangles", "curves"};
 
     public static JPanel handleRenderableField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         JPanel labelContainer = new JPanel();
@@ -40,10 +44,13 @@ public class RenderableFieldHandler {
                 createHideUIRenderableElements(canvas, obj, labelContainer);
                 break;
             default:
-                if (fieldValue != null) {
+                if (Objects.nonNull(fieldValue)) {
                     if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
-                        DoubleSupplier dSup = (DoubleSupplier) fieldValue;
-                        labelContainer.add(new JLabel(String.valueOf(dSup.getAsDouble())));
+                        labelContainer.add(new JLabel(String.valueOf(((DoubleSupplier) fieldValue).getAsDouble())));
+                    } else if (IntSupplier.class.isAssignableFrom(field.getType())) {
+                        labelContainer.add(new JLabel(String.valueOf(((IntSupplier) fieldValue).getAsInt())));
+                    } else if (Collection.class.isAssignableFrom(fieldValue.getClass())) {
+                        labelContainer.add(new JLabel(((Collection<?>) fieldValue).size() + " element(s)"));
                     } else {
                         labelContainer.add(new JLabel(String.valueOf(fieldValue)));
                     }
@@ -106,5 +113,9 @@ public class RenderableFieldHandler {
 
     public static boolean displayInControlArea(String fieldName) {
         return Arrays.asList(toControl).contains(fieldName);
+    }
+
+    public static boolean displayInInformationArea(String fieldName) {
+        return Arrays.asList(toDisplay).contains(fieldName);
     }
 }
