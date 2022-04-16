@@ -8,7 +8,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * TODO add documentation
+ * The KeyMaskListener class provides a way to check if a predefined set of keys is pressed.
+ *
+ * Therefore, a set of keys has to be passed in the constructor.
+ * The developer can then check if the specified set of keys is pressed by the
+ * {@link KeyMaskListener#areKeysPressed} method.
+ * The {@link KeyMaskListener#areKeysPressed} method also checks if there are more keys pressed than initially specified.
+ * If that is the case, it will also return false.
+ *
+ * A common use case would be the restriction of interaction interfaces (e.g. {@link CoordSysScrollZoom}) to only work
+ * when a specific set of keys is pressed to prevent multiple of them happening at the same time.
+ *
+ * All the interaction interfaces JPlotter offers ({@link CoordSysScrollZoom}, {@link CoordSysPanning}, ...), support the use of the KeyMaskListener.
+ *
  */
 public class KeyMaskListener extends KeyAdapter {
     protected boolean areKeysPressed = false;
@@ -17,20 +29,12 @@ public class KeyMaskListener extends KeyAdapter {
     final protected ArrayList<Integer> keysToPress = new ArrayList<>();
 
     public KeyMaskListener(final int... keys) {
-        if (keys.length == 0) {
+        // checks if either 0 arguments are passed or the number 0 as the only argument
+        if (keys.length == 0 || (keys.length == 1 && keys[0] == 0)) {
             this.noMasking = true;
         }
         for (int j : keys) {
             this.keysToPress.add(j);
-        }
-        Collections.sort(this.keysToPress);
-    }
-
-    public KeyMaskListener(final int extModifierMask) {
-        if (extModifierMask == 0) {
-            this.noMasking = true;
-        } else {
-            this.keysToPress.add(extModifierMask);
         }
         Collections.sort(this.keysToPress);
     }
@@ -47,6 +51,10 @@ public class KeyMaskListener extends KeyAdapter {
         areKeysPressed = this.keysToPress.equals(getPressedKeys());
     }
 
+    /**
+     * @return true if the keys currently pressed are exactly the same as specified in the constructor;
+     *         false if there are more, less or wrong keys currently pressed.
+     */
     public boolean areKeysPressed() {
         if (noMasking)
             return getPressedKeys().size() <= 0;
