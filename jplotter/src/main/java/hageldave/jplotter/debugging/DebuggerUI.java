@@ -115,7 +115,7 @@ public class DebuggerUI {
         infoContainer.removeAll();
     }
 
-    protected void handleObjectFields(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    protected void handleObjectFields(Object obj) throws IllegalAccessException {
         HashSet<Field> fieldSet = new HashSet<>(Utils.getReflectionFields(obj.getClass()));
 
         title.setText(obj.getClass().getSimpleName());
@@ -137,21 +137,21 @@ public class DebuggerUI {
         frame.repaint();
     }
 
-    protected void registerInternalComponents() throws NoSuchMethodException {
-        this.renFHandler.registerGUIElement(
-                "isEnabled", RendererFields.class.getMethod("createIsEnabledUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
-        this.renFHandler.registerGUIElement(
-                "hidden", RenderableFields.class.getMethod("createHideUIRenderableElements", JPlotterCanvas.class, Object.class, JPanel.class));
-        this.renFHandler.registerGUIElement(
-                "globalThicknessMultiplier", RenderableFields.class.getMethod("createGlobalThicknessMultiplierUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
-        this.renFHandler.registerGUIElement(
-                "globalSaturationMultiplier", RenderableFields.class.getMethod("createGlobalSaturationMultiplierUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
-        this.renFHandler.registerGUIElement(
-                "globalAlphaMultiplier", RenderableFields.class.getMethod("createGlobalAlphaMultiplierUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
-        this.renFHandler.registerGUIElement(
-                "angle", RenderableFields.class.getMethod("createAngleUIRenderableElements", JPlotterCanvas.class, Object.class, JPanel.class));
-        this.renFHandler.registerGUIElement(
-                "txtStr", RenderableFields.class.getMethod("createTextStrUIElements", JPlotterCanvas.class, Object.class, JPanel.class));
+    protected void registerInternalComponents() {
+        this.renFHandler.registerPanelCreator(
+                "isEnabled", RendererFields::createIsEnabledUIElements);
+        this.renFHandler.registerPanelCreator(
+                "hidden", RenderableFields::createHideUIRenderableElements);
+        this.renFHandler.registerPanelCreator(
+                "globalThicknessMultiplier", RenderableFields::createGlobalThicknessMultiplierUIElements);
+        this.renFHandler.registerPanelCreator(
+                "globalSaturationMultiplier", RenderableFields::createGlobalSaturationMultiplierUIElements);
+        this.renFHandler.registerPanelCreator(
+                "globalAlphaMultiplier", RenderableFields::createGlobalAlphaMultiplierUIElements);
+        this.renFHandler.registerPanelCreator(
+                "angle", RenderableFields::createAngleUIRenderableElements);
+        this.renFHandler.registerPanelCreator(
+                "txtStr", RenderableFields::createTextStrUIElements);
     }
 
     protected void onMouseClick(MouseEvent mouseEvent) throws NoSuchFieldException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {

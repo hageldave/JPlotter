@@ -6,8 +6,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,12 +21,12 @@ public class FieldHandler {
     final static String[] toDisplayRenderable = new String[]{"isDirty", "useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG", "numEffectiveSegments", "pickColor", "textSize", "fontsize", "style", "segments", "points", "triangles", "curves"};
     final static String[] toDisplayRenderer = new String[]{"strokePattern", "view", "itemToRender", "isGLDoublePrecisionEnabled", "orthoMX", "coordsysAreaRT", "coordsysAreaRB", "coordsysAreaLT", "coordsysAreaLB", "currentViewPort", "tickMarkLabels", "tickMarkGenerator", "colorScheme", "renderOrder"};
 
-    HashMap<String, Method> field2guiElementMethod = new HashMap<>();
+    HashMap<String, PanelCreator> field2panelcreator = new HashMap<>();
 
     // TODO: all fields should land here (without prefiltering before), if the field is in field2guiEL then draw the gui elements
-    // TODO: if it isn't look if it should be drawn at all
+    // TODO: if it isn't look if it should be drawn at all (toDisplay)
     // TODO: only do that later when all GUI elements are created (so we have a demo how it will look later)
-    public JPanel handleField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    public JPanel handleField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new FlowLayout(FlowLayout.LEFT));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -39,9 +37,8 @@ public class FieldHandler {
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
         labelContainer.add(fieldName);
 
-        if (field2guiElementMethod.containsKey(field.getName())) {
-            Method m = field2guiElementMethod.get(field.getName());
-            m.invoke(null, canvas, obj, labelContainer);
+        if (field2panelcreator.containsKey(field.getName())) {
+            field2panelcreator.get(field.getName()).createUnchecked(canvas, obj, labelContainer);
         } else {
             if (Objects.nonNull(fieldValue)) {
                 if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
@@ -71,9 +68,20 @@ public class FieldHandler {
         return labelContainer;
     }
 
+    public static interface PanelCreator {
+        JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer) throws Exception;
 
-    public void registerGUIElement(String field, Method m) {
-        this.field2guiElementMethod.put(field, m);
+        default JPanel createUnchecked(JPlotterCanvas canvas, Object obj, JPanel labelContainer) {
+            try {
+                return create(canvas, obj, labelContainer);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void registerPanelCreator(String field, PanelCreator p) {
+        this.field2panelcreator.put(field, p);
     }
 
     public static boolean displayInControlArea(String fieldName) {
