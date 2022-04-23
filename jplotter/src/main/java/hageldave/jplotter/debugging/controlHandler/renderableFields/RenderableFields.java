@@ -98,13 +98,17 @@ public class RenderableFields {
         Method isHidden = renderableClass.getMethod("isHidden");
 
         JLabel fieldValLabel = new JLabel(String.valueOf(isHidden.invoke(obj)));
-        fieldValLabel.addMouseListener(new MouseAdapter() {
+
+        String toggleHiddenButtonText = (boolean) isHidden.invoke(obj) ? "Show": "Hide";
+        JButton toggleHidden = new JButton(toggleHiddenButtonText);
+        toggleHidden.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
                 try {
                     hide.invoke(obj, ! (boolean) (isHidden.invoke(obj)));
                     fieldValLabel.setText(String.valueOf(isHidden.invoke(obj)));
+                    toggleHidden.setText((boolean) isHidden.invoke(obj) ? "Show": "Hide");
                 } catch (IllegalAccessException | InvocationTargetException ex) {
                     ex.printStackTrace();
                 }
@@ -113,6 +117,7 @@ public class RenderableFields {
         });
 
         labelContainer.add(fieldValLabel);
+        labelContainer.add(toggleHidden);
         return labelContainer;
     }
 
@@ -123,11 +128,14 @@ public class RenderableFields {
 
         JLabel fieldValLabel = new JLabel(String.valueOf(getAngle.invoke(obj)));
 
-        JTextField angleTextfield = new JTextField();
+        JTextField angleTextfield = new JTextField("", 20);
+        angleTextfield.setMaximumSize(angleTextfield.getPreferredSize());
+
         angleTextfield.addActionListener(e -> {
             try {
                 setAngle.invoke(obj, Double.valueOf(angleTextfield.getText()));
                 fieldValLabel.setText(String.valueOf(getAngle.invoke(obj)));
+                angleTextfield.setText("");
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 ex.printStackTrace();
             }
@@ -146,11 +154,14 @@ public class RenderableFields {
 
         JLabel fieldValLabel = new JLabel(String.valueOf(getTxtStr.invoke(obj)));
 
-        JTextField textfield = new JTextField();
+        JTextField textfield = new JTextField("", 20);
+        textfield.setMaximumSize(textfield.getPreferredSize());
+
         textfield.addActionListener(e -> {
             try {
                 setTxtStr.invoke(obj, textfield.getText());
                 fieldValLabel.setText((String) getTxtStr.invoke(obj));
+                textfield.setText("");
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 ex.printStackTrace();
             }

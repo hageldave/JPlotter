@@ -3,6 +3,7 @@ package hageldave.jplotter.debugging.controlHandler;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -28,8 +29,9 @@ public class FieldHandler {
     // TODO: only do that later when all GUI elements are created (so we have a demo how it will look later)
     public JPanel handleField(JPlotterCanvas canvas, Object obj, Field field) throws IllegalAccessException {
         JPanel labelContainer = new JPanel();
-        labelContainer.setLayout(new FlowLayout(FlowLayout.LEFT));
+        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        labelContainer.setBorder(new EmptyBorder(7, 0, 7, 0));
         Object fieldValue = field.get(obj);
 
         labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
@@ -64,7 +66,6 @@ public class FieldHandler {
             }
         }
 
-        labelContainer.setPreferredSize(new Dimension((int) labelContainer.getPreferredSize().getWidth(), 1));
         return labelContainer;
     }
 

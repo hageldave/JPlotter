@@ -15,15 +15,17 @@ public class RendererFields {
         Method setEnabled = rendererClass.getMethod("setEnabled", boolean.class);
 
         JLabel fieldValLabel = new JLabel(String.valueOf(isEnabled.invoke(obj)));
-        fieldValLabel.addMouseListener(new MouseAdapter() {
+
+        String toggleEnabledButtonText = (boolean) isEnabled.invoke(obj) ? "Disable": "Enable";
+        JButton toggleEnabled = new JButton(toggleEnabledButtonText);
+        toggleEnabled.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
                 try {
-                    boolean invoked = (boolean) isEnabled.invoke(obj);
-                    setEnabled.invoke(obj, !invoked);
-
+                    setEnabled.invoke(obj, ! (boolean) (isEnabled.invoke(obj)));
                     fieldValLabel.setText(String.valueOf(isEnabled.invoke(obj)));
+                    toggleEnabled.setText((boolean) isEnabled.invoke(obj) ? "Disable": "Enable");
                 } catch (IllegalAccessException | InvocationTargetException ex) {
                     ex.printStackTrace();
                 }
@@ -31,6 +33,7 @@ public class RendererFields {
             }
         });
         labelContainer.add(fieldValLabel);
+        labelContainer.add(toggleEnabled);
         return labelContainer;
     }
 }

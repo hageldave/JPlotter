@@ -4,6 +4,8 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.controlHandler.FieldHandler;
 import hageldave.jplotter.debugging.controlHandler.renderableFields.RenderableFields;
 import hageldave.jplotter.debugging.controlHandler.rendererFields.RendererFields;
+import hageldave.jplotter.renderables.Renderable;
+import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
 
 import javax.swing.*;
@@ -30,8 +32,7 @@ public class DebuggerUI {
     final protected JLabel controlHeader = new JLabel();
     final protected JLabel infoHeader = new JLabel();
 
-    // TODO: improve fieldHandler management, how can the developer register its own components?
-    FieldHandler renFHandler = new FieldHandler();
+    final protected FieldHandler renFHandler = new FieldHandler();
 
     final protected JPlotterCanvas canvas;
 
@@ -56,44 +57,39 @@ public class DebuggerUI {
         tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
 
         // register components here
-        registerInternalComponents();
+        registerInternalPanelCreators();
 
         // start title container
         JPanel titleArea = new JPanel();
-        titleArea.setLayout(new BoxLayout(titleArea, BoxLayout.PAGE_AXIS));
+        titleArea.setLayout(new BoxLayout(titleArea, BoxLayout.Y_AXIS));
         titleArea.setBorder(new EmptyBorder(10, 10, 10, 10));
         title.setFont(new Font(title.getFont().getName(), Font.BOLD, 17));
         titleArea.add(title);
 
         // start control container
-        controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.PAGE_AXIS));
+        controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.Y_AXIS));
         controlContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
-        controlContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         controlHeader.setFont(new Font(controlHeader.getFont().getName(), Font.PLAIN, 14));
 
         JPanel controlArea = new JPanel();
-        controlArea.setLayout(new BoxLayout(controlArea, BoxLayout.PAGE_AXIS));
+        controlArea.setLayout(new BoxLayout(controlArea, BoxLayout.Y_AXIS));
         controlArea.setBorder(new EmptyBorder(10, 10, 10, 10));
         controlArea.add(controlHeader);
         controlArea.add(controlContainer);
 
         // start info container
-        infoContainer.setLayout(new BoxLayout(infoContainer, BoxLayout.PAGE_AXIS));
+        infoContainer.setLayout(new BoxLayout(infoContainer, BoxLayout.Y_AXIS));
         infoContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
-        infoContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         infoHeader.setFont(new Font(infoHeader.getFont().getName(), Font.PLAIN, 14));
 
         JPanel infoArea = new JPanel();
-        infoArea.setLayout(new BoxLayout(infoArea, BoxLayout.PAGE_AXIS));
+        infoArea.setLayout(new BoxLayout(infoArea, BoxLayout.Y_AXIS));
         infoArea.setBorder(new EmptyBorder(10, 10, 10, 10));
         infoArea.add(infoHeader);
         infoArea.add(infoContainer);
 
         JPanel infoControlWrap = new JPanel();
         infoControlWrap.setLayout(new BoxLayout(infoControlWrap, BoxLayout.PAGE_AXIS));
-
         infoControlWrap.add(titleArea);
         infoControlWrap.add(controlArea);
         infoControlWrap.add(infoArea);
@@ -103,11 +99,18 @@ public class DebuggerUI {
         splitpane.setLeftComponent(new JScrollPane(tree));
 
         frame.getContentPane().add(splitpane);
+        frame.setPreferredSize(new Dimension(700, 450));
         frame.pack();
         frame.setVisible(true);
+
+        splitpane.setDividerLocation(1.0/3);
     }
 
-    protected void clearInformation() {
+    protected void createEmptyMessage() {
+        title.setText("No renderer or renderable selected.");
+    }
+
+    protected void clearGUIContents() {
         title.setText("");
         controlHeader.setText("");
         infoHeader.setText("");
@@ -121,7 +124,7 @@ public class DebuggerUI {
         title.setText(obj.getClass().getSimpleName());
 
         controlHeader.setText("Control Area");
-        infoHeader.setText("Information Area");
+        infoHeader.setText("Other Information");
 
         for (Field field : fieldSet) {
             field.setAccessible(true);
@@ -133,11 +136,10 @@ public class DebuggerUI {
                 infoContainer.add(panel);
             }
         }
-        frame.revalidate();
         frame.repaint();
     }
 
-    protected void registerInternalComponents() {
+    private void registerInternalPanelCreators() {
         this.renFHandler.registerPanelCreator(
                 "isEnabled", RendererFields::createIsEnabledUIElements);
         this.renFHandler.registerPanelCreator(
@@ -154,22 +156,31 @@ public class DebuggerUI {
                 "txtStr", RenderableFields::createTextStrUIElements);
     }
 
+    public void registerPanelCreator(String fieldName, FieldHandler.PanelCreator c) {
+        this.renFHandler.registerPanelCreator(fieldName, c);
+    }
+
     protected void onMouseClick(MouseEvent mouseEvent) throws NoSuchFieldException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        clearInformation();
         TreePath tp = tree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
 
-        Method method;
         if (Objects.nonNull(tp)) {
-            Class<?> class1 = tp.getLastPathComponent().getClass();
-            if (Arrays.stream(class1.getMethods()).anyMatch(e->e.getName().equals("getHiddenObject"))) {
-                method = class1.getMethod("getHiddenObject");
+            Class<?> clickedClass = tp.getLastPathComponent().getClass();
+
+            Method method;
+            if (Arrays.stream(clickedClass.getMethods()).anyMatch(e->e.getName().equals("getHiddenObject"))) {
+                method = clickedClass.getMethod("getHiddenObject");
             } else {
-                method = class1.getMethod("getUserObject");
+                method = clickedClass.getMethod("getUserObject");
             }
             Object obj = method.invoke(tp.getLastPathComponent());
 
-            this.handleObjectFields(obj);
-            canvas.scheduleRepaint();
+            clearGUIContents();
+            if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
+                this.handleObjectFields(obj);
+                canvas.scheduleRepaint();
+            } else {
+                createEmptyMessage();
+            }
         }
     }
 
