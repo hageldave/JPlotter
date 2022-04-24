@@ -43,6 +43,13 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
     protected KeyMaskListener keyMaskListener;
     protected boolean mouseFocusedZoom;
 
+    /**
+     * Creates a new {@link CoordSysScrollZoom} for the specified canvas and corresponding coordinate system.
+     * @param canvas displaying the coordsys
+     * @param coordsys the coordinate system to apply the zooming in
+     * @param keyMaskListener defines the set of keys that have to pressed during the scrolling
+     * @param mouseFocusedZoom toggles mouse focused zoom
+     */
     public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener, boolean mouseFocusedZoom) {
         this.canvas = canvas.asComponent();
         this.coordsys = coordsys;

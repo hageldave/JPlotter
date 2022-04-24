@@ -49,6 +49,12 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected Point start,end;
 	protected KeyMaskListener keyMaskListener;
 
+	/**
+	 * Creates a new {@link CoordSysViewSelector} for the specified canvas and corresponding coordinate system.
+	 * @param canvas displaying the coordsys
+	 * @param coordsys the coordinate system to apply the view selection in
+	 * @param keyMaskListener defines the set of keys that have to pressed during the view selection
+	 */
 	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;

@@ -76,6 +76,20 @@ public class ScatterPlot {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), xLabel, yLabel);
     }
 
+	/**
+	 * Creates a new {@link ScatterPlot} object.
+	 *
+	 * The ScatterPlot consists of a {@link CoordSysRenderer} and multiple content layers.
+	 * It also has a data model (see {@link ScatterPlotDataModel}) and a listener (see {@link ScatterPlotDataModel.ScatterPlotDataModelListener})
+	 * linked to it, listening for data changes.
+	 *
+	 * There is also a mouse event handler created in the constructor,
+	 * which can be used to listen the events of the {@link ScatterPlotMouseEventListener}.
+	 *
+	 * @param canvas displaying the {@link ScatterPlot}
+	 * @param xLabel label of the x-axis
+	 * @param yLabel label of the y-axis
+	 */
     public ScatterPlot(final JPlotterCanvas canvas, final String xLabel, final String yLabel) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
@@ -856,6 +870,9 @@ public class ScatterPlot {
 		});
     }
 
+	/**
+	 * TODO:
+	 */
     public static interface PointSetSelectionListener {
     	public void onPointSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Rectangle2D selectionArea);
     }
@@ -873,16 +890,20 @@ public class ScatterPlot {
     }
 
 	/**
-	 * TODO:
-	 * @param l
+	 * Adds a new {@link PointSetSelectionListener} to the ScatterPlot.
+	 * The added listener will be triggered, when the selection is done.
+	 *
+	 * @param l {@link PointSetSelectionListener} to add
 	 */
 	public synchronized void addPointSetSelectionListener(PointSetSelectionListener l) {
     	this.pointSetSelectionListeners.add(l);
     }
 
 	/**
-	 * TODO
-	 * @param l
+	 * Adds a new {@link PointSetSelectionListener} to the ScatterPlot.
+	 * The added listener will be triggered, while the selection is ongoing.
+	 *
+	 * @param l {@link PointSetSelectionListener} to add
 	 */
 	public synchronized void addPointSetSelectionOngoingListener(PointSetSelectionListener l) {
     	this.pointSetSelectionOngoingListeners.add(l);
