@@ -31,26 +31,13 @@ import java.util.Arrays;
  * }.register();
  * </pre>
  * <p>
- * Per default the extended modifier mask for a dragging mouse event to trigger
- * selection is {@link InputEvent#SHIFT_DOWN_MASK}. 
- * If this is undesired the {@link #extModifierMask} has to be overridden.<br>
+ * Per default the key event for a dragging mouse event to trigger
+ * selection is {@link KeyEvent#VK_SHIFT}.
+ * If this is undesired a {@link KeyMaskListener} has to be passed in the constructor.<br>
  * You may also want to not trigger selection when other modifiers are present. E.g.
- * when CTRL {@link InputEvent#CTRL_DOWN_MASK} is pressed, don't select because CTRL 
+ * when CTRL {@link KeyEvent#VK_CONTROL} is pressed, don't select because CTRL
  * is already meant for panning.
- * In this case you need to add these modifiers to the exclude list {@link #extModifierMaskExcludes}.
- * For example to not need to press any key:
- * <pre>
- * new CoordSysViewSelector(canvas, coordsys) {
- *    {
- *       extModifierMask=0;
- *       extModifierMaskExcludes.add(InputEvent.CTRL_DOWN_MASK);
- *    }
- *    
- *    public void areaSelected(double minX, double minY, double maxX, double maxY) {
- *       coordsys.setCoordinateView(minX, minY, maxX, maxY);
- *    }
- * }.register();
- * </pre>
+ *
  * @author hageldave
  */
 public abstract class CoordSysViewSelector extends MouseAdapter {
@@ -69,7 +56,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		Renderer presentRenderer;
 		if((presentRenderer = coordsys.getOverlay()) == null){
 			coordsys.setOverlay(this.overlay = new CompleteRenderer());
-		} else if(presentRenderer instanceof CompleteRenderer){
+		} else if (presentRenderer instanceof CompleteRenderer){
 			this.overlay = (CompleteRenderer) presentRenderer;
 		} else {
 			throw new IllegalStateException(
@@ -148,6 +135,12 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		end = null;
 	}
 
+	/**
+	 * Sets a new {@link KeyMaskListener}, removes the old KeyMaskListener from the canvas
+	 * and registers the new one.
+	 *
+	 * @param keyMaskListener defines the set of keys that have to pressed during the panning
+	 */
 	public void setKeyMaskListener(KeyMaskListener keyMaskListener) {
 		canvas.removeKeyListener(this.keyMaskListener);
 		this.keyMaskListener = keyMaskListener;

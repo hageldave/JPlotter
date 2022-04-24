@@ -18,11 +18,11 @@ import java.util.Arrays;
  * <p>
  * Intended use: {@code CoordSysPanning pan = new CoordSysPanning(canvas, coordsys).register(); }
  * <p>
- * Per default the extended modifier mask for a dragging mouse event to trigger
- * panning is {@link InputEvent#CTRL_DOWN_MASK}. 
- * If this is undesired the {@link #extModifierMask} has to be overridden.<br>
+ * Per default the key for a dragging mouse event to trigger
+ * panning is {@link KeyEvent#VK_CONTROL}.
+ * If this is undesired a {@link KeyMaskListener} has to be passed in the constructor.<br>
  * For example to not need to press any key:
- * <pre>new CoordSysPanning(canvas){{extModifierMask=0;}}.register();</pre>
+ * <pre>new CoordSysPanning(canvas, coordsys, new KeyMaskListener()).register();</pre>
  * 
  * @author hageldave
  */
@@ -38,6 +38,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	 * Creates a new {@link CoordSysPanning} for the specified canvas and corresponding coordinate system.
 	 * @param canvas displaying the coordsys
 	 * @param coordsys the coordinate system to apply the panning in
+	 * @param keyMaskListener defines the set of keys that have to pressed during the panning
 	 */
 	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
 		this.canvas = canvas.asComponent();
@@ -106,11 +107,18 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 		return axes;
 	}
 
-	public void setKeyMaskListener(KeyMaskListener keyMaskListener) {
+	/**
+	 * Sets a new {@link KeyMaskListener}, removes the old KeyMaskListener from the canvas
+	 * and registers the new one.
+	 *
+	 * @param keyMaskListener defines the set of keys that have to pressed during the panning
+	 */
+	public CoordSysPanning setKeyMaskListener(KeyMaskListener keyMaskListener) {
 		canvas.removeKeyListener(this.keyMaskListener);
 		this.keyMaskListener = keyMaskListener;
 		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
 			canvas.addKeyListener(this.keyMaskListener);
+		return this;
 	}
 
 	/**

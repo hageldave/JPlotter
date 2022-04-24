@@ -16,11 +16,21 @@ import java.util.Arrays;
 /**
  * The CoordSysScrollZoom class implements a {@link MouseWheelListener}
  * that realize zooming functionality for the coordinate view of the {@link CoordSysRenderer}.
- * When registering this with an {@link JPlotterCanvas} and corresponding {@link CoordSysRenderer} turning the scroll wheel zooms into or out of
+ * When registering this with an {@link JPlotterCanvas} and corresponding {@link CoordSysRenderer} turning the scroll wheel while holding down the ALT key zooms into or out of
  * the current coordinate system view.
  * The zoom factor can be set and is by default 2.0.
  * <p>
+ * There are two different zoom modes: One where the center of the zoom is always the center of the current viewport (default) and
+ * another where the center of the zoom is the current position of the mouse.
+ * The zoom mode can be switched via {@link CoordSysScrollZoom#mouseFocusedZoom}.
+ * <p>
  * Intended use: {@code CoordSysScrollZoom zoom = new CoordSysScrollZoom(canvas, coordsys).register(); }
+ * <p>
+ * Per default the key for a dragging mouse event to trigger
+ * zooming is {@link KeyEvent#VK_ALT}.
+ * If this is undesired a {@link KeyMaskListener} has to be passed in the constructor.<br>
+ * For example to not need to press any key:
+ * <pre>new CoordSysPanning(canvas, coordsys, new KeyMaskListener()).register();</pre>
  *
  * @author hageldave
  *
@@ -151,20 +161,37 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
         return axes;
     }
 
+    /**
+     * @return if mouse-focused zoom is enabled
+     */
     public boolean isMouseFocusedZoom() {
         return mouseFocusedZoom;
     }
 
+    /**
+     * Changes the zooming mode. With the mouse-focused zoom mode enabled the CoordSysScrollZoom always zooms "into" the mouse position,
+     * whereas when disabled it zooms into the center of the current viewport.
+     *
+     * @param mouseFocusedZoom toggles mouse focused zoom
+     * @return this for chaining
+     */
     public CoordSysScrollZoom setMouseFocusedZoom(boolean mouseFocusedZoom) {
         this.mouseFocusedZoom = mouseFocusedZoom;
         return this;
     }
 
-    public void setKeyMaskListener(KeyMaskListener keyMaskListener) {
+    /**
+     * Sets a new {@link KeyMaskListener}, removes the old KeyMaskListener from the canvas
+     * and registers the new one.
+     *
+     * @param keyMaskListener defines the set of keys that have to pressed during the panning
+     */
+    public CoordSysScrollZoom setKeyMaskListener(KeyMaskListener keyMaskListener) {
         canvas.removeKeyListener(this.keyMaskListener);
         this.keyMaskListener = keyMaskListener;
         if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
             canvas.addKeyListener(this.keyMaskListener);
+        return this;
     }
 
     /**
