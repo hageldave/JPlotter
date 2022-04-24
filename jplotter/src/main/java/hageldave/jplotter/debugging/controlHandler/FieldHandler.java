@@ -19,7 +19,7 @@ public class FieldHandler {
     final static String[] toControlRenderable = new String[]{"globalThicknessMultiplier", "globalSaturationMultiplier", "globalAlphaMultiplier", "hidden", "globalScaling", "glyph", "strokeLength", "strokePattern", "txtStr", "color", "background", "origin", "angle"};
     final static String[] toControlRenderer = new String[]{"isEnabled", "paddingLeft", "paddingRight", "paddingTop", "paddingBot", "legendRightWidth", "legendBottomHeight", "guideColor", "tickColor", "textColor"};
 
-    final static String[] toDisplayRenderable = new String[]{"isDirty", "useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG", "numEffectiveSegments", "pickColor", "textSize", "fontsize", "style", "segments", "points", "triangles", "curves"};
+    final static String[] toDisplayRenderable = new String[]{"useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG", "numEffectiveSegments", "pickColor", "textSize", "fontsize", "style", "segments", "points", "triangles", "curves"};
     final static String[] toDisplayRenderer = new String[]{"strokePattern", "view", "itemToRender", "isGLDoublePrecisionEnabled", "orthoMX", "coordsysAreaRT", "coordsysAreaRB", "coordsysAreaLT", "coordsysAreaLB", "currentViewPort", "tickMarkLabels", "tickMarkGenerator", "colorScheme", "renderOrder"};
 
     HashMap<String, PanelCreator> field2panelcreator = new HashMap<>();
@@ -31,16 +31,26 @@ public class FieldHandler {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        labelContainer.setBorder(new EmptyBorder(7, 0, 7, 0));
+        labelContainer.setBorder(new EmptyBorder(9, 0, 9, 0));
+        labelContainer.setBackground(new Color(225, 225, 225));
         Object fieldValue = field.get(obj);
 
-        labelContainer.add(new JLabel(("(" + field.getType()) + ") "));
+        labelContainer.add(new JLabel(("(" + field.getType().getSimpleName()) + ") "));
         JLabel fieldName = new JLabel((field.getName()) + ": ");
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
         labelContainer.add(fieldName);
 
         if (field2panelcreator.containsKey(field.getName())) {
             field2panelcreator.get(field.getName()).createUnchecked(canvas, obj, labelContainer);
+
+            // TODO: get the most specific class
+            /*for (Map.Entry<Class<?>, PanelCreator> e : field2panelcreator.get(field.getName()).entrySet()) {
+                if (e.getKey().isAssignableFrom(obj.getClass())) {
+                    field2panelcreator.get(field.getName()).get(e.getKey()).createUnchecked(canvas, obj, labelContainer);
+                    break;
+                }
+            }*/
+
         } else {
             if (Objects.nonNull(fieldValue)) {
                 if (DoubleSupplier.class.isAssignableFrom(fieldValue.getClass())) {
@@ -81,8 +91,15 @@ public class FieldHandler {
         }
     }
 
-    public void registerPanelCreator(String field, PanelCreator p) {
-        this.field2panelcreator.put(field, p);
+    public void addPanelCreator(String fieldName, PanelCreator p) {
+        this.field2panelcreator.put(fieldName, p);
+    }
+
+    public void removePanelCreator(String fieldName) {
+        if (!this.field2panelcreator.containsKey(fieldName)) {
+            throw new RuntimeException("There is no registered component for " + fieldName + ".");
+        }
+        this.field2panelcreator.remove(fieldName);
     }
 
     public static boolean displayInControlArea(String fieldName) {

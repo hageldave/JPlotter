@@ -3,36 +3,74 @@ package hageldave.jplotter.debugging.controlHandler.renderableFields;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.MathContext;
 
 public class RenderableFields {
+    public static JPanel createGlobalScalingMultiplierUIElements(JPlotterCanvas canvas, Object obj, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        Class<?> renderableClass = obj.getClass();
+        Method setGlobalScalingMultiplier = renderableClass.getMethod("setGlobalScaling", double.class);
+        Method getGlobalScalingMultiplier = renderableClass.getMethod("getGlobalScaling");
+
+        JLabel valueLabel = new JLabel(getGlobalScalingMultiplier.invoke(obj).toString());
+        float initValue = (Float) getGlobalScalingMultiplier.invoke(obj);
+
+        SpinnerNumberModel globalThicknessModel = new SpinnerNumberModel(initValue, 0, 5, 0.1);
+        JSpinner spinner = new JSpinner(globalThicknessModel);
+
+        Dimension prefSize = spinner.getPreferredSize();
+        prefSize = new Dimension(50, prefSize.height);
+        spinner.setMaximumSize(prefSize);
+
+        spinner.addChangeListener(e -> {
+            try {
+                double modelValue = (double) spinner.getModel().getValue();
+                setGlobalScalingMultiplier.invoke(obj, modelValue);
+                valueLabel.setText(String.valueOf(BigDecimal.valueOf(modelValue).round(MathContext.DECIMAL64).stripTrailingZeros()));
+            } catch (IllegalAccessException | InvocationTargetException ex) {
+                throw new RuntimeException(ex);
+            }
+            canvas.scheduleRepaint();
+        });
+
+        labelContainer.add(valueLabel);
+        labelContainer.add(spinner);
+        return labelContainer;
+    }
+
     public static JPanel createGlobalThicknessMultiplierUIElements(JPlotterCanvas canvas, Object obj, JPanel labelContainer) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Class<?> renderableClass = obj.getClass();
         Method setGlobalSaturationMultiplier = renderableClass.getMethod("setGlobalThicknessMultiplier", double.class);
         Method getGlobalSaturationMultiplier = renderableClass.getMethod("getGlobalThicknessMultiplier");
 
         JLabel valueLabel = new JLabel(getGlobalSaturationMultiplier.invoke(obj).toString());
-        float initValue = (Float) getGlobalSaturationMultiplier.invoke(obj)*100;
+        float initValue = (Float) getGlobalSaturationMultiplier.invoke(obj);
 
-        // TODO: check initValue
-        JSlider slider = new JSlider(0, 100, Math.min((int) initValue, 100));
+        SpinnerNumberModel globalThicknessModel = new SpinnerNumberModel(initValue, 0, 5, 0.1);
+        JSpinner spinner = new JSpinner(globalThicknessModel);
 
-        slider.addChangeListener(e -> {
+        Dimension prefSize = spinner.getPreferredSize();
+        prefSize = new Dimension(50, prefSize.height);
+        spinner.setMaximumSize(prefSize);
+
+        spinner.addChangeListener(e -> {
             try {
-                slider.setValue(slider.getValue());
-                setGlobalSaturationMultiplier.invoke(obj, (double) slider.getValue()/100);
-                valueLabel.setText(getGlobalSaturationMultiplier.invoke(obj).toString());
+                double modelValue = (double) spinner.getModel().getValue();
+                setGlobalSaturationMultiplier.invoke(obj, modelValue);
+                valueLabel.setText(String.valueOf(BigDecimal.valueOf(modelValue).round(MathContext.DECIMAL64).stripTrailingZeros()));
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                ex.printStackTrace();
+                throw new RuntimeException(ex);
             }
             canvas.scheduleRepaint();
         });
 
         labelContainer.add(valueLabel);
-        labelContainer.add(slider);
+        labelContainer.add(spinner);
         return labelContainer;
     }
 
@@ -101,6 +139,7 @@ public class RenderableFields {
 
         String toggleHiddenButtonText = (boolean) isHidden.invoke(obj) ? "Show": "Hide";
         JButton toggleHidden = new JButton(toggleHiddenButtonText);
+        toggleHidden.setCursor(new Cursor(Cursor.HAND_CURSOR));
         toggleHidden.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
