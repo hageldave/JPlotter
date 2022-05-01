@@ -338,6 +338,7 @@ public class CoordSysRenderer implements Renderer {
 	 */
 	public CoordSysRenderer setPaddingLeft(int padding) {
 		this.paddingLeft = padding;
+		this.setDirty();
 		return this;
 	}
 
@@ -349,6 +350,7 @@ public class CoordSysRenderer implements Renderer {
 	 */
 	public CoordSysRenderer setPaddingRight(int padding) {
 		this.paddingRight = padding;
+		this.setDirty();
 		return this;
 	}
 
@@ -360,6 +362,7 @@ public class CoordSysRenderer implements Renderer {
 	 */
 	public CoordSysRenderer setPaddingTop(int padding) {
 		this.paddingTop = padding;
+		this.setDirty();
 		return this;
 	}
 
@@ -371,6 +374,7 @@ public class CoordSysRenderer implements Renderer {
 	 */
 	public CoordSysRenderer setPaddingBot(int padding) {
 		this.paddingBot = padding;
+		this.setDirty();
 		return this;
 	}
 
