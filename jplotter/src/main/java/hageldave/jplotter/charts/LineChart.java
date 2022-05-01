@@ -10,6 +10,7 @@ import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Pair;
@@ -378,6 +379,51 @@ public class LineChart {
         }
     }
 
+    /**
+     * TODO
+     *
+     * @return
+     */
+    public LineChart fillLineArea(double threshold, double alpha, int... chunkIds) {
+        for (int chunkId: chunkIds) {
+            Triangles lineArea = new Triangles();
+            lineArea.setGlobalAlphaMultiplier(alpha);
+
+            double[][] dataChunk = dataModel.getDataChunk(chunkId);
+            Lines lines = linesPerDataChunk.get(chunkId);
+            int color = visualMapping.getColorForDataPoint(chunkId, dataModel.getChunkDescription(chunkId), dataChunk, 0);
+
+            for(Lines.SegmentDetails segment: lines.getSegments()){
+                Point2D pL=segment.p0, pR=segment.p1;
+
+                if(Math.signum(pL.getY()-threshold) == Math.signum(pR.getY()-threshold)){
+                    // points are on same side of x-axis
+                    ArrayList<Triangles.TriangleDetails> quad = lineArea.addQuad(
+                            pL.getX(), threshold, pL.getX(), pL.getY(),
+                            pR.getX(), pR.getY(), pR.getX(), threshold);
+                    quad.forEach(tri->tri.setColor(color));
+                } else {
+                    // segment intersects x-axis, need to find intersection
+                    double x0=pL.getX(),y0=pL.getY(), x2=pR.getX(), y2=pR.getY();
+                    double m = ((y2-threshold)-(y0-threshold))/(x2-x0);
+                    // solving for x1 in (x1-x0)*m+y0 = 0 --> 1x = x0-y0/m;
+                    double x1 = x0-(y0-threshold)/m;
+                    lineArea.addTriangle(x0, y0, x1, threshold, x0, threshold).setColor(color);
+                    lineArea.addTriangle(x2, y2, x1, threshold, x2, threshold).setColor(color);
+                }
+            }
+            contentLayer0.addItemToRender(lineArea);
+        }
+        return this;
+    }
+
+    public LineChart fillLineArea(double threshold, int... chunkIds) {
+        return fillLineArea(threshold, 0.2, chunkIds);
+    }
+
+    public LineChart fillLineArea(int... chunkIds) {
+        return fillLineArea(0, 0.2, chunkIds);
+    }
 
     /**
      * Adds a scroll zoom to the Scatterplot
