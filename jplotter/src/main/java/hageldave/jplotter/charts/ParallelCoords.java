@@ -542,8 +542,8 @@ public class ParallelCoords {
                         if (!isMouseDragged) {
                             yPos = currentValue;
                         } else {
-                            double min = Math.min(yPos, currentValue);
-                            double max = Math.max(yPos, currentValue);
+                            double min = Math.max(Math.min(yPos, currentValue), dataModel.getFeature(featureIndex).min);
+                            double max = Math.min(Math.max(yPos, currentValue), dataModel.getFeature(featureIndex).max);
                             if (min != max) {
                                 notifyMouseEventOnFeatureAxis(eventType, e, featureIndex, min, max);
                             }
