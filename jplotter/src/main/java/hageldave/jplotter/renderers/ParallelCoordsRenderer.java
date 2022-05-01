@@ -334,6 +334,7 @@ public class ParallelCoordsRenderer implements Renderer {
      */
     public ParallelCoordsRenderer setPaddingLeft(int padding) {
         this.paddingLeft = padding;
+        this.setDirty();
         return this;
     }
 
@@ -345,6 +346,7 @@ public class ParallelCoordsRenderer implements Renderer {
      */
     public ParallelCoordsRenderer setPaddingRight(int padding) {
         this.paddingRight = padding;
+        this.setDirty();
         return this;
     }
 
@@ -356,6 +358,7 @@ public class ParallelCoordsRenderer implements Renderer {
      */
     public ParallelCoordsRenderer setPaddingTop(int padding) {
         this.paddingTop = padding;
+        this.setDirty();
         return this;
     }
 
@@ -367,6 +370,7 @@ public class ParallelCoordsRenderer implements Renderer {
      */
     public ParallelCoordsRenderer setPaddingBot(int padding) {
         this.paddingBot = padding;
+        this.setDirty();
         return this;
     }
 
@@ -618,7 +622,9 @@ public class ParallelCoordsRenderer implements Renderer {
                 double x = coordsysAreaLB.getX() + m * axisDimensions.getWidth();
 
                 // feature guide
-                guides.addSegment(new Point2D.Double(Math.round(x+0.5), minValue), new Point2D.Double(Math.round(x+0.5), maxValue)).setColor(Color.RED).setThickness(1.1);
+                guides.addSegment(new Point2D.Double(Math.round(x), minValue), new Point2D.Double(Math.round(x), maxValue)).setColor(Color.RED).setThickness(1.1);
+                guides.addSegment(new Point2D.Double(Math.round(x)+3, minValue), new Point2D.Double(Math.round(x)-3, minValue)).setColor(Color.RED).setThickness(2);
+                guides.addSegment(new Point2D.Double(Math.round(x)+3, maxValue), new Point2D.Double(Math.round(x)-3, maxValue)).setColor(Color.RED).setThickness(2);
             }
 
             // setup legend areas (this will stay the same)
@@ -714,8 +720,6 @@ public class ParallelCoordsRenderer implements Renderer {
 
         currentViewPort.setRect(vpx, vpy, w, h);
         if(isDirty || viewportwidth != w || viewportheight != h){
-            // update axes
-            //axes.setDirty();
             viewportwidth = w;
             viewportheight = h;
             setupAndLayout();
@@ -768,8 +772,6 @@ public class ParallelCoordsRenderer implements Renderer {
         }
         currentViewPort.setRect(0, 0, w, h);
         if(isDirty || viewportwidth != w || viewportheight != h){
-            // update axes
-            //axes.setDirty();
             viewportwidth = w;
             viewportheight = h;
             setupAndLayout();
