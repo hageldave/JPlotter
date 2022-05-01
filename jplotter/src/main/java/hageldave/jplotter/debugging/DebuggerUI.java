@@ -25,8 +25,15 @@ import java.util.Objects;
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
     final protected JTree tree = new JTree();
+    final protected Color bgColor = new Color(225, 225, 225);
+    final protected JPanel controlBorderWrap = new JPanel();
+    final protected JPanel controlArea = new JPanel();
     final protected JPanel controlContainer = new JPanel();
+    final protected JPanel infoBorderWrap = new JPanel();
+
+    final protected JPanel infoArea = new JPanel();
     final protected JPanel infoContainer = new JPanel();
+    final protected JPanel infoControlWrap = new JPanel();
 
     final protected JLabel title = new JLabel();
     final protected JLabel controlHeader = new JLabel();
@@ -42,8 +49,6 @@ public class DebuggerUI {
     }
 
     public void display() throws IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
-        Color bgColor = new Color(225, 225, 225);
-
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // set constructed tree as tree model
@@ -56,48 +61,37 @@ public class DebuggerUI {
         JPanel titleArea = new JPanel();
         titleArea.setLayout(new GridLayout(1, 0));
         titleArea.setBorder(new EmptyBorder(10, 0, 10, 0));
-        //titleArea.setBackground(secondBGColor);
         title.setFont(new Font(title.getFont().getName(), Font.BOLD, 18));
         titleArea.add(title);
 
         // start control container
         controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.Y_AXIS));
         controlContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
-        controlContainer.setBackground(bgColor);
         controlHeader.setFont(new Font(controlHeader.getFont().getName(), Font.PLAIN, 16));
 
-        JPanel controlBorderWrap = new JPanel();
         controlBorderWrap.setLayout(new BorderLayout());
-        JPanel controlArea = new JPanel();
         controlArea.setLayout(new BorderLayout());
         controlArea.setBorder(new EmptyBorder(10, 10, 10, 10));
-        controlArea.setBackground(bgColor);
         controlArea.add(controlHeader, BorderLayout.NORTH);
         controlArea.add(controlContainer, BorderLayout.CENTER);
         controlBorderWrap.add(controlArea, BorderLayout.CENTER);
-        controlBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
 
         // start info container
         infoContainer.setLayout(new BoxLayout(infoContainer, BoxLayout.Y_AXIS));
         infoContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
-        infoContainer.setBackground(bgColor);
         infoHeader.setFont(new Font(infoHeader.getFont().getName(), Font.PLAIN, 16));
 
-        JPanel infoBorderWrap = new JPanel();
         infoBorderWrap.setLayout(new BorderLayout());
-        JPanel infoArea = new JPanel();
         infoArea.setLayout(new BorderLayout());
         infoArea.setBorder(new EmptyBorder(10, 10, 10, 10));
-        infoArea.setBackground(bgColor);
         infoArea.add(infoHeader, BorderLayout.NORTH);
         infoArea.add(infoContainer, BorderLayout.CENTER);
         infoBorderWrap.add(infoArea, BorderLayout.CENTER);
-        infoBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
 
         // create separator
         JPanel separator = new JPanel();
 
-        JPanel infoControlWrap = new JPanel();
+        //JPanel infoControlWrap = new JPanel();
         infoControlWrap.setLayout(new BoxLayout(infoControlWrap, BoxLayout.PAGE_AXIS));
         infoControlWrap.setBorder(new EmptyBorder(0, 10, 10, 10));
         infoControlWrap.add(titleArea);
@@ -118,11 +112,35 @@ public class DebuggerUI {
     }
 
     protected void createEmptyMessage() {
+        controlContainer.setBackground(infoControlWrap.getBackground());
+        controlArea.setBackground(infoControlWrap.getBackground());
+        controlBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
+
+        infoContainer.setBackground(infoControlWrap.getBackground());
+        infoBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
+        infoArea.setBackground(infoControlWrap.getBackground());
+
         title.setText("No renderer or renderable selected.");
     }
 
-    protected void clearGUIContents() {
+    protected void fillContent(Object obj) throws IllegalAccessException {
+        title.setText(obj.getClass().getSimpleName());
 
+        controlHeader.setText("Control Area");
+        infoHeader.setText("Other Information");
+
+        controlContainer.setBackground(bgColor);
+        controlArea.setBackground(bgColor);
+        controlBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
+
+        infoContainer.setBackground(bgColor);
+        infoArea.setBackground(bgColor);
+        infoBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
+
+        handleObjectFields(obj);
+    }
+
+    protected void clearGUIContents() {
         title.setText("");
         controlHeader.setText("");
         infoHeader.setText("");
@@ -132,11 +150,6 @@ public class DebuggerUI {
 
     protected void handleObjectFields(Object obj) throws IllegalAccessException {
         HashSet<Field> fieldSet = new HashSet<>(Utils.getReflectionFields(obj.getClass()));
-
-        title.setText(obj.getClass().getSimpleName());
-
-        controlHeader.setText("Control Area");
-        infoHeader.setText("Other Information");
 
         for (Field field : fieldSet) {
             field.setAccessible(true);
@@ -221,7 +234,7 @@ public class DebuggerUI {
                 clearGUIContents();
                 if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
                     try {
-                        handleObjectFields(obj);
+                        fillContent(obj);
                     } catch (IllegalAccessException ex) {
                         throw new RuntimeException(ex);
                     }
