@@ -327,6 +327,7 @@ public class BarRenderer implements Renderer {
      */
     public BarRenderer setPaddingLeft(int padding) {
         this.paddingLeft = padding;
+        this.setDirty();
         return this;
     }
 
@@ -339,6 +340,7 @@ public class BarRenderer implements Renderer {
      */
     public BarRenderer setPaddingRight(int padding) {
         this.paddingRight = padding;
+        this.setDirty();
         return this;
     }
 
@@ -351,6 +353,7 @@ public class BarRenderer implements Renderer {
      */
     public BarRenderer setPaddingTop(int padding) {
         this.paddingTop = padding;
+        this.setDirty();
         return this;
     }
 
@@ -363,6 +366,7 @@ public class BarRenderer implements Renderer {
      */
     public BarRenderer setPaddingBot(int padding) {
         this.paddingBot = padding;
+        this.setDirty();
         return this;
     }
 
