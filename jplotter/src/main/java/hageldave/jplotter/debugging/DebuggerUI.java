@@ -14,10 +14,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -41,16 +38,7 @@ public class DebuggerUI {
 
     public DebuggerUI(JPlotterCanvas canvas) {
         this.canvas = canvas;
-        tree.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent mouseEvent) {
-                try {
-                    onMouseClick(mouseEvent);
-                } catch (NoSuchFieldException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
+        registerTreeListener();
     }
 
     public void display() throws IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
@@ -203,28 +191,46 @@ public class DebuggerUI {
         this.renFHandler.removePanelCreator(fieldName);
     }
 
-    protected void onMouseClick(MouseEvent mouseEvent) throws NoSuchFieldException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        TreePath tp = tree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
+    private void registerTreeListener() {
+        tree.addTreeSelectionListener(e -> {
+            if (Objects.nonNull(e)) {
+                Object lastSelectedComponent = tree.getLastSelectedPathComponent();
+                Class<?> lastSelectedComponentClass = lastSelectedComponent.getClass();
 
-        if (Objects.nonNull(tp)) {
-            Class<?> clickedClass = tp.getLastPathComponent().getClass();
+                Method method;
+                if (Arrays.stream(lastSelectedComponentClass.getMethods()).anyMatch(toSearch->toSearch.getName().equals("getHiddenObject"))) {
+                    try {
+                        method = lastSelectedComponentClass.getMethod("getHiddenObject");
+                    } catch (NoSuchMethodException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                } else {
+                    try {
+                        method = lastSelectedComponentClass.getMethod("getUserObject");
+                    } catch (NoSuchMethodException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+                Object obj;
+                try {
+                    obj = method.invoke(lastSelectedComponent);
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    throw new RuntimeException(ex);
+                }
 
-            Method method;
-            if (Arrays.stream(clickedClass.getMethods()).anyMatch(e->e.getName().equals("getHiddenObject"))) {
-                method = clickedClass.getMethod("getHiddenObject");
-            } else {
-                method = clickedClass.getMethod("getUserObject");
+                clearGUIContents();
+                if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
+                    try {
+                        handleObjectFields(obj);
+                    } catch (IllegalAccessException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    canvas.scheduleRepaint();
+                } else {
+                    createEmptyMessage();
+                }
             }
-            Object obj = method.invoke(tp.getLastPathComponent());
-
-            clearGUIContents();
-            if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
-                this.handleObjectFields(obj);
-                canvas.scheduleRepaint();
-            } else {
-                createEmptyMessage();
-            }
-        }
+        });
     }
 
     public void refresh() throws IllegalAccessException {
