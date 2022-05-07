@@ -610,13 +610,25 @@ public class ParallelCoordsRenderer implements Renderer {
 
             if (Objects.nonNull(highlightedFeature)) {
                 axisDimensions = preventCoordSysInversion();
-                double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).max-features.get(highlightedFeature.first).min);
 
-                double clipMin = Math.max(highlightedFeature.second.min, features.get(highlightedFeature.first).min);
-                double clipMax = Math.min(highlightedFeature.second.max, features.get(highlightedFeature.first).max);
+                double minValue = 0;
+                double maxValue = 0;
+                if (features.get(highlightedFeature.first).min < features.get(highlightedFeature.first).max) {
+                    double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).max-features.get(highlightedFeature.first).min);
+                    double clipMin = Math.max(highlightedFeature.second.min, features.get(highlightedFeature.first).min);
+                    double clipMax = Math.min(highlightedFeature.second.max, features.get(highlightedFeature.first).max);
 
-                double minValue = y * (clipMin - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
-                double maxValue = y * (clipMax - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
+                    minValue = y * (clipMin - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
+                    maxValue = y * (clipMax - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
+                } else {
+                    double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).min-features.get(highlightedFeature.first).max);
+                    double clipMax = Math.max(highlightedFeature.second.max, features.get(highlightedFeature.first).max);
+                    double clipMin = Math.min(highlightedFeature.second.min, features.get(highlightedFeature.first).min);
+                    double difference = features.get(highlightedFeature.first).min - features.get(highlightedFeature.first).max;
+
+                    minValue = y * (difference-(clipMax - features.get(highlightedFeature.first).max)) + coordsysAreaLB.getY();
+                    maxValue = y * (difference-(clipMin - features.get(highlightedFeature.first).max)) + coordsysAreaLB.getY();
+                }
 
                 double m = (double) highlightedFeature.first / (features.size() - 1);
                 double x = coordsysAreaLB.getX() + m * axisDimensions.getWidth();
