@@ -5,6 +5,7 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
+import hageldave.jplotter.renderables.Curves;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
@@ -32,9 +33,11 @@ public class ParallelCoords {
 
     final protected ParallelCoordsDataModel dataModel = new ParallelCoordsDataModel();
     final protected ArrayList<Lines> linesPerDataChunk = new ArrayList<>();
+    final protected ArrayList<Curves> curvesPerDataChunk = new ArrayList<>();
     final protected ArrayList<Integer> legendElementPickIds = new ArrayList<>();
     final protected Legend legend = new Legend();
-    protected ParallelCoordsVisualMapping visualMapping = new ParallelCoordsVisualMapping(){};
+    protected ParallelCoordsVisualMapping visualMapping = new ParallelCoordsVisualMapping() {
+    };
     private int legendRightWidth = 100;
     private int legendBottomHeight = 60;
     final protected LinkedList<ParallelCoordsMouseEventListener> mouseEventListeners = new LinkedList<>();
@@ -44,12 +47,22 @@ public class ParallelCoords {
     protected static final String CUE_EMPHASIZE = "EMPHASIZE";
 
     protected HashMap<String, HashMap<Pair<Color, Integer>, Lines>> cp2linesMaps = new HashMap<>();
+    protected HashMap<String, HashMap<Pair<Color, Integer>, Curves>> cp2curvesMaps = new HashMap<>();
     protected HashMap<String, SimpleSelectionModel<Pair<Integer, Integer>>> cueSelectionModels = new HashMap<>();
 
     protected boolean axisHighlighting = false;
 
+    public final static int LINES=1;
+    public final static int CURVES=2;
+    protected int connectionMode = LINES | CURVES;
+
     public ParallelCoords(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback());
+    }
+
+    public ParallelCoords(final boolean useOpenGL, final int connectionMode) {
+        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback());
+        this.setConnectionMode(connectionMode);
     }
 
     public ParallelCoords(final JPlotterCanvas canvas) {
@@ -62,6 +75,7 @@ public class ParallelCoords {
         this.contentLayer2 = new CompleteRenderer();
         this.parallelCoordsys.setContent(contentLayer0.withAppended(contentLayer1).withAppended(contentLayer2));
         this.canvas.setRenderer(parallelCoordsys);
+        this.setConnectionMode(LINES);
 
         this.dataModel.addListener(new ParallelCoordsDataModel.ParallelCoordsDataModelListener() {
             @Override
@@ -87,10 +101,11 @@ public class ParallelCoords {
 
         createMouseEventHandler();
 
-        for(String cueType : Arrays.asList(CUE_EMPHASIZE, CUE_ACCENTUATE, CUE_HIGHLIGHT)){
+        for (String cueType : Arrays.asList(CUE_EMPHASIZE, CUE_ACCENTUATE, CUE_HIGHLIGHT)) {
             this.cp2linesMaps.put(cueType, new HashMap<>());
+            this.cp2curvesMaps.put(cueType, new HashMap<>());
             this.cueSelectionModels.put(cueType, new SimpleSelectionModel<>());
-            this.cueSelectionModels.get(cueType).addSelectionListener(selection->createCue(cueType));
+            this.cueSelectionModels.get(cueType).addSelectionListener(selection -> createCue(cueType));
         }
     }
 
@@ -113,7 +128,7 @@ public class ParallelCoords {
 
     public void setVisualMapping(ParallelCoordsVisualMapping visualMapping) {
         this.visualMapping = visualMapping;
-        for(Lines p: linesPerDataChunk)
+        for (Lines p : linesPerDataChunk)
             p.setDirty();
         this.canvas.scheduleRepaint();
     }
@@ -177,27 +192,47 @@ public class ParallelCoords {
         for (Integer value : getDataModel().axesMap)
             this.parallelCoordsys.addFeature(getDataModel().feature2dataIndex.get(value));
 
+        // create line object
         Lines lines = new Lines();
         linesPerDataChunk.add(lines);
         getContent().addItemToRender(lines);
 
-        for (int i=0; i<dataChunk.length; i++) {
+        // create curve object
+        Curves curves = new Curves();
+        curvesPerDataChunk.add(curves);
+        getContent().addItemToRender(curves);
+
+        for (int i = 0; i < dataChunk.length; i++) {
+            LinkedList<Point2D.Double> p = new LinkedList<>();
+
             double[] datapoint = dataChunk[i];
             int pickColor = registerInPickingRegistry(new int[]{chunkIdx, i});
 
-            int numberAxes = getDataModel().axesMap.size()-1;
+            int numberAxes = getDataModel().axesMap.size() - 1;
             for (int j = 0; j < numberAxes; j++) {
                 int firstIndex = getDataModel().axesMap.get(j);
-                int secondIndex = getDataModel().axesMap.get(j+1);
+                int secondIndex = getDataModel().axesMap.get(j + 1);
 
-                Lines.SegmentDetails segmentDetails =
-                        lines.addSegment(new Point2D.Double(
-                                (double) j / numberAxes, normalizeValue(datapoint[firstIndex], getDataModel().feature2dataIndex.get(firstIndex))),
-                                new Point2D.Double((double) (j+1) / numberAxes, normalizeValue(datapoint[secondIndex], getDataModel().feature2dataIndex.get(secondIndex))));
+                Point2D.Double firstCoord = new Point2D.Double((double) j / numberAxes, normalizeValue(datapoint[firstIndex], getDataModel().feature2dataIndex.get(firstIndex)));
+                Point2D.Double secCoord = new Point2D.Double((double) (j + 1) / numberAxes, normalizeValue(datapoint[secondIndex], getDataModel().feature2dataIndex.get(secondIndex)));
+
+                Lines.SegmentDetails segmentDetails = lines.addSegment(firstCoord, secCoord);
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                 segmentDetails.setPickColor(pickColor);
+
+                p.add(firstCoord);
+                if (j == numberAxes - 1)
+                    p.add(secCoord);
+            }
+            if (p.size() > 0 && (p.size() % 3 == 1)) {
+                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurvesThrough(p.toArray(new Point2D[0]));
+                for (Curves.CurveDetails det : curveDetails) {
+                    det.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
+                    det.setPickColor(pickColor);
+                }
             }
         }
+
         // create a picking ID for use in legend for this data chunk
         this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
         visualMapping.createLegendElementForChunk(legend, chunkIdx, chunkDescription, legendElementPickIds.get(chunkIdx));
@@ -210,41 +245,65 @@ public class ParallelCoords {
         for (Integer value : getDataModel().axesMap)
             this.parallelCoordsys.addFeature(getDataModel().feature2dataIndex.get(value));
 
+        // handle lines
         Lines lines = linesPerDataChunk.get(chunkIdx);
-        for(Lines.SegmentDetails pd:lines.getSegments()) {
-            int pickId = pd.pickColor;
-            if(pickId != 0) {
+        for (Lines.SegmentDetails ld : lines.getSegments()) {
+            int pickId = ld.pickColor;
+            if (pickId != 0) {
                 deregisterFromPickingRegistry(pickId);
             }
         }
         lines.removeAllSegments();
 
-        for(int i=0; i<dataChunk.length; i++) {
+        // handle curves
+        Curves curves = curvesPerDataChunk.get(chunkIdx);
+        for (Curves.CurveDetails cd : curves.getCurveDetails()) {
+            int pickId = cd.pickColor;
+            if (pickId != 0) {
+                deregisterFromPickingRegistry(pickId);
+            }
+        }
+        curves.removeAllCurves();
+
+        for (int i = 0; i < dataChunk.length; i++) {
+            LinkedList<Point2D.Double> p = new LinkedList<>();
+
             double[] datapoint = dataChunk[i];
             int pickColor = registerInPickingRegistry(new int[]{chunkIdx, i});
-            int numberAxes = getDataModel().axesMap.size()-1;
+            int numberAxes = getDataModel().axesMap.size() - 1;
 
             for (int j = 0; j < numberAxes; j++) {
                 int firstIndex = getDataModel().axesMap.get(j);
-                int secondIndex = getDataModel().axesMap.get(j+1);
+                int secondIndex = getDataModel().axesMap.get(j + 1);
 
                 if (firstIndex >= datapoint.length || secondIndex >= datapoint.length) {
                     throw new RuntimeException("Data index is larger than dataset.");
                 }
 
-                Lines.SegmentDetails segmentDetails =
-                        lines.addSegment(new Point2D.Double(
-                                        (double) j / numberAxes, normalizeValue(datapoint[firstIndex], getDataModel().feature2dataIndex.get(firstIndex))),
-                                new Point2D.Double((double) (j+1) / numberAxes, normalizeValue(datapoint[secondIndex], getDataModel().feature2dataIndex.get(secondIndex))));
+                Point2D.Double firstCoord = new Point2D.Double((double) j / numberAxes, normalizeValue(datapoint[firstIndex], getDataModel().feature2dataIndex.get(firstIndex)));
+                Point2D.Double secCoord = new Point2D.Double((double) (j + 1) / numberAxes, normalizeValue(datapoint[secondIndex], getDataModel().feature2dataIndex.get(secondIndex)));
+
+                Lines.SegmentDetails segmentDetails = lines.addSegment(firstCoord, secCoord);
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                 segmentDetails.setPickColor(pickColor);
+
+                p.add(firstCoord);
+                if (j == numberAxes - 1)
+                    p.add(secCoord);
+            }
+            if (p.size() > 0 && (p.size() % 3 == 1)) {
+                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurvesThrough(p.toArray(new Point2D[0]));
+                for (Curves.CurveDetails det : curveDetails) {
+                    det.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
+                    det.setPickColor(pickColor);
+                }
             }
         }
         this.canvas.scheduleRepaint();
     }
 
     protected static double normalizeValue(double value, ParallelCoordsRenderer.Feature feature) {
-        return (value - feature.min)/(feature.max - feature.min);
+        return (value - feature.min) / (feature.max - feature.min);
     }
 
     protected static double denormalizeValue(double value, ParallelCoordsRenderer.Feature feature) {
@@ -313,7 +372,7 @@ public class ParallelCoords {
             return dataChunks.size();
         }
 
-        public double[][] getDataChunk(int chunkIdx){
+        public double[][] getDataChunk(int chunkIdx) {
             return dataChunks.get(chunkIdx);
         }
 
@@ -321,8 +380,8 @@ public class ParallelCoords {
             return getDataChunk(chunkIdx).length;
         }
 
-        public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
-            if(chunkIdx >= numChunks())
+        public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk) {
+            if (chunkIdx >= numChunks())
                 throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
             this.dataChunks.set(chunkIdx, dataChunk);
             this.notifyDataChanged(chunkIdx);
@@ -358,16 +417,16 @@ public class ParallelCoords {
         }
 
         public int getGlobalIndex(int chunkIdx, int idx) {
-            int globalIdx=0;
-            for(int i=0; i<chunkIdx; i++) {
+            int globalIdx = 0;
+            for (int i = 0; i < chunkIdx; i++) {
                 globalIdx += chunkSize(i);
             }
             return globalIdx + idx;
         }
 
-        public Pair<Integer, Integer> locateGlobalIndex(int globalIdx){
-            int chunkIdx=0;
-            while(globalIdx >= chunkSize(chunkIdx)) {
+        public Pair<Integer, Integer> locateGlobalIndex(int globalIdx) {
+            int chunkIdx = 0;
+            while (globalIdx >= chunkSize(chunkIdx)) {
                 globalIdx -= chunkSize(chunkIdx);
                 chunkIdx++;
             }
@@ -376,8 +435,8 @@ public class ParallelCoords {
 
         public int numDataPoints() {
             int n = 0;
-            for(int i=0; i<numChunks(); i++)
-                n+=chunkSize(i);
+            for (int i = 0; i < numChunks(); i++)
+                n += chunkSize(i);
             return n;
         }
 
@@ -391,22 +450,22 @@ public class ParallelCoords {
         }
 
         public synchronized void notifyFeatureOrderChanged() {
-            for(ParallelCoordsDataModelListener l:listeners)
+            for (ParallelCoordsDataModelListener l : listeners)
                 l.featureOrderChanged();
         }
 
         public synchronized void notifyFeatureAdded(ParallelCoordsRenderer.Feature feature) {
-            for(ParallelCoordsDataModelListener l:listeners)
+            for (ParallelCoordsDataModelListener l : listeners)
                 l.featureAdded(feature);
         }
 
         public synchronized void notifyDataAdded(int chunkIdx) {
-            for(ParallelCoordsDataModelListener l:listeners)
+            for (ParallelCoordsDataModelListener l : listeners)
                 l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx));
         }
 
         public synchronized void notifyDataChanged(int chunkIdx) {
-            for(ParallelCoordsDataModelListener l:listeners)
+            for (ParallelCoordsDataModelListener l : listeners)
                 l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
         }
     }
@@ -414,7 +473,7 @@ public class ParallelCoords {
     public static interface ParallelCoordsVisualMapping {
         public default int getColorForChunk(int chunkIdx) {
             DefaultColorMap colorMap = DefaultColorMap.Q_8_SET2;
-            return colorMap.getColor(chunkIdx%colorMap.numColors());
+            return colorMap.getColor(chunkIdx % colorMap.numColors());
         }
 
         public default void createLegendElementForChunk(Legend legend, int chunkIdx, String chunkDescr, int pickColor) {
@@ -422,11 +481,14 @@ public class ParallelCoords {
             legend.addLineLabel(1, color, chunkDescr, pickColor);
         }
 
-        public default void createGeneralLegendElements(Legend legend) {};
+        public default void createGeneralLegendElements(Legend legend) {
+        }
+
+        ;
     }
 
     public void placeLegendOnRight() {
-        if(parallelCoordsys.getLegendBottom() == legend) {
+        if (parallelCoordsys.getLegendBottom() == legend) {
             parallelCoordsys.setLegendBottom(null);
             parallelCoordsys.setLegendBottomHeight(0);
         }
@@ -435,7 +497,7 @@ public class ParallelCoords {
     }
 
     public void placeLegendOnBottom() {
-        if(parallelCoordsys.getLegendRight() == legend) {
+        if (parallelCoordsys.getLegendRight() == legend) {
             parallelCoordsys.setLegendRight(null);
             parallelCoordsys.setLegendRightWidth(0);
         }
@@ -444,16 +506,39 @@ public class ParallelCoords {
     }
 
     public void placeLegendNowhere() {
-        if(parallelCoordsys.getLegendRight() == legend) {
+        if (parallelCoordsys.getLegendRight() == legend) {
             parallelCoordsys.setLegendRight(null);
             parallelCoordsys.setLegendRightWidth(0);
         }
-        if(parallelCoordsys.getLegendBottom() == legend) {
+        if (parallelCoordsys.getLegendBottom() == legend) {
             parallelCoordsys.setLegendBottom(null);
             parallelCoordsys.setLegendBottomHeight(0);
         }
     }
 
+    public int getConnectionMode() {
+        return connectionMode;
+    }
+
+    public void setConnectionMode(int connectionMode) {
+        this.connectionMode = connectionMode;
+        if (connectionMode == LINES) {
+            this.getContentLayer0().curves.setEnabled(false);
+            this.getContentLayer0().lines.setEnabled(true);
+            this.getContentLayer1().curves.setEnabled(false);
+            this.getContentLayer1().lines.setEnabled(true);
+            this.getContentLayer2().curves.setEnabled(false);
+            this.getContentLayer2().lines.setEnabled(true);
+        } else if (connectionMode == CURVES) {
+            this.getContentLayer0().lines.setEnabled(false);
+            this.getContentLayer0().curves.setEnabled(true);
+            this.getContentLayer1().lines.setEnabled(false);
+            this.getContentLayer1().curves.setEnabled(true);
+            this.getContentLayer2().lines.setEnabled(false);
+            this.getContentLayer2().curves.setEnabled(true);
+        }
+    }
+    
     public void setAxisHighlighting(boolean toHighlight) {
         this.axisHighlighting = toHighlight;
     }
@@ -467,19 +552,29 @@ public class ParallelCoords {
             int featureIndex = -1;
 
             @Override
-            public void mouseMoved(MouseEvent e) { mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_MOVED, e); }
+            public void mouseMoved(MouseEvent e) {
+                mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_MOVED, e);
+            }
 
             @Override
-            public void mouseClicked(MouseEvent e) { mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_CLICKED, e); }
+            public void mouseClicked(MouseEvent e) {
+                mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_CLICKED, e);
+            }
 
             @Override
-            public void mousePressed(MouseEvent e) { mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED, e); }
+            public void mousePressed(MouseEvent e) {
+                mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED, e);
+            }
 
             @Override
-            public void mouseReleased(MouseEvent e) { mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_RELEASED, e); }
+            public void mouseReleased(MouseEvent e) {
+                mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_RELEASED, e);
+            }
 
             @Override
-            public void mouseDragged(MouseEvent e) { mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED, e); }
+            public void mouseDragged(MouseEvent e) {
+                mouseAction(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED, e);
+            }
 
 
             private void mouseAction(String eventType, MouseEvent e) {
@@ -498,27 +593,29 @@ public class ParallelCoords {
                     } else {
                         Object segmentLocalizer = pickingRegistry.lookup(pixel);
 
-                        if(segmentLocalizer instanceof int[]) {
-                            int chunkIdx = ((int[])segmentLocalizer)[0];
-                            int segmentIdx = ((int[])segmentLocalizer)[1];
+                        if (segmentLocalizer instanceof int[]) {
+                            int chunkIdx = ((int[]) segmentLocalizer)[0];
+                            int segmentIdx = ((int[]) segmentLocalizer)[1];
                             notifyInsideMouseEventSegment(eventType, e, coordsysPoint, chunkIdx, segmentIdx);
                         }
                     }
                 } else {
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
-                    if((pixel & 0x00ffffff) == 0) {
+                    if ((pixel & 0x00ffffff) == 0) {
                         notifyOutsideMouseEventeNone(eventType, e);
                     } else {
                         Object miscLocalizer = pickingRegistry.lookup(pixel);
-                        if(miscLocalizer instanceof Integer) {
-                            int chunkIdx = (int)miscLocalizer;
+                        if (miscLocalizer instanceof Integer) {
+                            int chunkIdx = (int) miscLocalizer;
                             notifyOutsideMouseEventElement(eventType, e, chunkIdx);
                         }
                     }
                 }
 
                 // START Axis highlighting //
+
+                // TODO: currently does not work correctly if axis has a lower bound that is bigger than the upper bond
                 if (axisHighlighting) {
                     boolean isEventTypeKeyPressed = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED);
                     boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);
@@ -528,7 +625,7 @@ public class ParallelCoords {
                     double featureProportion = 1.0 / ((dataModel.getFeatureCount() - 1));
                     double modFP = coordsysPoint.getX() % featureProportion;
 
-                    double distToAxis = Math.min(featureProportion-modFP, modFP);
+                    double distToAxis = Math.min(featureProportion - modFP, modFP);
                     double allowedAxisDist = 0.03;
 
                     if (!isDragRegistered)
@@ -577,22 +674,22 @@ public class ParallelCoords {
     }
 
     protected synchronized void notifyInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
-        for(ParallelCoordsMouseEventListener l:mouseEventListeners)
+        for (ParallelCoordsMouseEventListener l : mouseEventListeners)
             l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
     }
 
     protected synchronized void notifyInsideMouseEventSegment(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int segmentIdx) {
-        for(ParallelCoordsMouseEventListener l:mouseEventListeners)
+        for (ParallelCoordsMouseEventListener l : mouseEventListeners)
             l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, chunkIdx, segmentIdx);
     }
 
     protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
-        for(ParallelCoordsMouseEventListener l:mouseEventListeners)
+        for (ParallelCoordsMouseEventListener l : mouseEventListeners)
             l.onOutsideMouseEventNone(mouseEventType, e);
     }
 
     protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
-        for(ParallelCoordsMouseEventListener l:mouseEventListeners)
+        for (ParallelCoordsMouseEventListener l : mouseEventListeners)
             l.onOutsideMouseEventElement(mouseEventType, e, chunkIdx);
     }
 
@@ -611,23 +708,29 @@ public class ParallelCoords {
     }
 
     public static interface ParallelCoordsMouseEventListener {
-        static final String MOUSE_EVENT_TYPE_MOVED="moved";
-        static final String MOUSE_EVENT_TYPE_CLICKED="clicked";
-        static final String MOUSE_EVENT_TYPE_PRESSED="pressed";
-        static final String MOUSE_EVENT_TYPE_RELEASED="released";
-        static final String MOUSE_EVENT_TYPE_DRAGGED="dragged";
+        static final String MOUSE_EVENT_TYPE_MOVED = "moved";
+        static final String MOUSE_EVENT_TYPE_CLICKED = "clicked";
+        static final String MOUSE_EVENT_TYPE_PRESSED = "pressed";
+        static final String MOUSE_EVENT_TYPE_RELEASED = "released";
+        static final String MOUSE_EVENT_TYPE_DRAGGED = "dragged";
 
-        public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
+        public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+        }
 
-        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int segmentIdx) {}
+        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int segmentIdx) {
+        }
 
-        public default void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {}
+        public default void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {
+        }
 
-        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {}
+        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
+        }
 
-        public default void notifyMouseEventOnFeature(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {}
+        public default void notifyMouseEventOnFeature(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {
+        }
 
-        public default void notifyMouseEventOffFeature(String mouseEventType, MouseEvent e) {}
+        public default void notifyMouseEventOffFeature(String mouseEventType, MouseEvent e) {
+        }
     }
 
     public synchronized ParallelCoordsMouseEventListener addParallelCoordsMouseEventListener(ParallelCoordsMouseEventListener l) {
@@ -643,33 +746,37 @@ public class ParallelCoords {
         return this.linesPerDataChunk.get(chunkIdx);
     }
 
+    public Curves getCurvesForChunk(int chunkIdx) {
+        return this.curvesPerDataChunk.get(chunkIdx);
+    }
+
     @SafeVarargs
-    public final void accentuate(Pair<Integer, Integer> ... toAccentuate) {
+    public final void accentuate(Pair<Integer, Integer>... toAccentuate) {
         accentuate(Arrays.asList(toAccentuate));
     }
 
     public void accentuate(Iterable<Pair<Integer, Integer>> toAccentuate) {
-        SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_ACCENTUATE);
+        SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(CUE_ACCENTUATE);
         selectionModel.setSelection(toAccentuate);
     }
 
     @SafeVarargs
-    public final void emphasize(Pair<Integer, Integer> ... toEmphasize) {
+    public final void emphasize(Pair<Integer, Integer>... toEmphasize) {
         emphasize(Arrays.asList(toEmphasize));
     }
 
     public void emphasize(Iterable<Pair<Integer, Integer>> toEmphasize) {
-        SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_EMPHASIZE);
+        SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(CUE_EMPHASIZE);
         selectionModel.setSelection(toEmphasize);
     }
 
     @SafeVarargs
-    public final void highlight(Pair<Integer, Integer> ... toHighlight) {
+    public final void highlight(Pair<Integer, Integer>... toHighlight) {
         highlight(Arrays.asList(toHighlight));
     }
 
     public void highlight(Iterable<Pair<Integer, Integer>> toHighlight) {
-        SimpleSelectionModel<Pair<Integer,Integer>> selectionModel = this.cueSelectionModels.get(CUE_HIGHLIGHT);
+        SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(CUE_HIGHLIGHT);
         selectionModel.setSelection(toHighlight);
     }
 
@@ -679,73 +786,146 @@ public class ParallelCoords {
 
         clearCue(cueType);
         switch (cueType) {
-            case CUE_ACCENTUATE:
-            {
+            case CUE_ACCENTUATE: {
                 // emphasis: show point in top layer with outline
-                for(Pair<Integer, Integer> instance : instancesToCue) {
-                    Lines lines = getLinesForChunk(instance.first);
-                    Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size()-1];
-
-                    for (int i = 0; i < segments.length; i++) {
-                        segments[i] = lines.getSegments().get(i + instance.second*segments.length);
-                    }
-
-                    for (Lines.SegmentDetails l : segments) {
-                        Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
-                        Color c = new Color(this.parallelCoordsys.getColorScheme().getColor1());
-                        front.addSegment(l.p0, l.p1).setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 0.75f))
-                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2 * lines.getGlobalThicknessMultiplier() + 1.5,
-                                        l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2 * lines.getGlobalThicknessMultiplier() + 1.5);
-                        front.setStrokePattern(lines.getStrokePattern());
-                        front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
-                                .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() * 1.05, l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() * 1.05);
-                    }
-                }
-            }
-            break;
-            case CUE_EMPHASIZE:
-            {
-                // accentuation: show enlarged point in top layer
-                for(Pair<Integer, Integer> instance : instancesToCue) {
-                    Lines lines = getLinesForChunk(instance.first);
-                    Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size()-1];
-
-                    for (int i = 0; i < segments.length; i++) {
-                        segments[i] = lines.getSegments().get(i + instance.second*segments.length);
-                    }
-
-                    for (Lines.SegmentDetails l : segments) {
-                        Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
-                        front.setStrokePattern(lines.getStrokePattern());
-                        front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
-                                .setThickness(( l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() ) + 1, ( l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() ) + 1);
-                    }
-                }
-            }
-            break;
-            case CUE_HIGHLIGHT:
-            {
-                if(instancesToCue.isEmpty()) {
-                    for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
-                        greyOutChunk(chunk, false);
-                } else {
-                    for(int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
-                        greyOutChunk(chunk, true);
-
-                    for(Pair<Integer, Integer> instance : instancesToCue) {
+                for (Pair<Integer, Integer> instance : instancesToCue) {
+                    if (connectionMode == LINES) {
+                        // lines here
                         Lines lines = getLinesForChunk(instance.first);
-                        Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size()-1];
+                        Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size() - 1];
 
                         for (int i = 0; i < segments.length; i++) {
-                            segments[i] = lines.getSegments().get(i + instance.second*segments.length);
+                            segments[i] = lines.getSegments().get(i + instance.second * segments.length);
+                        }
+
+                        for (Lines.SegmentDetails l : segments) {
+                            Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
+                            Color c = new Color(this.parallelCoordsys.getColorScheme().getColor1());
+                            front.addSegment(l.p0, l.p1).setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 0.75f))
+                                    .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2 * lines.getGlobalThicknessMultiplier() + 1.5,
+                                            l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2 * lines.getGlobalThicknessMultiplier() + 1.5);
+                            front.setStrokePattern(lines.getStrokePattern());
+                            front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
+                                    .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() * 1.05, l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() * 1.05);
+                        }
+                    } else {
+                        // curves here
+                        Curves curves = getCurvesForChunk(instance.first);
+                        Curves.CurveDetails[] curveDetails = new Curves.CurveDetails[dataModel.axesMap.size() - 1];
+
+                        for (int i = 0; i < curveDetails.length; i++) {
+                            curveDetails[i] = curves.getCurveDetails().get(i + instance.second * curveDetails.length);
+                        }
+
+                        ArrayList<Point2D> allPoints = new ArrayList<>();
+                        for (Curves.CurveDetails c : curveDetails) {
+                            allPoints.add(c.p0);
+                        }
+                        allPoints.add(curveDetails[curveDetails.length - 1].p1);
+
+                        Curves front = getOrCreateCueCurvesForGlyph(cueType, new Color(curves.getCurveDetails().get(0).color.getAsInt()), curves.getStrokePattern());
+                        Color col = new Color(this.parallelCoordsys.getColorScheme().getColor1());
+                        ArrayList<Curves.CurveDetails> detailsList = front.addCurvesThrough(allPoints.toArray(new Point2D[0]));
+
+                        for (Curves.CurveDetails det : detailsList) {
+                            det.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), 0.75f))
+                                    .setThickness(det.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() + 0.2 * curves.getGlobalThicknessMultiplier() + 1.5);
+                        }
+
+                        front.setStrokePattern(curves.getStrokePattern());
+
+                        detailsList = front.addCurvesThrough(allPoints.toArray(new Point2D[0]));
+                        for (Curves.CurveDetails det : detailsList) {
+                            det.setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt())).setThickness(det.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() * 1.05);
+                        }
+                    }
+                }
+            }
+            break;
+            case CUE_EMPHASIZE: {
+                // accentuation: show enlarged point in top layer
+                for (Pair<Integer, Integer> instance : instancesToCue) {
+                    if (connectionMode == LINES) {
+                        Lines lines = getLinesForChunk(instance.first);
+                        Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size() - 1];
+
+                        for (int i = 0; i < segments.length; i++) {
+                            segments[i] = lines.getSegments().get(i + instance.second * segments.length);
                         }
 
                         for (Lines.SegmentDetails l : segments) {
                             Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
                             front.setStrokePattern(lines.getStrokePattern());
-
                             front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
-                                    .setThickness(l.thickness0.getAsDouble()*lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble()*lines.getGlobalThicknessMultiplier());
+                                    .setThickness((l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier()) + 1, (l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier()) + 1);
+                        }
+                    } else {
+                        Curves curves = getCurvesForChunk(instance.first);
+                        Curves.CurveDetails[] curveDetails = new Curves.CurveDetails[dataModel.axesMap.size() - 1];
+                        for (int i = 0; i < curveDetails.length; i++) {
+                            curveDetails[i] = curves.getCurveDetails().get(i + instance.second * curveDetails.length);
+                        }
+                        ArrayList<Point2D> allPoints = new ArrayList<>();
+                        for (Curves.CurveDetails c : curveDetails) {
+                            allPoints.add(c.p0);
+                        }
+                        allPoints.add(curveDetails[curveDetails.length-1].p1);
+
+                        Curves front = getOrCreateCueCurvesForGlyph(cueType, new Color(curves.getCurveDetails().get(0).color.getAsInt()), curves.getStrokePattern());
+                        front.setStrokePattern(curves.getStrokePattern());
+
+                        ArrayList<Curves.CurveDetails> detailsList = front.addCurvesThrough(allPoints.toArray(new Point2D[0]));
+                        for (Curves.CurveDetails det: detailsList) {
+                            det.setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt())).setThickness(det.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() + 1);
+                        }
+                    }
+                }
+            }
+            break;
+            case CUE_HIGHLIGHT: {
+                if (instancesToCue.isEmpty()) {
+                    for (int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
+                        greyOutChunk(chunk, false);
+                } else {
+                    for (int chunk = 0; chunk < getDataModel().numChunks(); chunk++)
+                        greyOutChunk(chunk, true);
+
+                    for (Pair<Integer, Integer> instance : instancesToCue) {
+                        if (connectionMode == LINES) {
+                            Lines lines = getLinesForChunk(instance.first);
+                            Lines.SegmentDetails[] segments = new Lines.SegmentDetails[dataModel.axesMap.size() - 1];
+
+                            for (int i = 0; i < segments.length; i++) {
+                                segments[i] = lines.getSegments().get(i + instance.second * segments.length);
+                            }
+
+                            for (Lines.SegmentDetails l : segments) {
+                                Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
+                                front.setStrokePattern(lines.getStrokePattern());
+
+                                front.addSegment(l.p0, l.p1).setColor0(l.color0).setColor1(l.color1)
+                                        .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier(), l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier());
+                            }
+                        } else {
+                            // curves stuff
+                            Curves curves = getCurvesForChunk(instance.first);
+                            Curves.CurveDetails[] curveDetails = new Curves.CurveDetails[dataModel.axesMap.size() - 1];
+                            for (int i = 0; i < curveDetails.length; i++) {
+                                curveDetails[i] = curves.getCurveDetails().get(i + instance.second * curveDetails.length);
+                            }
+                            ArrayList<Point2D> allPoints = new ArrayList<>();
+                            for (Curves.CurveDetails c : curveDetails) {
+                                allPoints.add(c.p0);
+                            }
+                            allPoints.add(curveDetails[curveDetails.length-1].p1);
+
+                            Curves front = getOrCreateCueCurvesForGlyph(cueType, new Color(curves.getCurveDetails().get(0).color.getAsInt()), curves.getStrokePattern());
+                            front.setStrokePattern(curves.getStrokePattern());
+
+                            ArrayList<Curves.CurveDetails> detailsList = front.addCurvesThrough(allPoints.toArray(new Point2D[0]));
+                            for (Curves.CurveDetails det: detailsList) {
+                                det.setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt())).setThickness(det.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier());
+                            }
                         }
                     }
                 }
@@ -761,23 +941,23 @@ public class ParallelCoords {
     protected void greyOutChunk(int chunkIdx, boolean greyedOut) {
         double factor = greyedOut ? 0.1 : 1.0;
         getLinesForChunk(chunkIdx).setGlobalSaturationMultiplier(factor).setGlobalAlphaMultiplier(factor);
+        getCurvesForChunk(chunkIdx).setGlobalSaturationMultiplier(factor).setGlobalAlphaMultiplier(factor);
     }
 
     private Lines getOrCreateCueLinesForGlyph(String cue, Color c, int strokePattern) {
         HashMap<Pair<Color, Integer>, Lines> cp2lines = this.cp2linesMaps.get(cue);
-        if(!cp2lines.containsKey(new Pair<>(c, strokePattern))) {
+        if (!cp2lines.containsKey(new Pair<>(c, strokePattern))) {
             Lines lines = new Lines();
             cp2lines.put(new Pair<>(c, strokePattern), lines);
+
             switch (cue) {
                 case CUE_ACCENTUATE: // fallthrough
-                case CUE_EMPHASIZE:
-                {
+                case CUE_EMPHASIZE: {
                     lines.setGlobalThicknessMultiplier(1.2);
                     getContentLayer2().addItemToRender(lines);
                 }
                 break;
-                case CUE_HIGHLIGHT:
-                {
+                case CUE_HIGHLIGHT: {
                     getContentLayer1().addItemToRender(lines);
                 }
                 break;
@@ -788,9 +968,36 @@ public class ParallelCoords {
         return cp2lines.get(new Pair<>(c, strokePattern));
     }
 
+    private Curves getOrCreateCueCurvesForGlyph(String cue, Color c, int strokePattern) {
+        HashMap<Pair<Color, Integer>, Curves> cp2curves = this.cp2curvesMaps.get(cue);
+        if (!cp2curves.containsKey(new Pair<>(c, strokePattern))) {
+            Curves curves = new Curves();
+            cp2curves.put(new Pair<>(c, strokePattern), curves);
+
+            switch (cue) {
+                case CUE_ACCENTUATE: // fallthrough
+                case CUE_EMPHASIZE: {
+                    curves.setGlobalThicknessMultiplier(1.2);
+                    getContentLayer2().addItemToRender(curves);
+                }
+                break;
+                case CUE_HIGHLIGHT: {
+                    getContentLayer1().addItemToRender(curves);
+                }
+                break;
+                default:
+                    throw new IllegalStateException("unhandled cue case " + cue);
+            }
+        }
+        return cp2curves.get(new Pair<>(c, strokePattern));
+    }
+
     private void clearCue(String cue) {
         HashMap<Pair<Color, Integer>, Lines> cp2lines = this.cp2linesMaps.get(cue);
         cp2lines.values().forEach(Lines::removeAllSegments);
+
+        HashMap<Pair<Color, Integer>, Curves> cp2curves = this.cp2curvesMaps.get(cue);
+        cp2curves.values().forEach(Curves::removeAllCurves);
     }
 
     protected void highlightFeatureAxis() {
@@ -818,7 +1025,7 @@ public class ParallelCoords {
         frame.getContentPane().add(this.canvas.asComponent());
         this.canvas.addCleanupOnWindowClosingListener(frame);
 
-        SwingUtilities.invokeLater( ()->{
+        SwingUtilities.invokeLater(() -> {
             frame.pack();
             frame.setVisible(true);
         });
