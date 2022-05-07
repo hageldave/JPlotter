@@ -7,6 +7,7 @@ import hageldave.jplotter.util.Pair;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.IOException;
@@ -15,13 +16,25 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReadyParallelCoordinates {
     public static void main(String[] args) {
-        ParallelCoords coords = new ParallelCoords(false);
+        ParallelCoords coords = new ParallelCoords(false, ParallelCoords.CURVES);
 
         JLabel selectedAxis = new JLabel("No axis selected");
         selectedAxis.setBackground(Color.WHITE);
+
+        AtomicInteger selectionIndex = new AtomicInteger(0);
+        String[] modes = { "All", "Setosa", "Versicolor", "Virginica" };
+        JComboBox<String> selectMode = new JComboBox<>(modes);
+        selectMode.setSelectedIndex(selectionIndex.get());
+        selectMode.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                selectionIndex.getAndSet(selectMode.getSelectedIndex());
+            }
+        });
 
         ArrayList<double[]> setosaList = new ArrayList<>();
         ArrayList<double[]> versicolorList = new ArrayList<>();
@@ -62,10 +75,11 @@ public class ReadyParallelCoordinates {
         coords.getDataModel().addData(versicolor,  "versicolor");
         coords.getDataModel().addData(virginica,  "virginica");
 
-        coords.getDataModel().addFeature(0, new ParallelCoordsRenderer.Feature(4.3,7.9, "sepal length"));
+        coords.getDataModel().addFeature( 0,new ParallelCoordsRenderer.Feature(4.5,7.9, "sepal length"));
+        coords.getDataModel().addFeature(1, new ParallelCoordsRenderer.Feature(4.5,2.0, "sepal width"));
         coords.getDataModel().addFeature(2, new ParallelCoordsRenderer.Feature(1.0,6.9, "petal length"));
         coords.getDataModel().addFeature(3, new ParallelCoordsRenderer.Feature(0.1,2.5, "petal width"));
-        coords.getDataModel().addFeature(1, new ParallelCoordsRenderer.Feature(2.0,4.4, "sepal width"));
+
 
         coords.setAxisHighlighting(true);
 
@@ -93,13 +107,31 @@ public class ReadyParallelCoordinates {
             @Override
             public void notifyMouseEventOnFeature(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {
                 ParallelCoords.ParallelCoordsMouseEventListener.super.notifyMouseEventOnFeature(mouseEventType, e, featureIndex, min, max);
-                TreeSet<Integer> values = coords.getDataModel().getIndicesOfSegmentsInRange(0, featureIndex, min, max);
+
+                ArrayList<TreeSet<Integer>> values = new ArrayList<>();
+                if (selectionIndex.get() == 0) {
+                    values.add(new TreeSet<>(coords.getDataModel().getIndicesOfSegmentsInRange(0, featureIndex, min, max)));
+                    values.add(new TreeSet<>(coords.getDataModel().getIndicesOfSegmentsInRange(1, featureIndex, min, max)));
+                    values.add(new TreeSet<>(coords.getDataModel().getIndicesOfSegmentsInRange(2, featureIndex, min, max)));
+                } else {
+                    values.add(new TreeSet<>(coords.getDataModel().getIndicesOfSegmentsInRange(selectionIndex.get()-1, featureIndex, min, max)));
+                }
 
                 selectedAxis.setText("Min: " + String.format(Locale.US, "%.2f", min) + ", Max: " + String.format(Locale.US, "%.2f", max));
 
                 ArrayList<Pair<Integer, Integer>> pairs = new ArrayList<>(values.size());
-                for (int value: values) {
-                    pairs.add(new Pair<>(0, value));
+                int index = 0;
+                for (TreeSet<Integer> value: values) {
+                    if (selectionIndex.get() == 0) {
+                        for (int indices: value) {
+                            pairs.add(new Pair<>(index, indices));
+                        }
+                        index++;
+                    } else {
+                        for (int indices: value) {
+                            pairs.add(new Pair<>(selectionIndex.get()-1, indices));
+                        }
+                    }
                 }
 
                 coords.highlight(pairs);
@@ -117,18 +149,20 @@ public class ReadyParallelCoordinates {
             }
         });
 
-
         coords.placeLegendOnRight();
 
         // display within a JFrame
         JFrame frame = new JFrame();
-
         JPanel container = new JPanel();
         JPanel labelWrap = new JPanel();
+        JPanel modeSelectionWrap = new JPanel();
         labelWrap.setBorder(new EmptyBorder(10,10,10,10));
         labelWrap.add(selectedAxis);
+        modeSelectionWrap.setBorder(new EmptyBorder(3,10,0,10));
+        modeSelectionWrap.add(selectMode);
         container.setBackground(Color.WHITE);
         container.setLayout(new BorderLayout());
+        container.add(modeSelectionWrap, BorderLayout.NORTH);
         container.add(coords.getCanvas().asComponent(), BorderLayout.CENTER);
         container.add(labelWrap, BorderLayout.SOUTH);
 
