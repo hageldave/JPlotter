@@ -614,8 +614,6 @@ public class ParallelCoords {
                 }
 
                 // START Axis highlighting //
-
-                // TODO: currently does not work correctly if axis has a lower bound that is bigger than the upper bond
                 if (axisHighlighting) {
                     boolean isEventTypeKeyPressed = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED);
                     boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);
@@ -639,8 +637,8 @@ public class ParallelCoords {
                         if (!isMouseDragged) {
                             yPos = currentValue;
                         } else {
-                            double min = Math.max(Math.min(yPos, currentValue), dataModel.getFeature(featureIndex).min);
-                            double max = Math.min(Math.max(yPos, currentValue), dataModel.getFeature(featureIndex).max);
+                            double min = Math.max(Math.min(yPos, currentValue), Math.min(dataModel.getFeature(featureIndex).min, dataModel.getFeature(featureIndex).max));
+                            double max = Math.min(Math.max(yPos, currentValue), Math.max(dataModel.getFeature(featureIndex).min, dataModel.getFeature(featureIndex).max));
                             if (min != max) {
                                 notifyMouseEventOnFeatureAxis(eventType, e, featureIndex, min, max);
                             }
