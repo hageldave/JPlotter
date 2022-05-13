@@ -294,12 +294,12 @@ public class ParallelCoords {
     }
 
     protected static double normalizeValue(double value, ParallelCoordsRenderer.Feature feature) {
-        return (value - feature.min) / (feature.max - feature.min);
+        return (value - feature.bottom) / (feature.top - feature.bottom);
     }
 
     protected static double denormalizeValue(double value, ParallelCoordsRenderer.Feature feature) {
-        double diff = feature.max - feature.min;
-        return diff * value + feature.min;
+        double diff = feature.top - feature.bottom;
+        return diff * value + feature.bottom;
     }
 
     public static class ParallelCoordsDataModel {
@@ -628,8 +628,8 @@ public class ParallelCoords {
                         if (!isMouseDragged) {
                             yPos = currentValue;
                         } else {
-                            double min = Math.max(Math.min(yPos, currentValue), Math.min(dataModel.getFeature(featureIndex).min, dataModel.getFeature(featureIndex).max));
-                            double max = Math.min(Math.max(yPos, currentValue), Math.max(dataModel.getFeature(featureIndex).min, dataModel.getFeature(featureIndex).max));
+                            double min = Math.max(Math.min(yPos, currentValue), Math.min(dataModel.getFeature(featureIndex).bottom, dataModel.getFeature(featureIndex).top));
+                            double max = Math.min(Math.max(yPos, currentValue), Math.max(dataModel.getFeature(featureIndex).bottom, dataModel.getFeature(featureIndex).top));
                             if (min != max) {
                                 notifyMouseEventOnFeatureAxis(eventType, e, featureIndex, min, max);
                             }

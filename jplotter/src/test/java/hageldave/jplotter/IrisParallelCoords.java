@@ -123,6 +123,6 @@ public class IrisParallelCoords {
 
 
     private static double normalizeValue(double value, ParallelCoordsRenderer.Feature feature) {
-        return (value - feature.min)/(feature.max - feature.min);
+        return (value - feature.bottom)/(feature.top - feature.bottom);
     }
 }

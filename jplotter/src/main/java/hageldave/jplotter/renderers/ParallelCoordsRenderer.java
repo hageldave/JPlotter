@@ -451,8 +451,8 @@ public class ParallelCoordsRenderer implements Renderer {
         // find maximum length of y axis labels of first feature
         int maxYTickLabelWidth = 0;
         if (!features.isEmpty()) {
-            Pair<double[], String[]> firstFeatTicksAndLabels = new Pair<>(new double[]{features.getFirst().min, features.getFirst().max},
-                    new String[]{String.valueOf(features.getFirst().min), String.valueOf(features.getFirst().max)});
+            Pair<double[], String[]> firstFeatTicksAndLabels = new Pair<>(new double[]{features.getFirst().bottom, features.getFirst().top},
+                    new String[]{String.valueOf(features.getFirst().bottom), String.valueOf(features.getFirst().top)});
 
             for(String label : firstFeatTicksAndLabels.second) {
                 int labelW = CharacterAtlas.boundsForText(label.length(), tickfontSize, style).getBounds().width;
@@ -512,8 +512,8 @@ public class ParallelCoordsRenderer implements Renderer {
                 // feature guide
                 guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
 
-                Pair<Double[], String[]> tickLabels = new Pair<>(new Double[]{feature.min, feature.max},
-                        new String[]{String.valueOf(feature.min), String.valueOf(feature.max)});
+                Pair<Double[], String[]> tickLabels = new Pair<>(new Double[]{feature.bottom, feature.top},
+                        new String[]{String.valueOf(feature.bottom), String.valueOf(feature.top)});
 
                 Double[] yticks = tickLabels.first;
                 String[] yticklabels = tickLabels.second;
@@ -521,7 +521,7 @@ public class ParallelCoordsRenderer implements Renderer {
                 // yaxis ticks
                 for (int i = 0; i < yticks.length; i++) {
                     // tick
-                    double y_m = (yticks[i] - feature.min) / (feature.max - feature.min);
+                    double y_m = (yticks[i] - feature.bottom) / (feature.top - feature.bottom);
 
                     double y = y_m * axisDimensions.getHeight();
                     Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
@@ -579,8 +579,8 @@ public class ParallelCoordsRenderer implements Renderer {
                     guides.addSegment(onaxis, new TranslatedPoint2D(onaxis, 0, axisDimensions.getHeight())).setColor(guideColor);
 
                     // yaxis ticks
-                    Pair<Double[], String[]> tickLabels = new Pair<>(new Double[]{feature.min, feature.max},
-                            new String[]{String.valueOf(feature.min), String.valueOf(feature.max)});
+                    Pair<Double[], String[]> tickLabels = new Pair<>(new Double[]{feature.bottom, feature.top},
+                            new String[]{String.valueOf(feature.bottom), String.valueOf(feature.top)});
 
                     Double[] yticks = tickLabels.first;
                     String[] yticklabels = tickLabels.second;
@@ -588,7 +588,7 @@ public class ParallelCoordsRenderer implements Renderer {
                     // get max of the ticks to normalize them to the 0-1 area
                     for (int i = 0; i < yticks.length; i++) {
                         // tick
-                        double y_m = (yticks[i] - feature.min) / (feature.max - feature.min);
+                        double y_m = (yticks[i] - feature.bottom) / (feature.top - feature.bottom);
                         double y = y_m * axisDimensions.getHeight();
                         Point2D onYaxis = new TranslatedPoint2D(new PointeredPoint2D(0, coordsysAreaLB.getY()), x, Math.round(y));
                         ticks.addSegment(onYaxis, new TranslatedPoint2D(onYaxis, -4, 0)).setColor(tickColor);
@@ -613,21 +613,21 @@ public class ParallelCoordsRenderer implements Renderer {
 
                 double minValue = 0;
                 double maxValue = 0;
-                if (features.get(highlightedFeature.first).min < features.get(highlightedFeature.first).max) {
-                    double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).max-features.get(highlightedFeature.first).min);
-                    double clipMin = Math.max(highlightedFeature.second.min, features.get(highlightedFeature.first).min);
-                    double clipMax = Math.min(highlightedFeature.second.max, features.get(highlightedFeature.first).max);
+                if (features.get(highlightedFeature.first).bottom < features.get(highlightedFeature.first).top) {
+                    double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).top -features.get(highlightedFeature.first).bottom);
+                    double clipMin = Math.max(highlightedFeature.second.bottom, features.get(highlightedFeature.first).bottom);
+                    double clipMax = Math.min(highlightedFeature.second.top, features.get(highlightedFeature.first).top);
 
-                    minValue = y * (clipMin - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
-                    maxValue = y * (clipMax - features.get(highlightedFeature.first).min) + coordsysAreaLB.getY();
+                    minValue = y * (clipMin - features.get(highlightedFeature.first).bottom) + coordsysAreaLB.getY();
+                    maxValue = y * (clipMax - features.get(highlightedFeature.first).bottom) + coordsysAreaLB.getY();
                 } else {
-                    double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).min-features.get(highlightedFeature.first).max);
-                    double clipMax = Math.max(highlightedFeature.second.max, features.get(highlightedFeature.first).max);
-                    double clipMin = Math.min(highlightedFeature.second.min, features.get(highlightedFeature.first).min);
-                    double difference = features.get(highlightedFeature.first).min - features.get(highlightedFeature.first).max;
+                    double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).bottom -features.get(highlightedFeature.first).top);
+                    double clipMax = Math.max(highlightedFeature.second.top, features.get(highlightedFeature.first).top);
+                    double clipMin = Math.min(highlightedFeature.second.bottom, features.get(highlightedFeature.first).bottom);
+                    double difference = features.get(highlightedFeature.first).bottom - features.get(highlightedFeature.first).top;
 
-                    minValue = y * (difference-(clipMax - features.get(highlightedFeature.first).max)) + coordsysAreaLB.getY();
-                    maxValue = y * (difference-(clipMin - features.get(highlightedFeature.first).max)) + coordsysAreaLB.getY();
+                    minValue = y * (difference-(clipMax - features.get(highlightedFeature.first).top)) + coordsysAreaLB.getY();
+                    maxValue = y * (difference-(clipMin - features.get(highlightedFeature.first).top)) + coordsysAreaLB.getY();
                 }
 
                 double m = (double) highlightedFeature.first / (features.size() - 1);
@@ -1041,13 +1041,13 @@ public class ParallelCoordsRenderer implements Renderer {
     }
 
     public static class Feature {
-        public final double min;
-        public final double max;
+        public final double bottom;
+        public final double top;
         public final String label;
 
-        public Feature(double min, double max, String label) {
-            this.min = min;
-            this.max = max;
+        public Feature(double bottom, double top, String label) {
+            this.bottom = bottom;
+            this.top = top;
             this.label = label;
         }
     }
