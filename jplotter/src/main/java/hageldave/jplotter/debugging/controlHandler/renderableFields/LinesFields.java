@@ -67,4 +67,24 @@ public class LinesFields {
         }
         return labelContainer;
     }
+
+    public static JPanel createGenericButton(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter, Class<?> c) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        boolean currentStrokePattern = (boolean) getter.invoke(obj);
+        JLabel strokeLengthLabel = new JLabel(String.valueOf(currentStrokePattern));
+        JButton strokePatternModel = new JButton("hdhd");
+        strokePatternModel.addActionListener(e -> {
+            try {
+                setter.invoke(obj, !(boolean) getter.invoke(obj));
+                strokeLengthLabel.setText(String.valueOf(!currentStrokePattern));
+            } catch (IllegalAccessException | InvocationTargetException ex) {
+                throw new RuntimeException(ex);
+            }
+            canvas.scheduleRepaint();
+        });
+
+        labelContainer.add(strokePatternModel);
+        labelContainer.add(strokeLengthLabel);
+
+        return labelContainer;
+    }
 }

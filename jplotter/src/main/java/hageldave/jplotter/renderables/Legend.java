@@ -4,6 +4,7 @@ import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
+import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
@@ -67,6 +68,7 @@ public class Legend implements Renderable, Renderer {
 
 	protected boolean isEnabled=true;
 
+	@DisplayField
 	protected ColorScheme colorScheme;
 
 	public Legend() {

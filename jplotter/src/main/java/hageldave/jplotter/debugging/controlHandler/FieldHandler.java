@@ -15,12 +15,13 @@ import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 
 public class FieldHandler {
-    // TODO: Merge these if possible / or if merging causes problems (if we want to control stroke pattern of renderable, but not of renderer for example) the split it completely, by using polymorphy
     final static String[] toControlRenderable = new String[]{"globalThicknessMultiplier", "globalSaturationMultiplier", "globalAlphaMultiplier", "hidden", "globalScaling", "glyph", "strokeLength", "strokePattern", "txtStr", "color", "background", "origin", "angle"};
     final static String[] toControlRenderer = new String[]{"isEnabled", "paddingLeft", "paddingRight", "paddingTop", "paddingBot", "legendRightWidth", "legendBottomHeight", "guideColor", "tickColor", "textColor"};
 
-    final static String[] toDisplayRenderable = new String[]{"useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG", "numEffectiveSegments", "pickColor", "textSize", "fontsize", "style", "segments", "points", "triangles", "curves"};
-    final static String[] toDisplayRenderer = new String[]{"strokePattern", "view", "itemToRender", "isGLDoublePrecisionEnabled", "orthoMX", "coordsysAreaRT", "coordsysAreaRB", "coordsysAreaLT", "coordsysAreaLB", "currentViewPort", "tickMarkLabels", "tickMarkGenerator", "colorScheme", "renderOrder"};
+    //final static String[] toDisplayRenderable = new String[]{"useVertexRounding", "isGLDoublePrecision", "useAAinFallback", "useCrispEdgesForSVG",
+    // "numEffectiveSegments", "pickColor", "textSize", "fontsize", "style", "segments", "points", "triangles", "curves"};
+    //final static String[] toDisplayRenderer = new String[]{"strokePattern", "view", "itemToRender", "isGLDoublePrecisionEnabled", "orthoMX",
+    // "coordsysAreaRT", "coordsysAreaRB", "coordsysAreaLT", "coordsysAreaLB", "currentViewPort", "tickMarkLabels", "tickMarkGenerator", "colorScheme", "renderOrder"};
 
     HashMap<String, PanelCreator> field2panelcreator = new HashMap<>();
 
@@ -61,21 +62,12 @@ public class FieldHandler {
                     labelContainer.add(new JLabel(((Collection<?>) fieldValue).size() + " element(s)"));
                 } else if (fieldValue.getClass().isArray()) {
                     int arrLen = Array.getLength(fieldValue);
-                    if (arrLen < 6) {
-                        StringBuilder allArrElements = new StringBuilder();
-                        for (int i = 0; i < arrLen; i++) {
-                            allArrElements.append(Array.get(fieldValue, i)).append(", ");
-                        }
-                        labelContainer.add(new JLabel(allArrElements.toString()));
-                    } else {
-                        labelContainer.add(new JLabel(String.valueOf((Array.getLength(fieldValue)))));
-                    }
+                    labelContainer.add(new JLabel(String.valueOf(arrLen)));
                 } else {
                     labelContainer.add(new JLabel(String.valueOf(fieldValue)));
                 }
             }
         }
-
         return labelContainer;
     }
 
@@ -106,7 +98,7 @@ public class FieldHandler {
         return Arrays.asList(toControlRenderable).contains(fieldName) || Arrays.asList(toControlRenderer).contains(fieldName);
     }
 
-    public static boolean displayInInformationArea(String fieldName) {
+    /*public static boolean displayInInformationArea(String fieldName) {
         return Arrays.asList(toDisplayRenderable).contains(fieldName) || Arrays.asList(toDisplayRenderer).contains(fieldName);
-    }
+    }*/
 }

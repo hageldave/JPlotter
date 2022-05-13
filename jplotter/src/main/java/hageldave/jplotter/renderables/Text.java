@@ -2,6 +2,11 @@ package hageldave.jplotter.renderables;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElement;
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementGet;
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementSet;
+import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.TextfieldCreator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
@@ -33,7 +38,9 @@ import java.util.Objects;
  * @author hageldave
  */
 public class Text implements Renderable {
-	public final int fontsize; 
+	@DisplayField
+	public final int fontsize;
+	@DisplayField
 	public final int style;
 	protected Dimension textSize;
 	protected Color color;
@@ -42,6 +49,7 @@ public class Text implements Renderable {
 	protected Point2D origin;
 	protected VertexArray va=null;
 	protected float angle=0;
+	@CreateElement(key="txtStr", creator = TextfieldCreator.class)
 	protected String txtStr;
 	protected boolean isDirty=true;
 	protected boolean hidden=false;
@@ -379,6 +387,7 @@ public class Text implements Renderable {
 	/**
 	 * @return the String this text object displays
 	 */
+	@CreateElementGet(key="txtStr")
 	public String getTextString(){
 		return txtStr;
 	}
@@ -391,6 +400,7 @@ public class Text implements Renderable {
 	 * @param txtStr the text string this object should display.
 	 * @return this for chaining
 	 */
+	@CreateElementSet(key="txtStr")
 	public Text setTextString(String txtStr) {
 		this.txtStr = txtStr;
 		this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontsize, style).getBounds().getSize();

@@ -1,14 +1,15 @@
 package hageldave.jplotter.renderers;
 
-import java.awt.geom.Rectangle2D;
-import java.util.LinkedList;
-import java.util.Objects;
-
+import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
+
+import java.awt.geom.Rectangle2D;
+import java.util.LinkedList;
+import java.util.Objects;
 
 /**
  * The GenericRenderer class is an abstract {@link Renderer} intended
@@ -29,6 +30,7 @@ public abstract class GenericRenderer<T extends Renderable> implements Renderer,
 	protected Shader shaderF;
 	protected Shader shaderD;
 	protected float[] orthoMX = GLUtils.orthoMX(null,0, 1, 0, 1);
+	@DisplayField
 	protected Rectangle2D view = null;
 	protected boolean isEnabled = true;
 	protected boolean isGLDoublePrecisionEnabled = false;

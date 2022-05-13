@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderables;
 
+import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -40,6 +41,7 @@ public class Triangles implements Renderable {
 	protected boolean isDirty = true;
 	protected DoubleSupplier globalAlphaMultiplier = ()->1.0;
 	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
+	@DisplayField
 	protected ArrayList<TriangleDetails> triangles = new ArrayList<>();
 	protected boolean useCrispEdgesForSVG = true;
 	protected boolean useAAinFallback = false;

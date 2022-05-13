@@ -4,6 +4,7 @@ import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
+import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
@@ -88,17 +89,20 @@ public class CoordSysRenderer implements Renderer {
 	protected Rectangle legendRightViewPort = new Rectangle();
 	@GLCoordinates
 	protected Rectangle legendBottomViewPort = new Rectangle();
-	
+
+	@DisplayField
 	@GLCoordinates
 	protected Rectangle currentViewPort = new Rectangle();
 
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
+	@DisplayField
 	protected TickMarkGenerator tickMarkGenerator = new ExtendedWilkinson();
 
 	protected Lines axes = new Lines().setVertexRoundingEnabled(true);
 	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
 	protected Lines guides = new Lines().setVertexRoundingEnabled(true);
+
 	protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
 	protected Text xAxisLabelText = new Text("", 13, Font.PLAIN);
 	protected Text yAxisLabelText = new Text("", 13, Font.PLAIN);
@@ -106,7 +110,9 @@ public class CoordSysRenderer implements Renderer {
 	protected double[] xticks;
 	protected double[] yticks;
 
+	@DisplayField
 	protected int viewportwidth=0;
+	@DisplayField
 	protected int viewportheight=0;
 	protected boolean isDirty = true;
 
@@ -120,12 +126,16 @@ public class CoordSysRenderer implements Renderer {
 	protected int paddingBot = 10;
 
 	@GLCoordinates
+	@DisplayField
 	protected PointeredPoint2D coordsysAreaLB = new PointeredPoint2D();
 	@GLCoordinates
+	@DisplayField
 	protected PointeredPoint2D coordsysAreaRT = Utils.copy(coordsysAreaLB);
 	@GLCoordinates
+	@DisplayField
 	protected PointeredPoint2D coordsysAreaLT = new PointeredPoint2D(coordsysAreaLB.x, coordsysAreaRT.y);
 	@GLCoordinates
+	@DisplayField
 	protected PointeredPoint2D coordsysAreaRB = new PointeredPoint2D(coordsysAreaRT.x, coordsysAreaLB.y);
 
 	protected String xAxisLabel = null;
@@ -134,6 +144,7 @@ public class CoordSysRenderer implements Renderer {
 	protected ActionListener coordviewListener;
 	protected boolean isEnabled=true;
 
+	@DisplayField
 	protected ColorScheme colorScheme;
 
 	/**

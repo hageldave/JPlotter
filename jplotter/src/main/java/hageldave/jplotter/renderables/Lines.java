@@ -1,5 +1,10 @@
 package hageldave.jplotter.renderables;
 
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElement;
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementGet;
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementSet;
+import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.*;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.LinesRenderer;
@@ -45,24 +50,32 @@ public class Lines implements Renderable {
 
 	protected VertexArray va;
 
+	@DisplayField
 	protected ArrayList<SegmentDetails> segments = new ArrayList<>();
 
+	@CreateElement(key = "globalSaturationMultiplier", creator = PercentageSliderCreator.class)
 	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 
+	@CreateElement(key = "globalThicknessMultiplier", creator = SpinnerCreator.class)
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
 
 	protected boolean isDirty = true;
 
+	@CreateElement(key = "globalAlphaMultiplier", creator = PercentageSliderCreator.class)
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 
 	protected boolean useVertexRounding=false;
 
+	@CreateElement(key = "strokePattern", creator = StrokePatternCreator.class)
 	protected short strokePattern = (short)0xffff;
-	
+
+	@CreateElement(key = "strokeLength", creator = StrokeLengthCreator.class)
 	protected float strokeLength = 16;
-	
+
+	@CreateElement(key = "hidden", creator = ButtonCreator.class)
 	protected boolean hidden = false;
-	
+
+	@DisplayField
 	protected boolean isGLDoublePrecision = false;
 
 	/**
@@ -205,6 +218,7 @@ public class Lines implements Renderable {
 	 * @param globalAlphaMultiplier of the segments in this collection
 	 * @return this for chaining
 	 */
+	@CreateElementSet(key = "globalAlphaMultiplier")
 	public Lines setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
 	}
@@ -212,6 +226,8 @@ public class Lines implements Renderable {
 	/**
 	 * @return the global alpha multiplier of the segments in this collection
 	 */
+
+	@CreateElementGet(key = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -253,6 +269,7 @@ public class Lines implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
+	@CreateElementSet(key = "globalThicknessMultiplier")
 	public Lines setGlobalThicknessMultiplier(double thickness) {
 		return setGlobalThicknessMultiplier(() -> thickness); 
 	}
@@ -260,6 +277,7 @@ public class Lines implements Renderable {
 	/**
 	 * @return the line thickness multiplier of this {@link Lines} object
 	 */
+	@CreateElementGet(key = "globalThicknessMultiplier")
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
 	}
@@ -283,11 +301,13 @@ public class Lines implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
+	@CreateElementSet(key = "globalSaturationMultiplier")
 	public Lines setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
+	@CreateElementGet(key = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
@@ -381,6 +401,7 @@ public class Lines implements Renderable {
 	 * Returns this {@link Lines} object's stroke pattern
 	 * @return stroke pattern
 	 */
+	@CreateElementGet(key = "strokePattern")
 	public short getStrokePattern() {
 		return this.strokePattern;
 	}
@@ -403,6 +424,7 @@ public class Lines implements Renderable {
 	 * @param strokePattern 16bit pattern
 	 * @return this for chaining
 	 */
+	@CreateElementSet(key = "strokePattern")
 	public Lines setStrokePattern(int strokePattern) {
 		if(strokePattern >> 16 != 0){
 			System.err.println("specified stroke pattern should only be 16 bits but is " + Integer.toBinaryString(strokePattern));
@@ -415,6 +437,7 @@ public class Lines implements Renderable {
 	 * Returns the stroke length in pixels, which is by default 16 pixels.
 	 * @return stroke length
 	 */
+	@CreateElementGet(key = "strokeLength")
 	public float getStrokeLength() {
 		return strokeLength;
 	}
@@ -425,12 +448,14 @@ public class Lines implements Renderable {
 	 * @param strokeLength length of the stroke
 	 * @return this for chaining
 	 */
+	@CreateElementSet(key = "strokeLength")
 	public Lines setStrokeLength(double strokeLength) {
 		this.strokeLength = (float) Math.max(0, strokeLength);
 		return this;
 	}
 	
 	@Override
+	@CreateElementGet(key = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -441,6 +466,7 @@ public class Lines implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
+	@CreateElementSet(key = "hidden")
 	public Lines hide(boolean hide) {
 		this.hidden = hide;
 		return this;

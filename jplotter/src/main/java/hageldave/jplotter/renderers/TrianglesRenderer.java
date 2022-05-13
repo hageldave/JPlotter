@@ -1,6 +1,7 @@
 package hageldave.jplotter.renderers;
 
 import hageldave.jplotter.color.ColorOperations;
+import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Renderable;
@@ -140,7 +141,8 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "}"
 			+ NL
 			;
-	
+
+	@DisplayField
 	protected String svgTriangleStrategy=null;
 
 	/**

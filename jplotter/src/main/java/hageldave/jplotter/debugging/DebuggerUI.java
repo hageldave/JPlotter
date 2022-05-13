@@ -2,6 +2,11 @@ package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.controlHandler.FieldHandler;
+import hageldave.jplotter.debugging.controlHandler.PanelCreator;
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElement;
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementGet;
+import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementSet;
+import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.debugging.controlHandler.renderableFields.LinesFields;
 import hageldave.jplotter.debugging.controlHandler.renderableFields.RenderableFields;
 import hageldave.jplotter.debugging.controlHandler.rendererFields.CoordSysRendererFields;
@@ -21,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
@@ -55,7 +61,7 @@ public class DebuggerUI {
         tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
 
         // register components here
-        registerInternalPanelCreators();
+        // registerInternalPanelCreators();
 
         // start title container
         JPanel titleArea = new JPanel();
@@ -108,7 +114,7 @@ public class DebuggerUI {
         frame.pack();
         frame.setVisible(true);
 
-        splitpane.setDividerLocation(2.0/5);
+        splitpane.setDividerLocation(2.0 / 5);
     }
 
     protected void createEmptyMessage() {
@@ -123,7 +129,7 @@ public class DebuggerUI {
         title.setText("No renderer or renderable selected.");
     }
 
-    protected void fillContent(Object obj) throws IllegalAccessException {
+    protected void fillContent(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
         title.setText(obj.getClass().getSimpleName());
 
         controlHeader.setText("Control Area");
@@ -148,18 +154,61 @@ public class DebuggerUI {
         infoContainer.removeAll();
     }
 
-    protected void handleObjectFields(Object obj) throws IllegalAccessException {
+    protected void handleObjectFields(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
         HashSet<Field> fieldSet = new HashSet<>(Utils.getReflectionFields(obj.getClass()));
 
         for (Field field : fieldSet) {
             field.setAccessible(true);
-            JPanel panel = renFHandler.handleField(canvas, obj, field);
-
-            if (FieldHandler.displayInControlArea(field.getName())) {
-                controlContainer.add(panel);
-            } else if (FieldHandler.displayInInformationArea(field.getName())) {
+            if (field.getAnnotationsByType(DisplayField.class).length > 0) {
+                JPanel panel = renFHandler.handleField(canvas, obj, field);
                 infoContainer.add(panel);
             }
+
+            AtomicReference<String> key = new AtomicReference<>();
+            AtomicReference<Method> getter = new AtomicReference<>();
+            AtomicReference<Method> setter = new AtomicReference<>();
+            AtomicReference<Class<? extends PanelCreator>> creator = new AtomicReference<>();
+
+            CreateElement[] createBtnMethods = field.getAnnotationsByType(CreateElement.class);
+            for (CreateElement btnMethod : createBtnMethods) {
+                key.set(btnMethod.key());
+                creator.set(btnMethod.creator());
+            }
+
+            Arrays.stream(obj.getClass().getMethods()).forEach(e -> {
+                for (CreateElementGet btnMethod : e.getAnnotationsByType(CreateElementGet.class)) {
+                    if (Objects.equals(btnMethod.key(), key.get())) {
+                        getter.set(e);
+                    }
+                }
+
+                for (CreateElementSet btnMethod : e.getAnnotationsByType(CreateElementSet.class)) {
+                    if (Objects.equals(btnMethod.key(), key.get())) {
+                        setter.set(e);
+                    }
+                }
+            });
+
+            if (key.get() != null && getter.get() != null && setter.get() != null) {
+                JPanel labelContainer = new JPanel();
+                labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
+                labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+                labelContainer.setBorder(new EmptyBorder(9, 0, 9, 0));
+                labelContainer.setBackground(new Color(225, 225, 225));
+
+                labelContainer.add(new JLabel(("(" + field.getType().getSimpleName()) + ") "));
+                JLabel fieldName = new JLabel((field.getName()) + ": ");
+                fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+                labelContainer.add(fieldName);
+
+                PanelCreator pc = creator.get().getDeclaredConstructor().newInstance();
+                controlContainer.add(pc.createUnchecked(canvas, obj, labelContainer, setter.get(), getter.get()));
+            }
+
+            /*if (FieldHandler.displayInControlArea(field.getName())) {
+                JPanel panel = renFHandler.handleField(canvas, obj, field);
+                controlContainer.add(panel);
+            }*/
         }
         frame.repaint();
     }
@@ -170,17 +219,17 @@ public class DebuggerUI {
         this.renFHandler.addPanelCreator(
                 "paddingLeft", CoordSysRendererFields::createPaddingLeftUIElements);
         this.renFHandler.addPanelCreator(
-               "paddingRight", CoordSysRendererFields::createPaddingRightUIElements);
+                "paddingRight", CoordSysRendererFields::createPaddingRightUIElements);
         this.renFHandler.addPanelCreator(
                 "paddingTop", CoordSysRendererFields::createPaddingTopUIElements);
         this.renFHandler.addPanelCreator(
-              "paddingBot", CoordSysRendererFields::createPaddingBotUIElements);
+                "paddingBot", CoordSysRendererFields::createPaddingBotUIElements);
         this.renFHandler.addPanelCreator(
-            "hidden", RenderableFields::createHideUIRenderableElements);
+                "hidden", RenderableFields::createHideUIRenderableElements);
         this.renFHandler.addPanelCreator(
-               "globalScaling", RenderableFields::createGlobalScalingMultiplierUIElements);
+                "globalScaling", RenderableFields::createGlobalScalingMultiplierUIElements);
         this.renFHandler.addPanelCreator(
-               "globalThicknessMultiplier", RenderableFields::createGlobalThicknessMultiplierUIElements);
+                "globalThicknessMultiplier", RenderableFields::createGlobalThicknessMultiplierUIElements);
         this.renFHandler.addPanelCreator(
                 "globalSaturationMultiplier", RenderableFields::createGlobalSaturationMultiplierUIElements);
         this.renFHandler.addPanelCreator(
@@ -190,7 +239,7 @@ public class DebuggerUI {
         this.renFHandler.addPanelCreator(
                 "strokeLength", LinesFields::createStrokeLengthUIElements);
         this.renFHandler.addPanelCreator(
-               "strokePattern", LinesFields::createStrokePatternUIElements);
+                "strokePattern", LinesFields::createStrokePatternUIElements);
         this.renFHandler.addPanelCreator(
                 "txtStr", RenderableFields::createTextStrUIElements);
     }
@@ -211,7 +260,7 @@ public class DebuggerUI {
                 Class<?> lastSelectedComponentClass = lastSelectedComponent.getClass();
 
                 Method method;
-                if (Arrays.stream(lastSelectedComponentClass.getMethods()).anyMatch(toSearch->toSearch.getName().equals("getHiddenObject"))) {
+                if (Arrays.stream(lastSelectedComponentClass.getMethods()).anyMatch(toSearch -> toSearch.getName().equals("getHiddenObject"))) {
                     try {
                         method = lastSelectedComponentClass.getMethod("getHiddenObject");
                     } catch (NoSuchMethodException ex) {
@@ -236,6 +285,10 @@ public class DebuggerUI {
                     try {
                         fillContent(obj);
                     } catch (IllegalAccessException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (InvocationTargetException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (NoSuchMethodException | InstantiationException ex) {
                         throw new RuntimeException(ex);
                     }
                     canvas.scheduleRepaint();
