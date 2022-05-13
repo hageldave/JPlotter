@@ -203,12 +203,10 @@ public class ParallelCoords {
         getContent().addItemToRender(curves);
 
         for (int i = 0; i < dataChunk.length; i++) {
-            LinkedList<Point2D.Double> p = new LinkedList<>();
-
             double[] datapoint = dataChunk[i];
             int pickColor = registerInPickingRegistry(new int[]{chunkIdx, i});
-
             int numberAxes = getDataModel().axesMap.size() - 1;
+
             for (int j = 0; j < numberAxes; j++) {
                 int firstIndex = getDataModel().axesMap.get(j);
                 int secondIndex = getDataModel().axesMap.get(j + 1);
@@ -216,23 +214,20 @@ public class ParallelCoords {
                 Point2D.Double firstCoord = new Point2D.Double((double) j / numberAxes, normalizeValue(datapoint[firstIndex], getDataModel().feature2dataIndex.get(firstIndex)));
                 Point2D.Double secCoord = new Point2D.Double((double) (j + 1) / numberAxes, normalizeValue(datapoint[secondIndex], getDataModel().feature2dataIndex.get(secondIndex)));
 
+                // set lines
                 Lines.SegmentDetails segmentDetails = lines.addSegment(firstCoord, secCoord);
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                 segmentDetails.setPickColor(pickColor);
 
-                p.add(firstCoord);
-                if (j == numberAxes - 1)
-                    p.add(secCoord);
-            }
-            if (p.size() > 0 && (p.size() % 3 == 1)) {
-                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurvesThrough(p.toArray(new Point2D[0]));
+                // set curves
+                double diff = secCoord.x - firstCoord.x;
+                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurveStrip(firstCoord, new Point2D.Double(firstCoord.x + diff*0.25, firstCoord.y), new Point2D.Double(secCoord.x - diff*0.25, secCoord.y), secCoord);
                 for (Curves.CurveDetails det : curveDetails) {
                     det.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                     det.setPickColor(pickColor);
                 }
             }
         }
-
         // create a picking ID for use in legend for this data chunk
         this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
         visualMapping.createLegendElementForChunk(legend, chunkIdx, chunkDescription, legendElementPickIds.get(chunkIdx));
@@ -266,8 +261,6 @@ public class ParallelCoords {
         curves.removeAllCurves();
 
         for (int i = 0; i < dataChunk.length; i++) {
-            LinkedList<Point2D.Double> p = new LinkedList<>();
-
             double[] datapoint = dataChunk[i];
             int pickColor = registerInPickingRegistry(new int[]{chunkIdx, i});
             int numberAxes = getDataModel().axesMap.size() - 1;
@@ -283,16 +276,14 @@ public class ParallelCoords {
                 Point2D.Double firstCoord = new Point2D.Double((double) j / numberAxes, normalizeValue(datapoint[firstIndex], getDataModel().feature2dataIndex.get(firstIndex)));
                 Point2D.Double secCoord = new Point2D.Double((double) (j + 1) / numberAxes, normalizeValue(datapoint[secondIndex], getDataModel().feature2dataIndex.get(secondIndex)));
 
+                // set lines
                 Lines.SegmentDetails segmentDetails = lines.addSegment(firstCoord, secCoord);
                 segmentDetails.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                 segmentDetails.setPickColor(pickColor);
 
-                p.add(firstCoord);
-                if (j == numberAxes - 1)
-                    p.add(secCoord);
-            }
-            if (p.size() > 0 && (p.size() % 3 == 1)) {
-                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurvesThrough(p.toArray(new Point2D[0]));
+                // set curves
+                double diff = secCoord.x - firstCoord.x;
+                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurveStrip(firstCoord, new Point2D.Double(firstCoord.x + diff*0.35, firstCoord.y), new Point2D.Double(secCoord.x - diff*0.35, secCoord.y), secCoord);
                 for (Curves.CurveDetails det : curveDetails) {
                     det.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                     det.setPickColor(pickColor);
