@@ -1,15 +1,6 @@
 package hageldave.jplotter.renderers;
 
 
-/*
- * TODO
- *  This renderer is pretty similar to ParallelCoordsRenderer with the exception
- *  that there shouldn't be as many interaction classes.
- *  The same applies to the BarRenderer in the barchart branch
- *  Maybe some sort of coordinate system interface could be thought of, 
- *  which already defines the common methods, so that they can be reused.
- */
-
 import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
@@ -35,6 +26,24 @@ import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
+/**
+ * This ParallelCoordsRenderer is a {@link Renderer} that is used to display a parallel coordinate graph.
+ * To provide a way to define the vertical axes of the graph, there is the concept of "features" (see {@link Feature}).
+ * <p>
+ * Each feature has a top and a bottom axis label, which show the feature boundary values.
+ * <p>
+ * Optionally a {@link Renderer} for drawing a legend (such as the {@link Legend} class)
+ * can be set to either the bottom or right hand side of the coordinate system (can also
+ * use both areas at once).
+ * Use {@link #setLegendBottom(Renderer)} or {@link #setLegendRight(Renderer)} to do so.
+ * The legend area size can be partially controlled by {@link #setLegendBottomHeight(int)}
+ * and {@link #setLegendRightWidth(int)} if this is needed.
+ * <p>
+ * The overlay renderer ({@link #setOverlay(Renderer)}) can be used to finally draw over all
+ * of the renderer viewport.
+ * <p>
+ *
+ */
 public class ParallelCoordsRenderer implements Renderer {
     protected LinesRenderer preContentLinesR = new LinesRenderer();
     protected TextRenderer preContentTextR = new TextRenderer();
@@ -195,57 +204,69 @@ public class ParallelCoordsRenderer implements Renderer {
         return old;
     }
 
+    /**
+     * @return all features (see {@link Feature}) currently displayed in the {@link ParallelCoordsRenderer}.
+     */
     public LinkedList<Feature> getFeatures() {
         return features;
     }
 
+    /**
+     * Adds a {@link Feature} to the {@link ParallelCoordsRenderer}.
+     *
+     * @param feature to be added
+     * @return this for chaining
+     */
     public ParallelCoordsRenderer addFeature(Feature feature) {
         this.features.add(feature);
         return this;
     }
 
+    /**
+     * Adds multiple features (see {@link Feature}) to the {@link ParallelCoordsRenderer}.
+     *
+     * @param features to be added
+     * @return this for chaining
+     */
     public ParallelCoordsRenderer addFeature(Feature... features) {
         this.features.addAll(Arrays.asList(features));
         return this;
     }
 
+    /**
+     * Adds a {@link Feature} with the given parameters to the {@link ParallelCoordsRenderer}.
+     *
+     * @param min of the feature
+     * @param max of the feature
+     * @param label of the feature
+     * @return this for chaining
+     */
     public ParallelCoordsRenderer addFeature(double min, double max, String label) {
         return this.addFeature(new Feature(min, max, label));
     }
 
-    public ParallelCoordsRenderer addFeature(int xIndex, Feature feature) {
-
-        for (int i = features.size()-1; i < xIndex-1; i++) {
-            features.add(new ParallelCoordsRenderer.Feature(0, 1, ""));
-        }
-
-        this.features.add(xIndex, feature);
-        return this;
-    }
-
-    public ParallelCoordsRenderer addFeature(int[] xIndex, Feature... features) {
-        if (xIndex.length != features.length) {
-            throw new IllegalArgumentException("Both arrays have to be of equal length");
-        }
-        for (int i = 0; i < xIndex.length; i++) {
-            this.features.add(xIndex[i], features[i]);
-        }
-        return this;
-    }
-
-    public ParallelCoordsRenderer addFeature(int xIndex, double min, double max, String label) {
-        return this.addFeature(xIndex, new Feature(min, max, label));
-    }
-
+    /**
+     * @return the currently highlighted feature of the {@link ParallelCoordsRenderer} and its index.
+     */
     public Pair<Integer, Feature> getHighlightedFeature() {
         return highlightedFeature;
     }
 
+    /**
+     * Sets a highlighted {@link Feature} in the {@link ParallelCoordsRenderer} at the given index.
+     * The highlighted feature acts as an overlay of the underlying feature at the given index.
+     * As such it can't stick out the underlying feature and will be cropped if needed.
+     *
+     * @param highlightedFeature which pairs the highlighted feature and the index where it will be drawn
+     */
     public void setHighlightedFeature(Pair<Integer, Feature> highlightedFeature) {
         this.highlightedFeature = highlightedFeature;
         this.setDirty();
     }
 
+    /**
+     * Removes the highlighted {@link Feature}.
+     */
     public void setHighlightedFeature() {
         this.highlightedFeature = null;
     }
@@ -1043,11 +1064,23 @@ public class ParallelCoordsRenderer implements Renderer {
         return this.isEnabled;
     }
 
+    /**
+     * A feature represents an axis in the ParallelCoords renderer, where an index of a datachunk will be mapped to.
+     * It contains a descriptor label, which will be displayed below the axis
+     * and top/bottom labels which indicate the feature boundaries.
+     */
     public static class Feature {
         public final double bottom;
         public final double top;
         public final String label;
 
+        /**
+         * Creates a feature with the given parameters.
+         *
+         * @param bottom boundary of the feature
+         * @param top boundary of the feature
+         * @param label which describes the feature
+         */
         public Feature(double bottom, double top, String label) {
             this.bottom = bottom;
             this.top = top;
