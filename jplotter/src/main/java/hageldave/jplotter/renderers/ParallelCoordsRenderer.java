@@ -637,9 +637,9 @@ public class ParallelCoordsRenderer implements Renderer {
                 double x = coordsysAreaLB.getX() + m * axisDimensions.getWidth();
 
                 // feature guide
-                guides.addSegment(new Point2D.Double(Math.round(x), minValue), new Point2D.Double(Math.round(x), maxValue)).setColor(Color.RED).setThickness(1.1);
-                guides.addSegment(new Point2D.Double(Math.round(x)+3, minValue), new Point2D.Double(Math.round(x)-3, minValue)).setColor(Color.RED).setThickness(2);
-                guides.addSegment(new Point2D.Double(Math.round(x)+3, maxValue), new Point2D.Double(Math.round(x)-3, maxValue)).setColor(Color.RED).setThickness(2);
+                guides.addSegment(new Point2D.Double(Math.round(x), minValue), new Point2D.Double(Math.round(x), maxValue)).setColor(colorScheme.getColor1()).setThickness(1.1);
+                guides.addSegment(new Point2D.Double(Math.round(x)+3, minValue), new Point2D.Double(Math.round(x)-3, minValue)).setColor(colorScheme.getColor1()).setThickness(2);
+                guides.addSegment(new Point2D.Double(Math.round(x)+3, maxValue), new Point2D.Double(Math.round(x)-3, maxValue)).setColor(colorScheme.getColor1()).setThickness(2);
             }
 
             // setup legend areas (this will stay the same)
