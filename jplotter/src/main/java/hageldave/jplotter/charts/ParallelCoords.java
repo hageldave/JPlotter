@@ -809,26 +809,16 @@ public class ParallelCoords {
                             curveDetails[i] = curves.getCurveDetails().get(i + instance.second * curveDetails.length);
                         }
 
-                        ArrayList<Point2D> allPoints = new ArrayList<>();
-                        for (Curves.CurveDetails c : curveDetails) {
-                            allPoints.add(c.p0);
-                        }
-                        allPoints.add(curveDetails[curveDetails.length - 1].p1);
-
-                        Curves front = getOrCreateCueCurvesForGlyph(cueType, new Color(curves.getCurveDetails().get(0).color.getAsInt()), curves.getStrokePattern());
                         Color col = new Color(this.parallelCoordsys.getColorScheme().getColor1());
-                        ArrayList<Curves.CurveDetails> detailsList = front.addCurvesThrough(allPoints.toArray(new Point2D[0]));
-
-                        for (Curves.CurveDetails det : detailsList) {
-                            det.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), 0.75f))
-                                    .setThickness(det.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() + 0.2 * curves.getGlobalThicknessMultiplier() + 1.5);
-                        }
-
+                        Curves front = getOrCreateCueCurvesForGlyph(cueType, new Color(curves.getCurveDetails().get(0).color.getAsInt()), curves.getStrokePattern());
                         front.setStrokePattern(curves.getStrokePattern());
-
-                        detailsList = front.addCurvesThrough(allPoints.toArray(new Point2D[0]));
-                        for (Curves.CurveDetails det : detailsList) {
-                            det.setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt())).setThickness(det.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() * 1.05);
+                        for (Curves.CurveDetails c : curveDetails) {
+                            front.addCurve(c.copy())
+                                    .setColor(new Color(col.getRed()/255.f, col.getGreen()/255.f, col.getBlue()/255.f, 0.35f))
+                                    .setThickness(c.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() + 0.2 * curves.getGlobalThicknessMultiplier() + 1.5);
+                            front.addCurve(c.copy())
+                                    .setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt()))
+                                    .setThickness(c.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() * 1.05);
                         }
                     }
                 }
@@ -854,21 +844,17 @@ public class ParallelCoords {
                     } else {
                         Curves curves = getCurvesForChunk(instance.first);
                         Curves.CurveDetails[] curveDetails = new Curves.CurveDetails[dataModel.axesMap.size() - 1];
+
                         for (int i = 0; i < curveDetails.length; i++) {
                             curveDetails[i] = curves.getCurveDetails().get(i + instance.second * curveDetails.length);
                         }
-                        ArrayList<Point2D> allPoints = new ArrayList<>();
-                        for (Curves.CurveDetails c : curveDetails) {
-                            allPoints.add(c.p0);
-                        }
-                        allPoints.add(curveDetails[curveDetails.length-1].p1);
 
                         Curves front = getOrCreateCueCurvesForGlyph(cueType, new Color(curves.getCurveDetails().get(0).color.getAsInt()), curves.getStrokePattern());
                         front.setStrokePattern(curves.getStrokePattern());
-
-                        ArrayList<Curves.CurveDetails> detailsList = front.addCurvesThrough(allPoints.toArray(new Point2D[0]));
-                        for (Curves.CurveDetails det: detailsList) {
-                            det.setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt())).setThickness(det.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() + 1);
+                        for (Curves.CurveDetails c : curveDetails) {
+                            front.addCurve(c.copy())
+                                    .setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt()))
+                                    .setThickness((c.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier()) + 1);
                         }
                     }
                 }
@@ -905,18 +891,13 @@ public class ParallelCoords {
                             for (int i = 0; i < curveDetails.length; i++) {
                                 curveDetails[i] = curves.getCurveDetails().get(i + instance.second * curveDetails.length);
                             }
-                            ArrayList<Point2D> allPoints = new ArrayList<>();
-                            for (Curves.CurveDetails c : curveDetails) {
-                                allPoints.add(c.p0);
-                            }
-                            allPoints.add(curveDetails[curveDetails.length-1].p1);
 
                             Curves front = getOrCreateCueCurvesForGlyph(cueType, new Color(curves.getCurveDetails().get(0).color.getAsInt()), curves.getStrokePattern());
                             front.setStrokePattern(curves.getStrokePattern());
-
-                            ArrayList<Curves.CurveDetails> detailsList = front.addCurvesThrough(allPoints.toArray(new Point2D[0]));
-                            for (Curves.CurveDetails det: detailsList) {
-                                det.setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt())).setThickness(det.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier());
+                            for (Curves.CurveDetails c : curveDetails) {
+                                front.addCurve(c.copy())
+                                        .setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt()))
+                                        .setThickness(c.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier());
                             }
                         }
                     }
