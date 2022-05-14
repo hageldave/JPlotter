@@ -7,10 +7,6 @@ import hageldave.jplotter.debugging.controlHandler.annotations.CreateElement;
 import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementGet;
 import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementSet;
 import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
-import hageldave.jplotter.debugging.controlHandler.renderableFields.LinesFields;
-import hageldave.jplotter.debugging.controlHandler.renderableFields.RenderableFields;
-import hageldave.jplotter.debugging.controlHandler.rendererFields.CoordSysRendererFields;
-import hageldave.jplotter.debugging.controlHandler.rendererFields.RendererFields;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
@@ -160,7 +156,7 @@ public class DebuggerUI {
         for (Field field : fieldSet) {
             field.setAccessible(true);
             if (field.getAnnotationsByType(DisplayField.class).length > 0) {
-                JPanel panel = renFHandler.handleField(canvas, obj, field);
+                JPanel panel = FieldHandler.displayField(obj, field);
                 infoContainer.add(panel);
             }
 
@@ -189,68 +185,12 @@ public class DebuggerUI {
                 }
             });
 
-            if (key.get() != null && getter.get() != null && setter.get() != null) {
-                JPanel labelContainer = new JPanel();
-                labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
-                labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-                labelContainer.setBorder(new EmptyBorder(9, 0, 9, 0));
-                labelContainer.setBackground(new Color(225, 225, 225));
-
-                labelContainer.add(new JLabel(("(" + field.getType().getSimpleName()) + ") "));
-                JLabel fieldName = new JLabel((field.getName()) + ": ");
-                fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
-                labelContainer.add(fieldName);
-
-                PanelCreator pc = creator.get().getDeclaredConstructor().newInstance();
-                controlContainer.add(pc.createUnchecked(canvas, obj, labelContainer, setter.get(), getter.get()));
-            }
-
-            /*if (FieldHandler.displayInControlArea(field.getName())) {
-                JPanel panel = renFHandler.handleField(canvas, obj, field);
+            if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(setter.get())) {
+                JPanel panel = FieldHandler.controlField(canvas, obj, field, getter, setter, creator);
                 controlContainer.add(panel);
-            }*/
+            }
         }
         frame.repaint();
-    }
-
-    private void registerInternalPanelCreators() {
-        this.renFHandler.addPanelCreator(
-                "isEnabled", RendererFields::createIsEnabledUIElements);
-        this.renFHandler.addPanelCreator(
-                "paddingLeft", CoordSysRendererFields::createPaddingLeftUIElements);
-        this.renFHandler.addPanelCreator(
-                "paddingRight", CoordSysRendererFields::createPaddingRightUIElements);
-        this.renFHandler.addPanelCreator(
-                "paddingTop", CoordSysRendererFields::createPaddingTopUIElements);
-        this.renFHandler.addPanelCreator(
-                "paddingBot", CoordSysRendererFields::createPaddingBotUIElements);
-        this.renFHandler.addPanelCreator(
-                "hidden", RenderableFields::createHideUIRenderableElements);
-        this.renFHandler.addPanelCreator(
-                "globalScaling", RenderableFields::createGlobalScalingMultiplierUIElements);
-        this.renFHandler.addPanelCreator(
-                "globalThicknessMultiplier", RenderableFields::createGlobalThicknessMultiplierUIElements);
-        this.renFHandler.addPanelCreator(
-                "globalSaturationMultiplier", RenderableFields::createGlobalSaturationMultiplierUIElements);
-        this.renFHandler.addPanelCreator(
-                "globalAlphaMultiplier", RenderableFields::createGlobalAlphaMultiplierUIElements);
-        this.renFHandler.addPanelCreator(
-                "angle", RenderableFields::createAngleUIRenderableElements);
-        this.renFHandler.addPanelCreator(
-                "strokeLength", LinesFields::createStrokeLengthUIElements);
-        this.renFHandler.addPanelCreator(
-                "strokePattern", LinesFields::createStrokePatternUIElements);
-        this.renFHandler.addPanelCreator(
-                "txtStr", RenderableFields::createTextStrUIElements);
-    }
-
-    // TODO: also let the developer specify the class name not just the field name
-    public void registerPanelCreator(String fieldName, FieldHandler.PanelCreator c) {
-        this.renFHandler.addPanelCreator(fieldName, c);
-    }
-
-    public void deregisterPanelCreator(String fieldName) {
-        this.renFHandler.removePanelCreator(fieldName);
     }
 
     private void registerTreeListener() {
@@ -284,11 +224,8 @@ public class DebuggerUI {
                 if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
                     try {
                         fillContent(obj);
-                    } catch (IllegalAccessException ex) {
-                        throw new RuntimeException(ex);
-                    } catch (InvocationTargetException ex) {
-                        throw new RuntimeException(ex);
-                    } catch (NoSuchMethodException | InstantiationException ex) {
+                    } catch (IllegalAccessException | NoSuchMethodException | InstantiationException |
+                             InvocationTargetException ex) {
                         throw new RuntimeException(ex);
                     }
                     canvas.scheduleRepaint();
