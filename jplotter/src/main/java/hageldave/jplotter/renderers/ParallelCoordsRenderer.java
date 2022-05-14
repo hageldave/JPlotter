@@ -613,17 +613,20 @@ public class ParallelCoordsRenderer implements Renderer {
 
                 double minValue = 0;
                 double maxValue = 0;
+
+                double y = (axisDimensions.getHeight()) /
+                                (Math.max(features.get(highlightedFeature.first).top, features.get(highlightedFeature.first).bottom) -
+                                        Math.min(features.get(highlightedFeature.first).bottom, features.get(highlightedFeature.first).top));
+
                 if (features.get(highlightedFeature.first).bottom < features.get(highlightedFeature.first).top) {
-                    double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).top -features.get(highlightedFeature.first).bottom);
                     double clipMin = Math.max(highlightedFeature.second.bottom, features.get(highlightedFeature.first).bottom);
                     double clipMax = Math.min(highlightedFeature.second.top, features.get(highlightedFeature.first).top);
 
                     minValue = y * (clipMin - features.get(highlightedFeature.first).bottom) + coordsysAreaLB.getY();
                     maxValue = y * (clipMax - features.get(highlightedFeature.first).bottom) + coordsysAreaLB.getY();
                 } else {
-                    double y = (axisDimensions.getHeight()) / (features.get(highlightedFeature.first).bottom -features.get(highlightedFeature.first).top);
-                    double clipMax = Math.max(highlightedFeature.second.top, features.get(highlightedFeature.first).top);
                     double clipMin = Math.min(highlightedFeature.second.bottom, features.get(highlightedFeature.first).bottom);
+                    double clipMax = Math.max(highlightedFeature.second.top, features.get(highlightedFeature.first).top);
                     double difference = features.get(highlightedFeature.first).bottom - features.get(highlightedFeature.first).top;
 
                     minValue = y * (difference-(clipMax - features.get(highlightedFeature.first).top)) + coordsysAreaLB.getY();
