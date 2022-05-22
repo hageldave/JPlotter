@@ -406,6 +406,22 @@ public class Utils {
 		return toFill;
 	}
 
+	public static List<Method> getReflectionMethods(Class<?> toSearch) {
+		List<Method> toFill = new LinkedList<>();
+		if (Objects.nonNull(toSearch)) {
+			Method[] sameReturnType = Arrays.stream(toSearch.getDeclaredMethods()).toArray(Method[]::new);
+			Method[] sameReturnParamTypes = Arrays.stream(sameReturnType).toArray(Method[]::new);
+			Collections.addAll(toFill, sameReturnParamTypes);
+
+			if (Objects.nonNull(toSearch.getSuperclass()))
+				toFill.addAll(getReflectionMethods(toSearch.getSuperclass()));
+
+			for (Class<?> interfaceClass : toSearch.getInterfaces())
+				toFill.addAll(getReflectionMethods(interfaceClass));
+		}
+		return toFill;
+	}
+
 	public static List<Field> getReflectionFields(Class<?> toSearch) {
 		List<Field> toFill = new LinkedList<>();
 		if (Objects.nonNull(toSearch)) {
