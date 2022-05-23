@@ -1,6 +1,9 @@
 package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
+import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageSliderCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -50,7 +53,7 @@ public class Curves implements Renderable {
 	protected int numEffectiveSegments = 0;
 	protected boolean isGLDoublePrecision = false;
 	
-	
+	@DebugGetter(key = "numEffectiveSegments")
 	public int getNumEffectiveSegments() {
 		return numEffectiveSegments;
 	}
@@ -446,7 +449,6 @@ public class Curves implements Renderable {
 		return isGLDoublePrecision;
 	}
 
-
 	@Override
 	public boolean intersects(Rectangle2D rect) {
 		return streamIntersecting(rect)
@@ -474,6 +476,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the line thickness multiplier of this {@link Curves} object
 	 */
+	@DebugGetter(key = "globalThicknessMultiplier")
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
 	}
@@ -497,6 +500,7 @@ public class Curves implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "globalThicknessMultiplier", creator = DecimalSpinnerCreator.class)
 	public Curves setGlobalThicknessMultiplier(double thickness) {
 		return setGlobalThicknessMultiplier(() -> thickness); 
 	}
@@ -519,6 +523,7 @@ public class Curves implements Renderable {
 	 * @param globalAlphaMultiplier of the curves in this collection
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageSliderCreator.class)
 	public Curves setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
 	}
@@ -526,6 +531,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the global alpha multiplier of the curves in this collection
 	 */
+	@DebugGetter(key = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -550,11 +556,13 @@ public class Curves implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageSliderCreator.class)
 	public Curves setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
+	@DebugGetter(key = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}

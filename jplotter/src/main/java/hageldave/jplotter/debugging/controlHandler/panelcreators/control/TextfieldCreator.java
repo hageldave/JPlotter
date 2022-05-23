@@ -29,9 +29,4 @@ public class TextfieldCreator implements ControlPanelCreator {
         labelContainer.add(textfield);
         return labelContainer;
     }
-
-    @Override
-    public JPanel createUnchecked(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) {
-        return ControlPanelCreator.super.createUnchecked(canvas, obj, labelContainer, setter, getter);
-    }
 }

@@ -1,5 +1,10 @@
 package hageldave.jplotter.renderables;
 
+import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
+import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.GlyphSelector;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageSliderCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -237,6 +242,7 @@ public class Points implements Renderable {
 	 * @param globalScaling of the points in this collection.
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "globalScaling", creator = DecimalSpinnerCreator.class)
 	public Points setGlobalScaling(double globalScaling) {
 		return setGlobalScaling(()->globalScaling);
 	}
@@ -256,6 +262,7 @@ public class Points implements Renderable {
 	/**
 	 * @return the global scaling factor of the points in this collection.
 	 */
+	@DebugGetter(key = "globalScaling")
 	public float getGlobalScaling() {
 		return (float)globalScaling.getAsDouble();
 	}
@@ -267,6 +274,7 @@ public class Points implements Renderable {
 	 * @param globalAlphaMultiplier of the points in this collection
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageSliderCreator.class)
 	public Points setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(()->globalAlphaMultiplier);
 	}
@@ -286,6 +294,7 @@ public class Points implements Renderable {
 	/**
 	 * @return the global alpha multiplier of the points in this collection
 	 */
+	@DebugGetter(key = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -309,11 +318,13 @@ public class Points implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageSliderCreator.class)
 	public Points setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
+	@DebugGetter(key = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
@@ -512,6 +523,7 @@ public class Points implements Renderable {
 	 * @return the list of point details.<br>
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
+	@DebugGetter(key = "points")
 	public ArrayList<PointDetails> getPointDetails() {
 		return points;
 	}
@@ -604,12 +616,14 @@ public class Points implements Renderable {
 	 * @param glyph to use
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "glyph", creator = GlyphSelector.class)
 	public Points setGlyph(Glyph glyph) {
 		this.glyph = glyph;
 		return this;
 	}
 
 	/** @return current glyph */
+	@DebugGetter(key = "glyph")
 	public Glyph getGlyph() {
 		return glyph;
 	}

@@ -2,7 +2,10 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.*;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageSliderCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.StrokePatternCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.LinesRenderer;
@@ -260,7 +263,7 @@ public class Lines implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalThicknessMultiplier", creator = SpinnerCreator.class)
+	@DebugSetter(key = "globalThicknessMultiplier", creator = DecimalSpinnerCreator.class)
 	public Lines setGlobalThicknessMultiplier(double thickness) {
 		return setGlobalThicknessMultiplier(() -> thickness); 
 	}
@@ -439,7 +442,7 @@ public class Lines implements Renderable {
 	 * @param strokeLength length of the stroke
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "strokeLength", creator = StrokeLengthCreator.class)
+	@DebugSetter(key = "strokeLength", creator = DecimalSpinnerCreator.class)
 	public Lines setStrokeLength(double strokeLength) {
 		this.strokeLength = (float) Math.max(0, strokeLength);
 		return this;

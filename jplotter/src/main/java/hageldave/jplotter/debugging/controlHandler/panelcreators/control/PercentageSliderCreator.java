@@ -5,18 +5,22 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 public class PercentageSliderCreator implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
-        JLabel valueLabel = new JLabel(getter.invoke(obj).toString());
-        float initValue = (Float) getter.invoke(obj)*100;
+        DecimalFormat df = new DecimalFormat("#0.00", DecimalFormatSymbols.getInstance(Locale.US));
+        JLabel valueLabel = new JLabel(df.format(getter.invoke(obj)));
+        float initValue = (float) getter.invoke(obj)*100;
         JSlider slider = new JSlider(0, 100, Math.min((int) initValue, 100));
         slider.addChangeListener(e -> {
             try {
                 slider.setValue(slider.getValue());
                 setter.invoke(obj, (double) slider.getValue()/100);
-                valueLabel.setText(getter.invoke(obj).toString());
+                valueLabel.setText(df.format(getter.invoke(obj)));
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 ex.printStackTrace();
             }
@@ -26,10 +30,5 @@ public class PercentageSliderCreator implements ControlPanelCreator {
         labelContainer.add(valueLabel);
         labelContainer.add(slider);
         return labelContainer;
-    }
-
-    @Override
-    public JPanel createUnchecked(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) {
-        return ControlPanelCreator.super.createUnchecked(canvas, obj, labelContainer, setter, getter);
     }
 }
