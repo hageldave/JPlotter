@@ -1,13 +1,12 @@
-package hageldave.jplotter.debugging.controlHandler.panelcreators;
+package hageldave.jplotter.debugging.controlHandler.panelcreators.control;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.debugging.controlHandler.PanelCreator;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class ButtonCreator implements PanelCreator {
+public class ButtonCreator implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
         boolean currentValue = (boolean) getter.invoke(obj);
@@ -31,6 +30,6 @@ public class ButtonCreator implements PanelCreator {
 
     @Override
     public JPanel createUnchecked(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) {
-        return PanelCreator.super.createUnchecked(canvas, obj, labelContainer, setter, getter);
+        return ControlPanelCreator.super.createUnchecked(canvas, obj, labelContainer, setter, getter);
     }
 }

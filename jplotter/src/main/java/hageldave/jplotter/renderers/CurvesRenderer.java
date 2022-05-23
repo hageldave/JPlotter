@@ -2,7 +2,6 @@ package hageldave.jplotter.renderers;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorOperations;
-import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Curves;
@@ -386,7 +385,6 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
 	protected boolean viewHasChanged = true;
 	protected int preVpW = 0;
 	protected int preVpH = 0;
-	@DisplayField
 	private final int[] strokePattern = new int[16];
 
     /**

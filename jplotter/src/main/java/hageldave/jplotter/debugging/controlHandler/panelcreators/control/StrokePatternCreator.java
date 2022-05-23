@@ -1,20 +1,19 @@
-package hageldave.jplotter.debugging.controlHandler.panelcreators;
+package hageldave.jplotter.debugging.controlHandler.panelcreators.control;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.debugging.controlHandler.PanelCreator;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class StrokeLengthCreator implements PanelCreator {
+public class StrokePatternCreator implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
-        int currentStrokeLength = (int) ((float) getter.invoke(obj));
-        JLabel strokeLengthLabel = new JLabel(String.valueOf(currentStrokeLength));
+        short currentStrokePattern = (short) getter.invoke(obj);
+        JLabel strokeLengthLabel = new JLabel(String.valueOf(currentStrokePattern));
 
-        SpinnerNumberModel strokeLengthModel = new SpinnerNumberModel(currentStrokeLength, 1, canvas.asComponent().getWidth(), 1);
-        JSpinner spinner = new JSpinner(strokeLengthModel);
+        SpinnerNumberModel strokePatternModel = new SpinnerNumberModel(currentStrokePattern, Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
+        JSpinner spinner = new JSpinner(strokePatternModel);
         spinner.setMaximumSize(spinner.getPreferredSize());
 
         spinner.addChangeListener(e -> {
@@ -30,11 +29,12 @@ public class StrokeLengthCreator implements PanelCreator {
 
         labelContainer.add(strokeLengthLabel);
         labelContainer.add(spinner);
+
         return labelContainer;
     }
 
     @Override
     public JPanel createUnchecked(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) {
-        return PanelCreator.super.createUnchecked(canvas, obj, labelContainer, setter, getter);
+        return ControlPanelCreator.super.createUnchecked(canvas, obj, labelContainer, setter, getter);
     }
 }

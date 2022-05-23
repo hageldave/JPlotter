@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.renderables.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -45,10 +44,8 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 	public final TrianglesRenderer triangles = new TrianglesRenderer();
 	public final CurvesRenderer curves = new CurvesRenderer();
 
-	@DisplayField
 	private final Renderer[] rendererLUT = {triangles,lines,curves,points,text};
 	public static final int TRI = 0, LIN = 1, PNT = 2, TXT = 3, CRV = 4;
-	@DisplayField
 	private final int[] renderOrder = {TRI,LIN,CRV,PNT,TXT};
 	boolean isEnabled = true;
 	

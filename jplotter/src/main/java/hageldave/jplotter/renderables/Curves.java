@@ -1,6 +1,6 @@
 package hageldave.jplotter.renderables;
 
-import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
+import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -38,7 +38,6 @@ import java.util.stream.Stream;
 public class Curves implements Renderable {
 
 	protected VertexArray va;
-	@DisplayField
 	protected ArrayList<CurveDetails> curves = new ArrayList<>();
 	protected short strokePattern = (short)0xffff;
 	protected float strokeLength = 16;
@@ -48,7 +47,6 @@ public class Curves implements Renderable {
 	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
 	protected DoubleSupplier globalThicknessMultiplier = () -> 1.0;
-	@DisplayField
 	protected int numEffectiveSegments = 0;
 	protected boolean isGLDoublePrecision = false;
 	
@@ -632,6 +630,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the individual curve detail objects contained in this object
 	 */
+	@DebugGetter(key = "curves")
 	public ArrayList<CurveDetails> getCurveDetails() {
 		return curves;
 	}

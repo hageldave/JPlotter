@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderables;
 
-import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -43,14 +42,13 @@ import java.util.stream.Collectors;
  */
 public class Points implements Renderable {
 
-	@DisplayField
 	public Glyph glyph;
 	protected VertexArray va;
 	protected boolean isDirty;
 	protected DoubleSupplier globalScaling = ()->1.0;
 	protected DoubleSupplier globalAlphaMultiplier = ()->1.0;
 	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
-	@DisplayField
+
 	protected ArrayList<PointDetails> points = new ArrayList<>();
 	protected boolean hidden=false;
 	protected boolean useVertexRounding=false;

@@ -2,11 +2,10 @@ package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.controlHandler.FieldHandler;
-import hageldave.jplotter.debugging.controlHandler.PanelCreator;
-import hageldave.jplotter.debugging.controlHandler.annotations.CreateElement;
-import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementGet;
-import hageldave.jplotter.debugging.controlHandler.annotations.CreateElementSet;
-import hageldave.jplotter.debugging.controlHandler.annotations.DisplayField;
+import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
+import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ControlPanelCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.display.DisplayPanelCreator;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
@@ -16,11 +15,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,8 +39,6 @@ public class DebuggerUI {
     final protected JLabel controlHeader = new JLabel();
     final protected JLabel infoHeader = new JLabel();
 
-    final protected FieldHandler renFHandler = new FieldHandler();
-
     final protected JPlotterCanvas canvas;
 
     public DebuggerUI(JPlotterCanvas canvas) {
@@ -55,9 +51,6 @@ public class DebuggerUI {
 
         // set constructed tree as tree model
         tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
-
-        // register components here
-        // registerInternalPanelCreators();
 
         // start title container
         JPanel titleArea = new JPanel();
@@ -106,7 +99,7 @@ public class DebuggerUI {
         splitpane.setLeftComponent(new JScrollPane(tree));
 
         frame.getContentPane().add(splitpane);
-        frame.setPreferredSize(new Dimension(900, 500));
+        frame.setPreferredSize(new Dimension(950, 550));
         frame.pack();
         frame.setVisible(true);
 
@@ -150,46 +143,42 @@ public class DebuggerUI {
         infoContainer.removeAll();
     }
 
-    protected void handleObjectFields(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
-        HashSet<Field> fieldSet = new HashSet<>(Utils.getReflectionFields(obj.getClass()));
+    protected void handleObjectFields(Object obj) {
+        List<Method> allMethods = Utils.getReflectionMethods(obj.getClass());
 
-        for (Field field : fieldSet) {
-            field.setAccessible(true);
-            if (field.getAnnotationsByType(DisplayField.class).length > 0) {
-                JPanel panel = FieldHandler.displayField(obj, field);
-                infoContainer.add(panel);
-            }
-
+        allMethods.forEach(searchGetter -> {
             AtomicReference<String> key = new AtomicReference<>();
             AtomicReference<Method> getter = new AtomicReference<>();
             AtomicReference<Method> setter = new AtomicReference<>();
-            AtomicReference<Class<? extends PanelCreator>> creator = new AtomicReference<>();
+            AtomicReference<Class<? extends ControlPanelCreator>> ctrlCreator = new AtomicReference<>();
+            AtomicReference<Class<? extends DisplayPanelCreator>> dsplyCreator = new AtomicReference<>();
 
-            CreateElement[] createBtnMethods = field.getAnnotationsByType(CreateElement.class);
-            for (CreateElement btnMethod : createBtnMethods) {
-                key.set(btnMethod.key());
-                creator.set(btnMethod.creator());
+            for (DebugGetter debugGetter : searchGetter.getAnnotationsByType(DebugGetter.class)) {
+                key.set(debugGetter.key());
+                getter.set(searchGetter);
+                dsplyCreator.set(debugGetter.creator());
+
+                allMethods.forEach(searchSetter -> {
+                    for (DebugSetter debugSetter : searchSetter.getAnnotationsByType(DebugSetter.class)) {
+                        if (Objects.equals(debugSetter.key(), key.get())) {
+                            if (Objects.nonNull(setter.get()))
+                                throw new RuntimeException("Annotation key for @DebugSetter used more than once");
+
+                            setter.set(searchSetter);
+                            ctrlCreator.set(debugSetter.creator());
+                        }
+                    }
+                });
             }
 
-            Arrays.stream(obj.getClass().getMethods()).forEach(e -> {
-                for (CreateElementGet btnMethod : e.getAnnotationsByType(CreateElementGet.class)) {
-                    if (Objects.equals(btnMethod.key(), key.get())) {
-                        getter.set(e);
-                    }
-                }
-
-                for (CreateElementSet btnMethod : e.getAnnotationsByType(CreateElementSet.class)) {
-                    if (Objects.equals(btnMethod.key(), key.get())) {
-                        setter.set(e);
-                    }
-                }
-            });
-
-            if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(setter.get())) {
-                JPanel panel = FieldHandler.controlField(canvas, obj, field, getter, setter, creator);
+            if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(setter.get()) && Objects.nonNull(ctrlCreator.get())) {
+                JPanel panel = FieldHandler.controlField(canvas, obj, key.get(), getter, setter, ctrlCreator);
                 controlContainer.add(panel);
+            } else if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(dsplyCreator.get())) {
+                JPanel panel = FieldHandler.displayField(canvas, obj, key.get(), getter, dsplyCreator);
+                infoContainer.add(panel);
             }
-        }
+        });
         frame.repaint();
     }
 
