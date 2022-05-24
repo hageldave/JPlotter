@@ -347,14 +347,10 @@ public class ParallelCoords {
      * with the new or changed data.
      *
      */
-    public static class ParallelCoordsDataModel {
-        protected ArrayList<double[][]> dataChunks = new ArrayList<>();
+    public static class ParallelCoordsDataModel extends DataModel {
         protected ArrayList<ParallelCoordsRenderer.Feature> features = new ArrayList<>();
         protected HashMap<Integer, ParallelCoordsRenderer.Feature> feature2dataIndex = new HashMap<>();
-
-        protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
         protected LinkedList<ParallelCoordsDataModelListener> listeners = new LinkedList<>();
-
         protected List<Integer> axesMap = new ArrayList<>();
 
         /**
@@ -468,33 +464,6 @@ public class ParallelCoords {
         }
 
         /**
-         * @return number of data chunks added to the data model
-         */
-        public int numChunks() {
-            return dataChunks.size();
-        }
-
-        /**
-         * Returns the dataChunk which has the chunkIdx in the data model.
-         *
-         * @param chunkIdx of the desired dataChunk
-         * @return the dataChunk
-         */
-        public double[][] getDataChunk(int chunkIdx) {
-            return dataChunks.get(chunkIdx);
-        }
-
-        /**
-         * Returns the size of the dataChunk which has the chunkIdx in the data model.
-         *
-         * @param chunkIdx of the desired dataChunk
-         * @return size of the data chunk
-         */
-        public int chunkSize(int chunkIdx) {
-            return getDataChunk(chunkIdx).length;
-        }
-
-        /**
          * Updates the dataChunk with the given chunkIdx.
          * This will trigger the {@link ParallelCoordsDataModelListener#dataChanged(int, double[][])} method of the {@link ParallelCoordsDataModelListener}.
          *
@@ -533,16 +502,6 @@ public class ParallelCoords {
         }
 
         /**
-         * Returns the chunk description of the corresponding chunkIdx.
-         *
-         * @param chunkIdx specifies which chunk's description should be returned
-         * @return chunk description
-         */
-        public String getChunkDescription(int chunkIdx) {
-            return descriptionPerChunk.get(chunkIdx);
-        }
-
-        /**
          * Returns all data indices of the specified data chunk (chunkIdx) that contain values
          * between a min/max on a feature axis.
          *
@@ -562,48 +521,6 @@ public class ParallelCoords {
                     containedPointIndices.add(i);
             }
             return containedPointIndices;
-        }
-
-        /**
-         * Calculates the global index of idx if all values of the chunks
-         * are viewed as one sequence.
-         *
-         * @param chunkIdx marks the starting point of the globalIndex before idx
-         * @param idx will be added to the globalIndex after the sizes of all chunks before chunkIdx
-         * @return the global index of idx
-         */
-        public int getGlobalIndex(int chunkIdx, int idx) {
-            int globalIdx = 0;
-            for (int i = 0; i < chunkIdx; i++) {
-                globalIdx += chunkSize(i);
-            }
-            return globalIdx + idx;
-        }
-
-        /**
-         * Calculate the chunkIdx of the chunk which contains the globalIdx
-         * if all values of the chunks are viewed as one sequence.
-         *
-         * @param globalIdx data index that's chunk should be retrieved
-         * @return Pair of chunkIdx and globalIdx
-         */
-        public Pair<Integer, Integer> locateGlobalIndex(int globalIdx) {
-            int chunkIdx = 0;
-            while (globalIdx >= chunkSize(chunkIdx)) {
-                globalIdx -= chunkSize(chunkIdx);
-                chunkIdx++;
-            }
-            return Pair.of(chunkIdx, globalIdx);
-        }
-
-        /**
-         * @return how many values are stored in the data model
-         */
-        public int numDataPoints() {
-            int n = 0;
-            for (int i = 0; i < numChunks(); i++)
-                n += chunkSize(i);
-            return n;
         }
 
         /**
