@@ -90,10 +90,10 @@ public class ReadyLineChart {
                         .map(e -> new double[]{e.getKey(), e.getValue()})
                         .toArray(double[][]::new);
 
-        standardChart.getDataModel().addData(hpToMpgArr, 0, 1, 1, "Horsepower");
-        standardChart.getDataModel().addData(weightToMpgArr, 0, 1, 1, "Weight");
-        standardChart.getDataModel().addData(displacementToMpgArr, 0, 1, 1, "Displacement");
-        standardChart.getDataModel().addData(accelerationToMpgArr, 0, 1, 1, "Acceleration");
+        standardChart.getDataModel().addData(hpToMpgArr, 0, 1, "Horsepower");
+        standardChart.getDataModel().addData(weightToMpgArr, 0, 1, "Weight");
+        standardChart.getDataModel().addData(displacementToMpgArr, 0, 1,  "Displacement");
+        standardChart.getDataModel().addData(accelerationToMpgArr, 0, 1, "Acceleration");
         standardChart.getCoordsys().setCoordinateView(-10,-1,5200,60);
 
         // normalize values in chart
@@ -102,10 +102,10 @@ public class ReadyLineChart {
         normalizeValues(displacement2Mpg, displacementToMpgArr);
         normalizeValues(acceleration2Mpg, accelerationToMpgArr);
 
-        normalizedChart.getDataModel().addData(hpToMpgArr, 0, 1, 1, "Horsepower");
-        normalizedChart.getDataModel().addData(weightToMpgArr, 0, 1, 1, "Weight");
-        normalizedChart.getDataModel().addData(displacementToMpgArr, 0, 1, 1, "Displacement");
-        normalizedChart.getDataModel().addData(accelerationToMpgArr, 0, 1, 1, "Acceleration");
+        normalizedChart.getDataModel().addData(hpToMpgArr, 0, 1, "Horsepower");
+        normalizedChart.getDataModel().addData(weightToMpgArr, 0, 1, "Weight");
+        normalizedChart.getDataModel().addData(displacementToMpgArr, 0, 1, "Displacement");
+        normalizedChart.getDataModel().addData(accelerationToMpgArr, 0, 1, "Acceleration");
         normalizedChart.getCoordsys().setCoordinateView(-0.1,-0.1,1.1,1.1);
 
         ScatterPlot sc = new ScatterPlot(false);

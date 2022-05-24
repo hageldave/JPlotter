@@ -80,8 +80,8 @@ public class LineChart {
 
         this.dataModel.addListener(new LineChartDataModel.LineChartDataModelListener() {
             @Override
-            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx, Integer startEndInterval) {
-                onDataAdded(chunkIdx, chunkData, chunkDescription, xIdx, yIdx, startEndInterval);
+            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
+                onDataAdded(chunkIdx, chunkData, chunkDescription, xIdx, yIdx);
             }
 
             @Override
@@ -128,15 +128,15 @@ public class LineChart {
         return old;
     }
 
-    protected synchronized void onDataAdded(int chunkIdx, double[][] dataChunk, String chunkDescription, int xIdx, int yIdx, int startEndInterval) {
+    protected synchronized void onDataAdded(int chunkIdx, double[][] dataChunk, String chunkDescription, int xIdx, int yIdx) {
         Lines lines = new Lines();
         linesPerDataChunk.add(lines);
         contentLayer0.addItemToRender(lines);
         lines.setStrokePattern(getVisualMapping().getStrokePatternForChunk(chunkIdx, chunkDescription));
-        for(int i=0; i<dataChunk.length-startEndInterval; i++) {
+        for(int i=0; i<dataChunk.length-1; i++) {
             int i_=i;
             double[] datapoint = dataChunk[i];
-            double[] nextDatapoint = dataChunk[i+startEndInterval];
+            double[] nextDatapoint = dataChunk[i+1];
             Lines.SegmentDetails linesDetails = lines.addSegment(
                     new Point2D.Double(datapoint[xIdx], datapoint[yIdx]), new Point2D.Double(nextDatapoint[xIdx], nextDatapoint[yIdx]));
             linesDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, chunkDescription, dataChunk, i_));
@@ -161,13 +161,11 @@ public class LineChart {
         }
         lines.removeAllSegments();
 
-        int interval = this.getDataModel().startEndInterval.get(chunkIdx);
-
         // add changed data
-        for(int i=0; i<dataChunk.length-interval; i++) {
+        for(int i=0; i<dataChunk.length-1; i++) {
             int i_=i;
             double[] datapoint = dataChunk[i];
-            double[] nextDatapoint = dataChunk[i+interval];
+            double[] nextDatapoint = dataChunk[i+1];
             Lines.SegmentDetails segmentDetails = lines.addSegment(
                     new Point2D.Double(datapoint[dataModel.getXIdx(chunkIdx)], datapoint[dataModel.getYIdx(chunkIdx)]),
                     new Point2D.Double(nextDatapoint[dataModel.getXIdx(chunkIdx)], nextDatapoint[dataModel.getYIdx(chunkIdx)]));
@@ -192,22 +190,20 @@ public class LineChart {
     public static class LineChartDataModel {
         protected ArrayList<double[][]> dataChunks = new ArrayList<>();
         protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();
-        protected ArrayList<Integer> startEndInterval = new ArrayList<>();
         protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
 
         protected LinkedList<LineChartDataModelListener> listeners = new LinkedList<>();
 
         public static interface LineChartDataModelListener {
-            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx, Integer startEndInterval);
+            public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx);
 
             public void dataChanged(int chunkIdx, double[][] chunkData);
         }
 
-        public synchronized void addData(double[][] dataChunk, int xIdx, int yIdx, int startEndInterval, String chunkDescription) {
+        public synchronized void addData(double[][] dataChunk, int xIdx, int yIdx, String chunkDescription) {
             int chunkIdx = this.dataChunks.size();
             this.dataChunks.add(dataChunk);
             this.xyIndicesPerChunk.add(Pair.of(xIdx, yIdx));
-            this.startEndInterval.add(startEndInterval);
             this.descriptionPerChunk.add(chunkDescription);
             notifyDataAdded(chunkIdx);
         }
@@ -237,10 +233,6 @@ public class LineChart {
 
         public int getYIdx(int chunkIdx) {
             return xyIndicesPerChunk.get(chunkIdx).second;
-        }
-
-        public Integer getStartEndInterval(int chunkIdx) {
-            return startEndInterval.get(chunkIdx);
         }
 
         public String getChunkDescription(int chunkIdx) {
@@ -292,7 +284,7 @@ public class LineChart {
 
         protected synchronized void notifyDataAdded(int chunkIdx) {
             for(LineChartDataModelListener l:listeners)
-                l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx), getStartEndInterval(chunkIdx));
+                l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
         }
 
         public synchronized void notifyDataChanged(int chunkIdx) {
