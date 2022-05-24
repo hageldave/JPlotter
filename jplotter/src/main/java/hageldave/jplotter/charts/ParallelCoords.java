@@ -55,6 +55,7 @@ public class ParallelCoords {
     public final static int LINES=1;
     public final static int CURVES=2;
     protected int connectionMode = LINES | CURVES;
+    protected double bezierCPdist = 0.35;
 
     public ParallelCoords(final boolean useOpenGL) {
         this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback());
@@ -122,10 +123,18 @@ public class ParallelCoords {
         return old;
     }
 
+    /**
+     * @return the visual mapping {@link ParallelCoordsVisualMapping} of the ParallelCoords chart
+     */
     public ParallelCoordsVisualMapping getVisualMapping() {
         return visualMapping;
     }
 
+    /**
+     * Sets a new {@link ParallelCoordsVisualMapping}.
+     *
+     * @param visualMapping to be set
+     */
     public void setVisualMapping(ParallelCoordsVisualMapping visualMapping) {
         this.visualMapping = visualMapping;
         for (Lines p : linesPerDataChunk)
@@ -133,30 +142,51 @@ public class ParallelCoords {
         this.canvas.scheduleRepaint();
     }
 
+    /**
+     * @return the data model (see {@link ParallelCoordsVisualMapping}) linked to the ParallelCoords chart
+     */
     public ParallelCoordsDataModel getDataModel() {
         return dataModel;
     }
 
+    /**
+     * @return the underlying canvas on which the ParallelCoords chart will be rendered on
+     */
     public JPlotterCanvas getCanvas() {
         return canvas;
     }
 
+    /**
+     * @return the underlying (see {@link ParallelCoordsRenderer}) on which the ParallelCoords chart items will be placed on
+     */
     public ParallelCoordsRenderer getCoordsys() {
         return parallelCoordsys;
     }
 
+    /**
+     * @return the content layer
+     */
     public CompleteRenderer getContent() {
         return getContentLayer0();
     }
 
+    /**
+     * @return the first content layer
+     */
     public CompleteRenderer getContentLayer0() {
         return contentLayer0;
     }
 
+    /**
+     * @return the second content layer, which will overlay contentLayer0
+     */
     public CompleteRenderer getContentLayer1() {
         return contentLayer1;
     }
 
+    /**
+     * @return the third content layer, which will overlay contentLayer0 & contentLayer1
+     */
     public CompleteRenderer getContentLayer2() {
         return contentLayer2;
     }
@@ -221,7 +251,7 @@ public class ParallelCoords {
 
                 // set curves
                 double diff = secCoord.x - firstCoord.x;
-                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurveStrip(firstCoord, new Point2D.Double(firstCoord.x + diff*0.25, firstCoord.y), new Point2D.Double(secCoord.x - diff*0.25, secCoord.y), secCoord);
+                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurveStrip(firstCoord, new Point2D.Double(firstCoord.x + diff*bezierCPdist, firstCoord.y), new Point2D.Double(secCoord.x - diff*bezierCPdist, secCoord.y), secCoord);
                 for (Curves.CurveDetails det : curveDetails) {
                     det.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                     det.setPickColor(pickColor);
@@ -283,7 +313,7 @@ public class ParallelCoords {
 
                 // set curves
                 double diff = secCoord.x - firstCoord.x;
-                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurveStrip(firstCoord, new Point2D.Double(firstCoord.x + diff*0.35, firstCoord.y), new Point2D.Double(secCoord.x - diff*0.35, secCoord.y), secCoord);
+                ArrayList<Curves.CurveDetails> curveDetails = curves.addCurveStrip(firstCoord, new Point2D.Double(firstCoord.x + diff*bezierCPdist, firstCoord.y), new Point2D.Double(secCoord.x - diff*bezierCPdist, secCoord.y), secCoord);
                 for (Curves.CurveDetails det : curveDetails) {
                     det.setColor(() -> getVisualMapping().getColorForChunk(chunkIdx));
                     det.setPickColor(pickColor);
@@ -302,6 +332,21 @@ public class ParallelCoords {
         return diff * value + feature.bottom;
     }
 
+    /**
+     * The ParallelCoordsDataModel is the inner data model of the ParallelCoords chart.
+     *
+     * It consists of multiple so-called dataChunks,
+     * which are 2D double arrays holding the data that is used to render the lines/curves in the ParallelCoords chart.
+     *
+     * To access any data point later again (to highlight it for example [see {@link ParallelCoords#highlight(java.lang.Iterable)}]), we differentiate the term chunkIdx and segmentIdx.
+     * The chunkIdx is the index of the data chunk in the array, where all the added data chunks are saved (so the first added data chunk has chunkIdx 0, the second then chunkIdx 1, ...).
+     * The segmentIdx then is the index inside the data chunk, as expected.
+     *
+     * The data model consists also of listeners (see {@link ParallelCoordsDataModelListener}),
+     * which methods are called if data is added or changed. The listeners methods then cause a repaint of the ParallelCoords chart (including legend, etc.),
+     * with the new or changed data.
+     *
+     */
     public static class ParallelCoordsDataModel {
         protected ArrayList<double[][]> dataChunks = new ArrayList<>();
         protected ArrayList<ParallelCoordsRenderer.Feature> features = new ArrayList<>();
@@ -312,16 +357,50 @@ public class ParallelCoords {
 
         protected List<Integer> axesMap = new ArrayList<>();
 
+        /**
+         * The ParallelCoordsDataModelListener consists of multiple listener interfaces, which are called when the data model is manipulated.
+         */
         public static interface ParallelCoordsDataModelListener {
+            /**
+             * Whenever the feature axis order is changed, this interface will be called.
+             */
             public void featureOrderChanged();
 
+            /**
+             * Whenever a new feature axis is added to the ParallelCoords chart, this interface will be called.
+             *
+             * @param feature the feature axis to be added to the chart
+             */
             public void featureAdded(ParallelCoordsRenderer.Feature feature);
 
+            /**
+             * Whenever data is added to the ParallelCoords chart, this interface will be called.
+             *
+             * @param chunkIdx index of the dataChunk in the array where all dataChunks are stored
+             * @param chunkData 2D array containing the data that will be rendered in the ParallelCoords chart
+             * @param chunkDescription label of the data chunk which will also be shown in the legend
+             */
             public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription);
 
+            /**
+             * Whenever data is updated in the ParallelCoords chart, this interface will be called.
+             *
+             * @param chunkIdx index of the data chunk that should be updated
+             * @param chunkData 2D array containing the updated data
+             */
             public void dataChanged(int chunkIdx, double[][] chunkData);
         }
 
+        /**
+         * Adds a feature axis (see {@link ParallelCoordsRenderer.Feature}) to the ParallelCoordinates chart.
+         *
+         * The feature axis is mapped to an index which enables the possibility to reorder
+         * the axes later with the {@link #setDataIndicesOrder} method.
+         *
+         * @param dataIndex index of the feature
+         * @param feature the feature to be added
+         * @return this for chaining
+         */
         public synchronized ParallelCoordsDataModel addFeature(int dataIndex, ParallelCoordsRenderer.Feature feature) {
             features.add(feature);
             axesMap.add(dataIndex);
@@ -330,6 +409,16 @@ public class ParallelCoords {
             return this;
         }
 
+        /**
+         * Adds multiple feature axes (see {@link ParallelCoordsRenderer.Feature}) to the ParallelCoordinates chart.
+         *
+         * Each feature axis is mapped to an index which enables the possibility to reorder
+         * the axes later with the {@link #setDataIndicesOrder} method.
+         *
+         * @param dataIndices indices of the features
+         * @param features the features to be added
+         * @return this for chaining
+         */
         public synchronized ParallelCoordsDataModel addFeature(int[] dataIndices, ParallelCoordsRenderer.Feature[] features) {
             if (dataIndices.length != features.length) {
                 throw new IllegalArgumentException("Arrays have to be of equal length");
@@ -340,6 +429,12 @@ public class ParallelCoords {
             return this;
         }
 
+        /**
+         * Adds data to the data model of the ParallelCoords chart.
+         *
+         * @param dataChunk 2D array containing the data that will be rendered in the ParallelCoords chart
+         * @param chunkDescription description of the chunk which will also be shown in the legend
+         */
         public synchronized void addData(double[][] dataChunk, String chunkDescription) {
             int chunkIdx = this.dataChunks.size();
             this.dataChunks.add(dataChunk);
@@ -347,6 +442,16 @@ public class ParallelCoords {
             notifyDataAdded(chunkIdx);
         }
 
+        /**
+         * Sets the order of the feature axes.
+         *
+         * Each axis will be displayed at the position specified in the array.
+         * E.g. [0, 2, 1] means, that the feature added 1st -> displayed at the 1st position
+         *                                              2nd -> displayed at the 3rd position
+         *                                              3rd -> displayed at the 2nd position
+         *
+         * @param indicesOrder array containing the indices of the feature axes
+         */
         public synchronized void setDataIndicesOrder(int[] indicesOrder) {
             axesMap.clear();
             for (int i = 0; i < indicesOrder.length; i++) {
@@ -355,22 +460,47 @@ public class ParallelCoords {
             notifyFeatureOrderChanged();
         }
 
+        /**
+         * @return a list containing the indices of the axes which are displayed in their list order
+         */
         public List<Integer> getAxisOrder() {
             return axesMap;
         }
 
+        /**
+         * @return number of data chunks added to the data model
+         */
         public int numChunks() {
             return dataChunks.size();
         }
 
+        /**
+         * Returns the dataChunk which has the chunkIdx in the data model.
+         *
+         * @param chunkIdx of the desired dataChunk
+         * @return the dataChunk
+         */
         public double[][] getDataChunk(int chunkIdx) {
             return dataChunks.get(chunkIdx);
         }
 
+        /**
+         * Returns the size of the dataChunk which has the chunkIdx in the data model.
+         *
+         * @param chunkIdx of the desired dataChunk
+         * @return size of the data chunk
+         */
         public int chunkSize(int chunkIdx) {
             return getDataChunk(chunkIdx).length;
         }
 
+        /**
+         * Updates the dataChunk with the given chunkIdx.
+         * This will trigger the {@link ParallelCoordsDataModelListener#dataChanged(int, double[][])} method of the {@link ParallelCoordsDataModelListener}.
+         *
+         * @param chunkIdx id of the dataChunk to update
+         * @param dataChunk the new dataChunk
+         */
         public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk) {
             if (chunkIdx >= numChunks())
                 throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
@@ -378,23 +508,50 @@ public class ParallelCoords {
             this.notifyDataChanged(chunkIdx);
         }
 
+        /**
+         * @return the number of feature axes in the chart
+         */
         public int getFeatureCount() {
             return features.size();
         }
 
+        /**
+         * @return all {@link ParallelCoordsRenderer.Feature} objects stored in the data model
+         */
         public ArrayList<ParallelCoordsRenderer.Feature> getFeatures() {
             return this.features;
         }
 
+        /**
+         * Returns the {@link ParallelCoordsRenderer.Feature} at the given index.
+         *
+         * @param index of the feature
+         * @return feature at the given index
+         */
         public ParallelCoordsRenderer.Feature getFeature(int index) {
             return this.features.get(index);
         }
 
+        /**
+         * Returns the chunk description of the corresponding chunkIdx.
+         *
+         * @param chunkIdx specifies which chunk's description should be returned
+         * @return chunk description
+         */
         public String getChunkDescription(int chunkIdx) {
             return descriptionPerChunk.get(chunkIdx);
         }
 
-        // return data indices in between min/max
+        /**
+         * Returns all data indices of the specified data chunk (chunkIdx) that contain values
+         * between a min/max on a feature axis.
+         *
+         * @param chunkIdx elements of this chunk will be searched
+         * @param featureIndex defines which values will be searched
+         * @param min lower bound of values to be returned
+         * @param max upper bound of values to be returned
+         * @return all data indices with values between min/max on the specified feature axis
+         */
         public TreeSet<Integer> getIndicesOfSegmentsInRange(int chunkIdx, int featureIndex, double min, double max) {
             // naive search for contained points
             // TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
@@ -407,6 +564,14 @@ public class ParallelCoords {
             return containedPointIndices;
         }
 
+        /**
+         * Calculates the global index of idx if all values of the chunks
+         * are viewed as one sequence.
+         *
+         * @param chunkIdx marks the starting point of the globalIndex before idx
+         * @param idx will be added to the globalIndex after the sizes of all chunks before chunkIdx
+         * @return the global index of idx
+         */
         public int getGlobalIndex(int chunkIdx, int idx) {
             int globalIdx = 0;
             for (int i = 0; i < chunkIdx; i++) {
@@ -415,6 +580,13 @@ public class ParallelCoords {
             return globalIdx + idx;
         }
 
+        /**
+         * Calculate the chunkIdx of the chunk which contains the globalIdx
+         * if all values of the chunks are viewed as one sequence.
+         *
+         * @param globalIdx data index that's chunk should be retrieved
+         * @return Pair of chunkIdx and globalIdx
+         */
         public Pair<Integer, Integer> locateGlobalIndex(int globalIdx) {
             int chunkIdx = 0;
             while (globalIdx >= chunkSize(chunkIdx)) {
@@ -424,6 +596,9 @@ public class ParallelCoords {
             return Pair.of(chunkIdx, globalIdx);
         }
 
+        /**
+         * @return how many values are stored in the data model
+         */
         public int numDataPoints() {
             int n = 0;
             for (int i = 0; i < numChunks(); i++)
@@ -431,42 +606,92 @@ public class ParallelCoords {
             return n;
         }
 
+        /**
+         * Adds a {@link ParallelCoordsDataModelListener} to the data model.
+         *
+         * @param l listener to be added
+         * @return this for chaining
+         */
         public synchronized ParallelCoordsDataModelListener addListener(ParallelCoordsDataModelListener l) {
             listeners.add(l);
             return l;
         }
 
+        /**
+         * Removes a {@link ParallelCoordsDataModelListener} from the data model.
+         *
+         * @param l listener to be removed
+         */
         public synchronized void removeListener(ParallelCoordsDataModelListener l) {
             listeners.remove(l);
         }
 
+        /**
+         * Calls the {@link ParallelCoordsDataModelListener#featureOrderChanged()} interface of all registered {@link ParallelCoordsDataModelListener}.
+         */
         public synchronized void notifyFeatureOrderChanged() {
             for (ParallelCoordsDataModelListener l : listeners)
                 l.featureOrderChanged();
         }
 
+        /**
+         * Calls the {@link ParallelCoordsDataModelListener#featureAdded(ParallelCoordsRenderer.Feature)} interface of all registered {@link ParallelCoordsDataModelListener}.
+         *
+         * @param feature which has been added
+         */
         public synchronized void notifyFeatureAdded(ParallelCoordsRenderer.Feature feature) {
             for (ParallelCoordsDataModelListener l : listeners)
                 l.featureAdded(feature);
         }
 
+        /**
+         * Calls the {@link ParallelCoordsDataModelListener#dataAdded(int, double[][], String)} interface of all registered {@link ParallelCoordsDataModelListener}.
+         *
+         * @param chunkIdx data chunk id of the added data
+         */
         public synchronized void notifyDataAdded(int chunkIdx) {
             for (ParallelCoordsDataModelListener l : listeners)
                 l.dataAdded(chunkIdx, getDataChunk(chunkIdx), getChunkDescription(chunkIdx));
         }
 
+        /**
+         * Calls the {@link ParallelCoordsDataModelListener#dataChanged(int, double[][])} interface of all registered {@link ParallelCoordsDataModelListener}.
+         *
+         * @param chunkIdx data chunk id of the changed data
+         */
         public synchronized void notifyDataChanged(int chunkIdx) {
             for (ParallelCoordsDataModelListener l : listeners)
                 l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
         }
     }
 
+    /**
+     * The ParallelCoordsVisualMapping is responsible for mapping the chunks to a color.
+     *
+     */
     public static interface ParallelCoordsVisualMapping {
+        /**
+         * This method returns a color to the given chunkIdx.
+         *
+         * As there is only a limited number of colors in the color map (see {@link DefaultColorMap}),
+         * they are repeated in the same order, if all of them have been used.
+         *
+         * @param chunkIdx id of the data chunk
+         * @return color in an integer packed ARGB format
+         */
         public default int getColorForChunk(int chunkIdx) {
             DefaultColorMap colorMap = DefaultColorMap.Q_8_SET2;
             return colorMap.getColor(chunkIdx % colorMap.numColors());
         }
 
+        /**
+         * Adds a line label element to the legend of the ParallelCoords for a data chunk, using the {@link ParallelCoordsVisualMapping#getColorForChunk(int)} method.
+         *
+         * @param legend where the new element will be added
+         * @param chunkIdx id of the data chunk
+         * @param chunkDescr description of the data chunk
+         * @param pickColor pick color of the legend element
+         */
         public default void createLegendElementForChunk(Legend legend, int chunkIdx, String chunkDescr, int pickColor) {
             int color = getColorForChunk(chunkIdx);
             legend.addLineLabel(1, color, chunkDescr, pickColor);
@@ -478,6 +703,10 @@ public class ParallelCoords {
         ;
     }
 
+    /**
+     * Sets the legend on the right of the ParallelCoords graph.
+     * This replaces the legend on the bottom, if it was set before.
+     */
     public void placeLegendOnRight() {
         if (parallelCoordsys.getLegendBottom() == legend) {
             parallelCoordsys.setLegendBottom(null);
@@ -487,6 +716,10 @@ public class ParallelCoords {
         parallelCoordsys.setLegendRightWidth(this.legendRightWidth);
     }
 
+    /**
+     * Sets the legend on the bottom of the ParallelCoords graph.
+     * This replaces the legend on the right, if it was set before.
+     */
     public void placeLegendOnBottom() {
         if (parallelCoordsys.getLegendRight() == legend) {
             parallelCoordsys.setLegendRight(null);
@@ -496,6 +729,9 @@ public class ParallelCoords {
         parallelCoordsys.setLegendBottomHeight(this.legendBottomHeight);
     }
 
+    /**
+     * Removes all legends of the ParallelCoords graph.
+     */
     public void placeLegendNowhere() {
         if (parallelCoordsys.getLegendRight() == legend) {
             parallelCoordsys.setLegendRight(null);
@@ -507,10 +743,22 @@ public class ParallelCoords {
         }
     }
 
+    /**
+     * @return the currently active connection mode,
+     * which defines if the datapoints are connected by lines or curves.
+     */
     public int getConnectionMode() {
         return connectionMode;
     }
 
+    /**
+     * Defines if the datapoints are connected by lines (=1) or curves (=2)
+     * (see {@link #LINES} and {@link #CURVES}).
+     *
+     * To switch between connection modes, the corresponding renderers are enabled/disabled.
+     *
+     * @param connectionMode defines how datapoints should be connected
+     */
     public void setConnectionMode(int connectionMode) {
         this.connectionMode = connectionMode;
         if (connectionMode == LINES) {
@@ -529,7 +777,18 @@ public class ParallelCoords {
             this.getContentLayer2().curves.setEnabled(true);
         }
     }
-    
+
+    /**
+     * Enables/Disables the axis highlighting feature of the ParallelCoords graph.
+     *
+     * The ParallelCoords class contains multiple interaction interfaces that react to user input.
+     * One of these interfaces reacts to the event when the mouse is dragged on/over an axis.
+     * There's also a visual indicator which area is currently selected.
+     *
+     * If this behaviour is undesired, it can be deactivated.
+     *
+     * @param toHighlight controls if the feature should be enabled or disabled
+     */
     public void setAxisHighlighting(boolean toHighlight) {
         this.axisHighlighting = toHighlight;
     }
@@ -605,6 +864,7 @@ public class ParallelCoords {
                 }
 
                 // START Axis highlighting //
+                // TODO: maybe always listen to events, but only show visual indictator if axisHighlighting is true
                 if (axisHighlighting) {
                     boolean isEventTypeKeyPressed = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED);
                     boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);
@@ -699,6 +959,10 @@ public class ParallelCoords {
         highlightFeatureAxis();
     }
 
+    /**
+     * The ParallelCoordsMouseEventListener interface contains multiple methods,
+     * notifying if an element has been hit or not (inside and outside the graph).
+     */
     public static interface ParallelCoordsMouseEventListener {
         static final String MOUSE_EVENT_TYPE_MOVED = "moved";
         static final String MOUSE_EVENT_TYPE_CLICKED = "clicked";
@@ -706,38 +970,102 @@ public class ParallelCoords {
         static final String MOUSE_EVENT_TYPE_RELEASED = "released";
         static final String MOUSE_EVENT_TYPE_DRAGGED = "dragged";
 
+        /**
+         * Called whenever the mouse pointer doesn't hit a line/curve of the ParallelCoord while being inside the graph.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param coordsysPoint coordinates of the mouse event inside the coordinate system
+         */
         public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
         }
 
+        /**
+         * Called when the mouse pointer does hit a line/curve of the ScatterPlot.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param coordsysPoint coordinates of the mouse event inside the coordinate system
+         * @param chunkIdx id of the data chunk
+         * @param segmentIdx id of the data point inside the data chunk
+         */
         public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int segmentIdx) {
         }
 
+        /**
+         * Called when the mouse pointer doesn't hit an element (e.g. legend elements) of the ParallelCoords while being outside the graph.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         */
         public default void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {
         }
 
+        /**
+         * Called when the mouse pointer hits an element (e.g. legend elements) of the ParallelCoords while being outside the graph.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param chunkIdx id of the data chunk
+         */
         public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, int chunkIdx) {
         }
 
+        /**
+         * Called when the mouse pointer is being dragged over a feature axis.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param featureIndex index of the axis that the mouse is dragged over
+         * @param min lower bound of the selection
+         * @param max upper bound of the selection
+         */
         public default void notifyMouseEventOnFeature(String mouseEventType, MouseEvent e, int featureIndex, double min, double max) {
         }
 
+        /**
+         * Called when the mouse pointer is not being dragged over a feature axis.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         */
         public default void notifyMouseEventOffFeature(String mouseEventType, MouseEvent e) {
         }
     }
 
+    /**
+     * Adds a {@link ParallelCoordsMouseEventListener} to the ParallelCoords chart.
+     *
+     * @param l {@link ParallelCoordsMouseEventListener} that implements the interface methods which is called whenever one of the defined mouse events happens
+     * @return {@link ParallelCoordsMouseEventListener} for chaining
+     */
     public synchronized ParallelCoordsMouseEventListener addParallelCoordsMouseEventListener(ParallelCoordsMouseEventListener l) {
         this.mouseEventListeners.add(l);
         return l;
     }
 
+    /**
+     * Removes the given {@link ParallelCoordsMouseEventListener} from the ScatterPlot.
+     *
+     * @param l {@link ParallelCoordsMouseEventListener} that should be removed
+     * @return true if the {@link ParallelCoordsMouseEventListener} was added to the ParallelCoords chart before
+     */
     public synchronized boolean removeParallelCoordsMouseEventListener(ParallelCoordsMouseEventListener l) {
         return this.mouseEventListeners.remove(l);
     }
 
+    /**
+     * @param chunkIdx chunkIdx specifies which {@link Lines} object should be returned
+     * @return {@link Lines} object connected to the chunkIdx
+     */
     public Lines getLinesForChunk(int chunkIdx) {
         return this.linesPerDataChunk.get(chunkIdx);
     }
 
+    /**
+     * @param chunkIdx chunkIdx specifies which {@link Curves} object should be returned
+     * @return {@link Curves} object connected to the chunkIdx
+     */
     public Curves getCurvesForChunk(int chunkIdx) {
         return this.curvesPerDataChunk.get(chunkIdx);
     }
@@ -747,6 +1075,12 @@ public class ParallelCoords {
         accentuate(Arrays.asList(toAccentuate));
     }
 
+    /**
+     * "Accentuates" all the Lines/Curves which match the input parameters.
+     * The accentuation effect adds an outline to the specified line(s)/curve(s).
+     *
+     * @param toAccentuate pair of chunkIdx and pointIdx defining the lines/curves to accentuate
+     */
     public void accentuate(Iterable<Pair<Integer, Integer>> toAccentuate) {
         SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(CUE_ACCENTUATE);
         selectionModel.setSelection(toAccentuate);
@@ -757,6 +1091,12 @@ public class ParallelCoords {
         emphasize(Arrays.asList(toEmphasize));
     }
 
+    /**
+     * "Emphasizes" all the Lines/Curves which match the input parameters.
+     * The emphasizing effect enlarges the specified line(s)/curve(s).
+     *
+     * @param toEmphasize pair of chunkIdx and pointIdx defining the lines/curves to emphasize
+     */
     public void emphasize(Iterable<Pair<Integer, Integer>> toEmphasize) {
         SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(CUE_EMPHASIZE);
         selectionModel.setSelection(toEmphasize);
@@ -767,6 +1107,12 @@ public class ParallelCoords {
         highlight(Arrays.asList(toHighlight));
     }
 
+    /**
+     * "Highlights" all the Lines/Curves which match the input parameters.
+     * The highlighting effect greys out all other points other than the specified line(s)/curve(s).
+     *
+     * @param toHighlight pair of chunkIdx and pointIdx defining the lines/curves to highlight
+     */
     public void highlight(Iterable<Pair<Integer, Integer>> toHighlight) {
         SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(CUE_HIGHLIGHT);
         selectionModel.setSelection(toHighlight);
@@ -793,7 +1139,7 @@ public class ParallelCoords {
                         for (Lines.SegmentDetails l : segments) {
                             Lines front = getOrCreateCueLinesForGlyph(cueType, new Color(lines.getSegments().get(0).color0.getAsInt()), lines.getStrokePattern());
                             Color c = new Color(this.parallelCoordsys.getColorScheme().getColor1());
-                            front.addSegment(l.p0, l.p1).setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 0.75f))
+                            front.addSegment(l.p0, l.p1).setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 0.3f))
                                     .setThickness(l.thickness0.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2 * lines.getGlobalThicknessMultiplier() + 1.5,
                                             l.thickness1.getAsDouble() * lines.getGlobalThicknessMultiplier() + 0.2 * lines.getGlobalThicknessMultiplier() + 1.5);
                             front.setStrokePattern(lines.getStrokePattern());
@@ -814,7 +1160,7 @@ public class ParallelCoords {
                         front.setStrokePattern(curves.getStrokePattern());
                         for (Curves.CurveDetails c : curveDetails) {
                             front.addCurve(c.copy())
-                                    .setColor(new Color(col.getRed()/255.f, col.getGreen()/255.f, col.getBlue()/255.f, 0.35f))
+                                    .setColor(new Color(col.getRed()/255.f, col.getGreen()/255.f, col.getBlue()/255.f, 0.3f))
                                     .setThickness(c.thickness.getAsDouble() * curves.getGlobalThicknessMultiplier() + 0.2 * curves.getGlobalThicknessMultiplier() + 1.5);
                             front.addCurve(c.copy())
                                     .setColor(new Color(curves.getCurveDetails().get(0).color.getAsInt()))
@@ -907,7 +1253,6 @@ public class ParallelCoords {
             default:
                 throw new IllegalStateException("Unhandled cue type " + cueType);
         }
-
         this.getCanvas().scheduleRepaint();
     }
 
