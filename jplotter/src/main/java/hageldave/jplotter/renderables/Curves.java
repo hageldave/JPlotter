@@ -631,7 +631,7 @@ public class Curves implements Renderable {
 	public ArrayList<CurveDetails> getCurveDetails() {
 		return curves;
 	}
-	
+
 	/**
 	 * Adds a curve to the collection
 	 * @param cd curve to add
@@ -899,7 +899,7 @@ public class Curves implements Renderable {
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
 		/**
 		 * Sets the color of the curve
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)

@@ -1,10 +1,11 @@
 package hageldave.jplotter.canvas;
 
-import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
 import org.apache.batik.svggen.SVGGraphics2D;
+
+import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,6 +38,7 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	 * Creates a new {@link BlankCanvasFallback} instance.
 	 */
 	public BlankCanvasFallback() {
+		this.setFocusable(true);
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {

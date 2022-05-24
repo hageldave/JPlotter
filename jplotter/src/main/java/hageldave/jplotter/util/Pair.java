@@ -69,4 +69,5 @@ public class Pair<T1,T2> implements Comparable<Pair<T1,T2>> {
 			return comp1;
 		return ((Comparable<T2>)this.second).compareTo(o.second);
 	}
+
 }

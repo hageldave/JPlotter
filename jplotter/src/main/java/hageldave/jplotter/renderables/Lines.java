@@ -434,7 +434,9 @@ public class Lines implements Renderable {
 	public boolean isHidden() {
 		return hidden;
 	}
-	
+
+
+
 	/**
 	 * Hides or unhides this Lines object, i.e. sets the {@link #isHidden()} field
 	 * value. When hidden, renderers will not draw it.
@@ -496,13 +498,13 @@ public class Lines implements Renderable {
 		 * @param pickID picking color of the segment (see {@link Lines} for details)
 		 * @return this for chaining
 		 */
-		public SegmentDetails setPickColor(int pickID){
+		public SegmentDetails setPickColor (int pickID) {
 			if(pickID != 0)
 				pickID = pickID | 0xff000000;
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
 		/**
 		 * Sets the color at the starting point of the segment
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
