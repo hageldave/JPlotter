@@ -279,7 +279,7 @@ public class BarChart {
                     // get pick color under cursor
                     int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
                     if((pixel & 0x00ffffff) == 0) {
-                        notifyOutsideMouseEventeNone(eventType, e);
+                        notifyOutsideMouseEventNone(eventType, e);
                     } else {
                         Object miscLocalizer = pickingRegistry.lookup(pixel);
                         if(miscLocalizer instanceof Legend.BarLabel) {
@@ -301,12 +301,12 @@ public class BarChart {
 
     protected synchronized void notifyInsideMouseEventStruct(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {
         for(BarChartMouseEventListener l:mouseEventListeners)
-            l.onInsideMouseEventPoint(mouseEventType, e, coordsysPoint, barStruct);
+            l.onInsideMouseEventStruct(mouseEventType, e, coordsysPoint, barStruct);
     }
 
-    protected synchronized void notifyOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
+    protected synchronized void notifyOutsideMouseEventNone(String mouseEventType, MouseEvent e) {
         for(BarChartMouseEventListener l:mouseEventListeners)
-            l.onOutsideMouseEventeNone(mouseEventType, e);
+            l.onOutsideMouseEventNone(mouseEventType, e);
     }
 
     protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {
@@ -314,6 +314,10 @@ public class BarChart {
             l.onOutsideMouseEventElement(mouseEventType, e, legendElement);
     }
 
+    /**
+     * The BarChartMouseEventListener interface contains multiple methods,
+     * notifying if an element has been hit or not (inside and outside the coordsys).
+     */
     public static interface BarChartMouseEventListener {
         static final String MOUSE_EVENT_TYPE_MOVED="moved";
         static final String MOUSE_EVENT_TYPE_CLICKED="clicked";
@@ -321,20 +325,60 @@ public class BarChart {
         static final String MOUSE_EVENT_TYPE_RELEASED="released";
         static final String MOUSE_EVENT_TYPE_DRAGGED="dragged";
 
+        /**
+         * Called whenever the mouse pointer doesn't hit a {@link BarGroup.BarStruct} of the BarChart while being inside the coordsys.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param coordsysPoint coordinates of the mouse event inside the coordinate system
+         */
         public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
 
-        public default void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {}
+        /**
+         * Called when the mouse pointer does hit a {@link BarGroup.BarStruct} of the BarChart.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param coordsysPoint coordinates of the mouse event inside the coordinate system
+         * @param barStruct that has been hit
+         */
+        public default void onInsideMouseEventStruct(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {}
 
-        public default void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
+        /**
+         * Called when the mouse pointer doesn't hit an element (e.g. legend elements) of the BarChart while being outside the coordsys.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         */
+        public default void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {}
 
+        /**
+         * Called when the mouse pointer hits an element (e.g. legend elements) of the BarChart while being outside the coordsys.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param legendElement clicked legendElement
+         */
         public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {}
     }
 
+    /**
+     * Adds a {@link BarChartMouseEventListener} to the BarChart.
+     *
+     * @param l {@link BarChartMouseEventListener} that implements the interface methods which is called whenever one of the defined mouse events happens
+     * @return {@link BarChartMouseEventListener} for chaining
+     */
     public synchronized BarChartMouseEventListener addBarChartMouseEventListener(BarChartMouseEventListener l) {
         this.mouseEventListeners.add(l);
         return l;
     }
 
+    /**
+     * Removes the specified {@link BarChartMouseEventListener} from the BarChart.
+     *
+     * @param l {@link BarChartMouseEventListener} that should be removed
+     * @return true if the {@link BarChartMouseEventListener} was added to the BarChart before
+     */
     public synchronized boolean removeBarChartMouseEventListener(BarChartMouseEventListener l) {
         return this.mouseEventListeners.remove(l);
     }

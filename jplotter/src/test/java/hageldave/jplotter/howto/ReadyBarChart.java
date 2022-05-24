@@ -243,7 +243,7 @@ public class ReadyBarChart {
                 popUp.setVisible(false);
             }
             @Override
-            public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {
+            public void onInsideMouseEventStruct(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {
                 if (barStruct != selectedBarStruct) {
                     selectedBarStruct = barStruct;
                     popUp.setFocusable(false);
@@ -257,7 +257,7 @@ public class ReadyBarChart {
                 }
             }
             @Override
-            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {}
+            public void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {}
             @Override
             public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {}
         });
