@@ -18,24 +18,47 @@ public class FieldHandler {
                                       AtomicReference<Method> getter,
                                       AtomicReference<Method> setter,
                                       AtomicReference<Class<? extends ControlPanelCreator>> creator) {
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setAlignmentX(Component.LEFT_ALIGNMENT);
+        container.setBorder(new EmptyBorder(0, 0, 7, 0));
+        container.setBackground(new Color(228, 228, 228));
+
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        labelContainer.setBorder(new EmptyBorder(9, 0, 9, 0));
+        labelContainer.setBorder(new EmptyBorder(0, 0, 3, 0));
         labelContainer.setBackground(new Color(228, 228, 228));
 
-        labelContainer.add(new JLabel(("(" + getter.get().getReturnType().getSimpleName()) + ") "));
-        JLabel fieldName = new JLabel((field) + ": ");
+        JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
+        JLabel fieldName = new JLabel((field) + " ");
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+        fieldType.setFont(new Font(fieldType.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()-2));
+        fieldType.setForeground(Color.GRAY);
+
+        labelContainer.add(fieldType);
         labelContainer.add(fieldName);
+
+        JPanel controlContainer = new JPanel();
+        controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.X_AXIS));
+        controlContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        controlContainer.setBorder(new EmptyBorder(0, 0, 7, 0));
+        controlContainer.setBackground(new Color(228, 228, 228));
+
+        container.add(labelContainer);
+        container.add(controlContainer);
 
         try {
             ControlPanelCreator pc = creator.get().getDeclaredConstructor().newInstance();
-            pc.createUnchecked(canvas, obj, labelContainer, setter.get(), getter.get());
+            pc.createUnchecked(canvas, obj, controlContainer, setter.get(), getter.get());
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
-        return labelContainer;
+
+        JSeparator sep = new JSeparator();
+        container.add(sep);
+
+        return container;
     }
 
     public static JPanel displayField(JPlotterCanvas canvas,
@@ -49,9 +72,13 @@ public class FieldHandler {
         labelContainer.setBorder(new EmptyBorder(9, 0, 9, 0));
         labelContainer.setBackground(new Color(228, 228, 228));
 
-        labelContainer.add(new JLabel(("(" + getter.get().getReturnType().getSimpleName()) + ") "));
+        JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
         JLabel fieldName = new JLabel((field) + ": ");
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+        fieldType.setFont(new Font(fieldType.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()-2));
+        fieldType.setForeground(Color.GRAY);
+
+        labelContainer.add(fieldType);
         labelContainer.add(fieldName);
 
         try {

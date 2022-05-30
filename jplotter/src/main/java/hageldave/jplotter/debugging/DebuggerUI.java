@@ -64,6 +64,7 @@ public class DebuggerUI {
         controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.Y_AXIS));
         controlContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
         controlHeader.setFont(new Font(controlHeader.getFont().getName(), Font.PLAIN, 16));
+        controlHeader.setBorder(new EmptyBorder(0, 0, 9, 0));
 
         controlBorderWrap.setLayout(new BorderLayout());
         controlArea.setLayout(new BorderLayout());
