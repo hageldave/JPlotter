@@ -122,8 +122,8 @@ public class DebuggerUI {
     protected void fillContent(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
         title.setText(obj.getClass().getSimpleName());
 
-        controlHeader.setText("Control Area");
-        infoHeader.setText("Other Information");
+        controlHeader.setText("Manipulate object properties");
+        infoHeader.setText("Additional information");
 
         controlContainer.setBackground(bgColor);
         controlArea.setBackground(bgColor);
