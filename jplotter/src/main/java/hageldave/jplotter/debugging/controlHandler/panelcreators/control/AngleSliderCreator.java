@@ -3,6 +3,7 @@ package hageldave.jplotter.debugging.controlHandler.panelcreators.control;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 
 import javax.swing.*;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -14,6 +15,8 @@ public class AngleSliderCreator implements ControlPanelCreator {
 
         JLabel valueLabel = new JLabel(String.valueOf(roundedAngle));
         JSlider slider = new JSlider(-360, 360, roundedAngle);
+        slider.setMaximumSize(new Dimension(250, slider.getPreferredSize().height));
+
         slider.addChangeListener(e -> {
             try {
                 slider.setValue(slider.getValue());

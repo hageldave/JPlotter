@@ -3,6 +3,7 @@ package hageldave.jplotter.debugging.controlHandler.panelcreators.control;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 
 import javax.swing.*;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
@@ -16,6 +17,9 @@ public class PercentageSliderCreator implements ControlPanelCreator {
         JLabel valueLabel = new JLabel(df.format(getter.invoke(obj)));
         float initValue = (float) getter.invoke(obj)*100;
         JSlider slider = new JSlider(0, 100, Math.min((int) initValue, 100));
+
+        slider.setMaximumSize(new Dimension(200, slider.getPreferredSize().height));
+
         slider.addChangeListener(e -> {
             try {
                 slider.setValue(slider.getValue());
