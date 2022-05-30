@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
     final protected JTree tree = new JTree();
-    final protected Color bgColor = new Color(225, 225, 225);
+    final protected Color bgColor = new Color(228, 228, 228);
     final protected JPanel controlBorderWrap = new JPanel();
     final protected JPanel controlArea = new JPanel();
     final protected JPanel controlContainer = new JPanel();
