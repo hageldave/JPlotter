@@ -6,8 +6,8 @@ import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ControlPanelCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.IntegerSpinnerCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.Rectangle2DCreator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
@@ -879,8 +879,7 @@ public class CoordSysRenderer implements Renderer {
 	 * @param maxY maximum y coordinate visible in the coordinate system
 	 * @return this for chaining
 	 */
-	// TODO
-	@DebugSetter(key = "coordinateView", creator = ControlPanelCreator.class)
+	@DebugSetter(key = "coordinateView", creator = Rectangle2DCreator.class)
 	public CoordSysRenderer setCoordinateView(double minX, double minY, double maxX, double maxY){
 		return setCoordinateViewRect(minX, minY, maxX-minX, maxY-minY);
 	}

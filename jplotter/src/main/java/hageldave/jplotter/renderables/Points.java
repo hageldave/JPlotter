@@ -2,6 +2,7 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.GlyphSelector;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageSliderCreator;
@@ -378,6 +379,7 @@ public class Points implements Renderable {
 	}
 	
 	@Override
+	@DebugGetter(key = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -388,6 +390,7 @@ public class Points implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "hidden", creator = ButtonCreator.class)
 	public Points hide(boolean hide) {
 		this.hidden = hide;
 		return this;
@@ -585,6 +588,7 @@ public class Points implements Renderable {
 	 * This has the effect of sharpening horizontal and vertical lines, but
 	 * can affect shape. 
 	 */
+	@DebugGetter(key = "useVertexRounding")
 	public boolean isVertexRoundingEnabled() {
 		return useVertexRounding;
 	}
@@ -601,6 +605,7 @@ public class Points implements Renderable {
 	 * @param useVertexRounding will enable if true
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "useVertexRounding", creator = ButtonCreator.class)
 	public Points setVertexRoundingEnabled(boolean useVertexRounding) {
 		this.useVertexRounding = useVertexRounding;
 		return this;

@@ -4,7 +4,7 @@ import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.TextfieldCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.*;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
@@ -94,6 +94,7 @@ public class Text implements Renderable {
 	 * @param color to set
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "color", creator = ColorPicker.class)
 	public Text setColor(Color color) {
 		this.color = color;
 		return this;
@@ -112,6 +113,7 @@ public class Text implements Renderable {
 	/**
 	 * @return this text's color
 	 */
+	@DebugGetter(key = "color")
 	public Color getColor() {
 		return color;
 	}
@@ -121,6 +123,7 @@ public class Text implements Renderable {
 	 * transparent black (0x00000000) which wont be visible.
 	 * @param background color
 	 */
+	@DebugSetter(key = "background", creator = ColorPicker.class)
 	public void setBackground(Color background) {
 		this.background = background;
 	}
@@ -133,7 +136,8 @@ public class Text implements Renderable {
 	public void setBackground(int argb) {
 		this.background = new Color(argb, true);
 	}
-	
+
+	@DebugGetter(key = "background")
 	public Color getBackground() {
 		return background;
 	}
@@ -248,6 +252,7 @@ public class Text implements Renderable {
 	 * @return the origin of this text object, i.e. the bottom left corner of the rectangle enclosing the text,
 	 * the text's location so to say
 	 */
+	@DebugGetter(key = "origin")
 	public Point2D getOrigin() {
 		return origin;
 	}
@@ -270,6 +275,7 @@ public class Text implements Renderable {
 	 * @param y coordinate of origin
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "origin", creator = Coord2DCreator.class)
 	public Text setOrigin(int x, int y) {
 		return this.setOrigin(new Point(x, y));
 	}
@@ -277,6 +283,7 @@ public class Text implements Renderable {
 	/**
 	 * @return the rotation angle in radian by which this text object is rotated around its origin.
 	 */
+	@DebugGetter(key = "angle")
 	public float getAngle() {
 		return angle;
 	}
@@ -286,12 +293,15 @@ public class Text implements Renderable {
 	 * @param angle rotation angle
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "angle", creator = AngleSliderCreator.class)
+	// TODO: slider for 0-360 degree
 	public Text setAngle(double angle) {
 		this.angle = (float)angle;
 		return this;
 	}
 	
 	@Override
+	@DebugGetter(key = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -302,6 +312,7 @@ public class Text implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "hidden", creator = ButtonCreator.class)
 	public Text hide(boolean hide) {
 		this.hidden = hide;
 		return this;
