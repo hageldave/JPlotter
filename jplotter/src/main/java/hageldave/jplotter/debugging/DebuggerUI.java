@@ -51,6 +51,7 @@ public class DebuggerUI {
 
         // set constructed tree as tree model
         tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
+        tree.setBorder(new EmptyBorder(2, 5, 2, 5));
 
         // start title container
         JPanel titleArea = new JPanel();
