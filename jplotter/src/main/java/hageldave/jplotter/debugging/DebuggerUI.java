@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DebuggerUI {
@@ -68,7 +69,7 @@ public class DebuggerUI {
 
         controlBorderWrap.setLayout(new BorderLayout());
         controlArea.setLayout(new BorderLayout());
-        controlArea.setBorder(new EmptyBorder(10, 10, 10, 10));
+        controlArea.setBorder(new EmptyBorder(10, 10, 0, 10));
         controlArea.add(controlHeader, BorderLayout.NORTH);
         controlArea.add(controlContainer, BorderLayout.CENTER);
         controlBorderWrap.add(controlArea, BorderLayout.CENTER);
@@ -120,6 +121,14 @@ public class DebuggerUI {
         title.setText("No renderer or renderable selected.");
     }
 
+    protected void createEmptyInfoContMessage() {
+        infoContainer.add(new JLabel("No annotated fields found."));
+    }
+
+    protected void createEmptyControlContMessage() {
+        controlContainer.add(new JLabel("No manipulable fields found."));
+    }
+
     protected void fillContent(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
         title.setText(obj.getClass().getSimpleName());
 
@@ -148,6 +157,8 @@ public class DebuggerUI {
     protected void handleObjectFields(Object obj) {
         List<Method> allMethods = Utils.getReflectionMethods(obj.getClass());
 
+        AtomicBoolean infoFieldFound = new AtomicBoolean(false);
+        AtomicBoolean controlFieldFound = new AtomicBoolean(false);
         allMethods.forEach(searchGetter -> {
             AtomicReference<String> key = new AtomicReference<>();
             AtomicReference<Method> getter = new AtomicReference<>();
@@ -168,6 +179,7 @@ public class DebuggerUI {
 
                             setter.set(searchSetter);
                             ctrlCreator.set(debugSetter.creator());
+
                         }
                     }
                 });
@@ -176,11 +188,20 @@ public class DebuggerUI {
             if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(setter.get()) && Objects.nonNull(ctrlCreator.get())) {
                 JPanel panel = FieldHandler.controlField(canvas, obj, key.get(), getter, setter, ctrlCreator);
                 controlContainer.add(panel);
+                controlFieldFound.set(true);
             } else if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(dsplyCreator.get())) {
                 JPanel panel = FieldHandler.displayField(canvas, obj, key.get(), getter, dsplyCreator);
                 infoContainer.add(panel);
+                infoFieldFound.set(true);
             }
         });
+
+        if (!infoFieldFound.get())
+            createEmptyInfoContMessage();
+
+        if (!controlFieldFound.get())
+            createEmptyControlContMessage();
+
         frame.repaint();
     }
 
