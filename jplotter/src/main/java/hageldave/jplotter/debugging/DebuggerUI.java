@@ -107,13 +107,8 @@ public class DebuggerUI {
         infoControlWrap.add(infoBorderWrap);
 
         // "remove" background color if content is empty
-        controlContainer.setBackground(infoControlWrap.getBackground());
-        controlArea.setBackground(infoControlWrap.getBackground());
-        controlBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
-
-        infoContainer.setBackground(infoControlWrap.getBackground());
-        infoBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
-        infoArea.setBackground(infoControlWrap.getBackground());
+        changeControlAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
+        changeInfoAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
 
         JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitpane.setRightComponent(new JScrollPane(infoControlWrap));
@@ -128,13 +123,8 @@ public class DebuggerUI {
     }
 
     protected void createEmptyMessage() {
-        controlContainer.setBackground(infoControlWrap.getBackground());
-        controlArea.setBackground(infoControlWrap.getBackground());
-        controlBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
-
-        infoContainer.setBackground(infoControlWrap.getBackground());
-        infoBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
-        infoArea.setBackground(infoControlWrap.getBackground());
+        changeControlAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
+        changeInfoAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
 
         title.setText("No renderer or renderable selected.");
     }
@@ -153,13 +143,8 @@ public class DebuggerUI {
         controlHeader.setText("Manipulate object properties");
         infoHeader.setText("Additional information");
 
-        controlContainer.setBackground(UIManager.getColor("Panel.background"));
-        controlArea.setBackground(UIManager.getColor("Panel.background"));
-        controlBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
-
-        infoArea.setBackground(UIManager.getColor("Panel.background"));
-        infoContainer.setBackground(UIManager.getColor("Panel.background"));
-        infoBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
+        changeControlAreaColor(UIManager.getColor("Panel.background"), Color.LIGHT_GRAY);
+        changeInfoAreaColor(UIManager.getColor("Panel.background"), Color.LIGHT_GRAY);
 
         handleObjectFields(obj);
     }
@@ -224,13 +209,8 @@ public class DebuggerUI {
     }
 
     protected void createCanvasContent(JPlotterCanvas canvas) {
-        controlContainer.setBackground(UIManager.getColor("Panel.background"));
-        controlArea.setBackground(UIManager.getColor("Panel.background"));
-        controlBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
-
-        infoContainer.setBackground(infoControlWrap.getBackground());
-        infoBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
-        infoArea.setBackground(infoControlWrap.getBackground());
+        changeControlAreaColor(UIManager.getColor("Panel.background"), Color.LIGHT_GRAY);
+        changeInfoAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
 
         JPanel exportPanel = new JPanel();
         JButton exportSvgBtn = new JButton("Export SVG");
@@ -312,5 +292,17 @@ public class DebuggerUI {
 
     public void refresh() throws IllegalAccessException {
         tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
+    }
+
+    private void changeControlAreaColor(Color backgroundColor, Color borderColor) {
+        controlContainer.setBackground(backgroundColor);
+        controlArea.setBackground(backgroundColor);
+        controlBorderWrap.setBorder(new LineBorder(borderColor));
+    }
+
+    private void changeInfoAreaColor(Color backgroundColor, Color borderColor) {
+        infoContainer.setBackground(backgroundColor);
+        infoArea.setBackground(backgroundColor);
+        infoBorderWrap.setBorder(new LineBorder(borderColor));
     }
 }
