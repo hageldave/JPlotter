@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
     final protected JTree tree = new JTree();
-    final protected Color bgColor = new Color(245, 245, 245);
+    final protected Color bgColor = new Color(246, 246, 246);
     final protected JPanel controlBorderWrap = new JPanel();
     final protected JPanel controlArea = new JPanel();
     final protected JPanel controlContainer = new JPanel();
@@ -110,9 +110,18 @@ public class DebuggerUI {
         changeControlAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
         changeInfoAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
 
+        JScrollPane rightScrollPane = new JScrollPane(infoControlWrap);
+        rightScrollPane.getVerticalScrollBar().setUnitIncrement(12);
+        rightScrollPane.setBorder(new EmptyBorder(0,0,0,0));
+
+        JScrollPane treeScrollPane = new JScrollPane(tree);
+        treeScrollPane.getVerticalScrollBar().setUnitIncrement(12);
+        treeScrollPane.setBorder(new EmptyBorder(0,0,0,0));
+
         JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitpane.setRightComponent(new JScrollPane(infoControlWrap));
-        splitpane.setLeftComponent(new JScrollPane(tree));
+        splitpane.setRightComponent(rightScrollPane);
+        splitpane.setLeftComponent(treeScrollPane);
+        splitpane.setBorder(new EmptyBorder(0,0,0,0));
 
         frame.getContentPane().add(splitpane);
         frame.setPreferredSize(new Dimension(950, 550));
