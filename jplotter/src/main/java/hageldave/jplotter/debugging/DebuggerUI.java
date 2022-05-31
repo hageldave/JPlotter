@@ -8,13 +8,18 @@ import hageldave.jplotter.debugging.controlHandler.panelcreators.control.Control
 import hageldave.jplotter.debugging.controlHandler.panelcreators.display.DisplayPanelCreator;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderers.Renderer;
+import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Utils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.w3c.dom.Document;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -218,6 +223,47 @@ public class DebuggerUI {
         frame.repaint();
     }
 
+    protected void createCanvasContent(JPlotterCanvas canvas) {
+        controlContainer.setBackground(UIManager.getColor("Panel.background"));
+        controlArea.setBackground(UIManager.getColor("Panel.background"));
+        controlBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
+
+        infoContainer.setBackground(infoControlWrap.getBackground());
+        infoBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
+        infoArea.setBackground(infoControlWrap.getBackground());
+
+        JPanel exportPanel = new JPanel();
+        JButton exportSvgBtn = new JButton("Export SVG");
+        JButton exportPdfBtn = new JButton("Export PDF");
+
+        exportSvgBtn.addActionListener(e -> {
+            Document doc = canvas.paintSVG();
+            SVGUtils.documentToXMLFile(doc, new File("export.svg"));
+        });
+
+        exportPdfBtn.addActionListener(e -> {
+            try {
+                PDDocument doc = canvas.paintPDF();
+                doc.save("export.pdf");
+                doc.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        title.setText(canvas.getClass().getSimpleName());
+        controlHeader.setText("Export canvas");
+
+        exportPanel.setLayout(new BoxLayout(exportPanel, BoxLayout.X_AXIS));
+        exportPanel.add(exportSvgBtn);
+        exportPanel.add(exportPdfBtn);
+
+        exportPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        controlContainer.add(exportPanel);
+
+        frame.repaint();
+    }
+
     private void registerTreeListener() {
         tree.addTreeSelectionListener(e -> {
             if (Objects.nonNull(e)) {
@@ -253,6 +299,9 @@ public class DebuggerUI {
                              InvocationTargetException ex) {
                         throw new RuntimeException(ex);
                     }
+                    canvas.scheduleRepaint();
+                } else if (JPlotterCanvas.class.isAssignableFrom(obj.getClass())) {
+                    createCanvasContent(canvas);
                     canvas.scheduleRepaint();
                 } else {
                     createEmptyMessage();

@@ -16,7 +16,7 @@ public class Debugger {
 
         Class<?> cnvsClass = canvas.getClass();
         Field[] fields = cnvsClass.getDeclaredFields();
-        DebuggerMutableTreeNode root = new DebuggerMutableTreeNode(canvas.getClass().getSimpleName(), canvas.getClass());
+        DebuggerMutableTreeNode root = new DebuggerMutableTreeNode(canvas.getClass().getSimpleName(), canvas);
 
         for (Field field : fields) {
             Class<?> type = field.getType();
