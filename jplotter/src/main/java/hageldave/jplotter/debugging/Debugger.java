@@ -71,7 +71,7 @@ public class Debugger {
                     for (Object iteratedObject : iterableField) {
                         Class<?> iteratedClass = iteratedObject.getClass();
                         if (Renderable.class.isAssignableFrom(iteratedClass)) {
-                            DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(" + iteratedClass.getSimpleName() + ") " + iteratedObject, iteratedObject);
+                            DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(" + iteratedClass.getSimpleName() + ") Hash: @" + iteratedObject.hashCode(), iteratedObject);
                             listNode.add(newNode);
                         }
                     }
