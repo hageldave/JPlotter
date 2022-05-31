@@ -22,13 +22,11 @@ public class FieldHandler {
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
         container.setAlignmentX(Component.LEFT_ALIGNMENT);
         container.setBorder(new EmptyBorder(0, 0, 7, 0));
-        container.setBackground(new Color(228, 228, 228));
 
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
         labelContainer.setBorder(new EmptyBorder(0, 0, 3, 0));
-        labelContainer.setBackground(new Color(228, 228, 228));
 
         JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
         JLabel fieldName = new JLabel((field) + " ");
@@ -43,7 +41,6 @@ public class FieldHandler {
         controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.X_AXIS));
         controlContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
         controlContainer.setBorder(new EmptyBorder(0, 0, 7, 0));
-        controlContainer.setBackground(new Color(228, 228, 228));
 
         container.add(labelContainer);
         container.add(controlContainer);
@@ -70,7 +67,6 @@ public class FieldHandler {
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
         labelContainer.setBorder(new EmptyBorder(9, 0, 9, 0));
-        labelContainer.setBackground(new Color(228, 228, 228));
 
         JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
         JLabel fieldName = new JLabel((field) + ": ");

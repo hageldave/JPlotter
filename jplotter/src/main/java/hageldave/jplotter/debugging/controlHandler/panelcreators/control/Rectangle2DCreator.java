@@ -68,10 +68,20 @@ public class Rectangle2DCreator implements ControlPanelCreator {
                 canvas)
         );
 
-        labelContainer.add(xMinCoord);
-        labelContainer.add(xMaxCoord);
-        labelContainer.add(yMinCoord);
-        labelContainer.add(yMaxCoord);
+        JPanel topContainer = new JPanel();
+        JPanel bottomContainer = new JPanel();
+
+        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.Y_AXIS));
+        topContainer.setLayout(new BoxLayout(topContainer, BoxLayout.X_AXIS));
+        bottomContainer.setLayout(new BoxLayout(bottomContainer, BoxLayout.X_AXIS));
+
+        topContainer.add(xMinCoord);
+        topContainer.add(xMaxCoord);
+        bottomContainer.add(yMinCoord);
+        bottomContainer.add(yMaxCoord);
+
+        labelContainer.add(topContainer);
+        labelContainer.add(bottomContainer);
         return labelContainer;
     }
 

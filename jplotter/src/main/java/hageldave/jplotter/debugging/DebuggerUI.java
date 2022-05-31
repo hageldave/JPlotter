@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
     final protected JTree tree = new JTree();
-    final protected Color bgColor = new Color(228, 228, 228);
+    final protected Color bgColor = new Color(245, 245, 245);
     final protected JPanel controlBorderWrap = new JPanel();
     final protected JPanel controlArea = new JPanel();
     final protected JPanel controlContainer = new JPanel();
@@ -58,6 +58,9 @@ public class DebuggerUI {
         JPanel titleArea = new JPanel();
         titleArea.setLayout(new GridLayout(1, 0));
         titleArea.setBorder(new EmptyBorder(10, 0, 10, 0));
+        titleArea.setBackground(bgColor);
+
+        title.setText("Select renderer or renderable.");
         title.setFont(new Font(title.getFont().getName(), Font.BOLD, 18));
         titleArea.add(title);
 
@@ -88,14 +91,24 @@ public class DebuggerUI {
 
         // create separator
         JPanel separator = new JPanel();
+        separator.setBackground(bgColor);
 
-        //JPanel infoControlWrap = new JPanel();
         infoControlWrap.setLayout(new BoxLayout(infoControlWrap, BoxLayout.PAGE_AXIS));
+        infoControlWrap.setBackground(bgColor);
         infoControlWrap.setBorder(new EmptyBorder(0, 10, 10, 10));
         infoControlWrap.add(titleArea);
         infoControlWrap.add(controlBorderWrap);
         infoControlWrap.add(separator);
         infoControlWrap.add(infoBorderWrap);
+
+        // "remove" background color if content is empty
+        controlContainer.setBackground(infoControlWrap.getBackground());
+        controlArea.setBackground(infoControlWrap.getBackground());
+        controlBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
+
+        infoContainer.setBackground(infoControlWrap.getBackground());
+        infoBorderWrap.setBorder(new LineBorder(infoControlWrap.getBackground()));
+        infoArea.setBackground(infoControlWrap.getBackground());
 
         JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitpane.setRightComponent(new JScrollPane(infoControlWrap));
@@ -135,12 +148,12 @@ public class DebuggerUI {
         controlHeader.setText("Manipulate object properties");
         infoHeader.setText("Additional information");
 
-        controlContainer.setBackground(bgColor);
-        controlArea.setBackground(bgColor);
+        controlContainer.setBackground(UIManager.getColor("Panel.background"));
+        controlArea.setBackground(UIManager.getColor("Panel.background"));
         controlBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
 
-        infoContainer.setBackground(bgColor);
-        infoArea.setBackground(bgColor);
+        infoArea.setBackground(UIManager.getColor("Panel.background"));
+        infoContainer.setBackground(UIManager.getColor("Panel.background"));
         infoBorderWrap.setBorder(new LineBorder(Color.LIGHT_GRAY));
 
         handleObjectFields(obj);
