@@ -294,7 +294,6 @@ public class Text implements Renderable {
 	 * @return this for chaining
 	 */
 	@DebugSetter(key = "angle", creator = AngleSliderCreator.class)
-	// TODO: slider for 0-360 degree
 	public Text setAngle(double angle) {
 		this.angle = (float)angle;
 		return this;
