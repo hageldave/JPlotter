@@ -84,10 +84,25 @@ public interface JPlotterCanvas {
 	 */
 	public boolean isSvgAsImageRenderingEnabled();
 
-	// TODO add documentation
+	/**
+	 * En/disables PDF rendering as image.
+	 * When rendering to PDF and this is enabled, instead of translating the
+	 * contents of the renderers into PDF elements, the current framebuffer image
+	 * is used and put into the pdf document.
+	 * <p>
+	 * This can be useful for example when too many PDF elements would be created
+	 * resulting in a huge dom and file size when exporting as PDF.
+	 *
+	 * @param enable true when no PDF elements should be created from the content
+	 * of this JPlotterCanvas but instead a simple image element with the framebuffer's
+	 * content.
+	 */
 	public void enablePDFAsImageRendering(boolean enable);
 
-	// TODO add documentation
+	/**
+	 * @return true when enabled
+	 * @see #enablePDFAsImageRendering(boolean) (boolean)
+	 */
 	public boolean isPDFAsImageRenderingEnabled();
 
 
