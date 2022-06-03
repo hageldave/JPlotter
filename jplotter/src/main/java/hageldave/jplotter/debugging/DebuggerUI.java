@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -32,12 +34,12 @@ public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
     final protected JTree tree = new JTree();
     final protected Color bgColor = new Color(246, 246, 246);
-    final protected JPanel controlBorderWrap = new JPanel();
-    final protected JPanel controlArea = new JPanel();
+    final protected JPanel controlBorderWrap = new JPanel(new BorderLayout());
+    final protected JPanel controlArea = new JPanel(new BorderLayout());
     final protected JPanel controlContainer = new JPanel();
-    final protected JPanel infoBorderWrap = new JPanel();
+    final protected JPanel infoBorderWrap = new JPanel(new BorderLayout());
 
-    final protected JPanel infoArea = new JPanel();
+    final protected JPanel infoArea = new JPanel(new BorderLayout());
     final protected JPanel infoContainer = new JPanel();
     final protected JPanel infoControlWrap = new JPanel();
 
@@ -60,8 +62,7 @@ public class DebuggerUI {
         tree.setBorder(new EmptyBorder(2, 5, 2, 5));
 
         // start title container
-        JPanel titleArea = new JPanel();
-        titleArea.setLayout(new GridLayout(1, 0));
+        JPanel titleArea = new JPanel(new GridLayout(1, 0));
         titleArea.setBorder(new EmptyBorder(10, 0, 10, 0));
         titleArea.setBackground(bgColor);
 
@@ -75,8 +76,6 @@ public class DebuggerUI {
         controlHeader.setFont(new Font(controlHeader.getFont().getName(), Font.PLAIN, 16));
         controlHeader.setBorder(new EmptyBorder(0, 0, 9, 0));
 
-        controlBorderWrap.setLayout(new BorderLayout());
-        controlArea.setLayout(new BorderLayout());
         controlArea.setBorder(new EmptyBorder(10, 10, 0, 10));
         controlArea.add(controlHeader, BorderLayout.NORTH);
         controlArea.add(controlContainer, BorderLayout.CENTER);
@@ -87,8 +86,6 @@ public class DebuggerUI {
         infoContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
         infoHeader.setFont(new Font(infoHeader.getFont().getName(), Font.PLAIN, 16));
 
-        infoBorderWrap.setLayout(new BorderLayout());
-        infoArea.setLayout(new BorderLayout());
         infoArea.setBorder(new EmptyBorder(10, 10, 10, 10));
         infoArea.add(infoHeader, BorderLayout.NORTH);
         infoArea.add(infoContainer, BorderLayout.CENTER);
@@ -112,16 +109,40 @@ public class DebuggerUI {
 
         JScrollPane rightScrollPane = new JScrollPane(infoControlWrap);
         rightScrollPane.getVerticalScrollBar().setUnitIncrement(12);
-        rightScrollPane.setBorder(new EmptyBorder(0,0,0,0));
+        rightScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+
+        JPanel leftContainer = new JPanel(new BorderLayout());
 
         JScrollPane treeScrollPane = new JScrollPane(tree);
         treeScrollPane.getVerticalScrollBar().setUnitIncrement(12);
-        treeScrollPane.setBorder(new EmptyBorder(0,0,0,0));
+        treeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+
+        JPanel refreshBtnContainer = new JPanel(new BorderLayout());
+        JButton refreshTree = new JButton("Refresh objects");
+        refreshTree.setToolTipText("<html>"
+                        + "Updates the underlying TreeModel. "
+                        +"<br>"
+                        + "Could be used if one or more objects expire (e.g. tickmarkLabels of CoordSysRenderer when resizing the window.)"
+                        + "</html>");
+        refreshTree.addActionListener(e -> {
+            try {
+                refresh();
+            } catch (IllegalAccessException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        refreshTree.setMaximumSize(refreshTree.getPreferredSize());
+        refreshBtnContainer.add(refreshTree, BorderLayout.EAST);
+
+
+        leftContainer.add(refreshBtnContainer, BorderLayout.SOUTH);
+        leftContainer.add(treeScrollPane, BorderLayout.CENTER);
 
         JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitpane.setRightComponent(rightScrollPane);
-        splitpane.setLeftComponent(treeScrollPane);
-        splitpane.setBorder(new EmptyBorder(0,0,0,0));
+        splitpane.setLeftComponent(leftContainer);
+        splitpane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         frame.getContentPane().add(splitpane);
         frame.setPreferredSize(new Dimension(950, 550));
@@ -223,17 +244,24 @@ public class DebuggerUI {
 
         JPanel exportPanel = new JPanel();
         JButton exportSvgBtn = new JButton("Export SVG");
+        exportSvgBtn.setToolTipText("Exports the canvas as a .svg file to the root of the project.");
+
         JButton exportPdfBtn = new JButton("Export PDF");
+        exportPdfBtn.setToolTipText("Exports the canvas as a .pdf file to the root of the project.");
 
         exportSvgBtn.addActionListener(e -> {
+            String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
+            String fileName = "export-" + timeSubstring + ".svg";
             Document doc = canvas.paintSVG();
-            SVGUtils.documentToXMLFile(doc, new File("export.svg"));
+            SVGUtils.documentToXMLFile(doc, new File(fileName));
         });
 
         exportPdfBtn.addActionListener(e -> {
             try {
+                String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
+                String fileName = "export-" + timeSubstring + ".pdf";
                 PDDocument doc = canvas.paintPDF();
-                doc.save("export.pdf");
+                doc.save(fileName);
                 doc.close();
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -255,8 +283,8 @@ public class DebuggerUI {
 
     private void registerTreeListener() {
         tree.addTreeSelectionListener(e -> {
-            if (Objects.nonNull(e)) {
-                Object lastSelectedComponent = tree.getLastSelectedPathComponent();
+            Object lastSelectedComponent = tree.getLastSelectedPathComponent();
+            if (Objects.nonNull(lastSelectedComponent)) {
                 Class<?> lastSelectedComponentClass = lastSelectedComponent.getClass();
 
                 Method method;
@@ -296,6 +324,7 @@ public class DebuggerUI {
                     createEmptyMessage();
                 }
             }
+
         });
     }
 
