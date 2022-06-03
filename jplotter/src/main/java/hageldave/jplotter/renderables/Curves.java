@@ -837,7 +837,23 @@ public class Curves implements Renderable {
 		this.curves.clear();
 		return this.setDirty();
 	}
-	
+
+	@Override
+	public boolean isHidden() {
+		return hidden;
+	}
+
+	/**
+	 * Hides or unhides this Curves object, i.e. sets the {@link #isHidden()} field
+	 * value. When hidden, renderers will not draw it.
+	 * @param hide true when hiding
+	 * @return this for chaining
+	 */
+	public Curves hide(boolean hide) {
+		this.hidden = hide;
+		return this;
+	}
+
 	/**
 	 * Specification of a cubic Bezier curve element, comprising start/end point positions,
 	 * control point positions, as well as, line color, picking color and thickness.
