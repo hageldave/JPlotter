@@ -14,6 +14,7 @@ public class AngleSliderCreator implements ControlPanelCreator {
         int roundedAngle = (int) (angle * 180 / Math.PI);
 
         JLabel valueLabel = new JLabel(String.valueOf(roundedAngle));
+        valueLabel.setToolTipText("Angle in Degrees");
         JSlider slider = new JSlider(-360, 360, roundedAngle);
         slider.setMaximumSize(new Dimension(250, slider.getPreferredSize().height));
 
