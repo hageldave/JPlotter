@@ -2,6 +2,7 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
 import hageldave.jplotter.gl.FBO;
@@ -850,6 +851,7 @@ public class Curves implements Renderable {
 	}
 
 	@Override
+	@DebugGetter(key = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -860,6 +862,7 @@ public class Curves implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "hidden", creator = ButtonCreator.class)
 	public Curves hide(boolean hide) {
 		this.hidden = hide;
 		return this;
