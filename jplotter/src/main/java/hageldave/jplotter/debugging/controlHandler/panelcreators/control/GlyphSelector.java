@@ -13,6 +13,7 @@ public class GlyphSelector implements ControlPanelCreator {
         JComboBox<DefaultGlyph> glyphSelector = new JComboBox<>(DefaultGlyph.values());
 
         glyphSelector.setSelectedItem(getter.invoke(obj));
+        glyphSelector.setMaximumSize(glyphSelector.getPreferredSize());
 
         glyphSelector.addItemListener(e -> {
             glyphSelector.setSelectedItem(e.getItem());
