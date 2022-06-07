@@ -5,7 +5,7 @@ import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.GlyphSelector;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageSliderCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -275,7 +275,7 @@ public class Points implements Renderable {
 	 * @param globalAlphaMultiplier of the points in this collection
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageSliderCreator.class)
+	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Points setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(()->globalAlphaMultiplier);
 	}
@@ -319,7 +319,7 @@ public class Points implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageSliderCreator.class)
+	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Points setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}

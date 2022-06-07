@@ -3,7 +3,7 @@ package hageldave.jplotter.renderers;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageSliderCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageDoubleSliderCreator;
 import hageldave.jplotter.svg.SVGUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -68,7 +68,7 @@ public class SplitScreenRenderer implements Renderer {
 	 * @param location value in [0.0 .. 1.0], 0.5 is equal, 0.75 uses 3/4 of the space for renderer 1.
 	 * @return this for chaining.
 	 */
-	@DebugSetter(key = "dividerLocation", creator = PercentageSliderCreator.class)
+	@DebugSetter(key = "dividerLocation", creator = PercentageDoubleSliderCreator.class)
 	public SplitScreenRenderer setDividerLocation(double location) {
 		this.dividerLocation = location;
 		return this;

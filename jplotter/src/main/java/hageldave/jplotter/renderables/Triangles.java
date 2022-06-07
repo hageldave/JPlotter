@@ -3,7 +3,7 @@ package hageldave.jplotter.renderables;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageSliderCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -226,7 +226,7 @@ public class Triangles implements Renderable {
 	 * @param globalAlphaMultiplier of the triangles in this collection
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageSliderCreator.class)
+	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Triangles setGlobalAlphaMultiplier(DoubleSupplier globalAlphaMultiplier) {
 		this.globalAlphaMultiplier = globalAlphaMultiplier;
 		return this;
@@ -259,7 +259,7 @@ public class Triangles implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageSliderCreator.class)
+	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Triangles setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}

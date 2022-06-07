@@ -3,7 +3,7 @@ package hageldave.jplotter.renderables;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageSliderCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -523,7 +523,7 @@ public class Curves implements Renderable {
 	 * @param globalAlphaMultiplier of the curves in this collection
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageSliderCreator.class)
+	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Curves setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
 	}
@@ -556,7 +556,7 @@ public class Curves implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageSliderCreator.class)
+	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Curves setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}

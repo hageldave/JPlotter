@@ -10,12 +10,12 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
-public class PercentageSliderCreator implements ControlPanelCreator {
+public class PercentageDoubleSliderCreator implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
         DecimalFormat df = new DecimalFormat("#0.00", DecimalFormatSymbols.getInstance(Locale.US));
         JLabel valueLabel = new JLabel(df.format(getter.invoke(obj)));
-        float initValue = (float) getter.invoke(obj)*100;
+        double initValue = (double) getter.invoke(obj)*100;
         JSlider slider = new JSlider(0, 100, Math.min((int) initValue, 100));
 
         slider.setMaximumSize(new Dimension(200, slider.getPreferredSize().height));
