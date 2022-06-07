@@ -4,6 +4,9 @@ import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
+import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
+import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
@@ -754,11 +757,13 @@ public class Legend implements Renderable, Renderer {
 	}
 
 	@Override
+	@DebugSetter(key = "enabled", creator = ButtonCreator.class)
 	public void setEnabled(boolean enable) {
 		this.isEnabled = enable;	
 	}
 
 	@Override
+	@DebugGetter(key = "enabled")
 	public boolean isEnabled() {
 		return isEnabled;
 	}
