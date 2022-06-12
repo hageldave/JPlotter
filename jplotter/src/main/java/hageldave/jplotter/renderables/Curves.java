@@ -5,6 +5,7 @@ import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.display.RenderableDetailsCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -639,7 +640,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the individual curve detail objects contained in this object
 	 */
-	@DebugGetter(key = "curves")
+	@DebugGetter(key = "curves", creator = RenderableDetailsCreator.class)
 	public ArrayList<CurveDetails> getCurveDetails() {
 		return curves;
 	}

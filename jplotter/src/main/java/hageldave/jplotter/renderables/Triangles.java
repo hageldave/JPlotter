@@ -4,6 +4,7 @@ import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.display.RenderableDetailsCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -639,7 +640,7 @@ public class Triangles implements Renderable {
 	 * @return the list of triangle details.<br>
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
-	@DebugGetter(key = "triangles")
+	@DebugGetter(key = "triangles", creator = RenderableDetailsCreator.class)
 	public ArrayList<TriangleDetails> getTriangleDetails() {
 		return triangles;
 	}

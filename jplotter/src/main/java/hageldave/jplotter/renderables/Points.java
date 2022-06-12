@@ -6,6 +6,7 @@ import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonC
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.GlyphSelector;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
+import hageldave.jplotter.debugging.controlHandler.panelcreators.display.RenderableDetailsCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -526,7 +527,7 @@ public class Points implements Renderable {
 	 * @return the list of point details.<br>
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
-	@DebugGetter(key = "points")
+	@DebugGetter(key = "points", creator = RenderableDetailsCreator.class)
 	public ArrayList<PointDetails> getPointDetails() {
 		return points;
 	}
