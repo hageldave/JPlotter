@@ -314,6 +314,7 @@ public class Lines implements Renderable {
 	 * This has the effect of sharpening horizontal and vertical lines, but
 	 * can affect differently oriented lines to shrink in thickness or even vanish. 
 	 */
+	@DebugGetter(key = "useVertexRounding")
 	public boolean isVertexRoundingEnabled() {
 		return useVertexRounding;
 	}
@@ -330,6 +331,7 @@ public class Lines implements Renderable {
 	 * @param useVertexRounding will enable if true
 	 * @return this for chaining
 	 */
+	@DebugSetter(key = "useVertexRounding", creator = ButtonCreator.class)
 	public Lines setVertexRoundingEnabled(boolean useVertexRounding) {
 		this.useVertexRounding = useVertexRounding;
 		return this;
