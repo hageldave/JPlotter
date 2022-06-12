@@ -12,11 +12,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ColorPicker implements ControlPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         AtomicReference<Color> currentColor = new AtomicReference<>((Color) getter.invoke(obj));
 
-        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.Y_AXIS));
-        labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panelContainer.setLayout(new BoxLayout(panelContainer, BoxLayout.Y_AXIS));
+        panelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel colorInfoContainer = new JPanel();
         colorInfoContainer.setLayout(new BoxLayout(colorInfoContainer, BoxLayout.X_AXIS));
@@ -45,7 +45,7 @@ public class ColorPicker implements ControlPanelCreator {
         ColoredRectangle coloredRectangle = new ColoredRectangle(textColor);
 
         editButton.addActionListener(e -> {
-            Color selectedColor = JColorChooser.showDialog(labelContainer, "Pick a color", currentColor.get());
+            Color selectedColor = JColorChooser.showDialog(panelContainer, "Pick a color", currentColor.get());
             try {
                 if (Objects.nonNull(selectedColor)) {
                     setter.invoke(obj, selectedColor);
@@ -68,9 +68,9 @@ public class ColorPicker implements ControlPanelCreator {
         colorInfoContainer.add(greenValue);
         colorInfoContainer.add(blueValue);
         colorInfoContainer.add(alphaValue);
-        labelContainer.add(colorInfoContainer);
-        labelContainer.add(editButton);
-        return labelContainer;
+        panelContainer.add(colorInfoContainer);
+        panelContainer.add(editButton);
+        return panelContainer;
     }
 
     private static class ColoredRectangle extends JComponent {

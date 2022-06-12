@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 
 public class AngleSliderCreator implements ControlPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         float angle = (float) getter.invoke(obj);
         int roundedAngle = (int) (angle * 180 / Math.PI);
 
@@ -31,8 +31,8 @@ public class AngleSliderCreator implements ControlPanelCreator {
             canvas.scheduleRepaint();
         });
 
-        labelContainer.add(valueLabel);
-        labelContainer.add(slider);
-        return labelContainer;
+        panelContainer.add(valueLabel);
+        panelContainer.add(slider);
+        return panelContainer;
     }
 }

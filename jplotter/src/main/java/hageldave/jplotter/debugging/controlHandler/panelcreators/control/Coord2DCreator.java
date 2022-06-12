@@ -14,14 +14,14 @@ public class Coord2DCreator implements ControlPanelCreator {
     protected SpinnerNumberModel yCoordModel;
 
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         Point2D initValue = (Point2D) getter.invoke(obj);
-        labelContainer.setBorder(new EmptyBorder(10, 0, 7, 0));
+        panelContainer.setBorder(new EmptyBorder(10, 0, 7, 0));
         this.xCoordModel = new SpinnerNumberModel((int) initValue.getX(), Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
         this.yCoordModel = new SpinnerNumberModel((int) initValue.getY(), Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
-        labelContainer.add(constructCoordContainer(xCoordModel, "X Coordinate", setter, obj, canvas));
-        labelContainer.add(constructCoordContainer(yCoordModel, "Y Coordinate", setter, obj, canvas));
-        return labelContainer;
+        panelContainer.add(constructCoordContainer(xCoordModel, "X Coordinate", setter, obj, canvas));
+        panelContainer.add(constructCoordContainer(yCoordModel, "Y Coordinate", setter, obj, canvas));
+        return panelContainer;
     }
 
     private void addListener(int xCoordValue, int yCoordValue, Method setter, Object obj, JPlotterCanvas canvas) {

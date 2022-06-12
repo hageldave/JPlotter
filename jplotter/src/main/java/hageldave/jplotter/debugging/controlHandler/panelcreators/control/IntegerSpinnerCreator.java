@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 
 public class IntegerSpinnerCreator implements ControlPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         int initValue = (int) getter.invoke(obj);
 
         SpinnerNumberModel globalThicknessModel = new SpinnerNumberModel(initValue, 0, Integer.MAX_VALUE, 1);
@@ -24,7 +24,7 @@ public class IntegerSpinnerCreator implements ControlPanelCreator {
             }
             canvas.scheduleRepaint();
         });
-        labelContainer.add(spinner);
-        return labelContainer;
+        panelContainer.add(spinner);
+        return panelContainer;
     }
 }

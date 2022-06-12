@@ -16,19 +16,19 @@ public class RenderOrderCreator implements ControlPanelCreator {
     Map<Integer, Integer> index2renderer = new HashMap<>();
 
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         this.initRenderOrder = (int[]) getter.invoke(obj);
 
         for (int i = 0; i < this.initRenderOrder.length; i++)
             index2renderer.put(i, this.initRenderOrder[i]);
 
-        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.Y_AXIS));
-        labelContainer.add(createComboBox(new JPanel(), "First Renderer", 0, setter, obj, canvas));
-        labelContainer.add(createComboBox(new JPanel(), "Second Renderer", 1, setter, obj, canvas));
-        labelContainer.add(createComboBox(new JPanel(), "Third Renderer", 2, setter, obj, canvas));
-        labelContainer.add(createComboBox(new JPanel(), "Fourth Renderer", 3, setter, obj, canvas));
-        labelContainer.add(createComboBox(new JPanel(), "Fifth Renderer", 4, setter, obj, canvas));
-        return labelContainer;
+        panelContainer.setLayout(new BoxLayout(panelContainer, BoxLayout.Y_AXIS));
+        panelContainer.add(createComboBox(new JPanel(), "First Renderer", 0, setter, obj, canvas));
+        panelContainer.add(createComboBox(new JPanel(), "Second Renderer", 1, setter, obj, canvas));
+        panelContainer.add(createComboBox(new JPanel(), "Third Renderer", 2, setter, obj, canvas));
+        panelContainer.add(createComboBox(new JPanel(), "Fourth Renderer", 3, setter, obj, canvas));
+        panelContainer.add(createComboBox(new JPanel(), "Fifth Renderer", 4, setter, obj, canvas));
+        return panelContainer;
     }
 
     protected Map<Integer, String> mapRendererString2Index() {

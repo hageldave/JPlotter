@@ -12,7 +12,7 @@ import java.util.Locale;
 
 public class PercentageFloatSliderCreator implements ControlPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         DecimalFormat df = new DecimalFormat("#0.00", DecimalFormatSymbols.getInstance(Locale.US));
         JLabel valueLabel = new JLabel(df.format(getter.invoke(obj)));
         float initValue = (float) getter.invoke(obj)*100;
@@ -31,8 +31,8 @@ public class PercentageFloatSliderCreator implements ControlPanelCreator {
             canvas.scheduleRepaint();
         });
 
-        labelContainer.add(valueLabel);
-        labelContainer.add(slider);
-        return labelContainer;
+        panelContainer.add(valueLabel);
+        panelContainer.add(slider);
+        return panelContainer;
     }
 }

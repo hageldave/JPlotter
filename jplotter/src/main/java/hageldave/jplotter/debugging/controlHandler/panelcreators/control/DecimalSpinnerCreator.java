@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 
 public class DecimalSpinnerCreator implements ControlPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         float initValue = (float) getter.invoke(obj);
 
         SpinnerNumberModel globalThicknessModel = new SpinnerNumberModel(initValue, 0, Integer.MAX_VALUE, 0.1);
@@ -28,7 +28,7 @@ public class DecimalSpinnerCreator implements ControlPanelCreator {
             }
             canvas.scheduleRepaint();
         });
-        labelContainer.add(spinner);
-        return labelContainer;
+        panelContainer.add(spinner);
+        return panelContainer;
     }
 }

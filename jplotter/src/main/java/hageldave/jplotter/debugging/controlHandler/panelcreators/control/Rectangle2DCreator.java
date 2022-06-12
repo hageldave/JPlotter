@@ -15,7 +15,7 @@ public class Rectangle2DCreator implements ControlPanelCreator {
     protected SpinnerNumberModel yMaxCoordModel;
 
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         Rectangle2D initValue = (Rectangle2D) getter.invoke(obj);
 
         this.xMinCoordModel = new SpinnerNumberModel(initValue.getMinX(), Integer.MIN_VALUE, Integer.MAX_VALUE, 0.1);
@@ -26,7 +26,7 @@ public class Rectangle2DCreator implements ControlPanelCreator {
         JPanel topContainer = new JPanel();
         JPanel bottomContainer = new JPanel();
 
-        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.Y_AXIS));
+        panelContainer.setLayout(new BoxLayout(panelContainer, BoxLayout.Y_AXIS));
         topContainer.setLayout(new BoxLayout(topContainer, BoxLayout.X_AXIS));
         bottomContainer.setLayout(new BoxLayout(bottomContainer, BoxLayout.X_AXIS));
 
@@ -35,9 +35,9 @@ public class Rectangle2DCreator implements ControlPanelCreator {
         bottomContainer.add(constructCoordContainer(yMinCoordModel, "Y Min", setter, obj, canvas));
         bottomContainer.add(constructCoordContainer(yMaxCoordModel, "Y Max", setter, obj, canvas));
 
-        labelContainer.add(topContainer);
-        labelContainer.add(bottomContainer);
-        return labelContainer;
+        panelContainer.add(topContainer);
+        panelContainer.add(bottomContainer);
+        return panelContainer;
     }
 
     private void addListener(double minX, double minY, double maxX, double maxY, Method setter, Object obj, JPlotterCanvas canvas) {

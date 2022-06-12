@@ -6,11 +6,11 @@ import javax.swing.*;
 import java.lang.reflect.Method;
 
 public interface ControlPanelCreator {
-    JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception;
+    JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception;
 
-    default JPanel createUnchecked(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) {
+    default JPanel createUnchecked(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) {
         try {
-            return create(canvas, obj, labelContainer,  setter, getter);
+            return create(canvas, obj, panelContainer,  setter, getter);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 
 public class StrokePatternCreator implements ControlPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         short currentStrokePattern = (short) getter.invoke(obj);
         String strokePatternString = Integer.toUnsignedString(currentStrokePattern, 2);
         int strokePatternLength = strokePatternString.length();
@@ -58,13 +58,13 @@ public class StrokePatternCreator implements ControlPanelCreator {
                 }
             });
 
-            labelContainer.add(label[i]);
+            panelContainer.add(label[i]);
             if (i % 4 == 3) {
                 JLabel emptyLabel = new JLabel();
                 emptyLabel.setBorder(new EmptyBorder(0, 0, 0, 7));
-                labelContainer.add(emptyLabel);
+                panelContainer.add(emptyLabel);
             }
         }
-        return labelContainer;
+        return panelContainer;
     }
 }

@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 
 public class TextfieldCreator implements ControlPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         JLabel textLabel = new JLabel("Current string: " + getter.invoke(obj));
         JTextField textField = new JTextField("", 20);
         textField.setMaximumSize(textField.getPreferredSize());
@@ -26,13 +26,13 @@ public class TextfieldCreator implements ControlPanelCreator {
             canvas.scheduleRepaint();
         });
 
-        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.Y_AXIS));
-        labelContainer.setBorder(new EmptyBorder(10, 0, 7, 0));
+        panelContainer.setLayout(new BoxLayout(panelContainer, BoxLayout.Y_AXIS));
+        panelContainer.setBorder(new EmptyBorder(10, 0, 7, 0));
         textLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         textField.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        labelContainer.add(textLabel);
-        labelContainer.add(textField);
-        return labelContainer;
+        panelContainer.add(textLabel);
+        panelContainer.add(textField);
+        return panelContainer;
     }
 }

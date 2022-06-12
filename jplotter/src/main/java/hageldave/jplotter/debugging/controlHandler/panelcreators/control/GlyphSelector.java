@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 
 public class GlyphSelector implements ControlPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel labelContainer, Method setter, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         JComboBox<DefaultGlyph> glyphSelector = new JComboBox<>(DefaultGlyph.values());
 
         glyphSelector.setSelectedItem(getter.invoke(obj));
@@ -25,7 +25,7 @@ public class GlyphSelector implements ControlPanelCreator {
             }
         });
 
-        labelContainer.add(glyphSelector);
-        return labelContainer;
+        panelContainer.add(glyphSelector);
+        return panelContainer;
     }
 }
