@@ -31,8 +31,10 @@ public class FieldHandler {
         JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
         JLabel fieldName = new JLabel((field) + " ");
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+        fieldName.setToolTipText("Annotation key of the property");
         fieldType.setFont(new Font(fieldType.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()-2));
         fieldType.setForeground(Color.GRAY);
+        fieldType.setToolTipText("Type of the property");
 
         labelContainer.add(fieldType);
         labelContainer.add(fieldName);
@@ -71,8 +73,10 @@ public class FieldHandler {
         JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
         JLabel fieldName = new JLabel((field) + ": ");
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+        fieldName.setToolTipText("Annotation key of the property");
         fieldType.setFont(new Font(fieldType.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()-2));
         fieldType.setForeground(Color.GRAY);
+        fieldType.setToolTipText("Type of the property");
 
         labelContainer.add(fieldType);
         labelContainer.add(fieldName);
