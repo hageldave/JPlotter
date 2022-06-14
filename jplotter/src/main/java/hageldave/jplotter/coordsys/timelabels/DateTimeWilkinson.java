@@ -38,7 +38,10 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         for (int i = 0; i < ticks.length; i++) {
             double difference = ticks[i] - min;
             difference *= number2unit;
+            // increment by difference of ref. time and this tick
             LocalDateTime ldt = timeUnit.increment(referenceDateTime, difference);
+            // increment by minimal currently visible tick
+            ldt = timeUnit.increment(ldt, min);
             Duration duration = Duration.between(tempDateTime, ldt);
             tempDateTime = ldt;
             labels[i] = formattingFunction.apply(ldt, duration);
@@ -85,10 +88,10 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         long millisNextTick = ldt.toInstant(ZoneOffset.UTC).toEpochMilli();
         long differenceInMillis = millisNextTick - millisCurrentTick;
 
-
         DateTimeFormatter formatter;
-        // Duration of 1 day in millis
-        if (differenceInMillis > 86400000) {
+        // Duration of 1 day in millis (or zero difference in millis, but that is a bit clunky currently)
+        if (Math.abs(differenceInMillis) > 86400000 ||
+                (differenceInMillis <= 0 && (timeUnit == TimeUnit.Day || timeUnit == TimeUnit.Week || timeUnit == TimeUnit.Month || timeUnit == TimeUnit.Year))) {
             formatter = DateTimeFormatter.ISO_DATE;
         } else {
             formatter = DateTimeFormatter.ISO_TIME;
