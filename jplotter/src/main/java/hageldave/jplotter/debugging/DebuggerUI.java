@@ -4,6 +4,7 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.controlHandler.FieldHandler;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
+import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInterface;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ControlPanelCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.display.DisplayPanelCreator;
 import hageldave.jplotter.renderables.Renderable;
@@ -198,11 +199,13 @@ public class DebuggerUI {
             AtomicReference<Method> setter = new AtomicReference<>();
             AtomicReference<Class<? extends ControlPanelCreator>> ctrlCreator = new AtomicReference<>();
             AtomicReference<Class<? extends DisplayPanelCreator>> dsplyCreator = new AtomicReference<>();
+            AtomicReference<Class<? extends CustomPrinterInterface>> customPrinter = new AtomicReference<>();
 
             for (DebugGetter debugGetter : searchGetter.getAnnotationsByType(DebugGetter.class)) {
                 key.set(debugGetter.key());
                 getter.set(searchGetter);
                 dsplyCreator.set(debugGetter.creator());
+                customPrinter.set(debugGetter.objectPrinter());
 
                 allMethods.forEach(searchSetter -> {
                     for (DebugSetter debugSetter : searchSetter.getAnnotationsByType(DebugSetter.class)) {
@@ -222,8 +225,8 @@ public class DebuggerUI {
                 JPanel panel = FieldHandler.controlField(canvas, obj, key.get(), getter, setter, ctrlCreator);
                 controlContainer.add(panel);
                 controlFieldFound.set(true);
-            } else if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(dsplyCreator.get())) {
-                JPanel panel = FieldHandler.displayField(canvas, obj, key.get(), getter, dsplyCreator);
+            } else if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(dsplyCreator.get()) && Objects.nonNull(customPrinter.get())) {
+                JPanel panel = FieldHandler.displayField(canvas, obj, key.get(), getter, dsplyCreator, customPrinter);
                 infoContainer.add(panel);
                 infoFieldFound.set(true);
             }

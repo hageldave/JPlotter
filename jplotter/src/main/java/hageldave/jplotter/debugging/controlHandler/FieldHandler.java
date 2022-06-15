@@ -1,6 +1,7 @@
 package hageldave.jplotter.debugging.controlHandler;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInterface;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ControlPanelCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.display.DisplayPanelCreator;
 
@@ -64,7 +65,8 @@ public class FieldHandler {
                                       Object obj,
                                       String field,
                                       AtomicReference<Method> getter,
-                                      AtomicReference<Class<? extends DisplayPanelCreator>> creator) {
+                                      AtomicReference<Class<? extends DisplayPanelCreator>> creator,
+                                      AtomicReference<Class<? extends CustomPrinterInterface>> objectPrinter) {
         JPanel labelContainer = new JPanel();
         labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
         labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -83,7 +85,8 @@ public class FieldHandler {
 
         try {
             DisplayPanelCreator pc = creator.get().getDeclaredConstructor().newInstance();
-            pc.createUnchecked(canvas, obj, labelContainer, getter.get());
+            CustomPrinterInterface cpi = objectPrinter.get().getDeclaredConstructor().newInstance();
+            pc.createUnchecked(canvas, obj, labelContainer, getter.get(), cpi);
         } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

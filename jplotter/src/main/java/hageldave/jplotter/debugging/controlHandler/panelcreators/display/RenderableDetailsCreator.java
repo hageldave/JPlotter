@@ -1,6 +1,7 @@
 package hageldave.jplotter.debugging.controlHandler.panelcreators.display;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInterface;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,12 +14,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.DoubleSupplier;
-import java.util.function.IntSupplier;
 
 public class RenderableDetailsCreator implements DisplayPanelCreator {
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method getter, CustomPrinterInterface objectPrinter) throws Exception {
         try {
             Object fieldValue = getter.invoke(obj);
 
@@ -42,21 +41,8 @@ public class RenderableDetailsCreator implements DisplayPanelCreator {
                                     int columnindex = 0;
                                     for (Field f : o.getClass().getFields()) {
                                         try {
-                                            Class<?> fieldClass = f.get(o).getClass();
                                             Object value = f.get(o);
-                                            if (DoubleSupplier.class.isAssignableFrom(fieldClass)) {
-                                                double val = ((DoubleSupplier) value).getAsDouble();
-                                                data[rowIndex][columnindex] = val;
-                                            } else if (IntSupplier.class.isAssignableFrom(fieldClass)) {
-                                                int val = ((IntSupplier) value).getAsInt();
-                                                data[rowIndex][columnindex] = val;
-                                            } else if (Color.class.isAssignableFrom(fieldClass)) {
-                                                Color c = ((Color) value);
-                                                String colorString = c.getRed() + " " + c.getGreen() + " " + c.getBlue() + " " + c.getAlpha();
-                                                data[rowIndex][columnindex] = colorString;
-                                            } else {
-                                                data[rowIndex][columnindex] = value;
-                                            }
+                                            data[rowIndex][columnindex] = objectPrinter.print(value, f.getName());
                                         } catch (IllegalAccessException ex) {
                                             throw new RuntimeException(ex);
                                         }
@@ -81,5 +67,6 @@ public class RenderableDetailsCreator implements DisplayPanelCreator {
             throw new RuntimeException(e);
         }
         return panelContainer;
+
     }
 }

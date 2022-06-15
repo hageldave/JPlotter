@@ -1,6 +1,7 @@
 package hageldave.jplotter.debugging.controlHandler.panelcreators.display;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInterface;
 
 import javax.swing.*;
 import java.lang.reflect.Array;
@@ -13,7 +14,7 @@ import java.util.function.DoubleSupplier;
 public class StandardPanelCreator implements DisplayPanelCreator {
 
     @Override
-    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method getter) throws Exception {
+    public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method getter, CustomPrinterInterface objectPrinter) throws Exception {
         try {
             Object fieldValue = getter.invoke(obj);
 
