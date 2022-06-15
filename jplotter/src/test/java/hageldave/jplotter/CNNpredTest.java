@@ -8,7 +8,7 @@ import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
-import hageldave.jplotter.coordsys.timelabels.DateTimeWilkinson;
+import hageldave.jplotter.coordsys.timelabels.TimePassedWilkinson;
 import hageldave.jplotter.coordsys.timelabels.units.TimeUnit;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Scanner;
+
+import static hageldave.jplotter.interaction.InteractionConstants.X_AXIS;
 
 public class CNNpredTest {
 
@@ -126,9 +128,9 @@ public class CNNpredTest {
                 .addLineLabel(1, DefaultColorMap.Q_8_SET2.getColor(4), "MSFT")
         );
 
-        coordsys.setTickMarkGenerator(new DateTimeWilkinson(TimeUnit.Day, 1, startDate), new ExtendedWilkinson());
+        //coordsys.setTickMarkGenerator(new DateTimeWilkinson(TimeUnit.Day, 1, startDate), new ExtendedWilkinson());
         //coordsys.setTickMarkGenerator(new DateTimeWilkinson(TimeUnit.Hour, 1, startDate), new ExtendedWilkinson());
-        //coordsys.setTickMarkGenerator(new TimePassedWilkinson(TimeUnit.Day), new ExtendedWilkinson());
+        coordsys.setTickMarkGenerator(new TimePassedWilkinson(TimeUnit.Day), new ExtendedWilkinson());
         coordsys.setCoordinateView(0, -10, daysFromStartToEnd, 180);
 
         coordsys.setxAxisLabel("Development over time");
@@ -143,7 +145,7 @@ public class CNNpredTest {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         canvas.addCleanupOnWindowClosingListener(frame);
 
-        new CoordSysScrollZoom(canvas, coordsys).register();
+        new CoordSysScrollZoom(canvas, coordsys).register().setZoomedAxes(X_AXIS);
         new CoordSysPanning(canvas, coordsys).register();
 
         SwingUtilities.invokeLater(()->{
