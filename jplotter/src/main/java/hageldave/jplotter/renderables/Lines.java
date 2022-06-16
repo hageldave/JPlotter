@@ -2,7 +2,7 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.customPrint.SegmentDetailsPrinter;
+import hageldave.jplotter.debugging.controlHandler.customPrint.RenderableDetailsPrinter;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
@@ -241,7 +241,7 @@ public class Lines implements Renderable {
 	 * @return the line segments list.
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
-	@DebugGetter(key = "segments", creator = RenderableDetailsCreator.class, objectPrinter = SegmentDetailsPrinter.class)
+	@DebugGetter(key = "segments", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
 	public ArrayList<SegmentDetails> getSegments() {
 		return segments;
 	}

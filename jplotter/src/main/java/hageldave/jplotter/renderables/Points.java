@@ -2,6 +2,7 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
+import hageldave.jplotter.debugging.controlHandler.customPrint.RenderableDetailsPrinter;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.debugging.controlHandler.panelcreators.control.GlyphSelector;
@@ -527,7 +528,7 @@ public class Points implements Renderable {
 	 * @return the list of point details.<br>
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
-	@DebugGetter(key = "points", creator = RenderableDetailsCreator.class)
+	@DebugGetter(key = "points", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
 	public ArrayList<PointDetails> getPointDetails() {
 		return points;
 	}
