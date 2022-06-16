@@ -23,7 +23,7 @@ public class ColorPicker implements ControlPanelCreator {
         colorInfoContainer.setBorder(new EmptyBorder(10, 0, 7, 0));
         colorInfoContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel rgbLabel = new JLabel("RBG value: ");
+        JLabel rgbLabel = new JLabel("RBGA value: (");
 
         JLabel redValue = new JLabel(String.valueOf(currentColor.get().getRed()));
         redValue.setToolTipText("Value of the red color component.");
@@ -34,7 +34,7 @@ public class ColorPicker implements ControlPanelCreator {
         JLabel blueValue = new JLabel(", " + currentColor.get().getBlue());
         blueValue.setToolTipText("Value of the blue color component.");
 
-        JLabel alphaValue = new JLabel(", " + currentColor.get().getAlpha());
+        JLabel alphaValue = new JLabel(", " + currentColor.get().getAlpha() + ")");
         alphaValue.setToolTipText("Value of the alpha color component.");
 
         JButton editButton = new JButton("Edit color");
@@ -52,7 +52,7 @@ public class ColorPicker implements ControlPanelCreator {
                     redValue.setText("" + selectedColor.getRed());
                     greenValue.setText(", " + selectedColor.getGreen());
                     blueValue.setText(", " + selectedColor.getBlue());
-                    alphaValue.setText(", " + selectedColor.getAlpha());
+                    alphaValue.setText(", " + selectedColor.getAlpha() + ")");
                     coloredRectangle.updateColor(new Color(selectedColor.getRGB(), true));
                     currentColor.set(selectedColor);
                 }
