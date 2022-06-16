@@ -31,28 +31,32 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         this.formattingFunction = this::switchFormat;
     }
 
-    protected String[] labelsForTicks(double min, double[] ticks, ITimeUnit timeUnit) {
+    protected String[] labelsForTicks(double[] ticks, ITimeUnit timeUnit) {
         String[] labels = new String[ticks.length];
 
-        LocalDateTime tempDateTime = referenceDateTime;
-        for (int i = 0; i < ticks.length; i++) {
-            double difference = ticks[i] - min;
-            difference *= number2unit;
-            // increment by difference of ref. time and this tick
-            LocalDateTime ldt = timeUnit.increment(referenceDateTime, difference);
-            // increment by minimal currently visible tick
-            ldt = timeUnit.increment(ldt, min);
-            Duration duration = Duration.between(tempDateTime, ldt);
-            tempDateTime = ldt;
-            labels[i] = formattingFunction.apply(ldt, duration);
-        }
+        for (int i = 0; i < ticks.length - 1; i++) {
+            double currentDiff2Ref = ticks[i];
+            currentDiff2Ref *= number2unit;
 
+            double nextDiff2Ref = ticks[i + 1];
+            nextDiff2Ref *= number2unit;
+
+            LocalDateTime currentDateTime = timeUnit.increment(referenceDateTime, currentDiff2Ref);
+            LocalDateTime nextDateTime = timeUnit.increment(referenceDateTime, nextDiff2Ref);
+
+            Duration duration = Duration.between(currentDateTime, nextDateTime);
+            labels[i] = formattingFunction.apply(currentDateTime, duration);
+
+            if (i == ticks.length - 2) {
+                labels[i + 1] = formattingFunction.apply(nextDateTime, duration);
+            }
+        }
         return labels;
     }
 
     public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
         double[] ticks = getTicks(min, max, desiredNumTicks, super.Q, super.w);
-        String[] labelsForTicks = labelsForTicks(min, ticks, timeUnit);
+        String[] labelsForTicks = labelsForTicks(ticks, timeUnit);
         return new Pair<>(ticks, labelsForTicks);
     }
 
@@ -90,8 +94,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
 
         DateTimeFormatter formatter;
         // Duration of 1 day in millis (or zero difference in millis, but that is a bit clunky currently)
-        if (Math.abs(differenceInMillis) > 86400000 ||
-                (differenceInMillis <= 0 && (timeUnit == TimeUnit.Day || timeUnit == TimeUnit.Week || timeUnit == TimeUnit.Month || timeUnit == TimeUnit.Year))) {
+        if (Math.abs(differenceInMillis) > 86400000) {
             formatter = DateTimeFormatter.ISO_DATE;
         } else {
             formatter = DateTimeFormatter.ISO_TIME;
