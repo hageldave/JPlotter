@@ -418,7 +418,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * @return width of the width of the right hand side legend area.
+	 * @return width of the right hand side legend area.
 	 */
 	public int getLegendRightWidth() {
 		return legendRightWidth;

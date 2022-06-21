@@ -43,8 +43,10 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.FontProvider;
+
 import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
+
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.pdf.PDFUtils;

@@ -3,339 +3,384 @@ package hageldave.jplotter.charts;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.coordsys.TickMarkGenerator;
-import hageldave.jplotter.renderables.Triangles;
+import hageldave.jplotter.color.DefaultColorScheme;
+import hageldave.jplotter.renderables.BarGroup;
+import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderers.BarRenderer;
-import hageldave.jplotter.renderers.CompleteRenderer;
+import hageldave.jplotter.renderers.Renderer;
+import hageldave.jplotter.renderers.TrianglesRenderer;
 import hageldave.jplotter.util.AlignmentConstants;
-import hageldave.jplotter.util.Pair;
+import hageldave.jplotter.util.PickingRegistry;
+import hageldave.jplotter.util.Utils;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.TreeSet;
 
-@Deprecated(/*still in development, don't use this yet*/)
+/**
+ * The BarChart class is a convenience class to quickly create barcharts.
+ * Therefore, a new class of renderable and a new renderer are introduced: {@link BarGroup} & {@link BarRenderer},
+ * which are connected through this class.
+ *
+ * Optionally a {@link Renderer} for drawing a legend (such as the {@link Legend} class)
+ * can be set to either the bottom or right hand side of the coordinate system.
+ * Use {@link #placeLegendBottom()}} or {@link #placeLegendOnRight()} to do so.
+ * The legend area size can be partially controlled by {@link #setLegendBottomHeight(int)}
+ * and {@link #setLegendRightWidth(int)} if this is needed.
+ *
+ * The class also implements some simple interaction interfaces
+ * (see {@link #notifyInsideMouseEventStruct} for example),
+ * where the click on the canvas is registered and the corresponding interface
+ * is then called based on what was clicked.
+ *
+ */
 public class BarChart {
-    // renderedGroups has to be passed to renderer somehow, so that it knows when to add lines
-
-    // add legend
-
-    // renderer und barchart vereinen
-    final public TreeMap<Integer, BarGroup> renderedGroups = new TreeMap<>();
-    final protected double barSize = 0.8;
-    protected CompleteRenderer content;
+    protected TrianglesRenderer content;
     protected JPlotterCanvas canvas;
     protected BarRenderer barRenderer;
-    protected int chartAlignment;
+    final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 
-    protected int currentRow = 0;
+    final protected Legend legend = new Legend();
+    final protected TreeSet<Integer> freedPickIds = new TreeSet<>();
+    final protected ArrayList<Integer> legendElementPickIds = new ArrayList<>();
+    final protected LinkedList<BarChartMouseEventListener> mouseEventListeners = new LinkedList<>();
 
-    public static class BarStruct {
-        final public LinkedList<Triangles> stacks = new LinkedList<>();
-        final public LinkedList<Double> dataSets = new LinkedList<>();
-        public String descr;
-        public int position;
-        public double barLength;
-        public int ID;
+    private int legendRightWidth = 100;
+    private int legendBottomHeight = 60;
 
-        public BarStruct(final Triangles stacks, final int position, final String descr, final double dataSet, final int ID) {
-            this.stacks.add(stacks);
-            this.descr = descr;
-            this.position = position;
-            this.dataSets.add(dataSet);
-            this.ID = ID;
-        }
-
-        public BarStruct(final Triangles stacks, final int position, final String descr, final double dataSet, final double barLength, final int ID) {
-            this.stacks.add(stacks);
-            this.descr = descr;
-            this.position = position;
-            this.barLength = barLength;
-            this.dataSets.add(dataSet);
-            this.ID = ID;
-        }
+    public BarChart(final boolean useFallback, final int alignment) {
+        this(useFallback ? new BlankCanvasFallback() : new BlankCanvas(), "X", "Y", alignment);
     }
 
-    // TODO soll renderable sein, aber wie Lines, etc
-    public class BarGroup {
-        // use hashmap as model and add listener -> everytime it is changed, update sortedBars
-        final protected TreeMap<Integer, BarStruct> groupedBars = new TreeMap<>();
-        protected SortedSet<BarStruct> sortedBars = new TreeSet<>(Comparator.comparingDouble(o -> o.barLength));
-        protected int startingRow;
-
-        public BarGroup() {
-            this.startingRow = ++currentRow;
-        }
-
-        public BarGroup(final TreeMap<Integer, BarStruct> groupedBars) {
-            this.groupedBars.putAll(groupedBars);
-        }
-
-        public BarGroup addBar(final int ID, final double[] data, final Color color, final String descr) {
-            double val = Arrays.stream(data).sum();
-            return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{descr});
-        }
-
-        public BarGroup addBar(final int ID, final double val, final Color color, final String descr) {
-            return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{descr});
-        }
-
-        public BarGroup addBar(final int ID, final double val, final Color color) {
-            return addData(new int[]{ID}, new double[]{val}, new Color[]{color}, new String[]{""});
-        }
-
-        public BarGroup addData(final int[] IDs, final double[] data, final Color[] color, final String[] descr) {
-            if (!(IDs.length == data.length && data.length == color.length && color.length == descr.length))
-                throw new IllegalArgumentException("All arrays have to have equal size!");
-            for (int i = 0; i < data.length; i++) {
-                if (this.groupedBars.containsKey(IDs[i])) {
-                    addStack(IDs[i], data[i], color[i]);
-                } else {
-                    Triangles triangleRend = makeBar(currentRow++, data[i], color[i]);
-                    this.groupedBars.put(IDs[i],
-                            new BarStruct(triangleRend, currentRow, descr[i], data[i], data[i], IDs[i]));
-                    copyContent(sortedBars, groupedBars.values());
-                    renderBars();
-                }
-            }
-            return this;
-        }
-
-        public BarGroup addData(final int[] IDs, final double[][] data, final Color[] color, final String[] descr) {
-            // recalc data
-            HashMap<Double, Double> vals = new HashMap<>();
-            for (int i = 0; i < data.length; i++) {
-                if (!vals.containsKey(data[i][1])) {
-                    vals.put(data[i][1], data[i][0]);
-                } else {
-                    Double currentHeight = vals.get(data[i][1]) + data[i][0];
-                    vals.put(data[i][1], currentHeight);
-                }
-            }
-
-            int j = 0;
-            for (Double val: vals.values()) {
-                Triangles triangleRend = makeBar(j, val, color[j]);
-                //this.trianglesInRenderer.put(IDs[j], new BarStruct(triangleRend, j, descr[j]));
-                content.addItemToRender(triangleRend);
-                j++;
-            }
-            return this;
-        }
-
-        protected BarGroup addStack(final Integer ID, final double data, final Color color) {
-            Triangles newStack = makeBar(this.groupedBars.get(ID).barLength,
-                    this.groupedBars.get(ID).position - 1, data, color);
-            this.groupedBars.get(ID).stacks.add(newStack);
-            this.groupedBars.get(ID).dataSets.add(data);
-            this.groupedBars.get(ID).barLength += data;
-            copyContent(sortedBars, groupedBars.values());
-            renderBars();
-            return this;
-        }
-
-        public BarGroup removeBars(final int... IDs) {
-            clearRenderedTriangles();
-            for (int ID: IDs) {
-                this.groupedBars.remove(ID);
-            }
-            currentRow -= IDs.length;
-            copyContent(sortedBars, groupedBars.values());
-            renderBars();
-            return this;
-        }
-
-        // orders by height
-        public BarGroup sortBars() {
-            sortBars((o1, o2) -> {
-                if (o1.barLength < o2.barLength) return -1;
-                if (o1.barLength > o2.barLength) return 1;
-                return 0;
-            });
-            return this;
-        }
-
-        public BarGroup sortBars(final Comparator<BarStruct> comparator) {
-            clearRenderedTriangles();
-            this.sortedBars = new TreeSet<>(comparator);
-            copyContent(this.sortedBars, groupedBars.values());
-            renderBars();
-            return this;
-        }
-
-        public BarGroup sortBarsIDs() {
-            clearRenderedTriangles();
-            this.sortedBars = new TreeSet<>((o1, o2) -> {
-                if (o1.ID > o2.ID) return 1;
-                if (o1.ID < o2.ID) return -1;
-                return 0;
-            });
-            copyContent(this.sortedBars, groupedBars.values());
-            renderBars();
-            return this;
-        }
-
-        protected void copyContent(final Collection<BarStruct> c1,
-                                   final Collection<BarStruct> c2) {
-            c1.clear(); c1.addAll(c2);
-        }
-
-        public TreeMap<Integer, BarStruct> getBarsInGroup() {
-            return groupedBars;
-        }
-    }
-
-    public BarChart(final boolean useOpenGL) {
-        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), AlignmentConstants.HORIZONTAL, "X", "Y");
-    }
-
-    public BarChart(final boolean useOpenGL, final int chartAlignment) {
-        this(useOpenGL ? new BlankCanvas() : new BlankCanvasFallback(), chartAlignment, "X", "Y");
-    }
-
-    public BarChart(final JPlotterCanvas canvas, final int chartAlignment, final String xLabel, final String yLabel) {
+    public BarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel, final int alignment) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
-        this.barRenderer = new BarRenderer(chartAlignment);
-        this.content = new CompleteRenderer();
+        this.barRenderer = new BarRenderer(alignment, DefaultColorScheme.LIGHT.get());
+        this.content = new TrianglesRenderer();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
         this.barRenderer.setContent(content);
         this.canvas.setRenderer(barRenderer);
         this.barRenderer.setxAxisLabel(xLabel);
         this.barRenderer.setyAxisLabel(yLabel);
-        this.chartAlignment = chartAlignment;
+
+        createMouseEventHandler();
     }
 
-    public BarGroup createGroup(final int ID) {
-        BarGroup barGroup = new BarGroup();
-        this.renderedGroups.put(ID, barGroup);
-        return barGroup;
-    }
-
-    protected TickMarkGenerator setTickmarks() {
-        String[] description = new String[currentRow];
-        for (BarGroup group: renderedGroups.values()) {
-            for (int key: group.groupedBars.keySet()) {
-                int pos = group.groupedBars.get(key).position - 1;
-                description[pos] = group.groupedBars.get(key).descr;
+    /**
+     * Adds a BarGroup to the BarChart, which will be rendered by a BarRenderer.
+     *
+     * @param group will be added to the BarChart
+     * @return this for chaining
+     */
+    public BarChart addData(BarGroup group) {
+        for (BarGroup.BarStack struct : group.getGroupedBars().values()) {
+            for (BarGroup.BarStruct barStruct : struct.barStructs) {
+                barStruct.setPickColor(registerInPickingRegistry(barStruct));
             }
         }
-
-        for (int j = 0; j < description.length; j++) {
-            if (description[j] == null)
-                description[j] = "";
-        }
-
-        TickMarkGenerator oldTickGen = barRenderer.getTickMarkGenerator();
-        barRenderer.setTickMarkGenerator((min, max, desired, vert) -> {
-            if (!vert && this.chartAlignment == AlignmentConstants.HORIZONTAL)
-                return oldTickGen.genTicksAndLabels(min, max, desired, vert);
-            if (vert && this.chartAlignment == AlignmentConstants.VERTICAL)
-                return oldTickGen.genTicksAndLabels(min, max, desired, vert);
-            double[] ticks = IntStream.range(0, description.length).mapToDouble(i -> (double) i).toArray();
-            return Pair.of(ticks, description);
-        });
-        return barRenderer.getTickMarkGenerator();
-    }
-
-    protected Triangles makeBar(final int row, final double val, final Color color) {
-        return makeBar(0, row, val, color);
-    }
-
-    protected Triangles makeBar(final double start, final int row, final double val, final Color color) {
-        Triangles bar = new Triangles();
-        if (this.chartAlignment == AlignmentConstants.HORIZONTAL) {
-            bar.addQuad(new Rectangle2D.Double(start, row-(barSize/2), val, barSize));
-        } else if (this.chartAlignment == AlignmentConstants.VERTICAL) {
-            bar.addQuad(new Rectangle2D.Double(row-(barSize/2), start, barSize, val));
-        }
-        bar.getTriangleDetails().forEach(tri -> tri.setColor(color));
-        return bar;
-    }
-
-    // sets everything together
-    public BarChart renderBars() {
-        AtomicInteger index = new AtomicInteger();
-        for (BarGroup group: renderedGroups.values()) {
-            for (BarStruct struct: group.sortedBars) {
-                reconstructBars(index, struct);
-            }
-            index.incrementAndGet();
-        }
-        setTickmarks();
+        this.barRenderer.addBarGroup(group);
         return this;
     }
 
-    public BarChart setBarContentBoundaries() {
-        double maxVal = Integer.MIN_VALUE; double minVal = Integer.MAX_VALUE;
-        for (BarGroup value: renderedGroups.values()) {
-            for (BarStruct struct: value.groupedBars.values()) {
-                maxVal = Math.max(struct.barLength, maxVal);
-                minVal = Math.min(struct.barLength, minVal);
-            }
+    /**
+     * Places a legend on the right, next to the content.
+     * The width can be modified by the {@link BarRenderer#setLegendRightWidth(int)} method.
+     * @return Legend for chaining
+     */
+    public Legend placeLegendOnRight() {
+        if(this.barRenderer.getLegendBottom() == legend) {
+            this.barRenderer.setLegendBottom(null);
+            this.barRenderer.setLegendBottomHeight(0);
         }
-        if (minVal >= 0) {
-            minVal = 0.5;
+        this.barRenderer.setLegendRight(legend);
+        this.barRenderer.setLegendRightWidth(this.legendRightWidth);
+        return legend;
+    }
+
+    /**
+     * Places a legend on the bottom, under the content.
+     * The height can be modified by the {@link BarRenderer#setLegendBottomHeight(int)} method.
+     * @return Legend for chaining
+     */
+    public Legend placeLegendBottom() {
+        if(this.barRenderer.getLegendRight() == legend) {
+            this.barRenderer.setLegendRight(null);
+            this.barRenderer.setLegendRightWidth(0);
         }
-        if (this.chartAlignment == AlignmentConstants.HORIZONTAL) {
-            this.barRenderer.setCoordinateView(minVal - 0.5, -0.8, maxVal + 0.5, currentRow);
-        } else if (this.chartAlignment == AlignmentConstants.VERTICAL) {
-            this.barRenderer.setCoordinateView(-0.8, minVal - 0.5, currentRow, maxVal + 0.5);
+        this.barRenderer.setLegendBottom(legend);
+        this.barRenderer.setLegendBottomHeight(this.legendBottomHeight);
+        return legend;
+    }
+
+    /**
+     * Removes all legends from the BarChart.
+     * @return this for chaining
+     */
+    public BarChart placeLegendNowhere() {
+        if(this.barRenderer.getLegendRight() == legend) {
+            this.barRenderer.setLegendRight(null);
+            this.barRenderer.setLegendRightWidth(0);
+        }
+        if(this.barRenderer.getLegendBottom() == legend) {
+            this.barRenderer.setLegendBottom(null);
+            this.barRenderer.setLegendBottomHeight(0);
         }
         return this;
     }
 
-    protected BarChart reconstructBars(AtomicInteger index, BarStruct struct) {
-        double missingVals = struct.barLength;
-        struct.position = index.incrementAndGet();
-        for (Triangles element: struct.stacks) {
-            double length = 0;
-            if (chartAlignment == AlignmentConstants.HORIZONTAL) {
-                if (element.getBounds().getMaxX() == 0)
-                    length = element.getBounds().getMinX();
-                else
-                    length = element.getBounds().getMaxX();
-            } else if (chartAlignment == AlignmentConstants.VERTICAL) {
-                if (element.getBounds().getMaxY() == 0)
-                    length = element.getBounds().getMinY();
-                else
-                    length = element.getBounds().getMaxY();
-            }
-            Triangles tri = makeBar((int) (struct.barLength - missingVals), struct.position - 1, length, new Color(element.getTriangleDetails().get(0).c0.getAsInt()));
-            missingVals -= length;
-            this.content.addItemToRender(tri);
-        }
-        return this;
+    /**
+     * Registers an object in the picking registry
+     * (see {@link PickingRegistry} for more information about the functionality of the picking registry).
+     * @param obj will be registered in the picking registry
+     * @return the objects' id in the picking registry
+     */
+    protected synchronized int registerInPickingRegistry(Object obj) {
+        int id = freedPickIds.isEmpty() ? pickingRegistry.getNewID() : freedPickIds.pollFirst();
+        pickingRegistry.register(obj, id);
+        return id;
     }
 
-    protected BarChart clearRenderedTriangles() {
-        LinkedList<Triangles> items = new LinkedList<>(this.content.triangles.getItemsToRender());
-        for (Triangles tri : items) {
-            this.content.triangles.removeItemToRender(tri);
-        }
-        return this;
+    /**
+     * Deregisters an object from the picking registry
+     * (see {@link PickingRegistry} for more information about the functionality of the picking registry).
+     * @param id of the object to deregister
+     * @return the object deregistered
+     */
+    protected synchronized Object deregisterFromPickingRegistry(int id) {
+        Object old = pickingRegistry.lookup(id);
+        pickingRegistry.register(null, id);
+        freedPickIds.add(id);
+        return old;
     }
 
-    public CompleteRenderer getContent() {
+    /**
+     * @return {@link TrianglesRenderer} rendering the individual bars.
+     */
+    public TrianglesRenderer getContent() {
         return content;
     }
 
+    /**
+     * @return corresponding canvas, where everything is rendered in (See {@link hageldave.jplotter.canvas.FBOCanvas}).
+     */
     public JPlotterCanvas getCanvas() {
-        return canvas;
+        return this.canvas;
     }
 
+    /**
+     * @return {@link BarRenderer} that basically renders everything (coordinate system, legends, bars, ...).
+     */
     public BarRenderer getBarRenderer() {
         return barRenderer;
     }
 
-    public int getChartAlignment() {
-        return chartAlignment;
+    /**
+     * @return width of the right hand side legend area.
+     */
+    public int getLegendRightWidth() {
+        return legendRightWidth;
     }
 
-    public double getBarSize() {
-        return barSize;
+    /**
+     * Sets the width of the legend area right to the coordinate system.
+     * (height is determined by the space available until the bottom of the renderer's viewport)
+     * @param legendRightWidth width of the right legend area.
+     * (default is 100 px)
+     * @return this for chaining
+     */
+    public BarChart setLegendRightWidth(int legendRightWidth) {
+        this.legendRightWidth = legendRightWidth;
+        return this;
     }
+
+    /**
+     * @return height of the bottom side legend area.
+     */
+    public int getLegendBottomHeight() {
+        return legendBottomHeight;
+    }
+
+    /**
+     * Sets the height of the legend area below the coordinate system.
+     * (width is determined by x-axis width)
+     * @param legendBottomHeight height of the bottom legend area.
+     * (default is 60px)
+     * @return this for chaining
+     */
+    public BarChart setLegendBottomHeight(int legendBottomHeight) {
+        this.legendBottomHeight = legendBottomHeight;
+        return this;
+    }
+
+    /**
+     * @return current alignment of the BarChart.
+     */
+    public int getAlignment() {
+        return this.barRenderer.getAlignment();
+    }
+
+    /**
+     * Changes the orientation of the BarChart.
+     * Two orientations are possible: vertical (alignment=1) and horizontal (alignment=2)
+     * @param alignment orientation of the BarChart (see {@link AlignmentConstants})
+     * @return this for chaining
+     */
+    public BarChart setAlignment(int alignment) {
+        this.barRenderer.setAlignment(alignment);
+        return this;
+    }
+
+    /**
+     * Creates a mouse event handler.
+     */
+    protected void createMouseEventHandler() {
+        MouseAdapter mouseEventHandler = new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) { mouseAction(BarChartMouseEventListener.MOUSE_EVENT_TYPE_MOVED, e); }
+
+            @Override
+            public void mouseClicked(MouseEvent e) { mouseAction(BarChartMouseEventListener.MOUSE_EVENT_TYPE_CLICKED, e); }
+
+            @Override
+            public void mousePressed(MouseEvent e) { mouseAction(BarChartMouseEventListener.MOUSE_EVENT_TYPE_PRESSED, e); }
+
+            @Override
+            public void mouseReleased(MouseEvent e) { mouseAction(BarChartMouseEventListener.MOUSE_EVENT_TYPE_RELEASED, e); }
+
+            @Override
+            public void mouseDragged(MouseEvent e) { mouseAction(BarChartMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED, e); }
+
+
+            private void mouseAction(String eventType, MouseEvent e) {
+                /* TODO: check key mask listeners of panning, zooming, and rectangular point selection
+                 * to figure out if the mouse event is being handled by them. If not handled by any of them
+                 * then go on with the following.
+                 */
+                if(Utils.swapYAxis(barRenderer.getCoordSysArea(),canvas.asComponent().getHeight()).contains(e.getPoint())) {
+                    /* mouse inside coordinate area */
+                    Point2D coordsysPoint = barRenderer.transformAWT2CoordSys(e.getPoint(), canvas.asComponent().getHeight());
+                    // get pick color under cursor
+                    int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+                    if((pixel & 0x00ffffff) == 0) {
+                        notifyInsideMouseEventNone(eventType, e, coordsysPoint);
+                    } else {
+                        Object pointLocalizer = pickingRegistry.lookup(pixel);
+                        if (pointLocalizer instanceof BarGroup.BarStruct) {
+                            notifyInsideMouseEventStruct(eventType, e, coordsysPoint, (BarGroup.BarStruct) pointLocalizer);
+                        }
+                    }
+                } else {
+                    /* mouse outside coordinate area */
+                    // get pick color under cursor
+                    int pixel = canvas.getPixel(e.getX(), e.getY(), true, 3);
+                    if((pixel & 0x00ffffff) == 0) {
+                        notifyOutsideMouseEventNone(eventType, e);
+                    } else {
+                        Object miscLocalizer = pickingRegistry.lookup(pixel);
+                        if(miscLocalizer instanceof Legend.BarLabel) {
+                            notifyOutsideMouseEventElement(eventType, e, (Legend.BarLabel) miscLocalizer);
+                        }
+                    }
+                }
+            }
+
+        };
+        this.canvas.asComponent().addMouseListener(mouseEventHandler);
+        this.canvas.asComponent().addMouseMotionListener(mouseEventHandler);
+    }
+
+    protected synchronized void notifyInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {
+        for(BarChartMouseEventListener l:mouseEventListeners)
+            l.onInsideMouseEventNone(mouseEventType, e, coordsysPoint);
+    }
+
+    protected synchronized void notifyInsideMouseEventStruct(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {
+        for(BarChartMouseEventListener l:mouseEventListeners)
+            l.onInsideMouseEventStruct(mouseEventType, e, coordsysPoint, barStruct);
+    }
+
+    protected synchronized void notifyOutsideMouseEventNone(String mouseEventType, MouseEvent e) {
+        for(BarChartMouseEventListener l:mouseEventListeners)
+            l.onOutsideMouseEventNone(mouseEventType, e);
+    }
+
+    protected synchronized void notifyOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {
+        for(BarChartMouseEventListener l:mouseEventListeners)
+            l.onOutsideMouseEventElement(mouseEventType, e, legendElement);
+    }
+
+    /**
+     * The BarChartMouseEventListener interface contains multiple methods,
+     * notifying if an element has been hit or not (inside and outside the coordsys).
+     */
+    public static interface BarChartMouseEventListener {
+        static final String MOUSE_EVENT_TYPE_MOVED="moved";
+        static final String MOUSE_EVENT_TYPE_CLICKED="clicked";
+        static final String MOUSE_EVENT_TYPE_PRESSED="pressed";
+        static final String MOUSE_EVENT_TYPE_RELEASED="released";
+        static final String MOUSE_EVENT_TYPE_DRAGGED="dragged";
+
+        /**
+         * Called whenever the mouse pointer doesn't hit a {@link BarGroup.BarStruct} of the BarChart while being inside the coordsys.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param coordsysPoint coordinates of the mouse event inside the coordinate system
+         */
+        public default void onInsideMouseEventNone(String mouseEventType, MouseEvent e, Point2D coordsysPoint) {}
+
+        /**
+         * Called when the mouse pointer does hit a {@link BarGroup.BarStruct} of the BarChart.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param coordsysPoint coordinates of the mouse event inside the coordinate system
+         * @param barStruct that has been hit
+         */
+        public default void onInsideMouseEventStruct(String mouseEventType, MouseEvent e, Point2D coordsysPoint, BarGroup.BarStruct barStruct) {}
+
+        /**
+         * Called when the mouse pointer doesn't hit an element (e.g. legend elements) of the BarChart while being outside the coordsys.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         */
+        public default void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {}
+
+        /**
+         * Called when the mouse pointer hits an element (e.g. legend elements) of the BarChart while being outside the coordsys.
+         *
+         * @param mouseEventType type of the mouse event
+         * @param e passed on mouse event of the mouse adapter registering the mouse movements
+         * @param legendElement clicked legendElement
+         */
+        public default void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {}
+    }
+
+    /**
+     * Adds a {@link BarChartMouseEventListener} to the BarChart.
+     *
+     * @param l {@link BarChartMouseEventListener} that implements the interface methods which is called whenever one of the defined mouse events happens
+     * @return {@link BarChartMouseEventListener} for chaining
+     */
+    public synchronized BarChartMouseEventListener addBarChartMouseEventListener(BarChartMouseEventListener l) {
+        this.mouseEventListeners.add(l);
+        return l;
+    }
+
+    /**
+     * Removes the specified {@link BarChartMouseEventListener} from the BarChart.
+     *
+     * @param l {@link BarChartMouseEventListener} that should be removed
+     * @return true if the {@link BarChartMouseEventListener} was added to the BarChart before
+     */
+    public synchronized boolean removeBarChartMouseEventListener(BarChartMouseEventListener l) {
+        return this.mouseEventListeners.remove(l);
+    }
+
 }
