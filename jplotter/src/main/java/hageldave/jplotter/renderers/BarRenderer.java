@@ -85,6 +85,7 @@ public class BarRenderer implements Renderer {
 
     protected int legendRightWidth = 70;
     protected int legendBottomHeight = 20;
+    protected double bargroupGap = 0.5;
 
     @Annotations.GLCoordinates
     protected Rectangle legendRightViewPort = new Rectangle();
@@ -448,6 +449,16 @@ public class BarRenderer implements Renderer {
         this.colorScheme = colorScheme;
         updateColors();
         return this;
+    }
+
+    // TODO:
+    public double getBargroupGap() {
+        return bargroupGap;
+    }
+
+    // TODO:
+    public void setBargroupGap(double bargroupGap) {
+        this.bargroupGap = bargroupGap;
     }
 
     /**
@@ -904,7 +915,7 @@ public class BarRenderer implements Renderer {
                 index++;
             }
             // increment for every group (but by smaller increment)
-            structPos += 0.5;
+            structPos += this.bargroupGap;
         }
         groupSeparators[groupindex] = structPos - 0.75;
     }
@@ -1587,6 +1598,7 @@ public class BarRenderer implements Renderer {
                     .map(e -> e.getBounds(this.alignment))
                     .mapToDouble(RectangularShape::getWidth)
                     .max().orElse(0);
+            maxY += groupedBars.size() * (this.bargroupGap*2);
             return new Rectangle2D.Double(minX, -barSize, maxX - minX, maxY + barSize * 2);
         } else if (this.alignment == AlignmentConstants.VERTICAL) {
             minY = groupedBars.parallelStream()
@@ -1601,6 +1613,7 @@ public class BarRenderer implements Renderer {
                     .map(e -> e.getBounds(AlignmentConstants.VERTICAL))
                     .mapToDouble(RectangularShape::getHeight)
                     .max().orElse(0);
+            maxX += groupedBars.size() * (this.bargroupGap*2);
             return new Rectangle2D.Double(-barSize, minY, maxX + barSize * 2, maxY - minY);
         }
         return new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY);
