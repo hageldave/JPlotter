@@ -85,7 +85,7 @@ public class BarRenderer implements Renderer {
 
     protected int legendRightWidth = 70;
     protected int legendBottomHeight = 20;
-    protected double bargroupGap = 0.5;
+    protected double bargroupGap = 0.25;
 
     @Annotations.GLCoordinates
     protected Rectangle legendRightViewPort = new Rectangle();
@@ -886,21 +886,23 @@ public class BarRenderer implements Renderer {
 
     protected void setupBars(final double[] groupSeparators, String[] xticklabels, double[] xticks) {
         // where to position each barstruct
-        double structPos = 0;
-        // index for label array
-        int index = 0;
+        double structPos = - 0.3;
+        // structIndex for label array
+        int structIndex = 0;
         int groupindex = 0;
         // clear everything to avoid rendering stuff multiple times
         this.content.itemsToRender.clear();
         for (BarGroup group : this.groupedBars) {
             // add guide here
-            groupSeparators[groupindex++] = structPos - 0.75;
+            structPos += this.bargroupGap;
+            groupSeparators[groupindex++] = structPos - this.bargroupGap - 0.5;
+
             for (BarStack struct : group.getGroupedBars().values()) {
                 double stackEnd = 0;
                 // add description labels on y axis
                 // (or) add description labels on x axis (when vertical alignment instead of horizontal)
-                xticks[index] = structPos;
-                xticklabels[index] = struct.description;
+                xticks[structIndex] = structPos;
+                xticklabels[structIndex] = struct.description;
                 // adds each stack to the triangle renderer
                 for (BarStruct barStruct : struct.barStructs) {
                     if (barStruct.length >= 0) {
@@ -912,12 +914,12 @@ public class BarRenderer implements Renderer {
                 }
                 // increment pos for every struct
                 structPos++;
-                index++;
+                structIndex++;
             }
             // increment for every group (but by smaller increment)
             structPos += this.bargroupGap;
         }
-        groupSeparators[groupindex] = structPos - 0.75;
+        groupSeparators[groupindex] = structPos - 0.5;
     }
 
     // clear label content (e.g. when changing bar renderers' orientation)
