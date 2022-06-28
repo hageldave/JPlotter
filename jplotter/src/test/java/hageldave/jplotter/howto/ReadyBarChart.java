@@ -92,6 +92,9 @@ public class ReadyBarChart {
             allGroups.add(groupSetosa);
             allGroups.add(groupVersicolor);
             allGroups.add(groupVirginica);
+            allGroups.add(groupSetosa);
+            allGroups.add(groupVersicolor);
+            allGroups.add(groupVirginica);
 
             LinkedList<double[]> allValues = new LinkedList<>();
             allValues.add(setosaValues);
@@ -102,6 +105,7 @@ public class ReadyBarChart {
             allHistograms.add(setosaHistogramValues);
             allHistograms.add(versicolorHistogramValues);
             allHistograms.add(virginicaHistogramValues);
+            
 
             // now calculate mean for all values and save it in an array
             int index = 0;
@@ -154,6 +158,10 @@ public class ReadyBarChart {
         createHistogramGroup(0.0, petalLength, classcolors, setosaHistogramValues.get(2), versicolorHistogramValues.get(2), virginicaHistogramValues.get(2));
         createHistogramGroup(0.0, petalWidth, classcolors, setosaHistogramValues.get(3), versicolorHistogramValues.get(3), virginicaHistogramValues.get(3));
 
+        histogramChart.addData(sepalLength);
+        histogramChart.addData(sepalWidth);
+        histogramChart.addData(petalLength);
+        histogramChart.addData(petalWidth);
         histogramChart.addData(sepalLength);
         histogramChart.addData(sepalWidth);
         histogramChart.addData(petalLength);
