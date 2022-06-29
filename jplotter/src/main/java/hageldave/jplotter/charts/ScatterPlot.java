@@ -28,6 +28,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -134,10 +135,15 @@ public class ScatterPlot {
     
     public void setVisualMapping(ScatterPlotVisualMapping visualMapping) {
 		this.visualMapping = visualMapping;
-		for(Points p:pointsPerDataChunk)
-			p.setDirty();
+		this.visualMapping.createGeneralLegendElements(legend);
+		setAllPointsDirty();
 		this.canvas.scheduleRepaint();
 	}
+    
+    public void setAllPointsDirty() {
+    	for(Points p:pointsPerDataChunk)
+			p.setDirty();
+    }
 
 	/**
 	 * @return the data model (see {@link ScatterPlotVisualMapping}) linked to the scatter plot
@@ -997,9 +1003,16 @@ public class ScatterPlot {
 		selectionModel.setSelection(toHighlight);
 	}
 	
+	protected SortedSet<Pair<Integer, Integer>> sanitizeCueSet(SortedSet<Pair<Integer, Integer>> cueset) {
+		return cueset.stream()
+		.filter(p->p.first >= 0 && p.second >= 0 && p.first < dataModel.numChunks())
+		.filter(p->p.second < dataModel.chunkSize(p.first))
+		.collect(Collectors.toCollection(TreeSet::new));
+	}
+	
 	protected void createCue(final String cueType) {
 		SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(cueType);
-		SortedSet<Pair<Integer, Integer>> instancesToCue = selectionModel.getSelection();
+		SortedSet<Pair<Integer, Integer>> instancesToCue = sanitizeCueSet(selectionModel.getSelection());
 		
 		clearCue(cueType);
 		

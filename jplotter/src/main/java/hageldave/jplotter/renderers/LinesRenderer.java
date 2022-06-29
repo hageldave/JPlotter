@@ -549,7 +549,7 @@ public class LinesRenderer extends GenericRenderer<Lines> {
         double prevX = 0;
         double prevY = 0;
 
-        for (SegmentDetails seg : lines.getSegments()) {
+        for (SegmentDetails seg : lines.getIntersectingSegments(view)) {
             double x1, y1, x2, y2;
             x1 = seg.p0.getX();
             y1 = seg.p0.getY();
