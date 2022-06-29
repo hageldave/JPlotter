@@ -506,7 +506,7 @@ public class ScatterPlot {
 		 */
     	public default void createLegendElementForChunk(Legend legend, int chunkIdx, String chunkDescr, int pickColor) {
     		Glyph glyph = getGlyphForChunk(chunkIdx, chunkDescr);
-    		int color = getColorForDataPoint(chunkIdx, chunkDescr, null, -1);
+    		int color = getColorForDataPoint(chunkIdx, chunkDescr, null, 0);
     		legend.addGlyphLabel(glyph, color, chunkDescr, pickColor);	
     	}
     	
