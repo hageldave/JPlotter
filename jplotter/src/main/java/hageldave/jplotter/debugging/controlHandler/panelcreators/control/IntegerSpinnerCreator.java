@@ -11,8 +11,8 @@ public class IntegerSpinnerCreator implements ControlPanelCreator {
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         int initValue = (int) getter.invoke(obj);
 
-        SpinnerNumberModel globalThicknessModel = new SpinnerNumberModel(initValue, 0, Integer.MAX_VALUE, 1);
-        JSpinner spinner = new JSpinner(globalThicknessModel);
+        SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(initValue, 0, Integer.MAX_VALUE, 1);
+        JSpinner spinner = new JSpinner(spinnerNumberModel);
         spinner.setMaximumSize(spinner.getMinimumSize());
 
         spinner.addChangeListener(e -> {

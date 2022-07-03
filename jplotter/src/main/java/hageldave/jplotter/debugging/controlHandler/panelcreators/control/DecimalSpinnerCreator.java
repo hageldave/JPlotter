@@ -12,12 +12,10 @@ public class DecimalSpinnerCreator implements ControlPanelCreator {
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         float initValue = (float) getter.invoke(obj);
 
-        SpinnerNumberModel globalThicknessModel = new SpinnerNumberModel(initValue, 0, Integer.MAX_VALUE, 0.1);
-        JSpinner spinner = new JSpinner(globalThicknessModel);
+        SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(initValue, 0, Integer.MAX_VALUE, 0.1);
+        JSpinner spinner = new JSpinner(spinnerNumberModel);
 
-        spinner.setMaximumSize(
-                new Dimension((int) (spinner.getMinimumSize().getWidth() + 10), (int) spinner.getMinimumSize().getHeight())
-        );
+        spinner.setMaximumSize(new Dimension((int) (spinner.getMinimumSize().getWidth() + 10), (int) spinner.getMinimumSize().getHeight()));
 
         spinner.addChangeListener(e -> {
             try {
