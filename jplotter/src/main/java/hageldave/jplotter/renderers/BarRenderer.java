@@ -134,7 +134,7 @@ public class BarRenderer implements Renderer {
     protected int paddingBot = 10;
 
     // Linkedlist for now - later might be replaced by treeset
-    final protected LinkedList<BarGroup> groupedBars = new LinkedList<>();
+    final protected List<BarGroup> groupedBars = new LinkedList<>();
     protected double barSize = 0.8;
     protected double bargroupGap = 0.4;
     protected double barGap = 0.2;
@@ -1587,6 +1587,22 @@ public class BarRenderer implements Renderer {
         this.groupedBars.add(barGroup);
         this.setupAndLayout();
         return this;
+    }
+
+    /**
+     * Removes a bar group from the bar renderer.
+     *
+     * @param barGroup group that will be removed from the renderer
+     * @return this for chaining
+     */
+    public BarRenderer removeBarGroup(final BarGroup barGroup) {
+        this.groupedBars.remove(barGroup);
+        this.setupAndLayout();
+        return this;
+    }
+
+    public List<BarGroup> getBarGroups() {
+        return groupedBars;
     }
 
     /**

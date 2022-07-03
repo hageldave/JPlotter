@@ -17,6 +17,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.TreeSet;
@@ -78,12 +79,30 @@ public class BarChart {
      * @return this for chaining
      */
     public BarChart addData(BarGroup group) {
-        for (BarGroup.BarStack struct : group.getGroupedBars().values()) {
-            for (BarGroup.BarStruct barStruct : struct.barStructs) {
+        for (BarGroup.BarStack barStack : group.getGroupedBars().values()) {
+            for (BarGroup.BarStruct barStruct : barStack.barStructs) {
                 barStruct.setPickColor(registerInPickingRegistry(barStruct));
             }
         }
         this.barRenderer.addBarGroup(group);
+        return this;
+    }
+
+    /**
+     * Removes the BarGroup from the BarChart.
+     *
+     * @param group will be removed from the BarChart
+     * @return this for chaining
+     */
+    public BarChart removeData(BarGroup group) {
+        if (this.barRenderer.getBarGroups().contains(group)) {
+            for (BarGroup.BarStack barStack : group.getGroupedBars().values()) {
+                for (BarGroup.BarStruct barStruct : barStack.barStructs) {
+                    deregisterFromPickingRegistry(barStruct.pickColor);
+                }
+            }
+            this.barRenderer.removeBarGroup(group);
+        }
         return this;
     }
 
@@ -232,6 +251,17 @@ public class BarChart {
      */
     public BarChart setAlignment(int alignment) {
         this.barRenderer.setAlignment(alignment);
+        return this;
+    }
+
+    /**
+     * Sets the coordinate view (see {@link BarRenderer#setCoordinateView(Rectangle2D)})
+     * accordingly to the bounds of all bars in the bar chart.
+     *
+     * @return this for chaining
+     */
+    public BarChart alignBarRenderer() {
+        getBarRenderer().setCoordinateView(getBarRenderer().getBounds());
         return this;
     }
 

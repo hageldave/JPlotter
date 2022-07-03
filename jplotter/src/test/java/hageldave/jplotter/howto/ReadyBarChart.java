@@ -207,11 +207,7 @@ public class ReadyBarChart {
             contentWrapper.removeAll();
             contentWrapper.add(meanChart.getCanvas().asComponent());
             contentWrapper.add(buttonWrapper);
-            meanChart.getBarRenderer().setCoordinateView(
-                    meanChart.getBarRenderer().getBounds().getMinX(),
-                    meanChart.getBarRenderer().getBounds().getMinY(),
-                    meanChart.getBarRenderer().getBounds().getMaxX(),
-                    meanChart.getBarRenderer().getBounds().getMaxY());
+            meanChart.alignBarRenderer();
             meanChart.getBarRenderer().setDirty();
             meanChart.getCanvas().scheduleRepaint();
             frame.repaint();
@@ -221,17 +217,12 @@ public class ReadyBarChart {
             contentWrapper.removeAll();
             contentWrapper.add(histogramChart.getCanvas().asComponent());
             contentWrapper.add(buttonWrapper);
-            histogramChart.getBarRenderer().setCoordinateView(
-                    histogramChart.getBarRenderer().getBounds().getMinX(),
-                    histogramChart.getBarRenderer().getBounds().getMinY(),
-                    histogramChart.getBarRenderer().getBounds().getMaxX()+1,
-                    histogramChart.getBarRenderer().getBounds().getMaxY());
+            histogramChart.alignBarRenderer();
             histogramChart.getBarRenderer().setDirty();
             histogramChart.getCanvas().scheduleRepaint();
             frame.repaint();
             frame.pack();
         });
-
 
         // set up interaction stuff
         histogramChart.addBarChartMouseEventListener(new BarChart.BarChartMouseEventListener() {
@@ -262,12 +253,7 @@ public class ReadyBarChart {
             public void onOutsideMouseEventElement(String mouseEventType, MouseEvent e, Legend.BarLabel legendElement) {}
         });
 
-        meanChart.getBarRenderer().setCoordinateView(
-                meanChart.getBarRenderer().getBounds().getMinX(),
-                meanChart.getBarRenderer().getBounds().getMinY(),
-                meanChart.getBarRenderer().getBounds().getMaxX(),
-                meanChart.getBarRenderer().getBounds().getMaxY());
-
+        meanChart.alignBarRenderer();
         meanChart.getBarRenderer().setDirty();
         meanChart.getCanvas().scheduleRepaint();
 
