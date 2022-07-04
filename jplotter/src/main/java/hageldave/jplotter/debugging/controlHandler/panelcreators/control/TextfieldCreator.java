@@ -18,7 +18,7 @@ public class TextfieldCreator implements ControlPanelCreator {
         inlineContainer.setLayout(new BoxLayout(inlineContainer, BoxLayout.X_AXIS));
         inlineContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel textLabel = new JLabel("Current string: " + getter.invoke(obj));
+        JLabel textLabel = new JLabel("Current string: " + getter.invoke(obj), SwingConstants.LEFT);
         JTextField textField = new JTextField("", 20);
         textField.setMaximumSize(textField.getPreferredSize());
         JButton editBtn = new JButton("edit");
@@ -57,7 +57,6 @@ public class TextfieldCreator implements ControlPanelCreator {
 
         panelContainer.setLayout(new BoxLayout(panelContainer, BoxLayout.Y_AXIS));
         panelContainer.setBorder(new EmptyBorder(10, 0, 7, 0));
-        textLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         textField.setAlignmentX(Component.LEFT_ALIGNMENT);
         panelContainer.add(inlineContainer);
         return panelContainer;

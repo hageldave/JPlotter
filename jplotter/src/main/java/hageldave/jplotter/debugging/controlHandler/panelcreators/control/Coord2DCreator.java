@@ -36,12 +36,11 @@ public class Coord2DCreator implements ControlPanelCreator {
     private JPanel constructCoordContainer(SpinnerNumberModel spinnerNumberModel, String label, Method setter, Object obj, JPlotterCanvas canvas) {
         JPanel coordContainer = new JPanel();
         coordContainer.setLayout(new BoxLayout(coordContainer, BoxLayout.Y_AXIS));
-        JLabel coordLabel = new JLabel(label);
+        JLabel coordLabel = new JLabel(label, SwingConstants.LEFT);
 
         JSpinner coordSpinner = new JSpinner(spinnerNumberModel);
         coordSpinner.setMaximumSize(coordSpinner.getMinimumSize());
 
-        coordLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         coordSpinner.setAlignmentX(Component.LEFT_ALIGNMENT);
         coordContainer.add(coordLabel);
         coordContainer.add(coordSpinner);
