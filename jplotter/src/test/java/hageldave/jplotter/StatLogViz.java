@@ -1,33 +1,26 @@
 package hageldave.jplotter;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Scanner;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.SwingUtilities;
-
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.CoordSysPanning;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.KeyListenerMask;
+import hageldave.jplotter.interaction.klm.KLMCoordSysPanning;
+import hageldave.jplotter.interaction.klm.KLMCoordSysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Scanner;
 
 public class StatLogViz {
 	
@@ -126,8 +119,8 @@ public class StatLogViz {
 		footer.add(slider);
 		footer.add(Box.createGlue());
 
-		new CoordSysPanning(canvas,coordsys){{extModifierMask=0;}}.register();
-		new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.5).register();
+		new KLMCoordSysPanning(canvas,coordsys, new KeyListenerMask(0)){/*{extModifierMask=0;}*/}.register();
+		new KLMCoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.5).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

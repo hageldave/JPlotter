@@ -9,7 +9,8 @@ import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.font.FontProvider;
-import hageldave.jplotter.interaction.CoordSysViewSelector;
+import hageldave.jplotter.interaction.KeyListenerMask;
+import hageldave.jplotter.interaction.klm.KLMCoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.pdf.PDFUtils;
@@ -20,6 +21,7 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
 
@@ -287,8 +289,8 @@ public class IrisViz {
 						}
 					});
 					// selecting points (brush & link)
-					new CoordSysViewSelector(canvas,coordsys) {
-						{extModifierMask=0;/* no shift needed */}
+					new KLMCoordSysViewSelector(canvas,coordsys, new KeyListenerMask(0)) {
+						// deprecated {extModifierMask=0;/* no shift needed */}
 						public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
 							pointInfo.setText("");
 							desaturateExcept(minX, minY, maxX, maxY);

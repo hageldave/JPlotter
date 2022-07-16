@@ -5,8 +5,8 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.CoordSysPanning;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.klm.KLMCoordSysPanning;
+import hageldave.jplotter.interaction.klm.KLMCoordSysScrollZoom;
 import hageldave.jplotter.misc.Contours;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
@@ -17,6 +17,7 @@ import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
 
@@ -26,7 +27,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.File;
+
 import java.io.IOException;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
@@ -99,8 +102,8 @@ public class IsolinesViz {
 		content.addItemToRender(contourlines).addItemToRender(contourbands);
 		contourlines.setGlobalThicknessMultiplier(1);
 		contourbands.setGlobalAlphaMultiplier(0.3);
-		new CoordSysScrollZoom(canvas, coordsys).register();
-		new CoordSysPanning(canvas, coordsys).register();
+		new KLMCoordSysScrollZoom(canvas, coordsys).register();
+		new KLMCoordSysPanning(canvas, coordsys).register();
 		coordsys.setCoordinateView(-2.5, -1.5, 0.5, 1.5);
 		
 		Lines userContour = new Lines();

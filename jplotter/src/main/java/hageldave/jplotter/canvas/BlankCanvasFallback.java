@@ -37,6 +37,7 @@ public class BlankCanvasFallback extends JComponent implements JPlotterCanvas {
 	 * Creates a new {@link BlankCanvasFallback} instance.
 	 */
 	public BlankCanvasFallback() {
+		this.setFocusable(true);
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {

@@ -511,7 +511,7 @@ public class Triangles implements Renderable {
 			this.pickColor = pickID;
 			return this;
 		}
-		
+
 		/**
 		 * Sets the color for vertex 0
 		 * @param color integer packed ARGB color value (e.g. 0xff00ff00 = opaque green)
