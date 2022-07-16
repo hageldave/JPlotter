@@ -247,8 +247,8 @@ public class ReadyLineChart {
             }
 
             @Override
-            public void onOutsideMouseEventeNone(String mouseEventType, MouseEvent e) {
-                ScatterPlot.ScatterPlotMouseEventListener.super.onOutsideMouseEventeNone(mouseEventType, e);
+            public void onOutsideMouseEventNone(String mouseEventType, MouseEvent e) {
+                ScatterPlot.ScatterPlotMouseEventListener.super.onOutsideMouseEventNone(mouseEventType, e);
             }
 
             @Override

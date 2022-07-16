@@ -53,8 +53,8 @@ public class BarChart {
     private int legendRightWidth = 100;
     private int legendBottomHeight = 60;
 
-    public BarChart(final boolean useFallback, final int alignment) {
-        this(useFallback ? new BlankCanvasFallback() : new BlankCanvas(), "X", "Y", alignment);
+    public BarChart(final boolean useOpenGL, final int alignment) {
+        this(useOpenGL ? new BlankCanvasFallback() : new BlankCanvas(), "X", "Y", alignment);
     }
 
     public BarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel, final int alignment) {

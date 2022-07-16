@@ -47,8 +47,7 @@ public class ScatterPlot {
     protected CompleteRenderer contentLayer0;
     protected CompleteRenderer contentLayer1;
     protected CompleteRenderer contentLayer2;
-    final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
-
+	protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
     final protected ScatterPlotDataModel dataModel = new ScatterPlotDataModel();
     final protected ArrayList<Points> pointsPerDataChunk = new ArrayList<>();
     final protected ArrayList<Integer> legendElementPickIds = new ArrayList<>();
@@ -210,7 +209,7 @@ public class ScatterPlot {
     		double[] datapoint = dataChunk[i];
     		PointDetails pointDetails = points.addPoint(datapoint[xIdx], datapoint[yIdx]);
     		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, chunkDescription, dataChunk, i_));
-    		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+    		pointDetails.setPickColor(registerInPickingRegistry(new PointDataChunk(chunkIdx, i)));
     	}
     	// create a picking ID for use in legend for this data chunk
     	this.legendElementPickIds.add(registerInPickingRegistry(chunkIdx));
@@ -234,7 +233,7 @@ public class ScatterPlot {
     		double[] datapoint = dataChunk[i];
     		PointDetails pointDetails = points.addPoint(datapoint[dataModel.getXIdx(chunkIdx)], datapoint[dataModel.getYIdx(chunkIdx)]);
     		pointDetails.setColor(()->getVisualMapping().getColorForDataPoint(chunkIdx, dataModel.getChunkDescription(chunkIdx), dataChunk, i_));
-    		pointDetails.setPickColor(registerInPickingRegistry(new int[]{chunkIdx,i}));
+    		pointDetails.setPickColor(registerInPickingRegistry(new PointDataChunk(chunkIdx, i)));
     	}
     	// update cues (which may have been in place before)
     	for(String cueType : Arrays.asList(CUE_ACCENTUATE, CUE_EMPHASIZE, CUE_HIGHLIGHT)) {
@@ -451,6 +450,12 @@ public class ScatterPlot {
     			l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
     	}
     }
+
+	final public static class PointDataChunk extends DataChunk {
+		public PointDataChunk(int chunkID, int pointID) {
+			super(chunkID, pointID);
+		}
+	}
 
 	/**
 	 * The ScatterPlotVisualMapping is responsible for mapping the chunks to a glyph and a color.
@@ -679,11 +684,17 @@ public class ScatterPlot {
     					notifyInsideMouseEventNone(eventType, e, coordsysPoint);
     				} else {
     					Object pointLocalizer = pickingRegistry.lookup(pixel);
-    					if(pointLocalizer instanceof int[]) {
+    					// TODO: to discuss
+						/*if(pointLocalizer instanceof int[]) {
     						int chunkIdx = ((int[])pointLocalizer)[0];
     						int pointIdx = ((int[])pointLocalizer)[1];
     						notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, pointIdx);
-    					}
+    					}*/
+						if (pointLocalizer instanceof ScatterPlot.PointDataChunk) {
+							int chunkIdx = ( (ScatterPlot.PointDataChunk) pointLocalizer ).getChunkID();
+							int pointIdx = ( (ScatterPlot.PointDataChunk) pointLocalizer ).getPointID();
+							notifyInsideMouseEventPoint(eventType, e, coordsysPoint, chunkIdx, pointIdx);
+						}
     				}
     			} else {
     				/* mouse outside coordinate area */

@@ -4,10 +4,11 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.CoordSysPanning;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
-import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
+import hageldave.jplotter.interaction.kml.CoordSysPanning;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Triangles;
@@ -35,7 +36,7 @@ public class LineChart {
     protected CompleteRenderer contentLayer1;
     protected CompleteRenderer contentLayer2;
 
-    final public PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
+    public PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
 
     final protected LineChartDataModel dataModel = new LineChartDataModel();
     final protected ArrayList<Lines> linesPerDataChunk = new ArrayList<>();
@@ -427,6 +428,16 @@ public class LineChart {
     }
 
     /**
+     * Adds a scroll zoom to the Scatterplot
+     *
+     * @param keyMaskListener defines which keys have to pressed during scrolling to initiate the zoom.
+     * @return the {@link CoordSysScrollZoom} so that it can be further customized
+     */
+    public CoordSysScrollZoom addScrollZoom(final KeyMaskListener keyMaskListener) {
+        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyMaskListener).register();
+    }
+
+    /**
      * Adds panning functionality to the Scatterplot
      *
      * @return the {@link CoordSysPanning} so that it can be further customized
@@ -436,14 +447,37 @@ public class LineChart {
     }
 
     /**
+     * Adds panning functionality to the Scatterplot.
+     *
+     * @param keyMaskListener defines which keys have to pressed to initiate the panning.
+     * @return the {@link CoordSysPanning} so that it can be further customized
+     */
+    public CoordSysPanning addPanning(final KeyMaskListener keyMaskListener) {
+        return new CoordSysPanning(this.canvas, this.coordsys, keyMaskListener).register();
+    }
+
+    /**
      * Adds a zoom functionality by selecting a rectangle.
      *
      * @return the {@link CoordSysViewSelector} so that it can be further customized
      */
     public CoordSysViewSelector addZoomViewSelector() {
         return new CoordSysViewSelector(this.canvas, this.coordsys) {
-            { extModifierMask = 0;/* no need for shift to be pressed */ }
+            @Override
+            public void areaSelected(double minX, double minY, double maxX, double maxY) {
+                coordsys.setCoordinateView(minX, minY, maxX, maxY);
+            }
+        }.register();
+    }
 
+    /**
+     * Adds a zoom functionality by selecting a rectangle.
+     *
+     * @param keyMaskListener defines which keys have to pressed during the selection to initiate the zoom.
+     * @return the {@link CoordSysViewSelector} so that it can be further customized
+     */
+    public CoordSysViewSelector addRectangleSelectionZoom(final KeyMaskListener keyMaskListener) {
+        return new CoordSysViewSelector(this.canvas, this.coordsys, keyMaskListener) {
             @Override
             public void areaSelected(double minX, double minY, double maxX, double maxY) {
                 coordsys.setCoordinateView(minX, minY, maxX, maxY);
