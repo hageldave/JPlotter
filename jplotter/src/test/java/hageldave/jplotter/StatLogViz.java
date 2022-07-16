@@ -5,9 +5,9 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.KeyListenerMask;
-import hageldave.jplotter.interaction.klm.KLMCoordSysPanning;
-import hageldave.jplotter.interaction.klm.KLMCoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysPanning;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Points;
@@ -119,8 +119,8 @@ public class StatLogViz {
 		footer.add(slider);
 		footer.add(Box.createGlue());
 
-		new KLMCoordSysPanning(canvas,coordsys, new KeyListenerMask(0)){/*{extModifierMask=0;}*/}.register();
-		new KLMCoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.5).register();
+		new CoordSysPanning(canvas,coordsys, new KeyMaskListener(0)){/*{extModifierMask=0;}*/}.register();
+		new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.5).register();
 		SwingUtilities.invokeLater(()->{
 			frame.pack();
 			frame.setVisible(true);

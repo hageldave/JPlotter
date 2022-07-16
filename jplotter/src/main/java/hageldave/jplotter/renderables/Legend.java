@@ -221,8 +221,6 @@ public class Legend implements Renderable, Renderer {
 		return addGlyphLabel(glyph, color, labeltxt, 0);
 	}
 
-
-
 	/**
 	 * Adds a label for a line to this legend.
 	 * @param thickness of the line to appear in front of the label text
@@ -426,7 +424,7 @@ public class Legend implements Renderable, Renderer {
 							.setPickColor(glyphLabel.pickColor)
 							.setOrigin(itemWidth+itemTextSpacing,0);
 					texts.add(lbltxt);
-					pd = points.addPoint(itemWidth/2, fontHeight/2+1).setColor(glyphLabel.color);
+					pd = points.addPoint(itemWidth/2, fontHeight/2+1).setColor(glyphLabel.color).setPickColor(glyphLabel.pickColor);
 					rect = new Rectangle(itemWidth+itemTextSpacing+lbltxt.getTextSize().width, fontHeight);
 				}
 				@Override

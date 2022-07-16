@@ -1,7 +1,6 @@
-package hageldave.jplotter.interaction.klm;
+package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.interaction.KeyListenerMask;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
@@ -32,45 +31,38 @@ import java.util.Arrays;
  * }.register();
  * </pre>
  * <p>
- * Per default the extended modifier mask for a dragging mouse event to trigger
- * selection is {@link InputEvent#SHIFT_DOWN_MASK}. 
- * If this is undesired the {@link #extModifierMask} has to be overridden.<br>
+ * Per default the key event for a dragging mouse event to trigger
+ * selection is {@link KeyEvent#VK_SHIFT}.
+ * If this is undesired a {@link KeyMaskListener} has to be passed in the constructor.<br>
  * You may also want to not trigger selection when other modifiers are present. E.g.
- * when CTRL {@link InputEvent#CTRL_DOWN_MASK} is pressed, don't select because CTRL 
+ * when CTRL {@link KeyEvent#VK_CONTROL} is pressed, don't select because CTRL
  * is already meant for panning.
- * In this case you need to add these modifiers to the exclude list {@link #extModifierMaskExcludes}.
- * For example to not need to press any key:
- * <pre>
- * new CoordSysViewSelector(canvas, coordsys) {
- *    {
- *       extModifierMask=0;
- *       extModifierMaskExcludes.add(InputEvent.CTRL_DOWN_MASK);
- *    }
- *    
- *    public void areaSelected(double minX, double minY, double maxX, double maxY) {
- *       coordsys.setCoordinateView(minX, minY, maxX, maxY);
- *    }
- * }.register();
- * </pre>
+ *
  * @author hageldave
  */
-public abstract class KLMCoordSysViewSelector extends MouseAdapter {
+public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	protected Component canvas;
 	protected CoordSysRenderer coordsys;
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
 	protected Point start,end;
-	protected KeyListenerMask keyListenerMask;
+	protected KeyMaskListener keyMaskListener;
 
-	public KLMCoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyListenerMask keyListenerMask) {
+	/**
+	 * Creates a new {@link CoordSysViewSelector} for the specified canvas and corresponding coordinate system.
+	 * @param canvas displaying the coordsys
+	 * @param coordsys the coordinate system to apply the view selection in
+	 * @param keyMaskListener defines the set of keys that have to pressed during the view selection
+	 */
+	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
-		this.keyListenerMask = keyListenerMask;
+		this.keyMaskListener = keyMaskListener;
 		Renderer presentRenderer;
 		if((presentRenderer = coordsys.getOverlay()) == null){
 			coordsys.setOverlay(this.overlay = new CompleteRenderer());
-		} else if(presentRenderer instanceof CompleteRenderer){
+		} else if (presentRenderer instanceof CompleteRenderer){
 			this.overlay = (CompleteRenderer) presentRenderer;
 		} else {
 			throw new IllegalStateException(
@@ -79,13 +71,13 @@ public abstract class KLMCoordSysViewSelector extends MouseAdapter {
 		}
 	}
 
-	public KLMCoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
-		this(canvas, coordsys, new KeyListenerMask(KeyEvent.VK_SHIFT));
+	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+		this(canvas, coordsys, new KeyMaskListener(KeyEvent.VK_SHIFT));
 	}
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (this.keyListenerMask.isKeyTyped()) {
+		if (this.keyMaskListener.areKeysPressed()) {
 			start = e.getPoint();
 			overlay.addItemToRender(areaBorder);
 		}
@@ -93,7 +85,7 @@ public abstract class KLMCoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(start == null || !this.keyListenerMask.isKeyTyped()){
+		if(start == null || !this.keyMaskListener.areKeysPressed()){
 			return;
 		}
 		{
@@ -149,37 +141,43 @@ public abstract class KLMCoordSysViewSelector extends MouseAdapter {
 		end = null;
 	}
 
-	public void setKeyListenerMask(KeyListenerMask keyListenerMask) {
-		canvas.removeKeyListener(this.keyListenerMask);
-		this.keyListenerMask = keyListenerMask;
-		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
-			canvas.addKeyListener(this.keyListenerMask);
+	/**
+	 * Sets a new {@link KeyMaskListener}, removes the old KeyMaskListener from the canvas
+	 * and registers the new one.
+	 *
+	 * @param keyMaskListener defines the set of keys that have to pressed during the panning
+	 */
+	public void setKeyMaskListener(KeyMaskListener keyMaskListener) {
+		canvas.removeKeyListener(this.keyMaskListener);
+		this.keyMaskListener = keyMaskListener;
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+			canvas.addKeyListener(this.keyMaskListener);
 	}
 
 	/**
-	 * Adds this {@link KLMCoordSysViewSelector} as {@link MouseListener} and
+	 * Adds this {@link CoordSysViewSelector} as {@link MouseListener} and
 	 * {@link MouseMotionListener} to the associated canvas.
 	 * @return this for chaining
 	 */
-	public KLMCoordSysViewSelector register(){
+	public CoordSysViewSelector register(){
 		if( ! Arrays.asList(canvas.getMouseListeners()).contains(this))
 			canvas.addMouseListener(this);
 		if( ! Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
 			canvas.addMouseMotionListener(this);
-		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyListenerMask))
-			canvas.addKeyListener(this.keyListenerMask);
+		if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+			canvas.addKeyListener(this.keyMaskListener);
 		return this;
 	}
 	
 	/**
-	 * Removes this {@link KLMCoordSysViewSelector} from the associated canvas'
+	 * Removes this {@link CoordSysViewSelector} from the associated canvas'
 	 * mouse and mouse motion listeners.
 	 * @return this for chaining
 	 */
-	public KLMCoordSysViewSelector deRegister(){
+	public CoordSysViewSelector deRegister(){
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
-		canvas.removeKeyListener(this.keyListenerMask);
+		canvas.removeKeyListener(this.keyMaskListener);
 		return this;
 	}
 	

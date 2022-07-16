@@ -32,7 +32,7 @@ public enum DefaultGlyph implements Glyph {
 	/** a cross glyph, two diagonal lines */
 	CROSS(DefaultGlyph::mkCross, 4, GL11.GL_LINES, 6, false, false, DefaultGlyph::mkCrossSVG, DefaultGlyph::mkCrossPDF, DefaultGlyph::drawCross),
 	/** a square glyph */
-	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 6, false, false, DefaultGlyph::mkSquareSVG, DefaultGlyph::mkSquarePDF, DefaultGlyph::drawSquare),
+	SQUARE(DefaultGlyph::mkSquare, 4, GL11.GL_LINE_LOOP, 7, false, false, DefaultGlyph::mkSquareSVG, DefaultGlyph::mkSquarePDF, DefaultGlyph::drawSquare),
 	/** a filled square glyph */
 	SQUARE_F(DefaultGlyph::mkSquareF, 4, GL11.GL_TRIANGLE_STRIP, 6, false, true, DefaultGlyph::mkSquareSVG, DefaultGlyph::mkSquarePDF, DefaultGlyph::drawSquareF),
 	/** a triangle glyph */
