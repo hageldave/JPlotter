@@ -5,14 +5,12 @@ import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInte
 
 import javax.swing.*;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.DoubleSupplier;
 
 public class StandardPanelCreator implements DisplayPanelCreator {
-
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method getter, CustomPrinterInterface objectPrinter) throws Exception {
         try {
@@ -30,7 +28,7 @@ public class StandardPanelCreator implements DisplayPanelCreator {
                     panelContainer.add(new JLabel(String.valueOf(fieldValue)));
                 }
             }
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
 

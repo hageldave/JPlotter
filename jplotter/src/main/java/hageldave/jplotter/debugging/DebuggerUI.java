@@ -1,7 +1,6 @@
 package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.debugging.controlHandler.FieldHandler;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
 import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
 import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInterface;
@@ -31,6 +30,22 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * The DebuggerUI class is responsible for displaying and constructing all of the GUI elements of the debugger.
+ * The goal of the Debugger is to provide an easy way to view and control the properties
+ * of the elements (renderables & renderers) in a canvas.
+ *
+ * The Debugger interface is split into a sidebar and a main area.
+ * Each element shown in the canvas can be selected from the sidebar and its so-called "panels"
+ * (see {@link ControlPanelCreator} and {@link DisplayPanelCreator}) will then be shown in the main area.
+ * These panels are split into "control panels" (created by a {@link ControlPanelCreator}) and "display panels" (created by a {@link DisplayPanelCreator}).
+ * A control panel typically contains multiple gui elements (buttons, ...) which can be used to manipulate the elements' properties,
+ * whereas a display panel only can be used to display certain information about the property of element.
+ *
+ * Currently, the debugger supports most of the important properties, but it is designed to be extendable.
+ * See the documentation of the corresponding creater interfaces ({@link ControlPanelCreator} and {@link DisplayPanelCreator}) for more information.
+ *
+ */
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
     final protected JTree tree = new JTree();
@@ -55,7 +70,16 @@ public class DebuggerUI {
         registerTreeListener();
     }
 
-    public void display() throws IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
+    /**
+     * Creates and displays the debugger window.
+     * The debugger shows all the renderer and renderable items in the given canvas.
+     * If there are any renderers or renderables added at a later time, the {@link DebuggerUI#refresh()}
+     * method can be called to update the underlying model.
+     *
+     * The debugger also displays the registered panels (see {@link ControlPanelCreator} and {@link DisplayPanelCreator})
+     * for each renderer/renderable.
+     */
+    public void display() {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // set constructed tree as tree model
@@ -125,17 +149,10 @@ public class DebuggerUI {
                         +"<br>"
                         + "Could be used if one or more objects expire (e.g. tickmarkLabels of CoordSysRenderer when resizing the window.)"
                         + "</html>");
-        refreshTree.addActionListener(e -> {
-            try {
-                refresh();
-            } catch (IllegalAccessException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
+        refreshTree.addActionListener(e -> refresh());
 
         refreshTree.setMaximumSize(refreshTree.getPreferredSize());
         refreshBtnContainer.add(refreshTree, BorderLayout.EAST);
-
 
         leftContainer.add(refreshBtnContainer, BorderLayout.SOUTH);
         leftContainer.add(treeScrollPane, BorderLayout.CENTER);
@@ -168,7 +185,7 @@ public class DebuggerUI {
         controlContainer.add(new JLabel("No manipulable fields found."));
     }
 
-    protected void fillContent(Object obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
+    protected void fillContent(Object obj) {
         title.setText(obj.getClass().getSimpleName());
 
         controlHeader.setText("Manipulate object properties");
@@ -313,12 +330,7 @@ public class DebuggerUI {
 
                 clearGUIContents();
                 if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
-                    try {
-                        fillContent(obj);
-                    } catch (IllegalAccessException | NoSuchMethodException | InstantiationException |
-                             InvocationTargetException ex) {
-                        throw new RuntimeException(ex);
-                    }
+                    fillContent(obj);
                     canvas.scheduleRepaint();
                 } else if (JPlotterCanvas.class.isAssignableFrom(obj.getClass())) {
                     createCanvasContent(canvas);
@@ -331,7 +343,11 @@ public class DebuggerUI {
         });
     }
 
-    public void refresh() throws IllegalAccessException {
+    /**
+     * Refreshes the renderer and renderable tree in the debugger window.
+     * This can be used, if items are being added to (or removed from) the canvas after instantiating the debugger.
+     */
+    public void refresh() {
         tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
     }
 

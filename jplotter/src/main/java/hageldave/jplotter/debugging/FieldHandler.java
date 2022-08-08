@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging.controlHandler;
+package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInterface;
@@ -12,8 +12,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class FieldHandler {
-    public static JPanel controlField(JPlotterCanvas canvas,
+class FieldHandler {
+    protected static JPanel controlField(JPlotterCanvas canvas,
                                       Object obj,
                                       String field,
                                       AtomicReference<Method> getter,
@@ -61,7 +61,7 @@ public class FieldHandler {
         return container;
     }
 
-    public static JPanel displayField(JPlotterCanvas canvas,
+    protected static JPanel displayField(JPlotterCanvas canvas,
                                       Object obj,
                                       String field,
                                       AtomicReference<Method> getter,

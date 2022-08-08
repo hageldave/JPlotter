@@ -2,7 +2,7 @@ package hageldave.jplotter.debugging;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class DebuggerMutableTreeNode extends DefaultMutableTreeNode {
+class DebuggerMutableTreeNode extends DefaultMutableTreeNode {
 
     protected Object hiddenObject;
 
