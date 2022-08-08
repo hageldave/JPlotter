@@ -267,10 +267,8 @@ public class ScatterPlot {
 	 * with the new or changed data.
 	 *
 	 */
-	public static class ScatterPlotDataModel {
-    	protected ArrayList<double[][]> dataChunks = new ArrayList<>();
-    	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();;
-    	protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
+	public static class ScatterPlotDataModel extends DataModel {
+    	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();
     	
     	protected LinkedList<ScatterPlotDataModelListener> listeners = new LinkedList<>();
 
@@ -315,33 +313,6 @@ public class ScatterPlot {
     		notifyDataAdded(chunkIdx);
     	}
 
-		/**
-		 * @return number of data chunks added to the data model
-		 */
-		public int numChunks() {
-    		return dataChunks.size();
-    	}
-
-		/**
-		 * Returns the dataChunk which has the chunkIdx in the data model.
-		 *
-		 * @param chunkIdx of the desired dataChunk
-		 * @return the dataChunk
-		 */
-    	public double[][] getDataChunk(int chunkIdx){
-    		return dataChunks.get(chunkIdx);
-    	}
-
-		/**
-		 * Returns the size of the dataChunk which has the chunkIdx in the data model.
-		 *
-		 * @param chunkIdx of the desired dataChunk
-		 * @return size of the data chunk
-		 */
-    	public int chunkSize(int chunkIdx) {
-    		return getDataChunk(chunkIdx).length;
-    	}
-    	
     	public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
     		if(chunkIdx >= numChunks())
     			throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
@@ -356,10 +327,7 @@ public class ScatterPlot {
     	public int getYIdx(int chunkIdx) {
     		return xyIndicesPerChunk.get(chunkIdx).second;
     	}
-    	
-    	public String getChunkDescription(int chunkIdx) {
-    		return descriptionPerChunk.get(chunkIdx);
-    	}
+
     	
     	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area){
     		// naive search for contained points
@@ -373,41 +341,6 @@ public class ScatterPlot {
     				containedPointIndices.add(i);
     		}
     		return containedPointIndices;
-    	}
-    	
-    	public int getGlobalIndex(int chunkIdx, int idx) {
-    		int globalIdx=0;
-    		for(int i=0; i<chunkIdx; i++) {
-    			globalIdx += chunkSize(i);
-    		}
-    		return globalIdx + idx;
-    	}
-
-		/**
-		 * Locates the chunkIdx and pointIdx of a specified globalIdx.
-		 * As the data chunks are added sequentially to the data model,
-		 * the data implicitly has also a global index. As there is no way to
-		 *
-		 * @param globalIdx global index which should be mapped to chunkIdx and pointIdx
-		 * @return chunkIdx and pointIdx of the given globalIdx
-		 */
-    	public Pair<Integer, Integer> locateGlobalIndex(int globalIdx){
-    		int chunkIdx=0;
-    		while(globalIdx >= chunkSize(chunkIdx)) {
-    			globalIdx -= chunkSize(chunkIdx);
-    			chunkIdx++;
-    		}
-    		return Pair.of(chunkIdx, globalIdx);
-    	}
-
-		/**
-		 * @return the number of data points contained in the data model
-		 */
-		public int numDataPoints() {
-    		int n = 0;
-    		for(int i=0; i<numChunks(); i++)
-    			n+=chunkSize(i);
-    		return n;
     	}
 
 		/**

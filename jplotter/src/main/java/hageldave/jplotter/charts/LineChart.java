@@ -188,8 +188,7 @@ public class LineChart {
         this.canvas.scheduleRepaint();
     }
 
-    public static class LineChartDataModel {
-        protected ArrayList<double[][]> dataChunks = new ArrayList<>();
+    public static class LineChartDataModel extends DataModel {
         protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();
         protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
 
@@ -207,18 +206,6 @@ public class LineChart {
             this.xyIndicesPerChunk.add(Pair.of(xIdx, yIdx));
             this.descriptionPerChunk.add(chunkDescription);
             notifyDataAdded(chunkIdx);
-        }
-
-        public int numChunks() {
-            return dataChunks.size();
-        }
-
-        public double[][] getDataChunk(int chunkIdx){
-            return dataChunks.get(chunkIdx);
-        }
-
-        public int chunkSize(int chunkIdx) {
-            return getDataChunk(chunkIdx).length;
         }
 
         public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
@@ -253,31 +240,6 @@ public class LineChart {
             }
             return containedPointIndices;
         }
-
-        public int getGlobalIndex(int chunkIdx, int idx) {
-            int globalIdx=0;
-            for(int i=0; i<chunkIdx; i++) {
-                globalIdx += chunkSize(i);
-            }
-            return globalIdx + idx;
-        }
-
-        public Pair<Integer, Integer> locateGlobalIndex(int globalIdx){
-            int chunkIdx=0;
-            while(globalIdx >= chunkSize(chunkIdx)) {
-                globalIdx -= chunkSize(chunkIdx);
-                chunkIdx++;
-            }
-            return Pair.of(chunkIdx, globalIdx);
-        }
-
-        public int numDataPoints() {
-            int n = 0;
-            for(int i=0; i<numChunks(); i++)
-                n+=chunkSize(i);
-            return n;
-        }
-
 
         public synchronized void addListener(LineChartDataModelListener l) {
             listeners.add(l);
