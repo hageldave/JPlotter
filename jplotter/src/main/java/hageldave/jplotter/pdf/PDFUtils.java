@@ -352,11 +352,11 @@ public class PDFUtils {
                 JPlotterCanvas canvas = (JPlotterCanvas)comp;
                 if(canvas.isPDFAsImageRenderingEnabled())
                     return; // was already rendered through PdfBoxGraphics2D
-                canvas.paintPDF(doc, page, cs, new Rectangle2D.Double(canvas.asComponent().getX()+xOffset, canvas.asComponent().getY()+yOffset,
-                        canvas.asComponent().getWidth(), canvas.asComponent().getHeight()));
+                canvas.paintPDF(doc, page, cs, new Rectangle2D.Double(canvas.asComponent().getX()+xOffset, yOffset,
+                        canvas.asComponent().getWidth()+(canvas.asComponent().getX()-xOffset), canvas.asComponent().getHeight()));
             } else {
                 if(comp instanceof Container){
-                    containerToPDF((Container)comp, doc, page, cs, comp.getX(), comp.getY());
+                    containerToPDF((Container)comp, doc, page, cs, comp.getX()+xOffset, comp.getY()+yOffset);
                 }
             }
         }
