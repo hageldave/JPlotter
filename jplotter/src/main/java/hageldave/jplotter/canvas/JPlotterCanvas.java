@@ -247,8 +247,8 @@ public interface JPlotterCanvas {
 			renderer.renderPDF(document, page,
 					(int) renderLoc.getX(),
 					(int) (page.getMediaBox().getHeight()-renderLoc.getMaxY()),
-					(int) renderLoc.getMaxX(),
-					(int) (page.getMediaBox().getHeight()-renderLoc.getY()));
+					(int) renderLoc.getWidth(),
+					(int) (renderLoc.getHeight()));
 		}
 	}
 
