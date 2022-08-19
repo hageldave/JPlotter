@@ -145,4 +145,5 @@ fabric.properties
 # svg and pdf test export #
 svgtest.svg
 pdftest.pdf
+testexport.*
 
