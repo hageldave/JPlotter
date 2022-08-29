@@ -816,7 +816,7 @@ public class CoordSysRenderer implements Renderer {
 			return;
 		}
 		preContentLinesR.renderPDF(doc, page, x, y, w, h);
-		preContentTextR.renderPDF(doc, page, x,y, w, h);
+		preContentTextR.renderPDF(doc, page, x, y, w, h);
 		if(content != null){
 			int viewPortX = (int)(coordsysAreaLB.getX()+x);
 			int viewPortY = (int)(coordsysAreaLB.getY()+y);
