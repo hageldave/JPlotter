@@ -1,8 +1,8 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.RenderOrderCreator;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.RenderOrderCreator;
 import hageldave.jplotter.renderables.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;

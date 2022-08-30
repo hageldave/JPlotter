@@ -1,11 +1,11 @@
 package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInterface;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ControlPanelCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.display.DisplayPanelCreator;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.customPrint.CustomPrinterInterface;
+import hageldave.jplotter.debugging.panelcreators.control.ControlPanelCreator;
+import hageldave.jplotter.debugging.panelcreators.display.DisplayPanelCreator;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -65,6 +65,11 @@ public class DebuggerUI {
 
     final protected JPlotterCanvas canvas;
 
+    /**
+     * Standard DebuggerUI constructor.
+     *
+     * @param canvas the content of this canvas will be displayed by the debugger
+     */
     public DebuggerUI(JPlotterCanvas canvas) {
         this.canvas = canvas;
         registerTreeListener();

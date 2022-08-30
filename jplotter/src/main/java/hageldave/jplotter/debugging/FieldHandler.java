@@ -1,9 +1,9 @@
 package hageldave.jplotter.debugging;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.debugging.controlHandler.customPrint.CustomPrinterInterface;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ControlPanelCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.display.DisplayPanelCreator;
+import hageldave.jplotter.debugging.customPrint.CustomPrinterInterface;
+import hageldave.jplotter.debugging.panelcreators.control.ControlPanelCreator;
+import hageldave.jplotter.debugging.panelcreators.display.DisplayPanelCreator;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,6 +12,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * The FieldHandler class contains methods which are responsible for calling the
+ * {@link ControlPanelCreator#create(JPlotterCanvas, Object, JPanel, Method, Method)} method of the PanelCreators
+ * and creating of the corresponding Swing components (such as wrappers, headers, tooltips, ...)
+ */
 class FieldHandler {
     protected static JPanel controlField(JPlotterCanvas canvas,
                                       Object obj,

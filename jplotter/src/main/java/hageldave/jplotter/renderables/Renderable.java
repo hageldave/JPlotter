@@ -1,6 +1,6 @@
 package hageldave.jplotter.renderables;
 
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.GenericRenderer;
 import hageldave.jplotter.renderers.Renderer;

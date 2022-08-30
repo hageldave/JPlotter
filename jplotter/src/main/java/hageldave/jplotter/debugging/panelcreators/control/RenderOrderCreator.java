@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging.controlHandler.panelcreators.control;
+package hageldave.jplotter.debugging.panelcreators.control;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderers.CompleteRenderer;

@@ -1,13 +1,13 @@
 package hageldave.jplotter.renderables;
 
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.customPrint.RenderableDetailsPrinter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageFloatSliderCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.StrokePatternCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.display.RenderableDetailsCreator;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.customPrint.RenderableDetailsPrinter;
+import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
+import hageldave.jplotter.debugging.panelcreators.control.DecimalSpinnerCreator;
+import hageldave.jplotter.debugging.panelcreators.control.PercentageFloatSliderCreator;
+import hageldave.jplotter.debugging.panelcreators.control.StrokePatternCreator;
+import hageldave.jplotter.debugging.panelcreators.display.RenderableDetailsCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.LinesRenderer;

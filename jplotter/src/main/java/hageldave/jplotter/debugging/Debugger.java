@@ -10,6 +10,10 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ * The Debugger class contains all the internal methods for creating
+ * the tree model of the renderers & renderables shown on the canvas.
+ */
 class Debugger {
     protected static TreeNode getAllRenderersOnCanvas(JPlotterCanvas canvas) {
         Renderer ren = canvas.getRenderer();

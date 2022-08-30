@@ -2,9 +2,9 @@ package hageldave.jplotter.renderers;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorOperations;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.DecimalSpinnerCreator;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;

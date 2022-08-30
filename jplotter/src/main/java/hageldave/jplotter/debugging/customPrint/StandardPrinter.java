@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging.controlHandler.customPrint;
+package hageldave.jplotter.debugging.customPrint;
 
 public class StandardPrinter implements CustomPrinterInterface {
     @Override

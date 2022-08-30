@@ -2,9 +2,9 @@ package hageldave.jplotter.renderables;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.FBOCanvas;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.*;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.*;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;

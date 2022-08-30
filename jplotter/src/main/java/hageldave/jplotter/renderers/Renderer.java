@@ -1,8 +1,8 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.pdf.PDFRenderer;

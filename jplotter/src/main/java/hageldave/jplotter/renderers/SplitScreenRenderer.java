@@ -1,9 +1,9 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugGetter;
-import hageldave.jplotter.debugging.controlHandler.annotations.DebugSetter;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.ButtonCreator;
-import hageldave.jplotter.debugging.controlHandler.panelcreators.control.PercentageDoubleSliderCreator;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
+import hageldave.jplotter.debugging.panelcreators.control.PercentageDoubleSliderCreator;
 import hageldave.jplotter.svg.SVGUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
