@@ -1,7 +1,7 @@
 package hageldave.jplotter.debugging.panelcreators.display;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.debugging.customPrint.CustomPrinterInterface;
+import hageldave.jplotter.debugging.customPrinter.CustomPrinterInterface;
 
 import javax.swing.*;
 import java.lang.reflect.Array;

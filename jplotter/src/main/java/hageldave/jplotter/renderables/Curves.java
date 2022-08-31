@@ -2,7 +2,7 @@ package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.debugging.annotations.DebugGetter;
 import hageldave.jplotter.debugging.annotations.DebugSetter;
-import hageldave.jplotter.debugging.customPrint.RenderableDetailsPrinter;
+import hageldave.jplotter.debugging.customPrinter.RenderableDetailsPrinter;
 import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.debugging.panelcreators.control.PercentageFloatSliderCreator;

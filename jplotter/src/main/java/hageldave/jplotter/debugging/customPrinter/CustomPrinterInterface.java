@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging.customPrint;
+package hageldave.jplotter.debugging.customPrinter;
 
 import hageldave.jplotter.debugging.panelcreators.display.DisplayPanelCreator;
 

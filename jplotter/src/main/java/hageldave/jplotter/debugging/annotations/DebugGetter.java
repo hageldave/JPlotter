@@ -1,7 +1,7 @@
 package hageldave.jplotter.debugging.annotations;
 
-import hageldave.jplotter.debugging.customPrint.CustomPrinterInterface;
-import hageldave.jplotter.debugging.customPrint.StandardPrinter;
+import hageldave.jplotter.debugging.customPrinter.CustomPrinterInterface;
+import hageldave.jplotter.debugging.customPrinter.StandardPrinter;
 import hageldave.jplotter.debugging.panelcreators.display.DisplayPanelCreator;
 import hageldave.jplotter.debugging.panelcreators.display.StandardPanelCreator;
 

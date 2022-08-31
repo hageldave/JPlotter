@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging.customPrint;
+package hageldave.jplotter.debugging.customPrinter;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
