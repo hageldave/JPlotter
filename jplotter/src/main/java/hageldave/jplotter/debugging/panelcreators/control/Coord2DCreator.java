@@ -9,6 +9,9 @@ import java.awt.geom.Point2D;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * Used to manipulate the (x, y) coordinates of an object.
+ */
 public class Coord2DCreator implements ControlPanelCreator {
     protected SpinnerNumberModel xCoordModel;
     protected SpinnerNumberModel yCoordModel;

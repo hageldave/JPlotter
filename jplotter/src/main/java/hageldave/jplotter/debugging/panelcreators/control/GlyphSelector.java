@@ -7,6 +7,9 @@ import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * Creates a JComboBox to select one of the {@link DefaultGlyph}.
+ */
 public class GlyphSelector implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {

@@ -7,6 +7,9 @@ import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * Creates a JSpinner with a step size of 0.1.
+ */
 public class DecimalSpinnerCreator implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {

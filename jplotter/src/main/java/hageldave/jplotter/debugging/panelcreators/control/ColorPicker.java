@@ -10,6 +10,9 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Manipulates color. Creates a button which opens a JColorChooser when pressed.
+ */
 public class ColorPicker implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {

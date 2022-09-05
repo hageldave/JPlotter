@@ -1,6 +1,7 @@
 package hageldave.jplotter.debugging.panelcreators.control;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.renderables.Lines;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,6 +11,9 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * Manipulates the stroke pattern (used in the {@link Lines} for example).
+ */
 public class StrokePatternCreator implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {

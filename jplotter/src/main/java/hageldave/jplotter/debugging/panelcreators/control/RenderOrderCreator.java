@@ -10,6 +10,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Manipulates the render order.
+ */
 public class RenderOrderCreator implements ControlPanelCreator {
     protected int[] initRenderOrder;
     Map<Integer, String> rendererString2Index = mapRendererString2Index();

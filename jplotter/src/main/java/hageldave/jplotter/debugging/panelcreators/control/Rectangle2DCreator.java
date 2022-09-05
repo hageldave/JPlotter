@@ -8,6 +8,9 @@ import java.awt.geom.Rectangle2D;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * Creates multiple JSpinners to manipulate the coordinates of a rectangle.
+ */
 public class Rectangle2DCreator implements ControlPanelCreator {
     protected SpinnerNumberModel xMinCoordModel;
     protected SpinnerNumberModel xMaxCoordModel;
