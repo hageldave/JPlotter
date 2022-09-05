@@ -356,9 +356,10 @@ public class PDFUtils {
                         canvas.asComponent().getWidth(), canvas.asComponent().getHeight()));
             } else {
                 if(comp instanceof Container){
-                    containerToPDF((Container)comp, doc, page, cs, comp.getX(), comp.getY());
+                    containerToPDF((Container)comp, doc, page, cs, comp.getX()+xOffset, comp.getY()+yOffset);
                 }
             }
         }
     }
+
 }
