@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 
+/**
+ * An object printer which is designed to print the details of a renderable.
+ */
 public class RenderableDetailsPrinter implements CustomPrinterInterface {
     String[] colorVarNames = {"color0", "color1", "c0", "c1", "c2", "color"};
 

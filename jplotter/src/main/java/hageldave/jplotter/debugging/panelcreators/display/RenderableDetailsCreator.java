@@ -2,6 +2,7 @@ package hageldave.jplotter.debugging.panelcreators.display;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.customPrinter.CustomPrinterInterface;
+import hageldave.jplotter.renderables.Renderable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,6 +16,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * The {@link DisplayPanelCreator} which is designed to print the details of a {@link Renderable} (e.g. SegmentDetails).
+ * Therefore, a table will be created to display each renderable detail.
+ */
 public class RenderableDetailsCreator implements DisplayPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method getter, CustomPrinterInterface objectPrinter) throws Exception {

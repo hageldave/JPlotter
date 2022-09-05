@@ -10,6 +10,10 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.function.DoubleSupplier;
 
+/**
+ * The default {@link DisplayPanelCreator}, which just displays the object.
+ * It contains special handling for printing some data types (e.g. Collections).
+ */
 public class StandardPanelCreator implements DisplayPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method getter, CustomPrinterInterface objectPrinter) throws Exception {

@@ -15,13 +15,27 @@ import java.lang.annotation.Target;
  * in the debugger which uses the information provided by the getter.
  * The key property is used for identification of the property, as it can be coupled with the
  * setter of the corresponding property (see {@link DebugSetter}).
- *
  * A custom {@link DisplayPanelCreator} & {@link CustomPrinterInterface} also can be passed.
+ * If a {@link DebugGetter} is used in combination with a DebugSetter (they share the same key), the {@link DisplayPanelCreator} of the DebugGetter will be ignored.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface DebugGetter {
-    public String key();
-    public Class<? extends DisplayPanelCreator> creator() default StandardPanelCreator.class;
-    public Class<? extends CustomPrinterInterface> objectPrinter() default StandardPrinter.class;
+    /**
+     * @return the (unique) identifier of the getter method (used to connect it with a corresponding {@link DebugSetter}, needs the same key for that)
+     */
+    String key();
+
+    /**
+     * @return the {@link DisplayPanelCreator} that should be created in the debugger for this getter method,
+     * the default is {@link StandardPanelCreator} if there's no DisplayPanelCreator set
+     */
+    Class<? extends DisplayPanelCreator> creator() default StandardPanelCreator.class;
+
+    /**
+     *
+     * @return the {@link CustomPrinterInterface} should be used, when printing objects in the {@link DisplayPanelCreator},
+     * the default is {@link StandardPrinter} if there's no CustomPrinterInterface set
+     */
+    Class<? extends CustomPrinterInterface> objectPrinter() default StandardPrinter.class;
 }

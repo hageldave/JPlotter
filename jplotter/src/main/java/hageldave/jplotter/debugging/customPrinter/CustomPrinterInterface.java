@@ -17,5 +17,5 @@ public interface CustomPrinterInterface {
      * @param variableName currently visited variable
      * @return custom print string of object
      */
-    public String print(Object object, String variableName);
+    String print(Object object, String variableName);
 }
