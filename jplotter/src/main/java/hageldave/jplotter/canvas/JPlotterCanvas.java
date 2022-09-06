@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import java.awt.*;
 import java.awt.event.WindowListener;
@@ -163,6 +164,17 @@ public interface JPlotterCanvas {
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
 			parent.appendChild(rootGroup);
 			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
+			
+			// define the clipping rectangle for the content (rect of vieport size)
+			Node defs = SVGUtils.getDefs(document);
+			Element clip = SVGUtils.createSVGElement(document, "clipPath");
+			String clipDefID = SVGUtils.newDefId();
+			clip.setAttributeNS(null, "id", clipDefID);
+			clip.appendChild(SVGUtils.createSVGRect(document, 0, 0, w, h));
+			defs.appendChild(clip);
+			// clip the root group
+			rootGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
+			
 			
 			Element background = SVGUtils.createSVGElement(document, "rect");
 			rootGroup.appendChild(background);
