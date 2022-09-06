@@ -360,7 +360,6 @@ public class DebuggerUI {
                     createEmptyMessage();
                 }
             }
-            canvas.scheduleRepaint();
         });
     }
 
