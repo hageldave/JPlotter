@@ -16,6 +16,7 @@ import org.w3c.dom.Document;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.io.File;
@@ -24,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -48,7 +50,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
-    final protected JTree tree = new JTree();
     final protected Color bgColor = new Color(246, 246, 246);
     final protected JPanel controlBorderWrap = new JPanel(new BorderLayout());
     final protected JPanel controlArea = new JPanel(new BorderLayout());
@@ -62,17 +63,17 @@ public class DebuggerUI {
     final protected JLabel title = new JLabel();
     final protected JLabel controlHeader = new JLabel();
     final protected JLabel infoHeader = new JLabel();
-
-    final protected JPlotterCanvas canvas;
+    final protected JTree selectedTree = new JTree();
+    protected JPlotterCanvas selectedCanvas;
+    final List<JPlotterCanvas> canvasList = new ArrayList<>();
 
     /**
      * Standard DebuggerUI constructor.
      *
      * @param canvas the content of this canvas will be displayed by the debugger
      */
-    public DebuggerUI(JPlotterCanvas canvas) {
-        this.canvas = canvas;
-        registerTreeListener();
+    public DebuggerUI(JPlotterCanvas... canvas) {
+        this.canvasList.addAll(Arrays.asList(canvas));
     }
 
     /**
@@ -86,10 +87,6 @@ public class DebuggerUI {
      */
     public void display() {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        // set constructed tree as tree model
-        tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
-        tree.setBorder(new EmptyBorder(2, 5, 2, 5));
 
         // start title container
         JPanel titleArea = new JPanel(new GridLayout(1, 0));
@@ -143,11 +140,27 @@ public class DebuggerUI {
 
         JPanel leftContainer = new JPanel(new BorderLayout());
 
-        JScrollPane treeScrollPane = new JScrollPane(tree);
+        // set constructed tree as tree model
+        Integer[] canvasArr = canvasList.stream().map(Object::hashCode).toArray(Integer[]::new);
+        JComboBox<Integer> canvasSelection = new JComboBox<>(canvasArr);
+        canvasSelection.addItemListener(e -> {
+            selectedCanvas = canvasList.get(canvasSelection.getSelectedIndex());
+            selectedTree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(selectedCanvas)));
+            registerTreeListener(selectedTree, selectedCanvas);
+            frame.repaint();
+        });
+
+        selectedCanvas = canvasList.get(canvasSelection.getSelectedIndex());
+        selectedTree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(selectedCanvas)));
+        registerTreeListener(selectedTree, canvasList.get(0));
+        selectedTree.setBorder(new EmptyBorder(2, 5, 2, 5));
+        JScrollPane treeScrollPane = new JScrollPane(selectedTree);
         treeScrollPane.getVerticalScrollBar().setUnitIncrement(12);
         treeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        leftContainer.add(treeScrollPane, BorderLayout.CENTER);
 
         JPanel refreshBtnContainer = new JPanel(new BorderLayout());
+
         JButton refreshTree = new JButton("Refresh objects");
         refreshTree.setToolTipText("<html>"
                         + "Updates the underlying TreeModel. "
@@ -157,10 +170,10 @@ public class DebuggerUI {
         refreshTree.addActionListener(e -> refresh());
 
         refreshTree.setMaximumSize(refreshTree.getPreferredSize());
+        refreshBtnContainer.add(canvasSelection, BorderLayout.WEST);
         refreshBtnContainer.add(refreshTree, BorderLayout.EAST);
 
         leftContainer.add(refreshBtnContainer, BorderLayout.SOUTH);
-        leftContainer.add(treeScrollPane, BorderLayout.CENTER);
 
         JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitpane.setRightComponent(rightScrollPane);
@@ -190,7 +203,7 @@ public class DebuggerUI {
         controlContainer.add(new JLabel("No manipulable fields found."));
     }
 
-    protected void fillContent(Object obj) {
+    protected void fillContent(Object obj, JPlotterCanvas canvas) {
         title.setText(obj.getClass().getSimpleName());
 
         controlHeader.setText("Manipulate object properties");
@@ -199,7 +212,7 @@ public class DebuggerUI {
         changeControlAreaColor(UIManager.getColor("Panel.background"), Color.LIGHT_GRAY);
         changeInfoAreaColor(UIManager.getColor("Panel.background"), Color.LIGHT_GRAY);
 
-        handleObjectFields(obj);
+        handleObjectFields(obj,canvas);
     }
 
     protected void clearGUIContents() {
@@ -210,7 +223,7 @@ public class DebuggerUI {
         infoContainer.removeAll();
     }
 
-    protected void handleObjectFields(Object obj) {
+    protected void handleObjectFields(Object obj, JPlotterCanvas canvas) {
         List<Method> allMethods = Utils.getReflectionMethods(obj.getClass());
 
         AtomicBoolean infoFieldFound = new AtomicBoolean(false);
@@ -306,7 +319,10 @@ public class DebuggerUI {
         frame.repaint();
     }
 
-    private void registerTreeListener() {
+    private void registerTreeListener(JTree tree, JPlotterCanvas canvas) {
+        for (TreeSelectionListener tsl: tree.getTreeSelectionListeners())
+            tree.removeTreeSelectionListener(tsl);
+
         tree.addTreeSelectionListener(e -> {
             Object lastSelectedComponent = tree.getLastSelectedPathComponent();
             if (Objects.nonNull(lastSelectedComponent)) {
@@ -335,7 +351,7 @@ public class DebuggerUI {
 
                 clearGUIContents();
                 if (Renderer.class.isAssignableFrom(obj.getClass()) || Renderable.class.isAssignableFrom(obj.getClass())) {
-                    fillContent(obj);
+                    fillContent(obj, canvas);
                     canvas.scheduleRepaint();
                 } else if (JPlotterCanvas.class.isAssignableFrom(obj.getClass())) {
                     createCanvasContent(canvas);
@@ -344,7 +360,7 @@ public class DebuggerUI {
                     createEmptyMessage();
                 }
             }
-
+            canvas.scheduleRepaint();
         });
     }
 
@@ -353,7 +369,7 @@ public class DebuggerUI {
      * This can be used, if items are being added to (or removed from) the canvas after instantiating the debugger.
      */
     public void refresh() {
-        tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
+        selectedTree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(selectedCanvas)));
     }
 
     private void changeControlAreaColor(Color backgroundColor, Color borderColor) {
