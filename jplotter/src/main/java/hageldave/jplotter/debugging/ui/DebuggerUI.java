@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging;
+package hageldave.jplotter.debugging.ui;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 
@@ -11,23 +11,23 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class DebuggerUI {
     final protected JFrame frame = new JFrame("Debugger UI");
-    final protected List<DebuggerUIPanel> debuggerList = new ArrayList<>();
+    final protected List<DebuggerPanel> debuggerList = new ArrayList<>();
 
     public DebuggerUI(JPlotterCanvas... canvases) {
         for (JPlotterCanvas c: canvases) {
-            this.debuggerList.add(new DebuggerUIPanel(c));
+            this.debuggerList.add(new DebuggerPanel(c));
         }
         display();
     }
 
     public DebuggerUI(JPlotterCanvas canvas) {
-        this.debuggerList.add(new DebuggerUIPanel(canvas));
+        this.debuggerList.add(new DebuggerPanel(canvas));
         display();
     }
 
     protected void display() {
         JPanel debuggerPanel = new JPanel(new BorderLayout());
-        AtomicReference<DebuggerUIPanel> prevDebugUI = new AtomicReference<>();
+        AtomicReference<DebuggerPanel> prevDebugUI = new AtomicReference<>();
         Integer[] canvasArr = debuggerList.stream().map(Object::hashCode).toArray(Integer[]::new);
         JComboBox<Integer> canvasSelection = new JComboBox<>(canvasArr);
         canvasSelection.addItemListener(e -> prevDebugUI.set(changeDebuggerPanel(frame, debuggerPanel, debuggerList.get(canvasSelection.getSelectedIndex()), prevDebugUI.get())));
@@ -49,20 +49,20 @@ public class DebuggerUI {
         frame.setVisible(true);
     }
 
-    protected DebuggerUIPanel changeDebuggerPanel(JFrame frame, JPanel debuggerPanel, DebuggerUIPanel debuggerUIPanel, DebuggerUIPanel prevDebugUI) {
+    protected DebuggerPanel changeDebuggerPanel(JFrame frame, JPanel debuggerPanel, DebuggerPanel debuggerUIPanel, DebuggerPanel prevDebugUI) {
         debuggerPanel.remove(prevDebugUI);
         return changeDebuggerPanel(frame, debuggerPanel, debuggerUIPanel);
     }
 
-    protected DebuggerUIPanel changeDebuggerPanel(JFrame frame, JPanel debuggerPanel, DebuggerUIPanel debuggerUIPanel) {
+    protected DebuggerPanel changeDebuggerPanel(JFrame frame, JPanel debuggerPanel, DebuggerPanel debuggerUIPanel) {
         debuggerPanel.add(debuggerUIPanel, BorderLayout.CENTER);
         frame.repaint();
         frame.pack();
         return debuggerUIPanel;
     }
 
-    protected void refresh() {
-        for (DebuggerUIPanel p: debuggerList) {
+    public void refresh() {
+        for (DebuggerPanel p: debuggerList) {
             p.refresh();
         }
     }

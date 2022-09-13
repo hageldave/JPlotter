@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging;
+package hageldave.jplotter.debugging.ui;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.annotations.DebugGetter;
@@ -6,6 +6,7 @@ import hageldave.jplotter.debugging.annotations.DebugSetter;
 import hageldave.jplotter.debugging.customPrinter.CustomPrinterInterface;
 import hageldave.jplotter.debugging.panelcreators.control.ControlPanelCreator;
 import hageldave.jplotter.debugging.panelcreators.display.DisplayPanelCreator;
+import hageldave.jplotter.debugging.treemodel.TreeConstructor;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -47,7 +48,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * See the documentation of the corresponding creater interfaces ({@link ControlPanelCreator} and {@link DisplayPanelCreator}) for more information.
  *
  */
-class DebuggerUIPanel extends JPanel {
+class DebuggerPanel extends JPanel {
     final protected JTree tree = new JTree();
     final protected Color bgColor = new Color(246, 246, 246);
     final protected JPanel controlBorderWrap = new JPanel(new BorderLayout());
@@ -70,7 +71,7 @@ class DebuggerUIPanel extends JPanel {
      *
      * @param canvas the content of this canvas will be displayed by the debugger
      */
-    protected DebuggerUIPanel(JPlotterCanvas canvas) {
+    protected DebuggerPanel(JPlotterCanvas canvas) {
         this.canvas = canvas;
         registerTreeListener();
         display();
@@ -79,7 +80,7 @@ class DebuggerUIPanel extends JPanel {
     /**
      * Creates and displays the debugger window.
      * The debugger shows all the renderer and renderable items in the given canvas.
-     * If there are any renderers or renderables added at a later time, the {@link DebuggerUIPanel#refresh()}
+     * If there are any renderers or renderables added at a later time, the {@link DebuggerPanel#refresh()}
      * method can be called to update the underlying model.
      *
      * The debugger also displays the registered panels (see {@link ControlPanelCreator} and {@link DisplayPanelCreator})
@@ -87,7 +88,7 @@ class DebuggerUIPanel extends JPanel {
      */
     protected void display() {
         // set constructed tree as tree model
-        tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
+        tree.setModel(new DefaultTreeModel(TreeConstructor.getAllRenderersOnCanvas(canvas)));
         tree.setBorder(new EmptyBorder(2, 5, 2, 5));
 
         // start title container
@@ -244,11 +245,11 @@ class DebuggerUIPanel extends JPanel {
             }
 
             if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(setter.get()) && Objects.nonNull(ctrlCreator.get())) {
-                JPanel panel = FieldHandler.controlField(canvas, obj, key.get(), getter, setter, ctrlCreator);
+                JPanel panel = controlField(canvas, obj, key.get(), getter, setter, ctrlCreator);
                 controlContainer.add(panel);
                 controlFieldFound.set(true);
             } else if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(dsplyCreator.get()) && Objects.nonNull(customPrinter.get())) {
-                JPanel panel = FieldHandler.displayField(canvas, obj, key.get(), getter, dsplyCreator, customPrinter);
+                JPanel panel = displayField(canvas, obj, key.get(), getter, dsplyCreator, customPrinter);
                 infoContainer.add(panel);
                 infoFieldFound.set(true);
             }
@@ -353,7 +354,7 @@ class DebuggerUIPanel extends JPanel {
      * This can be used, if items are being added to (or removed from) the canvas after instantiating the debugger.
      */
     protected void refresh() {
-        tree.setModel(new DefaultTreeModel(Debugger.getAllRenderersOnCanvas(canvas)));
+        tree.setModel(new DefaultTreeModel(TreeConstructor.getAllRenderersOnCanvas(canvas)));
     }
 
     private void changeControlAreaColor(Color backgroundColor, Color borderColor) {
@@ -366,5 +367,85 @@ class DebuggerUIPanel extends JPanel {
         infoContainer.setBackground(backgroundColor);
         infoArea.setBackground(backgroundColor);
         infoBorderWrap.setBorder(new LineBorder(borderColor));
+    }
+
+    protected static JPanel controlField(JPlotterCanvas canvas,
+                                         Object obj,
+                                         String field,
+                                         AtomicReference<Method> getter,
+                                         AtomicReference<Method> setter,
+                                         AtomicReference<Class<? extends ControlPanelCreator>> creator) {
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setAlignmentX(Component.LEFT_ALIGNMENT);
+        container.setBorder(new EmptyBorder(0, 0, 7, 0));
+
+        JPanel labelContainer = new JPanel();
+        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
+        labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        labelContainer.setBorder(new EmptyBorder(0, 0, 3, 0));
+
+        JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
+        JLabel fieldName = new JLabel((field) + " ");
+        fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+        fieldName.setToolTipText("Annotation key of the property");
+        fieldType.setFont(new Font(fieldType.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()-2));
+        fieldType.setForeground(Color.GRAY);
+        fieldType.setToolTipText("Type of the property");
+
+        labelContainer.add(fieldType);
+        labelContainer.add(fieldName);
+
+        JPanel controlContainer = new JPanel();
+        controlContainer.setLayout(new BoxLayout(controlContainer, BoxLayout.X_AXIS));
+        controlContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        controlContainer.setBorder(new EmptyBorder(0, 0, 7, 0));
+
+        container.add(labelContainer);
+        container.add(controlContainer);
+
+        try {
+            ControlPanelCreator pc = creator.get().getDeclaredConstructor().newInstance();
+            pc.createUnchecked(canvas, obj, controlContainer, setter.get(), getter.get());
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+
+        JSeparator sep = new JSeparator();
+        container.add(sep);
+
+        return container;
+    }
+
+    protected static JPanel displayField(JPlotterCanvas canvas,
+                                         Object obj,
+                                         String field,
+                                         AtomicReference<Method> getter,
+                                         AtomicReference<Class<? extends DisplayPanelCreator>> creator,
+                                         AtomicReference<Class<? extends CustomPrinterInterface>> objectPrinter) {
+        JPanel labelContainer = new JPanel();
+        labelContainer.setLayout(new BoxLayout(labelContainer, BoxLayout.X_AXIS));
+        labelContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        labelContainer.setBorder(new EmptyBorder(9, 0, 9, 0));
+
+        JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
+        JLabel fieldName = new JLabel((field) + ": ");
+        fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
+        fieldName.setToolTipText("Annotation key of the property");
+        fieldType.setFont(new Font(fieldType.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()-2));
+        fieldType.setForeground(Color.GRAY);
+        fieldType.setToolTipText("Type of the property");
+
+        labelContainer.add(fieldType);
+        labelContainer.add(fieldName);
+
+        try {
+            DisplayPanelCreator pc = creator.get().getDeclaredConstructor().newInstance();
+            CustomPrinterInterface cpi = objectPrinter.get().getDeclaredConstructor().newInstance();
+            pc.createUnchecked(canvas, obj, labelContainer, getter.get(), cpi);
+        } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        return labelContainer;
     }
 }

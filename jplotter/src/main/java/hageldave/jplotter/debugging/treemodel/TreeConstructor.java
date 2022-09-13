@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging;
+package hageldave.jplotter.debugging.treemodel;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Renderable;
@@ -14,8 +14,8 @@ import java.util.Collections;
  * The Debugger class contains all the internal methods for creating
  * the tree model of the renderers & renderables shown on the canvas.
  */
-class Debugger {
-    protected static TreeNode getAllRenderersOnCanvas(JPlotterCanvas canvas) {
+public class TreeConstructor {
+    public static TreeNode getAllRenderersOnCanvas(JPlotterCanvas canvas) {
         Renderer ren = canvas.getRenderer();
 
         Class<?> cnvsClass = canvas.getClass();

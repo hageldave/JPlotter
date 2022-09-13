@@ -1,4 +1,4 @@
-package hageldave.jplotter.debugging;
+package hageldave.jplotter.debugging.treemodel;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -6,7 +6,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * The DebuggerMutableTreeNode class is an extension of the DefaultMutableTreeNode class.
  * It is modified to store two entries, instead of just one. The hiddenObject won't be shown in a JTree.
  */
-class DebuggerMutableTreeNode extends DefaultMutableTreeNode {
+public class DebuggerMutableTreeNode extends DefaultMutableTreeNode {
     protected Object hiddenObject;
 
     /**
