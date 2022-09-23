@@ -54,7 +54,7 @@ public class DebuggerUI {
         JPanel selectionWrapper = new JPanel(new FlowLayout());
         selectionWrapper.setBorder(new EmptyBorder(3, 5, 3, 5));
         selectionWrapper.setBackground(Color.WHITE);
-        selectionWrapper.add(new JLabel("Select debugger tab:"));
+        selectionWrapper.add(new JLabel("Select debugger panel:"));
         selectionWrapper.add(canvasSelection);
 
 
