@@ -57,7 +57,7 @@ public class DebuggerUI {
     protected DebuggerPanel changeDebuggerPanel(JFrame frame, JPanel debuggerPanel, DebuggerPanel debuggerUIPanel) {
         debuggerPanel.add(debuggerUIPanel, BorderLayout.CENTER);
         frame.repaint();
-        frame.pack();
+        frame.validate();
         return debuggerUIPanel;
     }
 
