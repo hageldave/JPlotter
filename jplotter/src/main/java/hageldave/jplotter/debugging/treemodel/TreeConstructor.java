@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- * The Debugger class contains all the internal methods for creating
+ * The Debugger class contains the static internal methods for creating
  * the tree model of the renderers & renderables shown on the canvas.
  */
 public class TreeConstructor {
@@ -27,7 +27,7 @@ public class TreeConstructor {
         Renderer rootRenderer = canvas.getRenderer();
         Class<?> canvasClass = canvas.getClass();
         Field[] fields = canvasClass.getDeclaredFields();
-        DebuggerMutableTreeNode root = new DebuggerMutableTreeNode(canvas.getClass().getSimpleName(), canvas);
+        CoupledMutableTreeNode root = new CoupledMutableTreeNode(canvas.getClass().getSimpleName(), canvas);
 
         for (Field field : fields) {
             Class<?> fieldType = field.getType();
@@ -35,7 +35,7 @@ public class TreeConstructor {
             boolean rendererAssignable = Renderer.class.isAssignableFrom(fieldType);
 
             if (rendererAssignable) {
-                DebuggerMutableTreeNode firstRendererNode = new DebuggerMutableTreeNode("(" + rootRenderer.getClass().getSimpleName() + ") " + field.getName(), rootRenderer);
+                CoupledMutableTreeNode firstRendererNode = new CoupledMutableTreeNode("(" + rootRenderer.getClass().getSimpleName() + ") " + field.getName(), rootRenderer);
                 root.add(firstRendererNode);
                 constructTree(rootRenderer, firstRendererNode);
             }
@@ -67,7 +67,7 @@ public class TreeConstructor {
                     Renderer nestedRenderer = (Renderer) field.get(rootRenderer);
                     // null check, as renderers might be null in coordsysrenderer
                     if (nestedRenderer != null) {
-                        DebuggerMutableTreeNode newRendererNode = new DebuggerMutableTreeNode("(" + nestedRenderer.getClass().getSimpleName() + ") " + field.getName(), nestedRenderer);
+                        CoupledMutableTreeNode newRendererNode = new CoupledMutableTreeNode("(" + nestedRenderer.getClass().getSimpleName() + ") " + field.getName(), nestedRenderer);
                         node.add(newRendererNode);
                         constructTree(nestedRenderer, newRendererNode);
                     }
@@ -78,7 +78,7 @@ public class TreeConstructor {
                 try {
                     Renderable nestedRenderable = (Renderable) field.get(rootRenderer);
                     node.add(
-                            new DebuggerMutableTreeNode("(" + nestedRenderable.getClass().getSimpleName() + ") " + field.getName(), nestedRenderable));
+                            new CoupledMutableTreeNode("(" + nestedRenderable.getClass().getSimpleName() + ") " + field.getName(), nestedRenderable));
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
@@ -93,7 +93,7 @@ public class TreeConstructor {
                             Class<?> iteratedClass = iteratedObject.getClass();
                             if (Renderable.class.isAssignableFrom(iteratedClass)) {
                                 listNode.add(
-                                        new DebuggerMutableTreeNode("(" + iteratedClass.getSimpleName() + ") Hashcode: @" + iteratedObject.hashCode(), iteratedObject));
+                                        new CoupledMutableTreeNode("(" + iteratedClass.getSimpleName() + ") Hashcode: @" + iteratedObject.hashCode(), iteratedObject));
                             }
                         }
                         node.add(listNode);

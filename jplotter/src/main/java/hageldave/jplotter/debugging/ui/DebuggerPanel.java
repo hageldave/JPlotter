@@ -33,20 +33,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * The DebuggerUI class is responsible for displaying and constructing all of the GUI elements of the debugger.
- * The goal of the Debugger is to provide an easy way to view and control the properties
- * of the elements (renderables & renderers) in a canvas.
- *
- * The Debugger interface is split into a sidebar and a main area.
- * Each element shown in the canvas can be selected from the sidebar and its so-called "panels"
+ * The DebuggerPanel class is responsible for displaying and constructing the "creator" GUI elements of the debugger.
+ * The DebuggerPanel interface is split into a sidebar and a main area.
+ * Each DebuggerPanel is connected to a {@link JPlotterCanvas} and displays the renderer/renderable tree structure (see {@link TreeConstructor} for more information)
+ * of the canvas in the sidebar.
+ * Each element shown in the canvas can be selected (from the sidebar) and the elements' so-called "panels"
  * (see {@link ControlPanelCreator} and {@link DisplayPanelCreator}) will then be shown in the main area.
  * These panels are split into "control panels" (created by a {@link ControlPanelCreator}) and "display panels" (created by a {@link DisplayPanelCreator}).
- * A control panel typically contains multiple gui elements (buttons, ...) which can be used to manipulate the elements' properties,
+ * A control panel typically contains multiple gui elements (buttons, sliders, ...) which can be used to manipulate the elements' properties,
  * whereas a display panel only can be used to display certain information about the property of element.
- *
- * Currently, the debugger supports most of the important properties, but it is designed to be extendable.
- * See the documentation of the corresponding creater interfaces ({@link ControlPanelCreator} and {@link DisplayPanelCreator}) for more information.
- *
+ * Currently, the debugger supports most of the important properties of JPlotter, but it is designed to be extendable.
+ * See the documentation of the corresponding creator interfaces ({@link ControlPanelCreator} and {@link DisplayPanelCreator}) for more information.
  */
 class DebuggerPanel extends JPanel {
     final protected JTree tree = new JTree();
@@ -67,7 +64,7 @@ class DebuggerPanel extends JPanel {
     final public JPlotterCanvas canvas;
 
     /**
-     * Standard DebuggerUI constructor.
+     * Standard DebuggerPanel constructor.
      *
      * @param canvas the content of this canvas will be displayed by the debugger
      */
@@ -78,11 +75,10 @@ class DebuggerPanel extends JPanel {
     }
 
     /**
-     * Creates and displays the debugger window.
+     * Creates and displays the DebuggerPanel.
      * The debugger shows all the renderer and renderable items in the given canvas.
      * If there are any renderers or renderables added at a later time, the {@link DebuggerPanel#refresh()}
      * method can be called to update the underlying model.
-     *
      * The debugger also displays the registered panels (see {@link ControlPanelCreator} and {@link DisplayPanelCreator})
      * for each renderer/renderable.
      */
@@ -178,7 +174,6 @@ class DebuggerPanel extends JPanel {
     protected void createEmptyMessage() {
         changeControlAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
         changeInfoAreaColor(infoControlWrap.getBackground(), infoControlWrap.getBackground());
-
         title.setText("No renderer or renderable selected.");
     }
 
@@ -351,8 +346,8 @@ class DebuggerPanel extends JPanel {
     }
 
     /**
-     * Refreshes the renderer and renderable tree in the debugger window.
-     * This can be used, if items are being added to (or removed from) the canvas after instantiating the debugger.
+     * Refreshes the renderer and renderable tree in the DebuggerPanel.
+     * Can be used, if items are being added to (or removed from) the canvas after instantiating the debugger.
      */
     protected void refresh() {
         tree.setModel(new DefaultTreeModel(TreeConstructor.getAllRenderersOnCanvas(canvas)));
