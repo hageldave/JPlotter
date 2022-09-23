@@ -148,6 +148,7 @@ class DebuggerPanel extends JPanel {
         treeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         JPanel refreshBtnContainer = new JPanel(new BorderLayout());
+        refreshBtnContainer.setBackground(bgColor);
         JButton refreshTree = new JButton("Refresh objects");
         refreshTree.setToolTipText("<html>"
                         + "Updates the underlying TreeModel. "
