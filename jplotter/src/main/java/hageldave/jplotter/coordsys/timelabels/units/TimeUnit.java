@@ -5,6 +5,9 @@ import hageldave.jplotter.util.Pair;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Delegate enum which passes through calls to the ITimeUnit interface
+ */
 public enum TimeUnit implements ITimeUnit {
 	
     Year(new YearTimeUnit()),
@@ -17,7 +20,7 @@ public enum TimeUnit implements ITimeUnit {
     Millisecond(new MilliTimeUnit())
     ;
 	
-	ITimeUnit delegate;
+	final ITimeUnit delegate;
 	
 	private TimeUnit(ITimeUnit proxy) {
 		this.delegate=proxy;
@@ -43,7 +46,5 @@ public enum TimeUnit implements ITimeUnit {
 	public String getUnitLabel() {
 		return this.delegate.getUnitLabel();
 	}
-	
-	
 }
 

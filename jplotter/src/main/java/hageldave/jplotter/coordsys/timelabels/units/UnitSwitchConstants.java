@@ -1,5 +1,9 @@
 package hageldave.jplotter.coordsys.timelabels.units;
 
+/**
+ * Contains constants when to switch the TimeUnit.
+ * Those can be used when the time difference between two ticks is too small/big and another unit is necessary.
+ */
 public class UnitSwitchConstants {
     public double millies_up = 10000;
 

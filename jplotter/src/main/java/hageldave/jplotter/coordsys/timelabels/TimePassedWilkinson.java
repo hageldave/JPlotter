@@ -6,14 +6,28 @@ import hageldave.jplotter.coordsys.timelabels.units.TimeUnit;
 import hageldave.jplotter.coordsys.timelabels.units.UnitSwitchConstants;
 import hageldave.jplotter.util.Pair;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * The TimePassedWilkinson is an extension of the {@link ExtendedWilkinson} tick labeling mechanism.
+ * It uses the ExtendedWilkinson to calculate the positioning of the tick labels which are then converted to
+ * {@link LocalDateTime} units.
+ * It calculates those label values with a {@link TimeUnit}.
+ * Then each tick label value is used as a {@link TimeUnit} value.
+ */
 public class TimePassedWilkinson extends ExtendedWilkinson {
 
     protected TimeUnit timeUnit;
     protected UnitSwitchConstants unitSwitchConstants;
 
+    /**
+     * Creates an instance of the TimePassedWilkinson.
+     *
+     * @param timeUnit to use when displaying the tick labels
+     * @param unitSwitchConstants used to determine when to switch time units
+     */
     public TimePassedWilkinson(final TimeUnit timeUnit, final UnitSwitchConstants unitSwitchConstants) {
         this.timeUnit = timeUnit;
         this.unitSwitchConstants = unitSwitchConstants;

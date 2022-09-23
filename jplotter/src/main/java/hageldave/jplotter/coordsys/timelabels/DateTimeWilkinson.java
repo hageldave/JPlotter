@@ -11,12 +11,30 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.function.BiFunction;
 
+/**
+ * The DateTimeWilkinson is an extension of the {@link ExtendedWilkinson} tick labeling mechanism.
+ * It uses the ExtendedWilkinson to calculate the positioning of the tick labels which are then converted to
+ * {@link LocalDateTime} units.
+ * It calculates those label values with a {@link TimeUnit} and a reference LocalDateTime
+ * (starting point positioned in left border of the respective chart).
+ * Then each tick label value is used as a {@link TimeUnit} value which is added to the referenceDateTime.
+ * A custom formatting {@link BiFunction} can also be set, as there might be special formatting requirements
+ * for the time values.
+ */
 public class DateTimeWilkinson extends ExtendedWilkinson {
     protected TimeUnit timeUnit;
     protected double number2unit;
     protected LocalDateTime referenceDateTime;
     protected BiFunction<LocalDateTime, Duration, String> formattingFunction;
 
+    /**
+     * Creates an instance of the DateTimeWilkinson.
+     *
+     * @param timeUnit the timeUnit used when calculating the difference between the axis ticks
+     * @param number2unit a custom multiplication factor (e.g. used when difference of 1.0 should be 1.5 in the timeUnit)
+     * @param referenceDateTime most left point has this value
+     * @param formattingFunction custom function used to format the time labels (e.g. showing only the date, not the time)
+     */
     public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime, final BiFunction<LocalDateTime, Duration, String> formattingFunction) {
         this.timeUnit = timeUnit;
         this.number2unit = number2unit;
@@ -54,6 +72,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         return labels;
     }
 
+    @Override
     public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
         double[] ticks = getTicks(min, max, desiredNumTicks, super.Q, super.w);
         String[] labelsForTicks = labelsForTicks(ticks, timeUnit);
@@ -61,28 +80,66 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     }
 
 
+    /**
+     * @return the function used to format the time labels
+     */
     public BiFunction<LocalDateTime, Duration, String> getFormattingFunction() {
         return formattingFunction;
     }
 
+    /**
+     * Sets a new formatting function.
+     *
+     * @param formattingFunction the function used to format the time labels
+     */
     public void setFormattingFunction(BiFunction<LocalDateTime, Duration, String> formattingFunction) {
         this.formattingFunction = formattingFunction;
     }
 
+    /**
+     *
+     *
+     * @param localDateTime
+     * @param duration
+     * @return
+     */
     public String getDateTime(LocalDateTime localDateTime, Double duration) {
         return localDateTime.toString();
     }
 
+    /**
+     * Formats the given localDateTime with a {@link DateTimeFormatter#ISO_DATE} formatter.
+     *
+     * @param localDateTime to format
+     * @param duration - ?
+     * @return formatted localDateTime
+     */
     public String getDate(LocalDateTime localDateTime, Duration duration) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
         return formatter.format(localDateTime);
     }
 
+    /**
+     * Formats the given localDateTime with a {@link DateTimeFormatter#ISO_TIME} formatter.
+     *
+     * @param localDateTime to format
+     * @param duration - ?
+     * @return formatted localDateTime
+     */
     public String getTime(LocalDateTime localDateTime, Duration duration) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_TIME;
         return formatter.format(localDateTime);
     }
 
+    /**
+     * Formats the localDateTime according to the given duration.
+     * If the time duration is big enough, the localDateTime will be formatted by
+     * {@link DateTimeFormatter#ISO_DATE}, else by {@link DateTimeFormatter#ISO_TIME}
+     *
+     * @param localDateTime reference point
+     * @param duration amount of time added to the localDateTime
+     * @return the formatted localDateTime
+     */
     public String switchFormat(LocalDateTime localDateTime, Duration duration) {
         ITimeUnit tu = timeUnit;
         LocalDateTime localDateTimeCopy = LocalDateTime.from(localDateTime);
