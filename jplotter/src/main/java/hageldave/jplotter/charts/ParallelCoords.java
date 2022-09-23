@@ -22,6 +22,19 @@ import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.*;
 
+/**
+ * The ParallelCoords class provides an easy way to create a parallel coordinates chart.
+ * Therefore, it abstracts some concepts that JPlotter provides (JPlotterCanvas, Renderers, ...) and sets them up automatically.
+ * To edit those, they can be returned with their respective getter methods.
+ * <p>
+ * It consists of a {@link ParallelCoordsRenderer} and multiple content layers.
+ * It also has a data model (see {@link ParallelCoordsDataModel}) and a listener (see {@link ParallelCoordsDataModel.ParallelCoordsDataModelListener})
+ * linked to it, listening for data changes.
+ * There is also a mouse event handler created in the constructor,
+ * which can be used to listen the events of the {@link ParallelCoordsMouseEventListener}.
+ * <p>
+ * There are 2 line connection modes (see {@link ParallelCoords#connectionMode}), which define how the chart is drawn.
+ */
 public class ParallelCoords {
     protected JPlotterCanvas canvas;
     protected ParallelCoordsRenderer parallelCoordsys;
@@ -30,7 +43,6 @@ public class ParallelCoords {
     protected CompleteRenderer contentLayer2;
     final protected PickingRegistry<Object> pickingRegistry = new PickingRegistry<>();
     final protected TreeSet<Integer> freedPickIds = new TreeSet<>();
-
     final protected ParallelCoordsDataModel dataModel = new ParallelCoordsDataModel();
     final protected ArrayList<Lines> linesPerDataChunk = new ArrayList<>();
     final protected ArrayList<Curves> curvesPerDataChunk = new ArrayList<>();
@@ -66,6 +78,13 @@ public class ParallelCoords {
         this.setConnectionMode(connectionMode);
     }
 
+    /**
+     * Creates a standard instance of a ParallelCoords chart.
+     * The constructor sets up the content layers, data model and more.
+     * It uses the {@link #LINES} connection mode by default.
+     *
+     * @param canvas the content of the ParallelCoords chart will be drawn here
+     */
     public ParallelCoords(final JPlotterCanvas canvas) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
@@ -780,11 +799,9 @@ public class ParallelCoords {
 
     /**
      * Enables/Disables the axis highlighting feature of the ParallelCoords graph.
-     *
      * The ParallelCoords class contains multiple interaction interfaces that react to user input.
      * One of these interfaces reacts to the event when the mouse is dragged on/over an axis.
      * There's also a visual indicator which area is currently selected.
-     *
      * If this behaviour is undesired, it can be deactivated.
      *
      * @param toHighlight controls if the feature should be enabled or disabled
@@ -864,7 +881,6 @@ public class ParallelCoords {
                 }
 
                 // START Axis highlighting //
-                // TODO: maybe always listen to events, but only show visual indictator if axisHighlighting is true
                 if (axisHighlighting) {
                     boolean isEventTypeKeyPressed = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_PRESSED);
                     boolean isEventTypeDragged = eventType.equals(ParallelCoordsMouseEventListener.MOUSE_EVENT_TYPE_DRAGGED);

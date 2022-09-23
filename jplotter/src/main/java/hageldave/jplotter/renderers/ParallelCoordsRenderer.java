@@ -40,9 +40,7 @@ import java.util.function.IntSupplier;
  * and {@link #setLegendRightWidth(int)} if this is needed.
  * <p>
  * The overlay renderer ({@link #setOverlay(Renderer)}) can be used to finally draw over all
- * of the renderer viewport.
- * <p>
- *
+ * the renderer viewport.
  */
 public class ParallelCoordsRenderer implements Renderer {
     protected LinesRenderer preContentLinesR = new LinesRenderer();
