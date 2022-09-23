@@ -15,79 +15,85 @@ import java.util.Collections;
  * the tree model of the renderers & renderables shown on the canvas.
  */
 public class TreeConstructor {
-    public static TreeNode getAllRenderersOnCanvas(JPlotterCanvas canvas) {
-        Renderer ren = canvas.getRenderer();
 
-        Class<?> cnvsClass = canvas.getClass();
-        Field[] fields = cnvsClass.getDeclaredFields();
+    /**
+     * The getAllRenderersOnCanvas method is responsible for constructing
+     * the tree model of the rendering structure.
+     *
+     * @param canvas where renderables are rendered in: root of the tree structure
+     * @return tree node of canvas with renderer & renderable nodes appended
+     */
+    public static TreeNode getAllRenderersOnCanvas(JPlotterCanvas canvas) {
+        Renderer rootRenderer = canvas.getRenderer();
+        Class<?> canvasClass = canvas.getClass();
+        Field[] fields = canvasClass.getDeclaredFields();
         DebuggerMutableTreeNode root = new DebuggerMutableTreeNode(canvas.getClass().getSimpleName(), canvas);
 
         for (Field field : fields) {
-            Class<?> type = field.getType();
+            Class<?> fieldType = field.getType();
             field.setAccessible(true);
-            boolean rendererAssignable = Renderer.class.isAssignableFrom(type);
+            boolean rendererAssignable = Renderer.class.isAssignableFrom(fieldType);
 
             if (rendererAssignable) {
-                DebuggerMutableTreeNode firstRendererN = new DebuggerMutableTreeNode("(" + ren.getClass().getSimpleName() + ") " + field.getName(), ren);
-                root.add(firstRendererN);
-                constructTree(ren, firstRendererN);
+                DebuggerMutableTreeNode firstRendererNode = new DebuggerMutableTreeNode("(" + rootRenderer.getClass().getSimpleName() + ") " + field.getName(), rootRenderer);
+                root.add(firstRendererNode);
+                constructTree(rootRenderer, firstRendererNode);
             }
         }
         return root;
     }
 
-    protected static TreeNode constructTree(Renderer ren, DefaultMutableTreeNode node) {
-        Class<? extends Renderer> class1 = ren.getClass();
-        Class<?> superclass = class1.getSuperclass();
+    protected static TreeNode constructTree(Renderer rootRenderer, DefaultMutableTreeNode node) {
+        Class<? extends Renderer> rootRenClass = rootRenderer.getClass();
+        Class<?> rootRenSuperclass = rootRenClass.getSuperclass();
 
-        Field[] fields = class1.getDeclaredFields();
-        Field[] superclassFields = superclass.getDeclaredFields();
+        Field[] fields = rootRenClass.getDeclaredFields();
+        Field[] superclassFields = rootRenSuperclass.getDeclaredFields();
 
         ArrayList<Field> allFields = new ArrayList<>();
         Collections.addAll(allFields, fields);
         Collections.addAll(allFields, superclassFields);
 
         for (Field field : allFields) {
-            Class<?> type = field.getType();
+            Class<?> fieldType = field.getType();
             field.setAccessible(true);
 
-            boolean rendererAssignable = Renderer.class.isAssignableFrom(type);
-            boolean renderableAssignable = Renderable.class.isAssignableFrom(type);
-            boolean isIterable = java.util.List.class.isAssignableFrom(type);
+            boolean isRendererAssignable = Renderer.class.isAssignableFrom(fieldType);
+            boolean isRenderableAssignable = Renderable.class.isAssignableFrom(fieldType);
+            boolean isIterable = java.util.List.class.isAssignableFrom(fieldType);
 
-            if (rendererAssignable) {
+            if (isRendererAssignable) {
                 try {
-                    Renderer nested = (Renderer) field.get(ren);
-
+                    Renderer nestedRenderer = (Renderer) field.get(rootRenderer);
                     // null check, as renderers might be null in coordsysrenderer
-                    if (nested != null) {
-                        DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(" + nested.getClass().getSimpleName() + ") " + field.getName(), nested);
-                        node.add(newNode);
-                        constructTree(nested, newNode);
+                    if (nestedRenderer != null) {
+                        DebuggerMutableTreeNode newRendererNode = new DebuggerMutableTreeNode("(" + nestedRenderer.getClass().getSimpleName() + ") " + field.getName(), nestedRenderer);
+                        node.add(newRendererNode);
+                        constructTree(nestedRenderer, newRendererNode);
                     }
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
-            } else if (renderableAssignable) {
+            } else if (isRenderableAssignable) {
                 try {
-                    Renderable nested = (Renderable) field.get(ren);
-                    DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(" + nested.getClass().getSimpleName() + ") " + field.getName(), nested);
-                    node.add(newNode);
+                    Renderable nestedRenderable = (Renderable) field.get(rootRenderer);
+                    node.add(
+                            new DebuggerMutableTreeNode("(" + nestedRenderable.getClass().getSimpleName() + ") " + field.getName(), nestedRenderable));
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             } else if (isIterable) {
                 try {
-                    java.util.List<?> iterableField = (java.util.List<?>) field.get(ren);
+                    java.util.List<?> iterableField = (java.util.List<?>) field.get(rootRenderer);
 
-                    if (iterableField.size() > 0) {
+                    if (!iterableField.isEmpty()) {
                         DefaultMutableTreeNode listNode = new DefaultMutableTreeNode(field.getName());
 
                         for (Object iteratedObject : iterableField) {
                             Class<?> iteratedClass = iteratedObject.getClass();
                             if (Renderable.class.isAssignableFrom(iteratedClass)) {
-                                DebuggerMutableTreeNode newNode = new DebuggerMutableTreeNode("(" + iteratedClass.getSimpleName() + ") Hashcode: @" + iteratedObject.hashCode(), iteratedObject);
-                                listNode.add(newNode);
+                                listNode.add(
+                                        new DebuggerMutableTreeNode("(" + iteratedClass.getSimpleName() + ") Hashcode: @" + iteratedObject.hashCode(), iteratedObject));
                             }
                         }
                         node.add(listNode);
@@ -95,11 +101,8 @@ public class TreeConstructor {
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
-
             }
         }
         return node;
     }
 }
-
-
