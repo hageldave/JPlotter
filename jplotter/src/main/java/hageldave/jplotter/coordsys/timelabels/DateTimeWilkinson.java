@@ -23,7 +23,7 @@ import java.util.function.BiFunction;
  */
 public class DateTimeWilkinson extends ExtendedWilkinson {
     protected TimeUnit timeUnit;
-    protected double number2unit;
+    protected double scalingFactor;
     protected LocalDateTime referenceDateTime;
     protected BiFunction<LocalDateTime, Duration, String> formattingFunction;
 
@@ -31,20 +31,20 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
      * Creates an instance of the DateTimeWilkinson.
      *
      * @param timeUnit the timeUnit used when calculating the difference between the axis ticks
-     * @param number2unit a custom multiplication factor (e.g. used when difference of 1.0 should be 1.5 in the timeUnit)
+     * @param scalingFactor a custom multiplication factor (e.g. used when difference of 1.0 should be 1.5 in the timeUnit)
      * @param referenceDateTime most left point has this value
      * @param formattingFunction custom function used to format the time labels (e.g. showing only the date, not the time)
      */
-    public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime, final BiFunction<LocalDateTime, Duration, String> formattingFunction) {
+    public DateTimeWilkinson(final TimeUnit timeUnit, final double scalingFactor, final LocalDateTime referenceDateTime, final BiFunction<LocalDateTime, Duration, String> formattingFunction) {
         this.timeUnit = timeUnit;
-        this.number2unit = number2unit;
+        this.scalingFactor = scalingFactor;
         this.referenceDateTime = referenceDateTime;
         this.formattingFunction = formattingFunction;
     }
 
-    public DateTimeWilkinson(final TimeUnit timeUnit, final double number2unit, final LocalDateTime referenceDateTime) {
+    public DateTimeWilkinson(final TimeUnit timeUnit, final double scalingFactor, final LocalDateTime referenceDateTime) {
         this.timeUnit = timeUnit;
-        this.number2unit = number2unit;
+        this.scalingFactor = scalingFactor;
         this.referenceDateTime = referenceDateTime;
         this.formattingFunction = this::switchFormat;
     }
@@ -54,10 +54,10 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
 
         for (int i = 0; i < ticks.length - 1; i++) {
             double currentDiff2Ref = ticks[i];
-            currentDiff2Ref *= number2unit;
+            currentDiff2Ref *= scalingFactor;
 
             double nextDiff2Ref = ticks[i + 1];
-            nextDiff2Ref *= number2unit;
+            nextDiff2Ref *= scalingFactor;
 
             LocalDateTime currentDateTime = timeUnit.increment(referenceDateTime, currentDiff2Ref);
             LocalDateTime nextDateTime = timeUnit.increment(referenceDateTime, nextDiff2Ref);
