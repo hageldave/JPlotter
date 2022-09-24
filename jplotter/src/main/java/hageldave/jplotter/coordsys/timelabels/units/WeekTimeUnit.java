@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Time unit representing a week.
+ */
 class WeekTimeUnit implements ITimeUnit {
     public final static long durationInMillis = 604800000L;
 

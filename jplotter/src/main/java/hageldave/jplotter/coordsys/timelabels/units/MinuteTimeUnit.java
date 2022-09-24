@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Time unit representing a minute.
+ */
 class MinuteTimeUnit implements ITimeUnit {
     public final static long durationInMillis = 60000;
 

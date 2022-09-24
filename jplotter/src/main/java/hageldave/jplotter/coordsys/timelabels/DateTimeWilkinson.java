@@ -13,11 +13,11 @@ import java.util.function.BiFunction;
 
 /**
  * The DateTimeWilkinson is an extension of the {@link ExtendedWilkinson} tick labeling mechanism.
- * It uses the ExtendedWilkinson to calculate the positioning of the tick labels which are then converted to
+ * It uses the ExtendedWilkinson to initially calculate the positioning of the tick labels which are then converted to
  * {@link LocalDateTime} units.
- * It calculates those label values with a {@link TimeUnit} and a reference LocalDateTime
- * (starting point positioned in left border of the respective chart).
- * Then each tick label value is used as a {@link TimeUnit} value which is added to the referenceDateTime.
+ * It calculates those label values by using a {@link TimeUnit} and a reference LocalDateTime
+ * (starting point positioned in left border of the chart).
+ * Then each tick label value (the ones calculated by the ExtendedWilkinson algorithm) is used as a {@link TimeUnit} value which is added to the referenceDateTime.
  * A custom formatting {@link BiFunction} can also be set, as there might be special formatting requirements
  * for the time values.
  */
@@ -79,7 +79,6 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         return new Pair<>(ticks, labelsForTicks);
     }
 
-
     /**
      * @return the function used to format the time labels
      */
@@ -97,11 +96,11 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     }
 
     /**
+     * Returns the given {@link LocalDateTime} as a string.
      *
-     *
-     * @param localDateTime
-     * @param duration
-     * @return
+     * @param localDateTime will be returned as a string
+     * @param duration - ?
+     * @return string value of localDateTime
      */
     public String getDateTime(LocalDateTime localDateTime, Double duration) {
         return localDateTime.toString();
