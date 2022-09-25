@@ -46,7 +46,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         this.timeUnit = timeUnit;
         this.scalingFactor = scalingFactor;
         this.referenceDateTime = referenceDateTime;
-        this.formattingFunction = this::switchFormat;
+        this.formattingFunction = DateTimeWilkinson::switchFormat;
     }
 
     protected String[] labelsForTicks(double[] ticks, ITimeUnit timeUnit) {
@@ -99,10 +99,10 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
      * Returns the given {@link LocalDateTime} as a string.
      *
      * @param localDateTime will be returned as a string
-     * @param duration - ?
+     * @param duration - interface parameter, not used here
      * @return string value of localDateTime
      */
-    public String getDateTime(LocalDateTime localDateTime, Double duration) {
+    public static String getDateTime(LocalDateTime localDateTime, Duration duration) {
         return localDateTime.toString();
     }
 
@@ -110,10 +110,10 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
      * Formats the given localDateTime with a {@link DateTimeFormatter#ISO_DATE} formatter.
      *
      * @param localDateTime to format
-     * @param duration - ?
+     * @param duration - interface parameter, not used here
      * @return formatted localDateTime
      */
-    public String getDate(LocalDateTime localDateTime, Duration duration) {
+    public static String getDate(LocalDateTime localDateTime, Duration duration) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
         return formatter.format(localDateTime);
     }
@@ -122,25 +122,24 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
      * Formats the given localDateTime with a {@link DateTimeFormatter#ISO_TIME} formatter.
      *
      * @param localDateTime to format
-     * @param duration - ?
+     * @param duration - interface parameter, not used here
      * @return formatted localDateTime
      */
-    public String getTime(LocalDateTime localDateTime, Duration duration) {
+    public static String getTime(LocalDateTime localDateTime, Duration duration) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_TIME;
         return formatter.format(localDateTime);
     }
 
     /**
      * Formats the localDateTime according to the given duration.
-     * If the time duration is big enough, the localDateTime will be formatted by
+     * If the time duration is large enough (larger than 86400000 millis), the localDateTime will be formatted by
      * {@link DateTimeFormatter#ISO_DATE}, else by {@link DateTimeFormatter#ISO_TIME}
      *
      * @param localDateTime reference point
      * @param duration amount of time added to the localDateTime
      * @return the formatted localDateTime
      */
-    public String switchFormat(LocalDateTime localDateTime, Duration duration) {
-        ITimeUnit tu = timeUnit;
+    public static String switchFormat(LocalDateTime localDateTime, Duration duration) {
         LocalDateTime localDateTimeCopy = LocalDateTime.from(localDateTime);
         LocalDateTime ldt = localDateTimeCopy.plus(duration);
 
