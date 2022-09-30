@@ -1,4 +1,4 @@
-package hageldave.jplotter.interaction;
+package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Lines;
@@ -7,10 +7,7 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
@@ -35,11 +32,11 @@ import java.util.List;
  * }.register();
  * </pre>
  * <p>
-
  */
 public abstract class CoordSysRopeSelection extends MouseAdapter {
     protected Component canvas;
     protected CoordSysRenderer coordSys;
+    protected KeyMaskListener keyMaskListener;
     protected final CompleteRenderer overlay = new CompleteRenderer();
     protected final Points points = new Points();
     protected final Lines lines = new Lines();
@@ -50,19 +47,25 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
     /**
      * Creates an CoordSysRopeSelection instance for the specified canvas and corresponding coordinate system.
      *
-     * @param canvas displaying the coordsys
-     * @param coordSys the coordinate system to apply the panning in
+     * @param canvas          displaying the coordsys
+     * @param coordSys        the coordinate system to apply the panning in
+     * @param keyMaskListener defines the set of keys that have to pressed during the selection
      */
-    public CoordSysRopeSelection(JPlotterCanvas canvas, CoordSysRenderer coordSys) {
+    public CoordSysRopeSelection(JPlotterCanvas canvas, CoordSysRenderer coordSys, KeyMaskListener keyMaskListener) {
         this.canvas = canvas.asComponent();
         this.coordSys = coordSys;
+        this.keyMaskListener = keyMaskListener;
         this.overlay.addItemToRender(lines).addItemToRender(points);
         this.coordSys.setContent(this.coordSys.getContent().withAppended(this.overlay));
     }
 
+    public CoordSysRopeSelection(JPlotterCanvas canvas, CoordSysRenderer coordSys) {
+        this(canvas, coordSys, new KeyMaskListener(KeyEvent.VK_R));
+    }
+
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (coordSys.getCoordSysArea().contains(e.getPoint())) {
+        if (keyMaskListener.areKeysPressed() && coordSys.getCoordSysArea().contains(e.getPoint())) {
             if (!isDone) {
                 Point2D pointInCoordsys = coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
 
@@ -72,8 +75,8 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
                     Point2D.Double lastCoord = coordinates.get(coordinates.size() - 2);
                     this.lines.addSegment(lastCoord, pointInCoordsys);
 
-                    Point2D pointinAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
-                    if (e.getPoint().distanceSq(pointinAWT) < radius) {
+                    Point2D pointInAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
+                    if (e.getPoint().distanceSq(pointInAWT) < radius) {
                         isDone = true;
                         canvas.repaint();
 
@@ -94,8 +97,8 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
                 points.getPointDetails().clear();
                 lines.getSegments().clear();
             }
+            canvas.repaint();
         }
-        canvas.repaint();
     }
 
     @Override
@@ -124,8 +127,9 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
 
     /**
      * Will be called when selection is done (first point connected to the last point).
+     *
      * @param selectedArea represents the selected points in the coordsys
-     *                      ({@link Path2D#contains(double, double)} method can be used to check if points are inside the selected area)
+     *                     ({@link Path2D#contains(double, double)} method can be used to check if points are inside the selected area)
      */
     public abstract void areaSelected(Path2D selectedArea);
 
@@ -136,33 +140,52 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
      * will be called.
      *
      * @param selectedArea represents the selected points in the coordsys
-     *                      ({@link Path2D#contains(double, double)} method can be used to check if points are inside the selected area)
+     *                     ({@link Path2D#contains(double, double)} method can be used to check if points are inside the selected area)
      */
     public void areaSelectedOnGoing(Path2D selectedArea) {
 
     }
 
     /**
+     * Sets a new {@link KeyMaskListener}, removes the old KeyMaskListener from the canvas
+     * and registers the new one.
+     *
+     * @param keyMaskListener defines the set of keys that have to pressed during the panning
+     */
+    public CoordSysRopeSelection setKeyMaskListener(KeyMaskListener keyMaskListener) {
+        canvas.removeKeyListener(this.keyMaskListener);
+        this.keyMaskListener = keyMaskListener;
+        if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+            canvas.addKeyListener(this.keyMaskListener);
+        return this;
+    }
+
+    /**
      * Adds this {@link CoordSysRopeSelection} as {@link MouseListener} and
      * {@link MouseMotionListener} to the associated canvas.
+     *
      * @return this for chaining
      */
-    public CoordSysRopeSelection register(){
-        if( ! Arrays.asList(canvas.getMouseListeners()).contains(this))
+    public CoordSysRopeSelection register() {
+        if (!Arrays.asList(canvas.getMouseListeners()).contains(this))
             canvas.addMouseListener(this);
-        if( ! Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
+        if (!Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
             canvas.addMouseMotionListener(this);
+        if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
+            canvas.addKeyListener(this.keyMaskListener);
         return this;
     }
 
     /**
      * Removes this {@link CoordSysRopeSelection} from the associated canvas'
      * mouse and mouse motion listeners.
+     *
      * @return this for chaining
      */
-    public CoordSysRopeSelection deRegister(){
+    public CoordSysRopeSelection deRegister() {
         canvas.removeMouseListener(this);
         canvas.removeMouseMotionListener(this);
+        canvas.removeKeyListener(this.keyMaskListener);
         return this;
     }
 }
