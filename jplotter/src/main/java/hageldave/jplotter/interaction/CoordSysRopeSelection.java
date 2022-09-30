@@ -5,83 +5,105 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.Renderer;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * The CoordSysRopeSelection class implements a {@link MouseListener}
+ * and {@link MouseMotionListener} that realize rope selection functionality
+ * for the coordinate view of the {@link CoordSysRenderer}.
+ * So it provides a way to select an area in a coordsys by selecting multiple points.
+ * The action to be performed with the selected region is up to
+ * the implementation of the methods {@link #areaSelected(Path2D)}
+ * and {@link #areaSelectedOnGoing(Path2D)}.
+ * <p>
+ * Intended use, (for example checking if point is contained):
+ * <pre>
+ * new CoordSysRopeSelection(canvas, coordsys) {
+ *    public void areaSelected(Path2D selectedArea) {
+ *       selectedArea.contains(pointToCheck);
+ *    }
+ * }.register();
+ * </pre>
+ * <p>
+
+ */
 public abstract class CoordSysRopeSelection extends MouseAdapter {
     protected Component canvas;
-    protected CoordSysRenderer coordsys;
-    protected CompleteRenderer overlay;
-    protected Points points = new Points();
-    protected Lines lines = new Lines();
-    protected List<Point2D.Double> coordinates = new LinkedList<>();
+    protected CoordSysRenderer coordSys;
+    protected final CompleteRenderer overlay = new CompleteRenderer();
+    protected final Points points = new Points();
+    protected final Lines lines = new Lines();
+    protected final List<Point2D.Double> coordinates = new LinkedList<>();
     protected boolean isDone = false;
     protected int radius = 25;
 
-    public CoordSysRopeSelection(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
+    /**
+     * Creates an CoordSysRopeSelection instance for the specified canvas and corresponding coordinate system.
+     *
+     * @param canvas displaying the coordsys
+     * @param coordSys the coordinate system to apply the panning in
+     */
+    public CoordSysRopeSelection(JPlotterCanvas canvas, CoordSysRenderer coordSys) {
         this.canvas = canvas.asComponent();
-        this.coordsys = coordsys;
-        Renderer presentRenderer;
-        if((presentRenderer = coordsys.getOverlay()) == null){
-            coordsys.setOverlay(this.overlay = new CompleteRenderer());
-        } else if(presentRenderer instanceof CompleteRenderer){
-            this.overlay = (CompleteRenderer) presentRenderer;
-        } else {
-            throw new IllegalStateException(
-                    "The canvas' current overlay renderer is not an instance of CompleteRenderer but "
-                            + presentRenderer.getClass().getName() + " which cannot be used with CoordSysAreaSelector.");
-        }
-
-        this.overlay
-                .addItemToRender(lines).addItemToRender(points);
+        this.coordSys = coordSys;
+        this.overlay.addItemToRender(lines).addItemToRender(points);
+        this.coordSys.setContent(this.coordSys.getContent().withAppended(this.overlay));
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (coordsys.getCoordSysArea().contains(e.getPoint()) && !isDone) {
-            Point2D.Double newPoint = new Point2D.Double(e.getX(), e.getY());
-            coordinates.add(newPoint);
+        if (coordSys.getCoordSysArea().contains(e.getPoint())) {
+            if (!isDone) {
+                Point2D pointInCoordsys = coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
 
-            if (coordinates.size() > 1) {
-                Point2D.Double firstPoint = coordinates.get(0);
-                Point2D.Double lastCoord = coordinates.get(coordinates.size() - 2);
-                this.lines.addSegment(new Point2D.Double(lastCoord.getX(), canvas.getHeight() - lastCoord.getY()),
-                        new Point2D.Double(e.getX(), canvas.getHeight() - e.getY()));
+                coordinates.add((Point2D.Double) pointInCoordsys);
+                if (coordinates.size() > 1) {
+                    Point2D.Double firstPoint = coordinates.get(0);
+                    Point2D.Double lastCoord = coordinates.get(coordinates.size() - 2);
+                    this.lines.addSegment(lastCoord, pointInCoordsys);
 
-                if (e.getPoint().distanceSq(firstPoint) < radius) {
-                    isDone = true;
-                    determineSelection();
+                    Point2D pointinAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
+                    if (e.getPoint().distanceSq(pointinAWT) < radius) {
+                        isDone = true;
+                        canvas.repaint();
+
+                        // call selected interface
+                        areaSelected(calculateSelectedArea());
+                    } else {
+                        this.points.addPoint(pointInCoordsys).setColor(Color.BLACK);
+
+                        // call ongoing interface
+                        areaSelectedOnGoing(calculateSelectedArea());
+                    }
                 } else {
-                    this.points.addPoint(new Point2D.Double(e.getX(), canvas.getHeight()-e.getY())).setColor(Color.BLACK);
+                    this.points.addPoint(pointInCoordsys).setColor(Color.BLACK);
                 }
             } else {
-                this.points.addPoint(new Point2D.Double(e.getX(), canvas.getHeight()-e.getY())).setColor(Color.BLACK);
+                isDone = false;
+                coordinates.clear();
+                points.getPointDetails().clear();
+                lines.getSegments().clear();
             }
-
-            canvas.repaint();
-        } else if (isDone) {
-            isDone = false;
-            coordinates.clear();
-            points.getPointDetails().clear();
-            lines.getSegments().clear();
-            canvas.repaint();
         }
+        canvas.repaint();
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
         if (!coordinates.isEmpty()) {
             Point2D.Double firstPoint = coordinates.get(0);
-            if (e.getPoint().distanceSq(firstPoint) < radius) {
+            Point2D pointInAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
+            if (e.getPoint().distanceSq(pointInAWT) < radius) {
                 this.points.getPointDetails().get(0).setScaling(1.3).setColor(Color.RED);
             } else {
                 this.points.getPointDetails().get(0).setScaling(1.0).setColor(Color.BLACK);
@@ -90,18 +112,38 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
         }
     }
 
-    protected void determineSelection() {
-        Polygon p = new Polygon();
-        for (Point2D.Double coord: coordinates) {
-            p.addPoint((int) coord.getX(), (int) coord.getY());
+    protected Path2D calculateSelectedArea() {
+        Path2D selectedArea = new Path2D.Double();
+        selectedArea.moveTo(coordinates.get(0).getX(), coordinates.get(0).getY());
+        for (int i = 1; i < coordinates.size(); i++) {
+            selectedArea.lineTo(coordinates.get(i).getX(), coordinates.get(i).getY());
         }
-        areaSelected(p);
+        selectedArea.closePath();
+        return selectedArea;
     }
 
-    protected abstract void areaSelected(Polygon selectedArea);
+    /**
+     * Will be called when selection is done (first point connected to the last point).
+     * @param selectedArea represents the selected points in the coordsys
+     *                      ({@link Path2D#contains(double, double)} method can be used to check if points are inside the selected area)
+     */
+    public abstract void areaSelected(Path2D selectedArea);
 
     /**
-     * Adds this {@link CoordSysPanning} as {@link MouseListener} and
+     * Reports on the area currently selected when start and end points haven't been connected.
+     * When selection is finished (mouse button released),
+     * {@link #areaSelected(Path2D)}
+     * will be called.
+     *
+     * @param selectedArea represents the selected points in the coordsys
+     *                      ({@link Path2D#contains(double, double)} method can be used to check if points are inside the selected area)
+     */
+    public void areaSelectedOnGoing(Path2D selectedArea) {
+
+    }
+
+    /**
+     * Adds this {@link CoordSysRopeSelection} as {@link MouseListener} and
      * {@link MouseMotionListener} to the associated canvas.
      * @return this for chaining
      */
@@ -114,7 +156,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
     }
 
     /**
-     * Removes this {@link CoordSysPanning} from the associated canvas'
+     * Removes this {@link CoordSysRopeSelection} from the associated canvas'
      * mouse and mouse motion listeners.
      * @return this for chaining
      */
