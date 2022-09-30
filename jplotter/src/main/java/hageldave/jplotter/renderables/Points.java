@@ -369,7 +369,9 @@ public class Points implements Renderable {
 	public boolean isHidden() {
 		return hidden;
 	}
-	
+
+
+
 	/**
 	 * Hides or unhides this Points object, i.e. sets the {@link #isHidden()} field
 	 * value. When hidden, renderers will not draw it.
@@ -505,6 +507,7 @@ public class Points implements Renderable {
 			this.pickColor = pickID;
 			return this;
 		}
+
 	}
 	
 	/**

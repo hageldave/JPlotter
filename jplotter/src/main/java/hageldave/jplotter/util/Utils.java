@@ -84,6 +84,17 @@ public class Utils {
 		return r;
 	}
 	
+	public static Rectangle2D scaleRect(Rectangle2D r, double s) {
+		r = copy(r);
+		r.setRect(
+				r.getCenterX()-r.getWidth() *0.5*s, 
+				r.getCenterY()-r.getHeight()*0.5*s, 
+				r.getWidth()*s, 
+				r.getHeight()*s
+		);
+		return r;
+	}
+	
 	/**
 	 * Swaps between GL and AWT coordinates, AWT coordinate system
 	 * has its origin in the top left corner of a component and downwards pointing

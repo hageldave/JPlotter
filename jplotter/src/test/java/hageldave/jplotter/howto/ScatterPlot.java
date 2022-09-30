@@ -1,22 +1,20 @@
 package hageldave.jplotter.howto;
 
-import java.awt.Color;
-import java.awt.Dimension;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
+
+import javax.swing.*;
+import java.awt.*;
 
 public class ScatterPlot {
 	
@@ -56,7 +54,7 @@ public class ScatterPlot {
 		PointsRenderer content = new PointsRenderer();
 		content.addItemToRender(pointsB).addItemToRender(pointsA);
 		coordsys.setContent(content);
-		
+
 		// display within a JFrame
 		JFrame frame = new JFrame();
 		boolean useOpenGL = true;
@@ -73,7 +71,9 @@ public class ScatterPlot {
 			frame.pack();
 			frame.setVisible(true);
 		});
-		
+		// use mouse focused zoom
+		new CoordSysScrollZoom(canvas, coordsys, true).register();
+
 		long t=System.currentTimeMillis()+2000;
 		while(t>System.currentTimeMillis());
 		if("false".equals("true"))
