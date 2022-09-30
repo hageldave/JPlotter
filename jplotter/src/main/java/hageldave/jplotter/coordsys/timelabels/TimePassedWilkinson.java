@@ -12,9 +12,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The TimePassedWilkinson is an extension of the {@link ExtendedWilkinson} tick labeling mechanism.
- * It uses the ExtendedWilkinson to calculate the positioning of the tick labels which are then converted to
+ * It uses the ExtendedWilkinson mechanism to calculate the positioning of the tick labels which are then converted to
  * {@link LocalDateTime} units.
  * It calculates those label values by using a {@link TimeUnit}. Then each tick label value is used as a {@link TimeUnit} value.
+ * The first value on the left border is 0[TimeUnit] (e.g. 0 weeks), which is then increased (e.g. 1 week, 2 weeks, ...) by going further to the right.
  */
 public class TimePassedWilkinson extends ExtendedWilkinson {
 

@@ -16,8 +16,8 @@ import java.util.function.BiFunction;
  * It uses the ExtendedWilkinson to initially calculate the positioning of the tick labels which are then converted to
  * {@link LocalDateTime} units.
  * It calculates those label values by using a {@link TimeUnit} and a reference LocalDateTime
- * (starting point positioned in left border of the chart).
- * Then each tick label value (the ones calculated by the ExtendedWilkinson algorithm) is used as a {@link TimeUnit} value which is added to the referenceDateTime.
+ * (point positioned in the left border/most left point of the chart).
+ * Then each tick label value (the ones calculated by the ExtendedWilkinson algorithm) is used as a {@link TimeUnit} value, which is added to the referenceDateTime.
  * A custom formatting {@link BiFunction} can also be set, as there might be special formatting requirements
  * for the time values.
  */
@@ -157,4 +157,3 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
         return formatter.format(localDateTime);
     }
 }
-

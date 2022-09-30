@@ -30,12 +30,14 @@ public interface ITimeUnit {
     LocalDateTime increment(LocalDateTime value, double delta);
 
     /**
-     * Converts the ticks to time labels.
+     * Converts the tick label / time unit values to another time unit (larger or smaller),
+     * if the difference between them is too large or too small.
+     * (E.g. 1st tick label is 1wk, 2nd is 100wk, then the time units might be switched to years)
      *
-     * @param timeUnit TODO
-     * @param ticks
-     * @param multiplier
-     * @param switchConstants
+     * @param timeUnit initially defined time unit
+     * @param ticks calculated ticks by the Extended Wilkinson (or another algorithm)
+     * @param multiplier multiplier that has to be used when switching time units (e.g. when switching from minutes to hours a multiplier of 60 has to be used.)
+     * @param switchConstants constants when to switch the time unit
      * @return pair of a tick array and a time label string array
      */
     Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants);
