@@ -6,6 +6,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Path2D;
@@ -20,6 +21,7 @@ import java.util.Objects;
  * and {@link MouseMotionListener} that realize rope selection functionality
  * for the coordinate view of the {@link CoordSysRenderer}.
  * So it provides a way to select an area in a coordsys by selecting multiple points.
+ * A selection can always be aborted by performing a right-click.
  * The action to be performed with the selected region is up to
  * the implementation of the methods {@link #areaSelected(Path2D)}
  * and {@link #areaSelectedOnGoing(Path2D)}.
@@ -68,14 +70,19 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
     @Override
     public void mouseClicked(MouseEvent e) {
         if (keyMaskListener.areKeysPressed() && coordSys.getCoordSysArea().contains(e.getPoint())) {
-            if (!isDone) {
+            if (isDone || SwingUtilities.isRightMouseButton(e)) {
+                isDone = false;
+                coordinates.clear();
+                points.getPointDetails().clear();
+                lines.getSegments().clear();
+            } else if (!isDone) {
                 Point2D pointInCoordsys = coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
 
                 coordinates.add((Point2D.Double) pointInCoordsys);
                 if (coordinates.size() > 1) {
                     Point2D.Double firstPoint = coordinates.get(0);
                     Point2D.Double lastCoord = coordinates.get(coordinates.size() - 2);
-                    this.lines.addSegment(lastCoord, pointInCoordsys);
+                    this.lines.addSegment(lastCoord, pointInCoordsys).setColor(Color.GRAY);
 
                     Point2D pointInAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
                     if (e.getPoint().distanceSq(pointInAWT) < radius) {
@@ -85,7 +92,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
                         // call selected interface
                         areaSelected(calculateSelectedArea());
                     } else {
-                        this.points.addPoint(pointInCoordsys).setColor(Color.BLACK);
+                        this.points.addPoint(pointInCoordsys).setColor(Color.DARK_GRAY);
 
                         // call ongoing interface
                         areaSelectedOnGoing(calculateSelectedArea());
@@ -93,11 +100,6 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
                 } else {
                     this.points.addPoint(pointInCoordsys).setColor(Color.BLACK);
                 }
-            } else {
-                isDone = false;
-                coordinates.clear();
-                points.getPointDetails().clear();
-                lines.getSegments().clear();
             }
             canvas.repaint();
         }
@@ -118,7 +120,11 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
                 this.lines.getSegments().remove(hoverIndicator);
             }
             Point2D.Double lastPoint = coordinates.get(coordinates.size()-1);
-            hoverIndicator = this.lines.addSegment(lastPoint, coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()));
+            hoverIndicator = this.lines.addSegment(lastPoint, coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight())).setColor(Color.GRAY);
+            canvas.repaint();
+        } else if (!coordinates.isEmpty() && !isDone) {
+            this.lines.getSegments().remove(hoverIndicator);
+            hoverIndicator = null;
             canvas.repaint();
         }
     }
@@ -150,9 +156,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
      * @param selectedArea represents the selected points in the coordsys
      *                     ({@link Path2D#contains(double, double)} method can be used to check if points are inside the selected area)
      */
-    public void areaSelectedOnGoing(Path2D selectedArea) {
-
-    }
+    public void areaSelectedOnGoing(Path2D selectedArea) {}
 
     /**
      * Sets a new {@link KeyMaskListener}, removes the old KeyMaskListener from the canvas
