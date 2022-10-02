@@ -13,6 +13,7 @@ import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The CoordSysRopeSelection class implements a {@link MouseListener}
@@ -43,6 +44,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
     protected final List<Point2D.Double> coordinates = new LinkedList<>();
     protected boolean isDone = false;
     protected int radius = 25;
+    protected Lines.SegmentDetails hoverIndicator = null;
 
     /**
      * Creates an CoordSysRopeSelection instance for the specified canvas and corresponding coordinate system.
@@ -103,7 +105,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (!coordinates.isEmpty()) {
+        if (!coordinates.isEmpty() && keyMaskListener.areKeysPressed() && !isDone) {
             Point2D.Double firstPoint = coordinates.get(0);
             Point2D pointInAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
             if (e.getPoint().distanceSq(pointInAWT) < radius) {
@@ -111,6 +113,12 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
             } else {
                 this.points.getPointDetails().get(0).setScaling(1.0).setColor(Color.BLACK);
             }
+
+            if (Objects.nonNull(hoverIndicator)) {
+                this.lines.getSegments().remove(hoverIndicator);
+            }
+            Point2D.Double lastPoint = coordinates.get(coordinates.size()-1);
+            hoverIndicator = this.lines.addSegment(lastPoint, coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()));
             canvas.repaint();
         }
     }
