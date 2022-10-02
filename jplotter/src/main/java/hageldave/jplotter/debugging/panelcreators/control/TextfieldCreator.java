@@ -24,7 +24,8 @@ public class TextfieldCreator implements ControlPanelCreator {
         JLabel textLabel = new JLabel("Current string: " + getter.invoke(obj), SwingConstants.LEFT);
         JTextField textField = new JTextField("", 20);
         textField.setMaximumSize(textField.getPreferredSize());
-        JButton editBtn = new JButton("edit");
+        JButton editBtn = new JButton("Edit text");
+        editBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         inlineContainer.add(textLabel);
         inlineContainer.add(editBtn);
@@ -36,14 +37,13 @@ public class TextfieldCreator implements ControlPanelCreator {
                 super.mouseClicked(e);
                 if (expanded.get()) {
                     panelContainer.remove(textField);
-                    editBtn.setText("edit");
+                    editBtn.setText("Edit text");
                 } else {
                     panelContainer.add(textField);
-                    editBtn.setText("close");
+                    editBtn.setText("Close");
                 }
                 expanded.set(!expanded.get());
-                panelContainer.revalidate();
-                panelContainer.repaint();
+                panelContainer.validate();
             }
         });
 

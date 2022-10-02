@@ -21,7 +21,7 @@ public class AngleSliderCreator implements ControlPanelCreator {
         valueLabel.setToolTipText("Angle in Degrees");
         JSlider slider = new JSlider(-360, 360, roundedAngle);
         slider.setMaximumSize(new Dimension(250, slider.getPreferredSize().height));
-
+        slider.setCursor(new Cursor(Cursor.HAND_CURSOR));
         slider.addChangeListener(e -> {
             try {
                 slider.setValue(slider.getValue());

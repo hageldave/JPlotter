@@ -3,6 +3,7 @@ package hageldave.jplotter.debugging.panelcreators.control;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 
 import javax.swing.*;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -14,6 +15,7 @@ public class ButtonCreator implements ControlPanelCreator {
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         boolean currentValue = (boolean) getter.invoke(obj);
         JButton button = new JButton(String.valueOf(currentValue));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.addActionListener(e -> {
             try {
                 setter.invoke(obj, !(boolean) getter.invoke(obj));

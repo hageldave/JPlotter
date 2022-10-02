@@ -43,6 +43,7 @@ public class ColorPicker implements ControlPanelCreator {
         JButton editButton = new JButton("Edit color");
         editButton.setMargin(new Insets(0,0,0,0));
         editButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        editButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         Color textColor = new Color(currentColor.get().getRed(), currentColor.get().getGreen(), currentColor.get().getBlue());
         ColoredRectangle coloredRectangle = new ColoredRectangle(textColor);

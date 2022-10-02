@@ -20,7 +20,7 @@ public class PercentageDoubleSliderCreator implements ControlPanelCreator {
         JLabel valueLabel = new JLabel(df.format(getter.invoke(obj)));
         double initValue = (double) getter.invoke(obj)*100;
         JSlider slider = new JSlider(0, 100, Math.min((int) initValue, 100));
-
+        slider.setCursor(new Cursor(Cursor.HAND_CURSOR));
         slider.setMaximumSize(new Dimension(200, slider.getPreferredSize().height));
 
         slider.addChangeListener(e -> {

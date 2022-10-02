@@ -145,12 +145,13 @@ class DebuggerPanel extends JPanel {
 
         JPanel refreshBtnContainer = new JPanel(new BorderLayout());
         refreshBtnContainer.setBackground(bgColor);
-        JButton refreshTree = new JButton("Refresh objects");
+        JButton refreshTree = new JButton("Refresh rendering tree");
         refreshTree.setToolTipText("<html>"
                         + "Updates the underlying TreeModel. "
                         +"<br>"
                         + "Could be used if one or more objects expire (e.g. tickmarkLabels of CoordSysRenderer when resizing the window.)"
                         + "</html>");
+        refreshTree.setCursor(new Cursor(Cursor.HAND_CURSOR));
         refreshTree.addActionListener(e -> refresh());
 
         refreshTree.setMaximumSize(refreshTree.getPreferredSize());
