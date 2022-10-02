@@ -5,10 +5,7 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
-import hageldave.jplotter.interaction.kml.CoordSysPanning;
-import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
-import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
-import hageldave.jplotter.interaction.kml.KeyMaskListener;
+import hageldave.jplotter.interaction.kml.*;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -25,6 +22,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
@@ -116,8 +114,8 @@ public class ScatterPlot {
 		});
         
         createMouseEventHandler();
-        createRectangularPointSetSelectionCapabilities();
-        
+        createSelectionCapabilities();
+
         for(String cueType : Arrays.asList(CUE_EMPHASIZE, CUE_ACCENTUATE, CUE_HIGHLIGHT)){
         	this.glyph2pointMaps.put(cueType, new HashMap<>());
         	this.cueSelectionModels.put(cueType, new SimpleSelectionModel<>());
@@ -362,7 +360,7 @@ public class ScatterPlot {
     		return descriptionPerChunk.get(chunkIdx);
     	}
     	
-    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area){
+    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Shape area){
     		// naive search for contained points
     		// TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
     		int xIdx = getXIdx(chunkIdx);
@@ -375,7 +373,7 @@ public class ScatterPlot {
     		}
     		return containedPointIndices;
     	}
-    	
+
     	public int getGlobalIndex(int chunkIdx, int idx) {
     		int globalIdx=0;
     		for(int i=0; i<chunkIdx; i++) {
@@ -645,8 +643,7 @@ public class ScatterPlot {
             }
         }.register();
     }
-    
-    
+
     protected void createMouseEventHandler() {
     	MouseAdapter mouseEventHandler = new MouseAdapter() {
     		@Override
@@ -803,7 +800,7 @@ public class ScatterPlot {
 	 * @param area where point indices are collected
 	 * @return List of {@link Pair}, which consists of chunkIds and the corresponding point indices contained in the area
 	 */
-    public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Rectangle2D area){
+    public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Shape area){
     	ArrayList<Pair<Integer, TreeSet<Integer>>> pointLocators = new ArrayList<>();
     	for(int chunkIdx=0; chunkIdx<dataModel.numChunks(); chunkIdx++) {
     		TreeSet<Integer> containedPointIndices = getDataModel().getIndicesOfPointsInArea(chunkIdx, area);
@@ -812,32 +809,44 @@ public class ScatterPlot {
     	}
     	return pointLocators;
     }
-    
-    protected void createRectangularPointSetSelectionCapabilities() {
-    	Comparator<Pair<Integer, TreeSet<Integer>>> comparator = new Comparator<Pair<Integer, TreeSet<Integer>>>() {
-			@Override
-			public int compare(Pair<Integer, TreeSet<Integer>> o1, Pair<Integer, TreeSet<Integer>> o2) {
-				int chunkIdxComp = o1.first.compareTo(o2.first);
-				if(chunkIdxComp != 0)
-					return chunkIdxComp;
-				int setSizeComp = Integer.compare(o1.second.size(),o2.second.size());
-				if(setSizeComp != 0)
-					return setSizeComp;
-				// compare elements of both sets in ascending order until mismatch
-				Iterator<Integer> it1 = o1.second.iterator();
-				Iterator<Integer> it2 = o2.second.iterator();
-				int elementComp=0;
-				while(it1.hasNext() && elementComp==0) {
-					elementComp=it1.next().compareTo(it2.next());
-				}
-				return elementComp;
+
+	protected void createSelectionCapabilities() {
+		Comparator<Pair<Integer, TreeSet<Integer>>> comparator = (o1, o2) -> {
+			int chunkIdxComp = o1.first.compareTo(o2.first);
+			if(chunkIdxComp != 0)
+				return chunkIdxComp;
+			int setSizeComp = Integer.compare(o1.second.size(),o2.second.size());
+			if(setSizeComp != 0)
+				return setSizeComp;
+			// compare elements of both sets in ascending order until mismatch
+			Iterator<Integer> it1 = o1.second.iterator();
+			Iterator<Integer> it2 = o2.second.iterator();
+			int elementComp=0;
+			while(it1.hasNext() && elementComp==0) {
+				elementComp=it1.next().compareTo(it2.next());
 			}
+			return elementComp;
 		};
-    	SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = new SimpleSelectionModel<>(comparator);
-    	SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = new SimpleSelectionModel<>(comparator);
-    	
-    	Rectangle2D[] selectionRectMemory = {null,null};
-    	
+
+		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = new SimpleSelectionModel<>(comparator);
+		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = new SimpleSelectionModel<>(comparator);
+		Shape[] selectionMemory = {null,null};
+
+		createRectangularPointSetSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory);
+		createRopeSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory);
+
+		selectedPointsOngoing.addSelectionListener(s->{
+			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+			notifyPointSetSelectionChangeOngoing(list, selectionMemory[0]);
+		});
+		selectedPoints.addSelectionListener(s->{
+			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+			notifyPointSetSelectionChange(list, selectionMemory[1]);
+		});
+	}
+
+    protected void createRectangularPointSetSelectionCapabilities(SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing,
+																  SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints, Shape[] selectionMemory) {
     	KeyMaskListener keyMask = new KeyMaskListener(KeyEvent.VK_S);
     	CoordSysViewSelector selector = new CoordSysViewSelector(this.canvas, this.coordsys, keyMask) {
     		@Override
@@ -845,7 +854,7 @@ public class ScatterPlot {
     			if(pointSetSelectionOngoingListeners.isEmpty())
     				return;
     			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
-    			selectionRectMemory[0] = area;
+				selectionMemory[0] = area;
     			selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(area));
     		}
     		
@@ -854,36 +863,49 @@ public class ScatterPlot {
     			if(pointSetSelectionListeners.isEmpty())
     				return;
     			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
-    			selectionRectMemory[1] = area;
+				selectionMemory[1] = area;
     			selectedPoints.setSelection(getIndicesOfPointsInArea(area));
 			}
 		};
 		selector.register();
-		
-		selectedPointsOngoing.addSelectionListener(s->{
-			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
-			notifyPointSetSelectionChangeOngoing(list, selectionRectMemory[0]);
-		});
-		selectedPoints.addSelectionListener(s->{
-			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
-			notifyPointSetSelectionChange(list, selectionRectMemory[1]);
-		});
     }
+
+	protected void createRopeSelectionCapabilities(SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing,
+												   SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints, Shape[] selectionMemory) {
+		CoordSysRopeSelection selector = new CoordSysRopeSelection(this.canvas, this.coordsys) {
+			@Override
+			public void areaSelected(Path2D selectedArea) {
+				if(pointSetSelectionListeners.isEmpty())
+					return;
+				selectionMemory[1] = selectedArea;
+				selectedPoints.setSelection(getIndicesOfPointsInArea(selectedArea));
+			}
+
+			@Override
+			public void areaSelectedOnGoing(Path2D selectedArea) {
+				if(pointSetSelectionOngoingListeners.isEmpty())
+					return;
+				selectionMemory[0] = selectedArea;
+				selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(selectedArea));
+			}
+		};
+		selector.register();
+	}
 
 	/**
 	 * TODO:
 	 */
     public static interface PointSetSelectionListener {
-    	public void onPointSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Rectangle2D selectionArea);
+    	public void onPointSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Shape selectionArea);
     }
     
-    protected synchronized void notifyPointSetSelectionChangeOngoing(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
+    protected synchronized void notifyPointSetSelectionChangeOngoing(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Shape rect) {
     	for(PointSetSelectionListener l:pointSetSelectionOngoingListeners) {
 			l.onPointSetSelectionChanged(list, rect);
 		}
     }
     
-    protected synchronized void notifyPointSetSelectionChange(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Rectangle2D rect) {
+    protected synchronized void notifyPointSetSelectionChange(ArrayList<Pair<Integer, TreeSet<Integer>>> list, Shape rect) {
     	for(PointSetSelectionListener l:pointSetSelectionListeners) {
 			l.onPointSetSelectionChanged(list, rect);
 		}
