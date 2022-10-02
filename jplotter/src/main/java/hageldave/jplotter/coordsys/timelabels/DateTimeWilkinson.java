@@ -43,10 +43,7 @@ public class DateTimeWilkinson extends ExtendedWilkinson {
     }
 
     public DateTimeWilkinson(final TimeUnit timeUnit, final double scalingFactor, final LocalDateTime referenceDateTime) {
-        this.timeUnit = timeUnit;
-        this.scalingFactor = scalingFactor;
-        this.referenceDateTime = referenceDateTime;
-        this.formattingFunction = DateTimeWilkinson::switchFormat;
+        this(timeUnit, scalingFactor, referenceDateTime, DateTimeWilkinson::switchFormat);
     }
 
     protected String[] labelsForTicks(double[] ticks, ITimeUnit timeUnit) {

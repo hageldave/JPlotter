@@ -27,12 +27,12 @@ class MinuteTimeUnit implements ITimeUnit {
     }
 
     @Override
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, IUnitSwitchConstants switchConstants) {
         double difference = ticks[1]-ticks[0];
         double[] convertedTicks = new double[ticks.length];
         String unitLabel;
 
-        if (difference > switchConstants.minutes_up) {
+        if (difference > switchConstants.getMinutesChangePoint(Direction.UP)) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]/60.0;
             timeUnit = new HourTimeUnit();
@@ -40,7 +40,7 @@ class MinuteTimeUnit implements ITimeUnit {
             Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
 
-        } else if (difference < switchConstants.minutes_down) {
+        } else if (difference < switchConstants.getMinutesChangePoint(Direction.DOWN)) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]*60;
             timeUnit = new SecondTimeUnit();

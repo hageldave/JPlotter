@@ -24,16 +24,15 @@ class SecondTimeUnit implements ITimeUnit {
         } else {
             return value.plus((long) (SecondTimeUnit.durationInMillis * delta), ChronoUnit.MILLIS);
         }
-
     }
 
     @Override
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, IUnitSwitchConstants switchConstants) {
         double difference = ticks[1]-ticks[0];
         double[] convertedTicks = new double[ticks.length];
         String unitLabel;
 
-        if (difference > switchConstants.seconds_up) {
+        if (difference > switchConstants.getSecondsChangePoint(Direction.UP)) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]/60.0;
             timeUnit = new MinuteTimeUnit();
@@ -41,7 +40,7 @@ class SecondTimeUnit implements ITimeUnit {
             Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
 
-        } else if (difference < switchConstants.seconds_down) {
+        } else if (difference < switchConstants.getSecondsChangePoint(Direction.DOWN)) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]*1000;
             timeUnit = new MilliTimeUnit();

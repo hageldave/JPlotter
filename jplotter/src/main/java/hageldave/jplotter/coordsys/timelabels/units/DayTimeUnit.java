@@ -27,12 +27,12 @@ class DayTimeUnit implements ITimeUnit {
     }
 
     @Override
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, IUnitSwitchConstants switchConstants) {
         double difference = ticks[1]-ticks[0];
         double[] convertedTicks = new double[ticks.length];
         String unitLabel;
 
-        if (difference > switchConstants.days_up) {
+        if (difference > switchConstants.getDaysChangePoint(Direction.UP)) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]/7.0;
             timeUnit = new WeekTimeUnit();
@@ -40,7 +40,7 @@ class DayTimeUnit implements ITimeUnit {
             Pair<double[], String> convertedTickPair = timeUnit.convertTicks(timeUnit, convertedTicks, multiplier, switchConstants);
             return new Pair<>(convertedTickPair.first, convertedTickPair.second);
 
-        } else if (difference < switchConstants.days_down) {
+        } else if (difference < switchConstants.getDaysChangePoint(Direction.DOWN)) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]*24.0;
             timeUnit = new HourTimeUnit();

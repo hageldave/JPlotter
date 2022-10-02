@@ -38,7 +38,7 @@ public enum TimeUnit implements ITimeUnit {
 
 	@Override
 	public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier,
-			UnitSwitchConstants switchConstants) {
+											   IUnitSwitchConstants switchConstants) {
 		return this.delegate.convertTicks(timeUnit, ticks, multiplier, switchConstants);
 	}
 

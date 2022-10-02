@@ -27,12 +27,12 @@ class YearTimeUnit implements ITimeUnit {
     }
 
     @Override
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, IUnitSwitchConstants switchConstants) {
         double difference = ticks[1]-ticks[0];
         double[] convertedTicks = new double[ticks.length];
         String unitLabel;
 
-        if (difference < switchConstants.years_down) {
+        if (difference < switchConstants.getYearsChangePoint(Direction.DOWN)) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]*52.0;
             timeUnit = new WeekTimeUnit();

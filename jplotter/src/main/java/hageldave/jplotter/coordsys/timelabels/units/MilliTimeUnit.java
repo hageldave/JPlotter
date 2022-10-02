@@ -24,12 +24,12 @@ class MilliTimeUnit implements ITimeUnit {
     }
 
     @Override
-    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants) {
+    public Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, IUnitSwitchConstants switchConstants) {
         double difference = ticks[1]-ticks[0];
         double[] convertedTicks = new double[ticks.length];
         String unitLabel;
 
-        if (difference > switchConstants.millies_up) {
+        if (difference > switchConstants.getMillisChangePoint(Direction.UP)) {
             for (int i = 0; i < ticks.length; i++)
                 convertedTicks[i] = ticks[i]/1000.0;
             timeUnit = new SecondTimeUnit();

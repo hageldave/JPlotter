@@ -40,7 +40,7 @@ public interface ITimeUnit {
      * @param switchConstants constants when to switch the time unit
      * @return pair of a tick array and a time label string array
      */
-    Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, UnitSwitchConstants switchConstants);
+    Pair<double[], String> convertTicks(ITimeUnit timeUnit, double[] ticks, AtomicReference<Double> multiplier, IUnitSwitchConstants switchConstants);
 
     /**
      * @return the label of the respective time unit (e.g. "s" for seconds or "h" for hours)

@@ -1,9 +1,10 @@
 package hageldave.jplotter.coordsys.timelabels;
 
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
+import hageldave.jplotter.coordsys.timelabels.units.DefaultUnitSwitchConstants;
 import hageldave.jplotter.coordsys.timelabels.units.ITimeUnit;
+import hageldave.jplotter.coordsys.timelabels.units.IUnitSwitchConstants;
 import hageldave.jplotter.coordsys.timelabels.units.TimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.UnitSwitchConstants;
 import hageldave.jplotter.util.Pair;
 
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class TimePassedWilkinson extends ExtendedWilkinson {
 
     protected TimeUnit timeUnit;
-    protected UnitSwitchConstants unitSwitchConstants;
+    protected IUnitSwitchConstants unitSwitchConstants;
 
     /**
      * Creates an instance of the TimePassedWilkinson.
@@ -28,14 +29,13 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
      * @param timeUnit to use for calculating and displaying the tick labels
      * @param unitSwitchConstants used to determine when to switch time units
      */
-    public TimePassedWilkinson(final TimeUnit timeUnit, final UnitSwitchConstants unitSwitchConstants) {
+    public TimePassedWilkinson(final TimeUnit timeUnit, final IUnitSwitchConstants unitSwitchConstants) {
         this.timeUnit = timeUnit;
         this.unitSwitchConstants = unitSwitchConstants;
     }
 
     public TimePassedWilkinson(final TimeUnit timeUnit) {
-        this.timeUnit = timeUnit;
-        this.unitSwitchConstants = new UnitSwitchConstants();
+        this(timeUnit, new DefaultUnitSwitchConstants());
     }
 
     protected Pair<double[], String[]> labelsForConvertedTicks(double[] ticks, ITimeUnit timeUnit, int desiredNumTicks) {
