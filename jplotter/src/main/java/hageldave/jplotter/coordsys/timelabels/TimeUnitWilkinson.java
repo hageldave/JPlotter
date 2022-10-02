@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * It calculates those label values by using a {@link TimeUnit}. Then each tick label value is used as a {@link TimeUnit} value.
  * The first value on the left border is 0[TimeUnit] (e.g. 0 weeks), which is then increased (e.g. 1 week, 2 weeks, ...) by going further to the right.
  */
-public class TimePassedWilkinson extends ExtendedWilkinson {
+public class TimeUnitWilkinson extends ExtendedWilkinson {
 
     protected TimeUnit timeUnit;
     protected IUnitSwitchConstants unitSwitchConstants;
@@ -29,12 +29,12 @@ public class TimePassedWilkinson extends ExtendedWilkinson {
      * @param timeUnit to use for calculating and displaying the tick labels
      * @param unitSwitchConstants used to determine when to switch time units
      */
-    public TimePassedWilkinson(final TimeUnit timeUnit, final IUnitSwitchConstants unitSwitchConstants) {
+    public TimeUnitWilkinson(final TimeUnit timeUnit, final IUnitSwitchConstants unitSwitchConstants) {
         this.timeUnit = timeUnit;
         this.unitSwitchConstants = unitSwitchConstants;
     }
 
-    public TimePassedWilkinson(final TimeUnit timeUnit) {
+    public TimeUnitWilkinson(final TimeUnit timeUnit) {
         this(timeUnit, new DefaultUnitSwitchConstants());
     }
 
