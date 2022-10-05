@@ -662,7 +662,17 @@ public class CoordSysRenderer implements Renderer {
 			if(content instanceof AdaptableView){
 				((AdaptableView) content).setView(coordinateView);
 			}
-			content.render(viewPortX,viewPortY,viewPortW, viewPortH);
+			content.render(viewPortX, viewPortY, viewPortW, viewPortH);
+
+			// draw overlay
+			if(Objects.nonNull(overlay)){
+				overlay.glInit();
+				if(overlay instanceof AdaptableView){
+					((AdaptableView) overlay).setView(coordinateView);
+				}
+				overlay.render(viewPortX, viewPortY, viewPortW, viewPortH);
+			}
+
 			GL11.glViewport(vpx, vpy, w, h);
 		}
 		postContentLinesR.render(vpx, vpy, w, h);
@@ -680,12 +690,6 @@ public class CoordSysRenderer implements Renderer {
 			GL11.glViewport(    vpx+legendBottomViewPort.x, vpy+legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			legendBottom.render(vpx+legendBottomViewPort.x, vpy+legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			GL11.glViewport(vpx, vpy, w, h);
-		}
-
-		// draw overlay
-		if(Objects.nonNull(overlay)){
-			overlay.glInit();
-			overlay.render(vpx,vpy,w,h);
 		}
 	}
 	
@@ -717,6 +721,14 @@ public class CoordSysRenderer implements Renderer {
 			Graphics2D g_ = (Graphics2D)g.create(viewPortX, viewPortY, viewPortW, viewPortH);
 			Graphics2D p_ = (Graphics2D)p.create(viewPortX, viewPortY, viewPortW, viewPortH);
 			content.renderFallback(g_, p_, viewPortW, viewPortH);
+
+			// draw overlay
+			if(Objects.nonNull(overlay)){
+				if(overlay instanceof AdaptableView){
+					((AdaptableView) overlay).setView(coordinateView);
+				}
+				overlay.renderFallback(g_, p_, viewPortW, viewPortH);
+			}
 		}
 		postContentLinesR.renderFallback(g, p, w, h);
 		postContentTextR.renderFallback(g, p, w, h);
@@ -733,13 +745,8 @@ public class CoordSysRenderer implements Renderer {
 			Graphics2D p_ = (Graphics2D)p.create(legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			legendBottom.renderFallback(g_, p_, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
-		
-		// draw overlay
-		if(Objects.nonNull(overlay)){
-			overlay.renderFallback(g, p, w, h);
-		}
 	}
-	
+
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
