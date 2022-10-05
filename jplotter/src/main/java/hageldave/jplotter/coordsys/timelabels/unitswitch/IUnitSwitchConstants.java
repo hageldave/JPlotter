@@ -1,8 +1,4 @@
-package hageldave.jplotter.coordsys.timelabels.units;
-
-enum Direction {
-    UP, DOWN
-}
+package hageldave.jplotter.coordsys.timelabels.unitswitch;
 
 /**
  * Interface that (when implemented) defines when to switch time units.

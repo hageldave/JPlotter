@@ -1,10 +1,10 @@
 package hageldave.jplotter.coordsys.timelabels;
 
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
-import hageldave.jplotter.coordsys.timelabels.units.DefaultUnitSwitchConstants;
 import hageldave.jplotter.coordsys.timelabels.units.ITimeUnit;
-import hageldave.jplotter.coordsys.timelabels.units.IUnitSwitchConstants;
 import hageldave.jplotter.coordsys.timelabels.units.TimeUnit;
+import hageldave.jplotter.coordsys.timelabels.unitswitch.DefaultUnitSwitchConstants;
+import hageldave.jplotter.coordsys.timelabels.unitswitch.IUnitSwitchConstants;
 import hageldave.jplotter.util.Pair;
 
 import java.time.LocalDateTime;
@@ -35,7 +35,7 @@ public class TimeUnitWilkinson extends ExtendedWilkinson {
     }
 
     public TimeUnitWilkinson(final TimeUnit timeUnit) {
-        this(timeUnit, new DefaultUnitSwitchConstants());
+        this(timeUnit, DefaultUnitSwitchConstants.getInstance());
     }
 
     protected Pair<double[], String[]> labelsForConvertedTicks(double[] ticks, ITimeUnit timeUnit, int desiredNumTicks) {
@@ -57,6 +57,18 @@ public class TimeUnitWilkinson extends ExtendedWilkinson {
         return new Pair<>(ticks, labels);
     }
 
+    /**
+     * Generates a number of tick marks and corresponding labels.
+     * The first entry of the returned pair are the tick mark values,
+     * the second part are the corresponding labels, which are (modified) values of {@link TimeUnit}.
+     *
+     * @param min minimum of value range for which ticks marks are to be generated
+     * @param max maximum of value range for which ticks marks are to be generated
+     * @param desiredNumTicks the desired number of generated tick marks, not obligatory,
+     * can also create less or more tick marks if that leads to better tick values.
+     * @param verticalAxis true if marks are for vertical axis, false when for horizontal axis
+     * @return pair of a tick mark value array and corresponding label array for these values
+     */
     @Override
     public Pair<double[], String[]> genTicksAndLabels(double min, double max, int desiredNumTicks, boolean verticalAxis) {
         double[] ticks = getTicks(min, max, desiredNumTicks, super.Q, super.w);

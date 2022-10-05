@@ -1,5 +1,7 @@
 package hageldave.jplotter.coordsys.timelabels.units;
 
+import hageldave.jplotter.coordsys.timelabels.unitswitch.Direction;
+import hageldave.jplotter.coordsys.timelabels.unitswitch.IUnitSwitchConstants;
 import hageldave.jplotter.util.Pair;
 
 import java.time.LocalDateTime;

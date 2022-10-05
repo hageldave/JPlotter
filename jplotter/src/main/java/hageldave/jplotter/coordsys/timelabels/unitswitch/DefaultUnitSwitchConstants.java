@@ -1,10 +1,16 @@
-package hageldave.jplotter.coordsys.timelabels.units;
+package hageldave.jplotter.coordsys.timelabels.unitswitch;
+
+import java.util.Objects;
 
 /**
  * Contains constants when to switch the TimeUnit.
  * Those can be used when the time difference between two ticks is too small/big and another unit is necessary.
  */
 public class DefaultUnitSwitchConstants implements IUnitSwitchConstants {
+    private static DefaultUnitSwitchConstants instance = null;
+
+    DefaultUnitSwitchConstants() {}
+
     @Override
     public double getMillisChangePoint(Direction dir) {
         if (dir == Direction.UP) {
@@ -67,5 +73,18 @@ public class DefaultUnitSwitchConstants implements IUnitSwitchConstants {
             return 0.05;
         }
         return -1;
+    }
+
+    /**
+     * Returns the instance of the DefaultUnitSwitchConstants class and creates one if it doesn't exist already.
+     * It uses the singleton pattern, so this instance is the only one of this class.
+     *
+     * @return the instance of the DefaultUnitSwitchConstants class
+     */
+    public static DefaultUnitSwitchConstants getInstance() {
+        if (Objects.isNull(instance)) {
+            instance = new DefaultUnitSwitchConstants();
+        }
+        return instance;
     }
 }
