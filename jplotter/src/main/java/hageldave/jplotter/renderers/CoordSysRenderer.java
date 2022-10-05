@@ -777,6 +777,14 @@ public class CoordSysRenderer implements Renderer {
 			contentGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
 			// render the content into the group
 			content.renderSVG(doc, contentGroup, viewPortW, viewPortH);
+
+			// draw overlay
+			if(Objects.nonNull(overlay)){
+				if(overlay instanceof AdaptableView){
+					((AdaptableView) overlay).setView(coordinateView);
+				}
+				overlay.renderSVG(doc, contentGroup, viewPortW, viewPortH);
+			}
 		}
 		postContentLinesR.renderSVG(doc, parent, w, h);
 		postContentTextR.renderSVG(doc, parent, w, h);
@@ -834,6 +842,14 @@ public class CoordSysRenderer implements Renderer {
 			}
 			// render the content into the group
 			content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
+
+			// draw overlay
+			if(Objects.nonNull(overlay)){
+				if(overlay instanceof AdaptableView){
+					((AdaptableView) overlay).setView(coordinateView);
+				}
+				overlay.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
+			}
 		}
 		postContentLinesR.renderPDF(doc, page, x, y, w, h);
 		postContentTextR.renderPDF(doc, page, x, y, w, h);
