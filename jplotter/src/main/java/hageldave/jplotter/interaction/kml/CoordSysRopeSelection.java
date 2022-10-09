@@ -1,6 +1,7 @@
 package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
@@ -39,6 +40,7 @@ import java.util.Objects;
 public abstract class CoordSysRopeSelection extends MouseAdapter {
     protected Component canvas;
     protected CoordSysRenderer coordSys;
+    protected ColorScheme colorScheme;
     protected KeyMaskListener keyMaskListener;
     protected final CompleteRenderer overlay = new CompleteRenderer();
     protected final Points points = new Points();
@@ -58,6 +60,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
     public CoordSysRopeSelection(JPlotterCanvas canvas, CoordSysRenderer coordSys, KeyMaskListener keyMaskListener) {
         this.canvas = canvas.asComponent();
         this.coordSys = coordSys;
+        this.colorScheme = coordSys.getColorScheme();
         this.keyMaskListener = keyMaskListener;
         this.overlay.addItemToRender(lines).addItemToRender(points);
         this.coordSys.setContent(this.coordSys.getContent().withAppended(this.overlay));
@@ -75,6 +78,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
                 coordinates.clear();
                 points.getPointDetails().clear();
                 lines.getSegments().clear();
+                this.lines.setGlobalAlphaMultiplier(1);
             } else if (!isDone) {
                 Point2D pointInCoordsys = coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
 
@@ -82,23 +86,27 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
                 if (coordinates.size() > 1) {
                     Point2D.Double firstPoint = coordinates.get(0);
                     Point2D.Double lastCoord = coordinates.get(coordinates.size() - 2);
-                    this.lines.addSegment(lastCoord, pointInCoordsys).setColor(Color.GRAY);
+                    this.lines.addSegment(lastCoord, pointInCoordsys).setColor(colorScheme.getColor2());
 
                     Point2D pointInAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
                     if (e.getPoint().distanceSq(pointInAWT) < radius) {
                         isDone = true;
+                        for (Points.PointDetails pd: this.points.getPointDetails()) {
+                            pd.setColor(colorScheme.getColorText());
+                        }
+                        this.lines.setGlobalAlphaMultiplier(0.5);
                         canvas.repaint();
 
                         // call selected interface
                         areaSelected(calculateSelectedArea());
                     } else {
-                        this.points.addPoint(pointInCoordsys).setColor(Color.DARK_GRAY);
+                        this.points.addPoint(pointInCoordsys).setColor(colorScheme.getColor1());
 
                         // call ongoing interface
                         areaSelectedOnGoing(calculateSelectedArea());
                     }
                 } else {
-                    this.points.addPoint(pointInCoordsys).setColor(Color.BLACK);
+                    this.points.addPoint(pointInCoordsys).setColor(colorScheme.getColor1());
                 }
             }
             canvas.repaint();
@@ -111,16 +119,16 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
             Point2D.Double firstPoint = coordinates.get(0);
             Point2D pointInAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
             if (e.getPoint().distanceSq(pointInAWT) < radius) {
-                this.points.getPointDetails().get(0).setScaling(1.3).setColor(Color.RED);
+                this.points.getPointDetails().get(0).setColor(Color.RED);
             } else {
-                this.points.getPointDetails().get(0).setScaling(1.0).setColor(Color.BLACK);
+                this.points.getPointDetails().get(0).setColor(colorScheme.getColor1());
             }
 
             if (Objects.nonNull(hoverIndicator)) {
                 this.lines.getSegments().remove(hoverIndicator);
             }
             Point2D.Double lastPoint = coordinates.get(coordinates.size()-1);
-            hoverIndicator = this.lines.addSegment(lastPoint, coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight())).setColor(Color.GRAY);
+            hoverIndicator = this.lines.addSegment(lastPoint, coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight())).setColor(colorScheme.getColor2());
             canvas.repaint();
         } else if (!coordinates.isEmpty() && !isDone) {
             this.lines.getSegments().remove(hoverIndicator);
