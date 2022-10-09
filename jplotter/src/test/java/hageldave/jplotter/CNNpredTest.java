@@ -8,7 +8,7 @@ import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
-import hageldave.jplotter.coordsys.timelabels.TimePassedWilkinson;
+import hageldave.jplotter.coordsys.timelabels.TimeUnitWilkinson;
 import hageldave.jplotter.coordsys.timelabels.units.TimeUnit;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
@@ -129,8 +129,7 @@ public class CNNpredTest {
         );
 
         //coordsys.setTickMarkGenerator(new DateTimeWilkinson(TimeUnit.Day, 1, startDate), new ExtendedWilkinson());
-        //coordsys.setTickMarkGenerator(new DateTimeWilkinson(TimeUnit.Hour, 1, startDate), new ExtendedWilkinson());
-        coordsys.setTickMarkGenerator(new TimePassedWilkinson(TimeUnit.Day), new ExtendedWilkinson());
+        coordsys.setTickMarkGenerator(new TimeUnitWilkinson(TimeUnit.Day), new ExtendedWilkinson());
         coordsys.setCoordinateView(0, -10, daysFromStartToEnd, 180);
 
         coordsys.setxAxisLabel("Development over time");
