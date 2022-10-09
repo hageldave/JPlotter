@@ -34,7 +34,7 @@ import java.util.Scanner;
 
 import static hageldave.jplotter.interaction.InteractionConstants.X_AXIS;
 
-public class CNNpredTest {
+public class CNNpredTimeLabels {
 
     static JPlotterCanvas mkCanvas(boolean fallback, JPlotterCanvas contextShareParent) {
         return fallback ? new BlankCanvasFallback() : new BlankCanvas((FBOCanvas)contextShareParent);
@@ -53,7 +53,7 @@ public class CNNpredTest {
         // setup content
         ArrayList<String[]> dataset = new ArrayList<>();
         //URL cnnsrc = new URL("https://archive.ics.uci.edu/ml/datasets/CNNpred%3A+CNN-based+stock+market+prediction+using+a+diverse+set+of+variables");
-        try (InputStream stream = CNNpredTest.class.getResourceAsStream("/processed_nasdaq.csv");
+        try (InputStream stream = CNNpredTimeLabels.class.getResourceAsStream("/processed_nasdaq.csv");
              Scanner sc = new Scanner(stream))
         {
             while(sc.hasNextLine()){
