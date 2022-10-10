@@ -7,7 +7,7 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.debugging.DebuggerUI;
+import hageldave.jplotter.debugging.ui.DebuggerUI;
 import hageldave.jplotter.misc.Contours;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
