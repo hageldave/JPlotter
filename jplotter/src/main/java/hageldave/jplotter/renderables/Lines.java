@@ -213,7 +213,7 @@ public class Lines implements Renderable {
 	 * @param globalAlphaMultiplier of the segments in this collection
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
+	@DebugSetter(ID = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Lines setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
 	}
@@ -222,7 +222,7 @@ public class Lines implements Renderable {
 	 * @return the global alpha multiplier of the segments in this collection
 	 */
 
-	@DebugGetter(key = "globalAlphaMultiplier")
+	@DebugGetter(ID = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -241,7 +241,7 @@ public class Lines implements Renderable {
 	 * @return the line segments list.
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
-	@DebugGetter(key = "segments", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
+	@DebugGetter(ID = "segments", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
 	public ArrayList<SegmentDetails> getSegments() {
 		return segments;
 	}
@@ -265,7 +265,7 @@ public class Lines implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalThicknessMultiplier", creator = DecimalSpinnerCreator.class)
+	@DebugSetter(ID = "globalThicknessMultiplier", creator = DecimalSpinnerCreator.class)
 	public Lines setGlobalThicknessMultiplier(double thickness) {
 		return setGlobalThicknessMultiplier(() -> thickness); 
 	}
@@ -273,7 +273,7 @@ public class Lines implements Renderable {
 	/**
 	 * @return the line thickness multiplier of this {@link Lines} object
 	 */
-	@DebugGetter(key = "globalThicknessMultiplier")
+	@DebugGetter(ID = "globalThicknessMultiplier")
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
 	}
@@ -297,13 +297,13 @@ public class Lines implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
+	@DebugSetter(ID = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Lines setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
-	@DebugGetter(key = "globalSaturationMultiplier")
+	@DebugGetter(ID = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
@@ -316,7 +316,7 @@ public class Lines implements Renderable {
 	 * This has the effect of sharpening horizontal and vertical lines, but
 	 * can affect differently oriented lines to shrink in thickness or even vanish. 
 	 */
-	@DebugGetter(key = "useVertexRounding")
+	@DebugGetter(ID = "useVertexRounding")
 	public boolean isVertexRoundingEnabled() {
 		return useVertexRounding;
 	}
@@ -333,7 +333,7 @@ public class Lines implements Renderable {
 	 * @param useVertexRounding will enable if true
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "useVertexRounding", creator = ButtonCreator.class)
+	@DebugSetter(ID = "useVertexRounding", creator = ButtonCreator.class)
 	public Lines setVertexRoundingEnabled(boolean useVertexRounding) {
 		this.useVertexRounding = useVertexRounding;
 		return this;
@@ -399,7 +399,7 @@ public class Lines implements Renderable {
 	 * Returns this {@link Lines} object's stroke pattern
 	 * @return stroke pattern
 	 */
-	@DebugGetter(key = "strokePattern")
+	@DebugGetter(ID = "strokePattern")
 	public short getStrokePattern() {
 		return this.strokePattern;
 	}
@@ -422,7 +422,7 @@ public class Lines implements Renderable {
 	 * @param strokePattern 16bit pattern
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "strokePattern", creator = StrokePatternCreator.class)
+	@DebugSetter(ID = "strokePattern", creator = StrokePatternCreator.class)
 	public Lines setStrokePattern(int strokePattern) {
 		if(strokePattern >> 16 != 0){
 			System.err.println("specified stroke pattern should only be 16 bits but is " + Integer.toBinaryString(strokePattern));
@@ -435,7 +435,7 @@ public class Lines implements Renderable {
 	 * Returns the stroke length in pixels, which is by default 16 pixels.
 	 * @return stroke length
 	 */
-	@DebugGetter(key = "strokeLength")
+	@DebugGetter(ID = "strokeLength")
 	public float getStrokeLength() {
 		return strokeLength;
 	}
@@ -446,14 +446,14 @@ public class Lines implements Renderable {
 	 * @param strokeLength length of the stroke
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "strokeLength", creator = DecimalSpinnerCreator.class)
+	@DebugSetter(ID = "strokeLength", creator = DecimalSpinnerCreator.class)
 	public Lines setStrokeLength(double strokeLength) {
 		this.strokeLength = (float) Math.max(0, strokeLength);
 		return this;
 	}
 	
 	@Override
-	@DebugGetter(key = "hidden")
+	@DebugGetter(ID = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -464,7 +464,7 @@ public class Lines implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "hidden", creator = ButtonCreator.class)
+	@DebugSetter(ID = "hidden", creator = ButtonCreator.class)
 	public Lines hide(boolean hide) {
 		this.hidden = hide;
 		return this;

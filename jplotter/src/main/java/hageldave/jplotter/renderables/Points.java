@@ -245,7 +245,7 @@ public class Points implements Renderable {
 	 * @param globalScaling of the points in this collection.
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalScaling", creator = DecimalSpinnerCreator.class)
+	@DebugSetter(ID = "globalScaling", creator = DecimalSpinnerCreator.class)
 	public Points setGlobalScaling(double globalScaling) {
 		return setGlobalScaling(()->globalScaling);
 	}
@@ -265,7 +265,7 @@ public class Points implements Renderable {
 	/**
 	 * @return the global scaling factor of the points in this collection.
 	 */
-	@DebugGetter(key = "globalScaling")
+	@DebugGetter(ID = "globalScaling")
 	public float getGlobalScaling() {
 		return (float)globalScaling.getAsDouble();
 	}
@@ -277,7 +277,7 @@ public class Points implements Renderable {
 	 * @param globalAlphaMultiplier of the points in this collection
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
+	@DebugSetter(ID = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Points setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(()->globalAlphaMultiplier);
 	}
@@ -297,7 +297,7 @@ public class Points implements Renderable {
 	/**
 	 * @return the global alpha multiplier of the points in this collection
 	 */
-	@DebugGetter(key = "globalAlphaMultiplier")
+	@DebugGetter(ID = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -321,13 +321,13 @@ public class Points implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
+	@DebugSetter(ID = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Points setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
-	@DebugGetter(key = "globalSaturationMultiplier")
+	@DebugGetter(ID = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
@@ -381,7 +381,7 @@ public class Points implements Renderable {
 	}
 	
 	@Override
-	@DebugGetter(key = "hidden")
+	@DebugGetter(ID = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -392,7 +392,7 @@ public class Points implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "hidden", creator = ButtonCreator.class)
+	@DebugSetter(ID = "hidden", creator = ButtonCreator.class)
 	public Points hide(boolean hide) {
 		this.hidden = hide;
 		return this;
@@ -528,7 +528,7 @@ public class Points implements Renderable {
 	 * @return the list of point details.<br>
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
-	@DebugGetter(key = "points", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
+	@DebugGetter(ID = "points", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
 	public ArrayList<PointDetails> getPointDetails() {
 		return points;
 	}
@@ -590,7 +590,7 @@ public class Points implements Renderable {
 	 * This has the effect of sharpening horizontal and vertical lines, but
 	 * can affect shape. 
 	 */
-	@DebugGetter(key = "useVertexRounding")
+	@DebugGetter(ID = "useVertexRounding")
 	public boolean isVertexRoundingEnabled() {
 		return useVertexRounding;
 	}
@@ -607,7 +607,7 @@ public class Points implements Renderable {
 	 * @param useVertexRounding will enable if true
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "useVertexRounding", creator = ButtonCreator.class)
+	@DebugSetter(ID = "useVertexRounding", creator = ButtonCreator.class)
 	public Points setVertexRoundingEnabled(boolean useVertexRounding) {
 		this.useVertexRounding = useVertexRounding;
 		return this;
@@ -623,14 +623,14 @@ public class Points implements Renderable {
 	 * @param glyph to use
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "glyph", creator = GlyphSelector.class)
+	@DebugSetter(ID = "glyph", creator = GlyphSelector.class)
 	public Points setGlyph(Glyph glyph) {
 		this.glyph = glyph;
 		return this;
 	}
 
 	/** @return current glyph */
-	@DebugGetter(key = "glyph")
+	@DebugGetter(ID = "glyph")
 	public Glyph getGlyph() {
 		return glyph;
 	}

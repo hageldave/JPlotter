@@ -193,7 +193,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	 * @param glyphScaling scaling for the glyphs that are rendered
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "glyphScaling", creator = DecimalSpinnerCreator.class)
+	@DebugSetter(ID = "glyphScaling", creator = DecimalSpinnerCreator.class)
 	public PointsRenderer setGlyphScaling(double glyphScaling) {
 		this.glyphScaling = (float) glyphScaling;
 		return this;
@@ -202,7 +202,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	/**
 	 * @return the renderers glyph scaling value
 	 */
-	@DebugGetter(key = "glyphScaling")
+	@DebugGetter(ID = "glyphScaling")
 	public float getGlyphScaling() {
 		return glyphScaling;
 	}

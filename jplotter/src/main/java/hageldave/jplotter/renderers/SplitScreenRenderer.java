@@ -68,7 +68,7 @@ public class SplitScreenRenderer implements Renderer {
 	 * @param location value in [0.0 .. 1.0], 0.5 is equal, 0.75 uses 3/4 of the space for renderer 1.
 	 * @return this for chaining.
 	 */
-	@DebugSetter(key = "dividerLocation", creator = PercentageDoubleSliderCreator.class)
+	@DebugSetter(ID = "dividerLocation", creator = PercentageDoubleSliderCreator.class)
 	public SplitScreenRenderer setDividerLocation(double location) {
 		this.dividerLocation = location;
 		return this;
@@ -80,7 +80,7 @@ public class SplitScreenRenderer implements Renderer {
 	 * when false they are put top and bottom.
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "verticalSplit", creator = ButtonCreator.class)
+	@DebugSetter(ID = "verticalSplit", creator = ButtonCreator.class)
 	public SplitScreenRenderer setVerticalSplit(boolean verticalSplit) {
 		this.verticalSplit = verticalSplit;
 		return this;
@@ -123,7 +123,7 @@ public class SplitScreenRenderer implements Renderer {
 	/**
 	 * @return the relative location of the divider.
 	 */
-	@DebugGetter(key = "dividerLocation")
+	@DebugGetter(ID = "dividerLocation")
 	public double getDividerLocation() {
 		return dividerLocation;
 	}
@@ -131,7 +131,7 @@ public class SplitScreenRenderer implements Renderer {
 	/**
 	 * @return whether the split orientation is vertical
 	 */
-	@DebugGetter(key = "verticalSplit")
+	@DebugGetter(ID = "verticalSplit")
 	public boolean isVerticalSplit() {
 		return verticalSplit;
 	}

@@ -10,10 +10,8 @@ import java.lang.reflect.Method;
 /**
  * The DisplayPanelCreator interface provides a method to create a debugger panel
  * that shows certain information of the property of an element.
- *
  * Each DisplayPanelCreator has to be "registered", which means that the property (its getter method to be more specific) that should be
  * shown in the debugger has to be annotated with the {@link DebugGetter} annotation.
- *
  */
 public interface DisplayPanelCreator {
     /**

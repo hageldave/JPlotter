@@ -94,7 +94,7 @@ public class Text implements Renderable {
 	 * @param color to set
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "color", creator = ColorPicker.class)
+	@DebugSetter(ID = "color", creator = ColorPicker.class)
 	public Text setColor(Color color) {
 		this.color = color;
 		return this;
@@ -113,7 +113,7 @@ public class Text implements Renderable {
 	/**
 	 * @return this text's color
 	 */
-	@DebugGetter(key = "color")
+	@DebugGetter(ID = "color")
 	public Color getColor() {
 		return color;
 	}
@@ -123,7 +123,7 @@ public class Text implements Renderable {
 	 * transparent black (0x00000000) which wont be visible.
 	 * @param background color
 	 */
-	@DebugSetter(key = "background", creator = ColorPicker.class)
+	@DebugSetter(ID = "background", creator = ColorPicker.class)
 	public void setBackground(Color background) {
 		this.background = background;
 	}
@@ -137,7 +137,7 @@ public class Text implements Renderable {
 		this.background = new Color(argb, true);
 	}
 
-	@DebugGetter(key = "background")
+	@DebugGetter(ID = "background")
 	public Color getBackground() {
 		return background;
 	}
@@ -252,7 +252,7 @@ public class Text implements Renderable {
 	 * @return the origin of this text object, i.e. the bottom left corner of the rectangle enclosing the text,
 	 * the text's location so to say
 	 */
-	@DebugGetter(key = "origin")
+	@DebugGetter(ID = "origin")
 	public Point2D getOrigin() {
 		return origin;
 	}
@@ -275,7 +275,7 @@ public class Text implements Renderable {
 	 * @param y coordinate of origin
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "origin", creator = Coord2DCreator.class)
+	@DebugSetter(ID = "origin", creator = Coord2DCreator.class)
 	public Text setOrigin(int x, int y) {
 		return this.setOrigin(new Point(x, y));
 	}
@@ -283,7 +283,7 @@ public class Text implements Renderable {
 	/**
 	 * @return the rotation angle in radian by which this text object is rotated around its origin.
 	 */
-	@DebugGetter(key = "angle")
+	@DebugGetter(ID = "angle")
 	public float getAngle() {
 		return angle;
 	}
@@ -293,14 +293,14 @@ public class Text implements Renderable {
 	 * @param angle rotation angle
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "angle", creator = AngleSliderCreator.class)
+	@DebugSetter(ID = "angle", creator = AngleSliderCreator.class)
 	public Text setAngle(double angle) {
 		this.angle = (float)angle;
 		return this;
 	}
 	
 	@Override
-	@DebugGetter(key = "hidden")
+	@DebugGetter(ID = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -311,7 +311,7 @@ public class Text implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "hidden", creator = ButtonCreator.class)
+	@DebugSetter(ID = "hidden", creator = ButtonCreator.class)
 	public Text hide(boolean hide) {
 		this.hidden = hide;
 		return this;
@@ -392,7 +392,7 @@ public class Text implements Renderable {
 	/**
 	 * @return the String this text object displays
 	 */
-	@DebugGetter(key="txtStr")
+	@DebugGetter(ID ="txtStr")
 	public String getTextString(){
 		return txtStr;
 	}
@@ -405,7 +405,7 @@ public class Text implements Renderable {
 	 * @param txtStr the text string this object should display.
 	 * @return this for chaining
 	 */
-	@DebugSetter(key="txtStr", creator = TextfieldCreator.class)
+	@DebugSetter(ID ="txtStr", creator = TextfieldCreator.class)
 	public Text setTextString(String txtStr) {
 		this.txtStr = txtStr;
 		this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontsize, style).getBounds().getSize();

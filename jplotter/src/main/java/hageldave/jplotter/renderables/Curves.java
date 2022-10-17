@@ -56,7 +56,7 @@ public class Curves implements Renderable {
 	protected int numEffectiveSegments = 0;
 	protected boolean isGLDoublePrecision = false;
 	
-	@DebugGetter(key = "numEffectiveSegments")
+	@DebugGetter(ID = "numEffectiveSegments")
 	public int getNumEffectiveSegments() {
 		return numEffectiveSegments;
 	}
@@ -479,7 +479,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the line thickness multiplier of this {@link Curves} object
 	 */
-	@DebugGetter(key = "globalThicknessMultiplier")
+	@DebugGetter(ID = "globalThicknessMultiplier")
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
 	}
@@ -503,7 +503,7 @@ public class Curves implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalThicknessMultiplier", creator = DecimalSpinnerCreator.class)
+	@DebugSetter(ID = "globalThicknessMultiplier", creator = DecimalSpinnerCreator.class)
 	public Curves setGlobalThicknessMultiplier(double thickness) {
 		return setGlobalThicknessMultiplier(() -> thickness); 
 	}
@@ -526,7 +526,7 @@ public class Curves implements Renderable {
 	 * @param globalAlphaMultiplier of the curves in this collection
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
+	@DebugSetter(ID = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Curves setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
 	}
@@ -534,7 +534,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the global alpha multiplier of the curves in this collection
 	 */
-	@DebugGetter(key = "globalAlphaMultiplier")
+	@DebugGetter(ID = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -559,13 +559,13 @@ public class Curves implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
+	@DebugSetter(ID = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Curves setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
-	@DebugGetter(key = "globalSaturationMultiplier")
+	@DebugGetter(ID = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
@@ -641,7 +641,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the individual curve detail objects contained in this object
 	 */
-	@DebugGetter(key = "curves", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
+	@DebugGetter(ID = "curves", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
 	public ArrayList<CurveDetails> getCurveDetails() {
 		return curves;
 	}
@@ -853,7 +853,7 @@ public class Curves implements Renderable {
 	}
 
 	@Override
-	@DebugGetter(key = "hidden")
+	@DebugGetter(ID = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -864,7 +864,7 @@ public class Curves implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "hidden", creator = ButtonCreator.class)
+	@DebugSetter(ID = "hidden", creator = ButtonCreator.class)
 	public Curves hide(boolean hide) {
 		this.hidden = hide;
 		return this;

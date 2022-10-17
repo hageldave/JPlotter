@@ -50,7 +50,7 @@ public interface Renderable extends AutoCloseable {
 	 * Precision is not decided by the Renderable but by the corresponding {@link Renderer}.
 	 * @return true if current GL resources (e.g vertex arrays) are using double precision
 	 */
-	@DebugGetter(key = "isGLDoublePrecision")
+	@DebugGetter(ID = "isGLDoublePrecision")
 	public boolean isGLDoublePrecision();
 	
 	/**

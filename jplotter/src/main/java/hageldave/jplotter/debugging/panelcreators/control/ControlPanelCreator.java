@@ -10,10 +10,8 @@ import java.lang.reflect.Method;
 /**
  * The ControlPanelCreator interface provides a method to create a debugger panel
  * that shows certain information of the property of an element and provides an easy way to manipulate the property.
- *
  * Each ControlPanelCreator has to be "registered", which means that the property (its getter and setter methods to be more specific) that should be
  * shown in the debugger has to be annotated with the {@link DebugGetter} and the {@link DebugSetter} annotations.
- *
  */
 public interface ControlPanelCreator {
 

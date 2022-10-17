@@ -69,7 +69,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 	 * @param fifth one of {0,1,2,3,4} or {TRI,LIN,PNT,TXT,CRV}
 	 * @return this for chaining
 	 */
-	@DebugSetter(key = "renderOrder", creator = RenderOrderCreator.class)
+	@DebugSetter(ID = "renderOrder", creator = RenderOrderCreator.class)
 	public CompleteRenderer setRenderOrder(int first, int second, int third, int fourth, int fifth){
 		renderOrder[0] = first;
 		renderOrder[1] = second;
@@ -79,7 +79,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		return this;
 	}
 
-	@DebugGetter(key = "renderOrder")
+	@DebugGetter(ID = "renderOrder")
 	public int[] getRenderOrder() {
 		return renderOrder;
 	}

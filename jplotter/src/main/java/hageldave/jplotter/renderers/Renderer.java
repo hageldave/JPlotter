@@ -73,7 +73,7 @@ public interface Renderer extends AutoCloseable, SVGRenderer, PDFRenderer {
 	 * When disabled those methods return right away and will not render anything.
 	 * @param enable true when activating, false when deactivating.
 	 */
-	@DebugSetter(key = "enabled", creator = ButtonCreator.class)
+	@DebugSetter(ID = "enabled", creator = ButtonCreator.class)
 	public void setEnabled(boolean enable);
 	
 	/**
@@ -82,7 +82,7 @@ public interface Renderer extends AutoCloseable, SVGRenderer, PDFRenderer {
 	 * When disabled those methods return right away and will not render anything.
 	 * @return true when active
 	 */
-	@DebugGetter(key = "enabled")
+	@DebugGetter(ID = "enabled")
 	public boolean isEnabled();
 	
 	/**

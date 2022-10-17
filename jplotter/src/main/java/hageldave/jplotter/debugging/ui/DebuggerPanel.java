@@ -212,7 +212,7 @@ class DebuggerPanel extends JPanel {
         AtomicBoolean infoFieldFound = new AtomicBoolean(false);
         AtomicBoolean controlFieldFound = new AtomicBoolean(false);
         allMethods.forEach(searchGetter -> {
-            AtomicReference<String> key = new AtomicReference<>();
+            AtomicReference<String> annotationID = new AtomicReference<>();
             AtomicReference<Method> getter = new AtomicReference<>();
             AtomicReference<Method> setter = new AtomicReference<>();
             AtomicReference<Class<? extends ControlPanelCreator>> ctrlCreator = new AtomicReference<>();
@@ -220,17 +220,17 @@ class DebuggerPanel extends JPanel {
             AtomicReference<Class<? extends CustomPrinterInterface>> customPrinter = new AtomicReference<>();
 
             for (DebugGetter debugGetter : searchGetter.getAnnotationsByType(DebugGetter.class)) {
-                key.set(debugGetter.key());
+                annotationID.set(debugGetter.ID());
                 getter.set(searchGetter);
                 dsplyCreator.set(debugGetter.creator());
                 customPrinter.set(debugGetter.objectPrinter());
 
                 allMethods.forEach(searchSetter -> {
                     for (DebugSetter debugSetter : searchSetter.getAnnotationsByType(DebugSetter.class)) {
-                        if (Objects.equals(debugSetter.key(), key.get())) {
+                        if (Objects.equals(debugSetter.ID(), annotationID.get())) {
                             if (Objects.nonNull(setter.get())) {
                                 System.out.println(setter.get());
-                                throw new RuntimeException("Annotation key for @DebugSetter used more than once");
+                                throw new RuntimeException("Annotation annotationID for @DebugSetter used more than once");
                             }
 
                             setter.set(searchSetter);
@@ -241,12 +241,12 @@ class DebuggerPanel extends JPanel {
                 });
             }
 
-            if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(setter.get()) && Objects.nonNull(ctrlCreator.get())) {
-                JPanel panel = controlField(canvas, obj, key.get(), getter, setter, ctrlCreator);
+            if (Objects.nonNull(annotationID.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(setter.get()) && Objects.nonNull(ctrlCreator.get())) {
+                JPanel panel = controlField(canvas, obj, annotationID.get(), getter, setter, ctrlCreator);
                 controlContainer.add(panel);
                 controlFieldFound.set(true);
-            } else if (Objects.nonNull(key.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(dsplyCreator.get()) && Objects.nonNull(customPrinter.get())) {
-                JPanel panel = displayField(canvas, obj, key.get(), getter, dsplyCreator, customPrinter);
+            } else if (Objects.nonNull(annotationID.get()) && Objects.nonNull(getter.get()) && Objects.nonNull(dsplyCreator.get()) && Objects.nonNull(customPrinter.get())) {
+                JPanel panel = displayField(canvas, obj, annotationID.get(), getter, dsplyCreator, customPrinter);
                 infoContainer.add(panel);
                 infoFieldFound.set(true);
             }
@@ -385,7 +385,7 @@ class DebuggerPanel extends JPanel {
         JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
         JLabel fieldName = new JLabel((field) + " ");
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
-        fieldName.setToolTipText("Annotation key of the property");
+        fieldName.setToolTipText("Annotation ID of the property");
         fieldType.setFont(new Font(fieldType.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()-2));
         fieldType.setForeground(Color.GRAY);
         fieldType.setToolTipText("Type of the property");
@@ -428,7 +428,7 @@ class DebuggerPanel extends JPanel {
         JLabel fieldType = new JLabel(("" + getter.get().getReturnType().getSimpleName()) + " ");
         JLabel fieldName = new JLabel((field) + ": ");
         fieldName.setFont(new Font(fieldName.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()));
-        fieldName.setToolTipText("Annotation key of the property");
+        fieldName.setToolTipText("Annotation ID of the property");
         fieldType.setFont(new Font(fieldType.getFont().getName(), Font.BOLD, fieldName.getFont().getSize()-2));
         fieldType.setForeground(Color.GRAY);
         fieldType.setToolTipText("Type of the property");
