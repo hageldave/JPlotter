@@ -37,7 +37,7 @@ import java.util.Objects;
  * </pre>
  * <p>
  */
-public abstract class CoordSysRopeSelection extends MouseAdapter {
+public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyListener {
     protected Component canvas;
     protected CoordSysRenderer coordSys;
     protected ColorScheme colorScheme;
@@ -130,11 +130,14 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
             Point2D.Double lastPoint = coordinates.get(coordinates.size()-1);
             hoverIndicator = this.lines.addSegment(lastPoint, coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight())).setColor(colorScheme.getColor2());
             canvas.repaint();
+            canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         } else if (!coordinates.isEmpty() && !isDone) {
             this.lines.getSegments().remove(hoverIndicator);
             hoverIndicator = null;
             canvas.repaint();
         }
+
+        changeCursor();
     }
 
     protected Path2D calculateSelectedArea() {
@@ -145,6 +148,28 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
         }
         selectedArea.closePath();
         return selectedArea;
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        changeCursor();
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        changeCursor();
+    }
+
+    private void changeCursor() {
+        if (keyMaskListener.areKeysPressed() && isDone) {
+            canvas.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        } else {
+            canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+        canvas.repaint();
     }
 
     /**
@@ -193,6 +218,8 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
             canvas.addMouseMotionListener(this);
         if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
             canvas.addKeyListener(this.keyMaskListener);
+        if (!Arrays.asList(canvas.getKeyListeners()).contains(this))
+            canvas.addKeyListener(this);
         return this;
     }
 
@@ -206,6 +233,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter {
         canvas.removeMouseListener(this);
         canvas.removeMouseMotionListener(this);
         canvas.removeKeyListener(this.keyMaskListener);
+        canvas.removeKeyListener(this);
         return this;
     }
 }
