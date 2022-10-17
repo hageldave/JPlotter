@@ -44,7 +44,7 @@ public class DebuggerUI {
         display();
     }
 
-    protected void display() {
+    public void display() {
         JPanel debuggerPanel = new JPanel(new BorderLayout());
         AtomicReference<DebuggerPanel> prevDebugUI = new AtomicReference<>();
         Integer[] canvasArr = debuggerList.stream().map(Object::hashCode).toArray(Integer[]::new);
@@ -67,8 +67,10 @@ public class DebuggerUI {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(debuggerPanel);
         frame.setPreferredSize(new Dimension(950, 550));
-        frame.pack();
-        frame.setVisible(true);
+        SwingUtilities.invokeLater(()->{
+        	frame.pack();
+        	frame.setVisible(true);
+        });
     }
 
     protected DebuggerPanel changeDebuggerPanel(JFrame frame, JPanel debuggerPanel, DebuggerPanel debuggerUIPanel, DebuggerPanel prevDebugUI) {
