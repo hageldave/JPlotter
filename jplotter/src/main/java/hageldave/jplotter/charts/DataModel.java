@@ -4,8 +4,9 @@ import hageldave.jplotter.util.Pair;
 
 import java.util.ArrayList;
 
+
 /**
- * TODO: add documentation
+ * The DataModel provides a way to store multiple {@link DataChunk} and perform operations on them.
  */
 public abstract class DataModel {
     protected ArrayList<double[][]> dataChunks = new ArrayList<>();
