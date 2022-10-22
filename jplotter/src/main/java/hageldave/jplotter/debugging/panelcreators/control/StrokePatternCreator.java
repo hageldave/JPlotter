@@ -6,6 +6,7 @@ import hageldave.jplotter.renderables.Lines;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
@@ -18,9 +19,72 @@ public class StrokePatternCreator implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         short currentStrokePattern = (short) getter.invoke(obj);
-        String strokePatternString = Integer.toUnsignedString(currentStrokePattern, 2);
-        int strokePatternLength = strokePatternString.length();
+        String strokePatternStringAsBin = Integer.toBinaryString(currentStrokePattern);
+        String strokePatternStringAsHex = Integer.toHexString(currentStrokePattern);
 
+        int strokePatternLength = strokePatternStringAsBin.length();
+
+        JPanel labelWrapper = new JPanel();
+        labelWrapper.setLayout(new BoxLayout(labelWrapper, BoxLayout.X_AXIS));
+        labelWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel binaryWrapper = new JPanel();
+        binaryWrapper.setLayout(new BoxLayout(binaryWrapper, BoxLayout.X_AXIS));
+        binaryWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        createBinaryStringPanel(labelWrapper, strokePatternStringAsBin, strokePatternLength, canvas, obj, setter);
+
+        JButton editButton = new JButton("Edit as Hex");
+        binaryWrapper.add(labelWrapper);
+        binaryWrapper.add(editButton);
+        panelContainer.add(binaryWrapper);
+
+        JPanel container16bit = new JPanel();
+        container16bit.setLayout(new BoxLayout(container16bit, BoxLayout.X_AXIS));
+        container16bit.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JTextField textField16bit = new JTextField(strokePatternStringAsHex, 20);
+        container16bit.add(textField16bit);
+
+        JButton submitButton = new JButton("Submit");
+        container16bit.add(submitButton);
+
+        editButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                switchPanels(panelContainer, binaryWrapper, container16bit);
+            }
+        });
+
+        submitButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int textfieldValueAsInt = Integer.parseUnsignedInt(textField16bit.getText(), 16);
+                String textfieldValueAsBin = Integer.toBinaryString(textfieldValueAsInt);
+                int strokePatternLength = textfieldValueAsBin.length();
+                try {
+                    setter.invoke(obj, textfieldValueAsInt);
+                    canvas.scheduleRepaint();
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    throw new RuntimeException(ex);
+                }
+                createBinaryStringPanel(labelWrapper, textfieldValueAsBin, strokePatternLength, canvas, obj, setter);
+                switchPanels(panelContainer, container16bit, binaryWrapper);
+            }
+        });
+
+        return panelContainer;
+    }
+
+    private void switchPanels(JPanel wrapper, JPanel toRemove, JPanel toAdd) {
+        wrapper.remove(toRemove);
+        wrapper.add(toAdd);
+        wrapper.validate();
+        wrapper.repaint();
+    }
+
+    private void createBinaryStringPanel(JPanel wrapper, String strokePatternString, int strokePatternLength, JPlotterCanvas canvas, Object obj, Method setter) {
+        wrapper.removeAll();
         String[] value = new String[strokePatternLength];
         JLabel[] label = new JLabel[strokePatternLength];
         for (int i = 0; i < strokePatternLength; i++) {
@@ -37,6 +101,7 @@ public class StrokePatternCreator implements ControlPanelCreator {
             label[i].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
             JLabel currentLabel = label[i];
+            currentLabel.setToolTipText("Click on the number to flip the bit.");
             currentLabel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -62,13 +127,12 @@ public class StrokePatternCreator implements ControlPanelCreator {
                 }
             });
 
-            panelContainer.add(label[i]);
+            wrapper.add(label[i]);
             if (i % 4 == 3) {
                 JLabel emptyLabel = new JLabel();
                 emptyLabel.setBorder(new EmptyBorder(0, 0, 0, 7));
-                panelContainer.add(emptyLabel);
+                wrapper.add(emptyLabel);
             }
         }
-        return panelContainer;
     }
 }
