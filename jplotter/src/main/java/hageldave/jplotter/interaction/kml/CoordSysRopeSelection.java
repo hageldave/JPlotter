@@ -12,10 +12,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * The CoordSysRopeSelection class implements a {@link MouseListener}
@@ -74,11 +72,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
     public void mouseClicked(MouseEvent e) {
         if (keyMaskListener.areKeysPressed() && coordSys.getCoordSysArea().contains(e.getPoint())) {
             if (isDone || SwingUtilities.isRightMouseButton(e)) {
-                isDone = false;
-                coordinates.clear();
-                points.getPointDetails().clear();
-                lines.getSegments().clear();
-                this.lines.setGlobalAlphaMultiplier(1);
+                clearSelectionResources();
             } else if (!isDone) {
                 Point2D pointInCoordsys = coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
 
@@ -170,6 +164,62 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
             canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
         canvas.repaint();
+    }
+
+    /**
+     * Sets a rope selection with the given points.
+     * If the first and another point are on the same position, the selection is done (the following points will be ignored, if there are any)
+     * and the {@link #areaSelected(Path2D)} interface is called.
+     * If this isn't the case, the {@link #areaSelectedOnGoing(Path2D)} interface will be called and the selection can be continued by mouse selection.
+     *
+     * @param pointsToSet the coordinates to set in the coordsys (have to be given in coordsys coordinates)
+     */
+    public void setSelection(List<Point2D.Double> pointsToSet) {
+        clearSelectionResources();
+
+        for (Point2D.Double pointInCoordsys: pointsToSet) {
+            coordinates.add(pointInCoordsys);
+            this.points.addPoint(pointInCoordsys).setColor(colorScheme.getColor1());
+
+            if (coordinates.size() > 1) {
+                Point2D.Double firstPoint = coordinates.get(0);
+                Point2D.Double lastCoord = coordinates.get(coordinates.size() - 2);
+                this.lines.addSegment(lastCoord, pointInCoordsys).setColor(colorScheme.getColor2());
+
+                if (coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight()).distanceSq(coordSys.transformCoordSys2AWT(pointInCoordsys, canvas.getHeight())) < radius) {
+                    isDone = true;
+                    for (Points.PointDetails pd: this.points.getPointDetails()) {
+                        pd.setColor(colorScheme.getColorText());
+                    }
+                    this.lines.setGlobalAlphaMultiplier(0.5);
+                    canvas.repaint();
+
+                    // call selected interface
+                    areaSelected(calculateSelectedArea());
+                    System.out.println("Selection is done.");
+                    break;
+                } else {
+                    // call ongoing interface
+                    areaSelectedOnGoing(calculateSelectedArea());
+                }
+            }
+        }
+        canvas.repaint();
+    }
+
+    /**
+     * Simply removes the current (possibly not finished) selection.
+     */
+    public void removeSelection() {
+        setSelection(new ArrayList<>());
+    }
+
+    private void clearSelectionResources() {
+        isDone = false;
+        this.coordinates.clear();
+        this.points.getPointDetails().clear();
+        this.lines.getSegments().clear();
+        this.lines.setGlobalAlphaMultiplier(1);
     }
 
     /**
