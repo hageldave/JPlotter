@@ -417,10 +417,13 @@ public class TextRenderer extends GenericRenderer<Text> {
 				y1+=1;
 				
 				// test if inside of view port
-				if(x1+txt.getTextSize().width < 0 || x1-txt.getTextSize().width > w){
-					continue;
-				}
-				if(y1+txt.getTextSize().width < 0 || y1-txt.getTextSize().width > h){
+				Rectangle2D bounds = txt.getBoundsWithRotation();
+				AffineTransform trnsfrm = new AffineTransform();
+				trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
+				trnsfrm.translate(x1, y1);
+				bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
+				Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+				if(!viewportRect.intersects(bounds)) {
 					continue;
 				}
 				
@@ -488,14 +491,18 @@ public class TextRenderer extends GenericRenderer<Text> {
 					y1 *= scaleY;
 					y1 += 2;
 					x1 += 1;
-
+					
 					// test if inside of view port
-					if (x1 + txt.getTextSize().width < 0 || x1 - txt.getTextSize().width > w) {
+					Rectangle2D bounds = txt.getBoundsWithRotation();
+					AffineTransform trnsfrm = new AffineTransform();
+					trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
+					trnsfrm.translate(x1, y1);
+					bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
+					Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+					if(!viewportRect.intersects(bounds)) {
 						continue;
 					}
-					if (y1 + txt.getTextSize().width < 0 || y1 - txt.getTextSize().width > h) {
-						continue;
-					}
+					
 					float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
 					float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
 					if(txt.getBackground().getRGB() != 0){

@@ -192,7 +192,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 * @param data GLData object for creating the GL context.
 	 */
 	protected FBOCanvas(GLData data){
-		this(new GLData(), null);
+		this(data, null);
 	}
 
 	/** 

@@ -4,6 +4,10 @@ import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.IntegerSpinnerCreator;
+import hageldave.jplotter.debugging.panelcreators.control.Rectangle2DCreator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.interaction.CoordSysScrollZoom;
@@ -88,7 +92,7 @@ public class CoordSysRenderer implements Renderer {
 	protected Rectangle legendRightViewPort = new Rectangle();
 	@GLCoordinates
 	protected Rectangle legendBottomViewPort = new Rectangle();
-	
+
 	@GLCoordinates
 	protected Rectangle currentViewPort = new Rectangle();
 
@@ -100,6 +104,7 @@ public class CoordSysRenderer implements Renderer {
 	protected Lines axes = new Lines().setVertexRoundingEnabled(true);
 	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
 	protected Lines guides = new Lines().setVertexRoundingEnabled(true);
+
 	protected LinkedList<Text> tickMarkLabels = new LinkedList<>();
 	protected Text xAxisLabelText = new Text("", 13, Font.PLAIN);
 	protected Text yAxisLabelText = new Text("", 13, Font.PLAIN);
@@ -326,6 +331,7 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * @return the padding on the left side
 	 */
+	@DebugGetter(ID = "paddingLeft")
 	public int getPaddingLeft() {
 		return paddingLeft;
 	}
@@ -333,6 +339,7 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * @return the padding on the right side
 	 */
+	@DebugGetter(ID = "paddingRight")
 	public int getPaddingRight() {
 		return paddingRight;
 	}
@@ -340,6 +347,7 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * @return the padding on the top side
 	 */
+	@DebugGetter(ID = "paddingTop")
 	public int getPaddingTop() {
 		return paddingTop;
 	}
@@ -347,6 +355,7 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * @return the padding on the bottom side
 	 */
+	@DebugGetter(ID = "paddingBottom")
 	public int getPaddingBot() {
 		return paddingBot;
 	}
@@ -357,8 +366,10 @@ public class CoordSysRenderer implements Renderer {
 	 * @param padding amount of blank area
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "paddingLeft", creator = IntegerSpinnerCreator.class)
 	public CoordSysRenderer setPaddingLeft(int padding) {
 		this.paddingLeft = padding;
+		this.setDirty();
 		return this;
 	}
 
@@ -368,8 +379,10 @@ public class CoordSysRenderer implements Renderer {
 	 * @param padding amount of blank area
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "paddingRight", creator = IntegerSpinnerCreator.class)
 	public CoordSysRenderer setPaddingRight(int padding) {
 		this.paddingRight = padding;
+		this.setDirty();
 		return this;
 	}
 
@@ -379,8 +392,10 @@ public class CoordSysRenderer implements Renderer {
 	 * @param padding amount of blank area
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "paddingTop", creator = IntegerSpinnerCreator.class)
 	public CoordSysRenderer setPaddingTop(int padding) {
 		this.paddingTop = padding;
+		this.setDirty();
 		return this;
 	}
 
@@ -390,8 +405,10 @@ public class CoordSysRenderer implements Renderer {
 	 * @param padding amount of blank area
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "paddingBottom", creator = IntegerSpinnerCreator.class)
 	public CoordSysRenderer setPaddingBot(int padding) {
 		this.paddingBot = padding;
+		this.setDirty();
 		return this;
 	}
 
@@ -423,8 +440,10 @@ public class CoordSysRenderer implements Renderer {
 	 * (default is 20px)
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "legendBottomHeight", creator = IntegerSpinnerCreator.class)
 	public CoordSysRenderer setLegendBottomHeight(int legendBottomHeight) {
 		this.legendBottomHeight = legendBottomHeight;
+		this.setDirty();
 		return this;
 	}
 
@@ -435,14 +454,17 @@ public class CoordSysRenderer implements Renderer {
 	 * (default is 70 px)
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "legendRightWidth", creator = IntegerSpinnerCreator.class)
 	public CoordSysRenderer setLegendRightWidth(int legendRightWidth) {
 		this.legendRightWidth = legendRightWidth;
+		this.setDirty();
 		return this;
 	}
 
 	/**
 	 * @return width of the width of the right hand side legend area.
 	 */
+	@DebugGetter(ID = "legendRightWidth")
 	public int getLegendRightWidth() {
 		return legendRightWidth;
 	}
@@ -450,6 +472,7 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * @return height of the bottom side legend area.
 	 */
+	@DebugGetter(ID = "legendBottomHeight")
 	public int getLegendBottomHeight() {
 		return legendBottomHeight;
 	}
@@ -778,7 +801,17 @@ public class CoordSysRenderer implements Renderer {
 			if(content instanceof AdaptableView){
 				((AdaptableView) content).setView(coordinateView);
 			}
-			content.render(viewPortX,viewPortY,viewPortW, viewPortH);
+			content.render(viewPortX, viewPortY, viewPortW, viewPortH);
+
+			// draw overlay
+			if(Objects.nonNull(overlay)){
+				overlay.glInit();
+				if(overlay instanceof AdaptableView){
+					((AdaptableView) overlay).setView(coordinateView);
+				}
+				overlay.render(viewPortX, viewPortY, viewPortW, viewPortH);
+			}
+
 			GL11.glViewport(vpx, vpy, w, h);
 		}
 		postContentLinesR.render(vpx, vpy, w, h);
@@ -796,12 +829,6 @@ public class CoordSysRenderer implements Renderer {
 			GL11.glViewport(    vpx+legendBottomViewPort.x, vpy+legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			legendBottom.render(vpx+legendBottomViewPort.x, vpy+legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			GL11.glViewport(vpx, vpy, w, h);
-		}
-
-		// draw overlay
-		if(Objects.nonNull(overlay)){
-			overlay.glInit();
-			overlay.render(vpx,vpy,w,h);
 		}
 	}
 	
@@ -833,6 +860,14 @@ public class CoordSysRenderer implements Renderer {
 			Graphics2D g_ = (Graphics2D)g.create(viewPortX, viewPortY, viewPortW, viewPortH);
 			Graphics2D p_ = (Graphics2D)p.create(viewPortX, viewPortY, viewPortW, viewPortH);
 			content.renderFallback(g_, p_, viewPortW, viewPortH);
+
+			// draw overlay
+			if(Objects.nonNull(overlay)){
+				if(overlay instanceof AdaptableView){
+					((AdaptableView) overlay).setView(coordinateView);
+				}
+				overlay.renderFallback(g_, p_, viewPortW, viewPortH);
+			}
 		}
 		postContentLinesR.renderFallback(g, p, w, h);
 		postContentTextR.renderFallback(g, p, w, h);
@@ -849,13 +884,8 @@ public class CoordSysRenderer implements Renderer {
 			Graphics2D p_ = (Graphics2D)p.create(legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
 			legendBottom.renderFallback(g_, p_, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
-		
-		// draw overlay
-		if(Objects.nonNull(overlay)){
-			overlay.renderFallback(g, p, w, h);
-		}
 	}
-	
+
 	@Override
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
@@ -886,6 +916,14 @@ public class CoordSysRenderer implements Renderer {
 			contentGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
 			// render the content into the group
 			content.renderSVG(doc, contentGroup, viewPortW, viewPortH);
+
+			// draw overlay
+			if(Objects.nonNull(overlay)){
+				if(overlay instanceof AdaptableView){
+					((AdaptableView) overlay).setView(coordinateView);
+				}
+				overlay.renderSVG(doc, contentGroup, viewPortW, viewPortH);
+			}
 		}
 		postContentLinesR.renderSVG(doc, parent, w, h);
 		postContentTextR.renderSVG(doc, parent, w, h);
@@ -932,7 +970,7 @@ public class CoordSysRenderer implements Renderer {
 			return;
 		}
 		preContentLinesR.renderPDF(doc, page, x, y, w, h);
-		preContentTextR.renderPDF(doc, page, x,y, w, h);
+		preContentTextR.renderPDF(doc, page, x, y, w, h);
 		if(content != null){
 			int viewPortX = (int)(coordsysAreaLB.getX()+x);
 			int viewPortY = (int)(coordsysAreaLB.getY()+y);
@@ -943,6 +981,14 @@ public class CoordSysRenderer implements Renderer {
 			}
 			// render the content into the group
 			content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
+
+			// draw overlay
+			if(Objects.nonNull(overlay)){
+				if(overlay instanceof AdaptableView){
+					((AdaptableView) overlay).setView(coordinateView);
+				}
+				overlay.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
+			}
 		}
 		postContentLinesR.renderPDF(doc, page, x, y, w, h);
 		postContentTextR.renderPDF(doc, page, x, y, w, h);
@@ -976,6 +1022,7 @@ public class CoordSysRenderer implements Renderer {
 	 * @param maxY maximum y coordinate visible in the coordinate system
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "coordinateView", creator = Rectangle2DCreator.class)
 	public CoordSysRenderer setCoordinateView(double minX, double minY, double maxX, double maxY){
 		return setCoordinateViewRect(minX, minY, maxX-minX, maxY-minY);
 	}
@@ -1039,6 +1086,7 @@ public class CoordSysRenderer implements Renderer {
 	 * See {@link #setCoordinateView(double, double, double, double)}.
 	 * @return the coordinate view
 	 */
+	@DebugGetter(ID = "coordinateView")
 	public Rectangle2D getCoordinateView() {
 		return coordinateView;
 	}

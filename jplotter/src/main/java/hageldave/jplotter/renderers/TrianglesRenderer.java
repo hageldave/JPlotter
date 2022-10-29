@@ -140,7 +140,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			+ NL + "}"
 			+ NL
 			;
-	
+
 	protected String svgTriangleStrategy=null;
 
 	/**

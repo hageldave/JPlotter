@@ -1,5 +1,13 @@
 package hageldave.jplotter.renderables;
 
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.customPrinter.RenderableDetailsPrinter;
+import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
+import hageldave.jplotter.debugging.panelcreators.control.DecimalSpinnerCreator;
+import hageldave.jplotter.debugging.panelcreators.control.PercentageFloatSliderCreator;
+import hageldave.jplotter.debugging.panelcreators.control.StrokePatternCreator;
+import hageldave.jplotter.debugging.panelcreators.display.RenderableDetailsCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.renderers.LinesRenderer;
@@ -7,6 +15,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Utils;
 
 import java.awt.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -16,6 +25,8 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
+
+import static java.awt.geom.Rectangle2D.*;
 
 /**
  * The Lines class is a collection of linear line segments.
@@ -58,11 +69,11 @@ public class Lines implements Renderable {
 	protected boolean useVertexRounding=false;
 
 	protected short strokePattern = (short)0xffff;
-	
+
 	protected float strokeLength = 16;
-	
+
 	protected boolean hidden = false;
-	
+
 	protected boolean isGLDoublePrecision = false;
 
 	/**
@@ -205,6 +216,7 @@ public class Lines implements Renderable {
 	 * @param globalAlphaMultiplier of the segments in this collection
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Lines setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
 	}
@@ -212,6 +224,8 @@ public class Lines implements Renderable {
 	/**
 	 * @return the global alpha multiplier of the segments in this collection
 	 */
+
+	@DebugGetter(ID = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -230,6 +244,7 @@ public class Lines implements Renderable {
 	 * @return the line segments list.
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
+	@DebugGetter(ID = "segments", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
 	public ArrayList<SegmentDetails> getSegments() {
 		return segments;
 	}
@@ -253,6 +268,7 @@ public class Lines implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "globalThicknessMultiplier", creator = DecimalSpinnerCreator.class)
 	public Lines setGlobalThicknessMultiplier(double thickness) {
 		return setGlobalThicknessMultiplier(() -> thickness); 
 	}
@@ -260,6 +276,7 @@ public class Lines implements Renderable {
 	/**
 	 * @return the line thickness multiplier of this {@link Lines} object
 	 */
+	@DebugGetter(ID = "globalThicknessMultiplier")
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
 	}
@@ -283,11 +300,13 @@ public class Lines implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Lines setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
+	@DebugGetter(ID = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
@@ -300,6 +319,7 @@ public class Lines implements Renderable {
 	 * This has the effect of sharpening horizontal and vertical lines, but
 	 * can affect differently oriented lines to shrink in thickness or even vanish. 
 	 */
+	@DebugGetter(ID = "useVertexRounding")
 	public boolean isVertexRoundingEnabled() {
 		return useVertexRounding;
 	}
@@ -316,6 +336,7 @@ public class Lines implements Renderable {
 	 * @param useVertexRounding will enable if true
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "useVertexRounding", creator = ButtonCreator.class)
 	public Lines setVertexRoundingEnabled(boolean useVertexRounding) {
 		this.useVertexRounding = useVertexRounding;
 		return this;
@@ -368,7 +389,93 @@ public class Lines implements Renderable {
 				.filter(seg->rect.intersectsLine(seg.p0.getX(), seg.p0.getY(), seg.p1.getX(), seg.p1.getY()))
 				.collect(Collectors.toList());
 	}
-	
+
+	/**
+	 * TODO
+	 * @param rect
+	 * @param line
+	 * @return
+	 */
+	public static Line2D getClippedLine(Rectangle2D rect, Line2D line) {
+		Point2D intersectionPoint;
+
+		double x1 = line.getX1();
+		double y1 = line.getY1();
+		double x2 = line.getX2();
+		double y2 = line.getY2();
+
+		List<Point2D> points = new ArrayList<>(2);
+		points.add(line.getP1());
+		points.add(line.getP2());
+
+		for (Point2D point: points) {
+			double x = point.getX();
+			double y = point.getY();
+			switch (rect.outcode(x1, y1)) {
+				case OUT_LEFT:
+					// clip left
+					intersectionPoint = Utils.intersection(
+							new Line2D.Double(
+									new Point2D.Double(rect.getMinX(), rect.getMinY()),
+									new Point2D.Double(rect.getMinX(), rect.getMaxY())
+							),
+							new Line2D.Double(
+									new Point2D.Double(x1, y1),
+									new Point2D.Double(x2, y2)
+							)
+					);
+					x = Objects.requireNonNull(intersectionPoint).getX();
+					y = intersectionPoint.getY();
+
+					break;
+				case OUT_TOP:
+					intersectionPoint = Utils.intersection(
+							new Line2D.Double(
+									new Point2D.Double(rect.getMinX(), rect.getMinY()),
+									new Point2D.Double(rect.getMaxX(), rect.getMinY())
+							),
+							new Line2D.Double(
+									new Point2D.Double(x1, y1),
+									new Point2D.Double(x2, y2)
+							)
+					);
+					x = Objects.requireNonNull(intersectionPoint).getX();
+					y = intersectionPoint.getY();
+					break;
+				case OUT_RIGHT:
+					intersectionPoint = Utils.intersection(
+							new Line2D.Double(
+									new Point2D.Double(rect.getMaxX(), rect.getMinY()),
+									new Point2D.Double(rect.getMaxX(), rect.getMaxY())
+							),
+							new Line2D.Double(
+									new Point2D.Double(x1, y1),
+									new Point2D.Double(x2, y2)
+							)
+					);
+					x = Objects.requireNonNull(intersectionPoint).getX();
+					y = intersectionPoint.getY();
+					break;
+				case OUT_BOTTOM:
+					intersectionPoint = Utils.intersection(
+							new Line2D.Double(
+									new Point2D.Double(rect.getMinX(), rect.getMaxY()),
+									new Point2D.Double(rect.getMaxX(), rect.getMaxY())
+							),
+							new Line2D.Double(
+									new Point2D.Double(x1, y1),
+									new Point2D.Double(x2, y2)
+							)
+					);
+					x = Objects.requireNonNull(intersectionPoint).getX();
+					y = intersectionPoint.getY();
+					break;
+			}
+			point.setLocation(x, y);
+		}
+		return new Line2D.Double(line.getP1(), line.getP2());
+	}
+
 	/**
 	 * Whether this Lines object has a stroke pattern other than 0xffff (completely solid).
 	 * @return true when stroke pattern != 0xffff
@@ -381,6 +488,7 @@ public class Lines implements Renderable {
 	 * Returns this {@link Lines} object's stroke pattern
 	 * @return stroke pattern
 	 */
+	@DebugGetter(ID = "strokePattern")
 	public short getStrokePattern() {
 		return this.strokePattern;
 	}
@@ -403,6 +511,7 @@ public class Lines implements Renderable {
 	 * @param strokePattern 16bit pattern
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "strokePattern", creator = StrokePatternCreator.class)
 	public Lines setStrokePattern(int strokePattern) {
 		if(strokePattern >> 16 != 0){
 			System.err.println("specified stroke pattern should only be 16 bits but is " + Integer.toBinaryString(strokePattern));
@@ -415,6 +524,7 @@ public class Lines implements Renderable {
 	 * Returns the stroke length in pixels, which is by default 16 pixels.
 	 * @return stroke length
 	 */
+	@DebugGetter(ID = "strokeLength")
 	public float getStrokeLength() {
 		return strokeLength;
 	}
@@ -425,12 +535,14 @@ public class Lines implements Renderable {
 	 * @param strokeLength length of the stroke
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "strokeLength", creator = DecimalSpinnerCreator.class)
 	public Lines setStrokeLength(double strokeLength) {
 		this.strokeLength = (float) Math.max(0, strokeLength);
 		return this;
 	}
 	
 	@Override
+	@DebugGetter(ID = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -441,6 +553,7 @@ public class Lines implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "hidden", creator = ButtonCreator.class)
 	public Lines hide(boolean hide) {
 		this.hidden = hide;
 		return this;

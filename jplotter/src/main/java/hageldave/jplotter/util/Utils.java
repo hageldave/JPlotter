@@ -1,25 +1,21 @@
 package hageldave.jplotter.util;
 
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.DirectColorModel;
-import java.awt.image.ImageObserver;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.stream.Stream;
-
-import javax.swing.SwingUtilities;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.renderables.Triangles;
+
+import javax.swing.*;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
+import java.awt.image.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Class containing utility methods
@@ -368,6 +364,96 @@ public class Utils {
 		return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
 	}
 	
-	
-}
+	public static Method searchReflectionMethod(Class<?> toSearch, String methodName, Class<?>... params) {
+		if (Objects.nonNull(toSearch)) {
+			if (Arrays.stream(toSearch.getDeclaredMethods()).anyMatch(e -> e.getName().equals(methodName))) {
+				try {
+					return toSearch.getDeclaredMethod(methodName, params);
+				} catch (NoSuchMethodException e) {
+					e.printStackTrace();
+				}
+			}
 
+			if (Objects.nonNull(toSearch.getSuperclass())) {
+				Method superclassMethod = searchReflectionMethod(toSearch.getSuperclass(), methodName, params);
+				if (Objects.nonNull(superclassMethod)) {
+					return superclassMethod;
+				}
+			}
+
+			for (Class<?> interfaceClass : toSearch.getInterfaces()) {
+				Method interfaceMethod = searchReflectionMethod(interfaceClass, methodName, params);
+				if (Objects.nonNull(interfaceMethod)) {
+					return interfaceMethod;
+				}
+			}
+		}
+		return null;
+	}
+
+	public static List<Method> getReflectionMethods(Class<?> toSearch, Class<?> returnType, Class<?>... params) {
+		List<Method> toFill = new LinkedList<>();
+		if (Objects.nonNull(toSearch)) {
+			Method[] sameReturnType = Arrays.stream(toSearch.getDeclaredMethods()).filter(e -> e.getReturnType().equals(returnType)).toArray(Method[]::new);
+			Method[] sameReturnParamTypes = Arrays.stream(sameReturnType).filter(e -> Arrays.equals(e.getParameterTypes(), params)).toArray(Method[]::new);
+			Collections.addAll(toFill, sameReturnParamTypes);
+
+			if (Objects.nonNull(toSearch.getSuperclass()))
+				toFill.addAll(getReflectionMethods(toSearch.getSuperclass(), returnType, params));
+
+			for (Class<?> interfaceClass : toSearch.getInterfaces())
+				toFill.addAll(getReflectionMethods(interfaceClass, returnType, params));
+		}
+		return toFill;
+	}
+
+	public static List<Method> getReflectionMethods(Class<?> toSearch) {
+		List<Method> toFill = new LinkedList<>();
+		if (Objects.nonNull(toSearch)) {
+			Method[] sameReturnType = Arrays.stream(toSearch.getDeclaredMethods()).toArray(Method[]::new);
+			Method[] sameReturnParamTypes = Arrays.stream(sameReturnType).toArray(Method[]::new);
+			Collections.addAll(toFill, sameReturnParamTypes);
+
+			if (Objects.nonNull(toSearch.getSuperclass()))
+				toFill.addAll(getReflectionMethods(toSearch.getSuperclass()));
+
+			for (Class<?> interfaceClass : toSearch.getInterfaces())
+				toFill.addAll(getReflectionMethods(interfaceClass));
+		}
+		return toFill;
+	}
+
+	public static List<Field> getReflectionFields(Class<?> toSearch) {
+		List<Field> toFill = new LinkedList<>();
+		if (Objects.nonNull(toSearch)) {
+			Collections.addAll(toFill, Arrays.stream(toSearch.getDeclaredFields()).toArray(Field[]::new));
+
+			if (Objects.nonNull(toSearch.getSuperclass()))
+				toFill.addAll(getReflectionFields(toSearch.getSuperclass()));
+
+			for (Class<?> interfaceClass : toSearch.getInterfaces())
+				toFill.addAll(getReflectionFields(interfaceClass));
+		}
+		return toFill;
+	}
+
+	/**
+	 * TODO
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static Point2D intersection(Line2D a, Line2D b) {
+		double x1 = a.getX1(), y1 = a.getY1(), x2 = a.getX2(), y2 = a.getY2(), x3 = b.getX1(), y3 = b.getY1(),
+				x4 = b.getX2(), y4 = b.getY2();
+		double d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+		if (d == 0) {
+			return null;
+		}
+
+		double xi = ((x3 - x4) * (x1 * y2 - y1 * x2) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
+		double yi = ((y3 - y4) * (x1 * y2 - y1 * x2) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
+
+		return new Point2D.Double(xi, yi);
+	}
+}
