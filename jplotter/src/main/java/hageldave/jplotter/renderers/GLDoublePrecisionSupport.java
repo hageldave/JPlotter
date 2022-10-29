@@ -11,5 +11,4 @@ public interface GLDoublePrecisionSupport {
 	 * @param enable true when enabling
 	 */
 	public void setGLDoublePrecisionEnabled(boolean enable);
-	
 }

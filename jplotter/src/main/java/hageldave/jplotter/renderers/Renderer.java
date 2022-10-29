@@ -1,5 +1,8 @@
 package hageldave.jplotter.renderers;
 
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.pdf.PDFRenderer;
@@ -70,6 +73,7 @@ public interface Renderer extends AutoCloseable, SVGRenderer, PDFRenderer {
 	 * When disabled those methods return right away and will not render anything.
 	 * @param enable true when activating, false when deactivating.
 	 */
+	@DebugSetter(ID = "enabled", creator = ButtonCreator.class)
 	public void setEnabled(boolean enable);
 	
 	/**
@@ -78,6 +82,7 @@ public interface Renderer extends AutoCloseable, SVGRenderer, PDFRenderer {
 	 * When disabled those methods return right away and will not render anything.
 	 * @return true when active
 	 */
+	@DebugGetter(ID = "enabled")
 	public boolean isEnabled();
 	
 	/**
@@ -99,5 +104,4 @@ public interface Renderer extends AutoCloseable, SVGRenderer, PDFRenderer {
 	public default ChainedRenderer withPrepended(Renderer r){
 		return new ChainedRenderer(r, this);
 	}
-
 }
