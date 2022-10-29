@@ -15,6 +15,7 @@ import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Utils;
 
 import java.awt.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -24,6 +25,8 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
+
+import static java.awt.geom.Rectangle2D.*;
 
 /**
  * The Lines class is a collection of linear line segments.
@@ -386,7 +389,93 @@ public class Lines implements Renderable {
 				.filter(seg->rect.intersectsLine(seg.p0.getX(), seg.p0.getY(), seg.p1.getX(), seg.p1.getY()))
 				.collect(Collectors.toList());
 	}
-	
+
+	/**
+	 * TODO
+	 * @param rect
+	 * @param line
+	 * @return
+	 */
+	public static Line2D getClippedLine(Rectangle2D rect, Line2D line) {
+		Point2D intersectionPoint;
+
+		double x1 = line.getX1();
+		double y1 = line.getY1();
+		double x2 = line.getX2();
+		double y2 = line.getY2();
+
+		List<Point2D> points = new ArrayList<>(2);
+		points.add(line.getP1());
+		points.add(line.getP2());
+
+		for (Point2D point: points) {
+			double x = point.getX();
+			double y = point.getY();
+			switch (rect.outcode(x1, y1)) {
+				case OUT_LEFT:
+					// clip left
+					intersectionPoint = Utils.intersection(
+							new Line2D.Double(
+									new Point2D.Double(rect.getMinX(), rect.getMinY()),
+									new Point2D.Double(rect.getMinX(), rect.getMaxY())
+							),
+							new Line2D.Double(
+									new Point2D.Double(x1, y1),
+									new Point2D.Double(x2, y2)
+							)
+					);
+					x = Objects.requireNonNull(intersectionPoint).getX();
+					y = intersectionPoint.getY();
+
+					break;
+				case OUT_TOP:
+					intersectionPoint = Utils.intersection(
+							new Line2D.Double(
+									new Point2D.Double(rect.getMinX(), rect.getMinY()),
+									new Point2D.Double(rect.getMaxX(), rect.getMinY())
+							),
+							new Line2D.Double(
+									new Point2D.Double(x1, y1),
+									new Point2D.Double(x2, y2)
+							)
+					);
+					x = Objects.requireNonNull(intersectionPoint).getX();
+					y = intersectionPoint.getY();
+					break;
+				case OUT_RIGHT:
+					intersectionPoint = Utils.intersection(
+							new Line2D.Double(
+									new Point2D.Double(rect.getMaxX(), rect.getMinY()),
+									new Point2D.Double(rect.getMaxX(), rect.getMaxY())
+							),
+							new Line2D.Double(
+									new Point2D.Double(x1, y1),
+									new Point2D.Double(x2, y2)
+							)
+					);
+					x = Objects.requireNonNull(intersectionPoint).getX();
+					y = intersectionPoint.getY();
+					break;
+				case OUT_BOTTOM:
+					intersectionPoint = Utils.intersection(
+							new Line2D.Double(
+									new Point2D.Double(rect.getMinX(), rect.getMaxY()),
+									new Point2D.Double(rect.getMaxX(), rect.getMaxY())
+							),
+							new Line2D.Double(
+									new Point2D.Double(x1, y1),
+									new Point2D.Double(x2, y2)
+							)
+					);
+					x = Objects.requireNonNull(intersectionPoint).getX();
+					y = intersectionPoint.getY();
+					break;
+			}
+			point.setLocation(x, y);
+		}
+		return new Line2D.Double(line.getP1(), line.getP2());
+	}
+
 	/**
 	 * Whether this Lines object has a stroke pattern other than 0xffff (completely solid).
 	 * @return true when stroke pattern != 0xffff

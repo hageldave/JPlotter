@@ -524,14 +524,17 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                 stroke = new BasicStroke(thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f);
             }
             g.setStroke(stroke);
-            g.draw(new Line2D.Double(x1, y1, x2, y2));
+
+			// clip segments before here
+			Line2D clippedLine = Lines.getClippedLine(viewportRect, new Line2D.Double(x1, y1, x2, y2));
+
+            g.draw(clippedLine);
 
             if (seg.pickColor != 0) {
                 p.setStroke(stroke);
                 p.setColor(new Color(seg.pickColor));
                 p.draw(new Line2D.Double(x1, y1, x2, y2));
             }
-
         }
     }
 
