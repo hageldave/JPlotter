@@ -362,7 +362,16 @@ public class Utils {
 	public static ImageObserver imageObserver(int flags) {
 		return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
 	}
-	
+
+	/**
+	 * Searches for a specific method in a class (and its superclass & interfaces) using reflections.
+	 * It's also possible to search for the variant with the correct parameters (in case that the method is overloaded)
+	 *
+	 * @param toSearch the class where the method is located
+	 * @param methodName name of the method that should be returned
+	 * @param params parameters of the method
+	 * @return the method, null if the method hasn't been found
+	 */
 	public static Method searchReflectionMethod(Class<?> toSearch, String methodName, Class<?>... params) {
 		if (Objects.nonNull(toSearch)) {
 			if (Arrays.stream(toSearch.getDeclaredMethods()).anyMatch(e -> e.getName().equals(methodName))) {
@@ -390,6 +399,14 @@ public class Utils {
 		return null;
 	}
 
+	/**
+	 * Searches for multiple methods that match the return type and parameters in a class (and its superclass & interfaces) using reflections.
+	 *
+	 * @param toSearch the class where the method(s) are located
+	 * @param returnType return type of the method(s) that should be returned
+	 * @param params parameters of the method(s) that should be returned
+	 * @return list of methods that match the return type and the parameters
+	 */
 	public static List<Method> getReflectionMethods(Class<?> toSearch, Class<?> returnType, Class<?>... params) {
 		List<Method> toFill = new LinkedList<>();
 		if (Objects.nonNull(toSearch)) {
@@ -406,6 +423,12 @@ public class Utils {
 		return toFill;
 	}
 
+	/**
+	 * Returns all methods of a class, its superclass and its interfaces using reflections.
+	 *
+	 * @param toSearch the class where the methods are located
+	 * @return list of methods located in the class, its superclass and its interfaces
+	 */
 	public static List<Method> getReflectionMethods(Class<?> toSearch) {
 		List<Method> toFill = new LinkedList<>();
 		if (Objects.nonNull(toSearch)) {
@@ -422,6 +445,12 @@ public class Utils {
 		return toFill;
 	}
 
+	/**
+	 * Returns all fields of a class, its superclass and its interfaces using reflections.
+	 *
+	 * @param toSearch the class where the fields are located
+	 * @return list of fields located in the class, its superclass and its interfaces
+	 */
 	public static List<Field> getReflectionFields(Class<?> toSearch) {
 		List<Field> toFill = new LinkedList<>();
 		if (Objects.nonNull(toSearch)) {
