@@ -47,7 +47,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
     protected boolean isDone = false;
     protected int radius = 25;
     protected Lines.SegmentDetails hoverIndicator = null;
-    protected SequentialSelectionModel<Point2D.Double> selectionModel = new SequentialSelectionModel<>(Comparator.comparingInt(Point2D::hashCode));
+    protected SequentialSelectionModel<Point2D.Double> selectionModel = new SequentialSelectionModel<>();
 
     /**
      * Creates an CoordSysRopeSelection instance for the specified canvas and corresponding coordinate system.

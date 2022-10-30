@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -55,22 +54,11 @@ public class SequentialSelectionModel<T> {
         return selection.isEmpty() ? def : selection.getLast();
     }
 
-
-    /**
-     * Creates a new SimpleSelectionModel using the specified comparator
-     * to sort the model's items.
-     *
-     * @param comp comparator to be used (null for natural ordering)
-     */
-    public SequentialSelectionModel(Comparator<? super T> comp) {
-        this.selection = new LinkedList<>();
-    }
-
     /**
      * Creates a new SimpleSelectionModel.
      */
     public SequentialSelectionModel() {
-        this(null);
+        this.selection = new LinkedList<>();
     }
 
     /**
