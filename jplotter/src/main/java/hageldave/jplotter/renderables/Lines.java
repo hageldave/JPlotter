@@ -398,134 +398,62 @@ public class Lines implements Renderable {
 	 */
 	public static Line2D getClippedLine(Rectangle2D rect, Line2D line) {
 		Point2D intersectionPoint;
+		double x1 = line.getX1(); double y1 = line.getY1();
+		double x2 = line.getX2(); double y2 = line.getY2();
 
-		double x1 = line.getX1();
-		double y1 = line.getY1();
-		double x2 = line.getX2();
-		double y2 = line.getY2();
+		Line2D.Double unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		Line2D.Double leftBorder = new Line2D.Double(new Point2D.Double(rect.getMinX(), rect.getMinY()), new Point2D.Double(rect.getMinX(), rect.getMaxY()));
+		Line2D.Double rightBorder = new Line2D.Double(new Point2D.Double(rect.getMaxX(), rect.getMinY()), new Point2D.Double(rect.getMaxX(), rect.getMaxY()));
+		Line2D.Double topBorder = new Line2D.Double(new Point2D.Double(rect.getMinX(), rect.getMinY()), new Point2D.Double(rect.getMaxX(), rect.getMinY()));
+		Line2D.Double bottomBorder = new Line2D.Double(new Point2D.Double(rect.getMinX(), rect.getMaxY()), new Point2D.Double(rect.getMaxX(), rect.getMaxY()));
 
 		switch (rect.outcode(x1, y1)) {
 			case OUT_LEFT:
 				// clip left
-				intersectionPoint = Utils.intersection(
-						new Line2D.Double(
-								new Point2D.Double(rect.getMinX(), rect.getMinY()),
-								new Point2D.Double(rect.getMinX(), rect.getMaxY())
-						),
-						new Line2D.Double(
-								new Point2D.Double(x1, y1),
-								new Point2D.Double(x2, y2)
-						)
-				);
-				x1 = intersectionPoint.getX();
-				y1 = intersectionPoint.getY();
-
+				intersectionPoint = Utils.intersection(leftBorder, unclippedLine);
+				x1 = Objects.requireNonNull(intersectionPoint).getX();
+				y1 = Objects.requireNonNull(intersectionPoint).getY();
 				break;
 			case OUT_TOP:
-				intersectionPoint = Utils.intersection(
-						new Line2D.Double(
-								new Point2D.Double(rect.getMinX(), rect.getMinY()),
-								new Point2D.Double(rect.getMaxX(), rect.getMinY())
-						),
-						new Line2D.Double(
-								new Point2D.Double(x1, y1),
-								new Point2D.Double(x2, y2)
-						)
-				);
-				x1 = intersectionPoint.getX();
-				y1 = intersectionPoint.getY();
+				intersectionPoint = Utils.intersection(topBorder, unclippedLine);
+				x1 = Objects.requireNonNull(intersectionPoint).getX();
+				y1 = Objects.requireNonNull(intersectionPoint).getY();
 				break;
 			case OUT_RIGHT:
-				intersectionPoint = Utils.intersection(
-						new Line2D.Double(
-								new Point2D.Double(rect.getMaxX(), rect.getMinY()),
-								new Point2D.Double(rect.getMaxX(), rect.getMaxY())
-						),
-						new Line2D.Double(
-								new Point2D.Double(x1, y1),
-								new Point2D.Double(x2, y2)
-						)
-				);
-				x1 = intersectionPoint.getX();
-				y1 = intersectionPoint.getY();
+				intersectionPoint = Utils.intersection(rightBorder, unclippedLine);
+				x1 = Objects.requireNonNull(intersectionPoint).getX();
+				y1 = Objects.requireNonNull(intersectionPoint).getY();
 				break;
 			case OUT_BOTTOM:
-				intersectionPoint = Utils.intersection(
-						new Line2D.Double(
-								new Point2D.Double(rect.getMinX(), rect.getMaxY()),
-								new Point2D.Double(rect.getMaxX(), rect.getMaxY())
-						),
-						new Line2D.Double(
-								new Point2D.Double(x1, y1),
-								new Point2D.Double(x2, y2)
-						)
-				);
-				x1 = intersectionPoint.getX();
-				y1 = intersectionPoint.getY();
+				intersectionPoint = Utils.intersection(bottomBorder, unclippedLine);
+				x1 = Objects.requireNonNull(intersectionPoint).getX();
+				y1 = Objects.requireNonNull(intersectionPoint).getY();
 				break;
 		}
 
 		switch (rect.outcode(x2, y2)) {
 			case OUT_LEFT:
 				// clip left
-				intersectionPoint = Utils.intersection(
-						new Line2D.Double(
-								new Point2D.Double(rect.getMinX(), rect.getMinY()),
-								new Point2D.Double(rect.getMinX(), rect.getMaxY())
-						),
-						new Line2D.Double(
-								new Point2D.Double(x1, y1),
-								new Point2D.Double(x2, y2)
-						)
-				);
-				x2 = intersectionPoint.getX();
-				y2 = intersectionPoint.getY();
-
+				intersectionPoint = Utils.intersection(leftBorder, unclippedLine);
+				x2 = Objects.requireNonNull(intersectionPoint).getX();
+				y2 = Objects.requireNonNull(intersectionPoint).getY();
 				break;
 			case OUT_TOP:
-				intersectionPoint = Utils.intersection(
-						new Line2D.Double(
-								new Point2D.Double(rect.getMinX(), rect.getMinY()),
-								new Point2D.Double(rect.getMaxX(), rect.getMinY())
-						),
-						new Line2D.Double(
-								new Point2D.Double(x1, y1),
-								new Point2D.Double(x2, y2)
-						)
-				);
-				x2 = intersectionPoint.getX();
-				y2 = intersectionPoint.getY();
+				intersectionPoint = Utils.intersection(topBorder, unclippedLine);
+				x2 = Objects.requireNonNull(intersectionPoint).getX();
+				y2 = Objects.requireNonNull(intersectionPoint).getY();
 				break;
 			case OUT_RIGHT:
-				intersectionPoint = Utils.intersection(
-						new Line2D.Double(
-								new Point2D.Double(rect.getMaxX(), rect.getMinY()),
-								new Point2D.Double(rect.getMaxX(), rect.getMaxY())
-						),
-						new Line2D.Double(
-								new Point2D.Double(x1, y1),
-								new Point2D.Double(x2, y2)
-						)
-				);
-				x2 = intersectionPoint.getX();
-				y2 = intersectionPoint.getY();
+				intersectionPoint = Utils.intersection(rightBorder, unclippedLine);
+				x2 = Objects.requireNonNull(intersectionPoint).getX();
+				y2 = Objects.requireNonNull(intersectionPoint).getY();
 				break;
 			case OUT_BOTTOM:
-				intersectionPoint = Utils.intersection(
-						new Line2D.Double(
-								new Point2D.Double(rect.getMinX(), rect.getMaxY()),
-								new Point2D.Double(rect.getMaxX(), rect.getMaxY())
-						),
-						new Line2D.Double(
-								new Point2D.Double(x1, y1),
-								new Point2D.Double(x2, y2)
-						)
-				);
-				x2 = intersectionPoint.getX();
-				y2 = intersectionPoint.getY();
+				intersectionPoint = Utils.intersection(bottomBorder, unclippedLine);
+				x2 = Objects.requireNonNull(intersectionPoint).getX();
+				y2 = Objects.requireNonNull(intersectionPoint).getY();
 				break;
 		}
-
 		return new Line2D.Double(x1, y1, x2, y2);
 	}
 
