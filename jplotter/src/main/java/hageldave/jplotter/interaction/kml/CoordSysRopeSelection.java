@@ -2,7 +2,7 @@ package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorScheme;
-import hageldave.jplotter.interaction.SequentialSelectionModel;
+import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
@@ -47,7 +47,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
     protected boolean isDone = false;
     protected int radius = 25;
     protected Lines.SegmentDetails hoverIndicator = null;
-    protected SequentialSelectionModel<Point2D.Double> selectionModel = new SequentialSelectionModel<>();
+    protected SimpleSelectionModel<List<Point2D.Double>> selectionModel = new SimpleSelectionModel<>(Comparator.comparingInt(List::hashCode));
 
     /**
      * Creates an CoordSysRopeSelection instance for the specified canvas and corresponding coordinate system.
@@ -63,6 +63,10 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
         this.keyMaskListener = keyMaskListener;
         this.overlay.addItemToRender(lines).addItemToRender(points);
         this.coordSys.setContent(this.coordSys.getContent().withAppended(this.overlay));
+
+        List<List<Point2D.Double>> initialSelection = new ArrayList<>();
+        initialSelection.add(new ArrayList<>());
+        selectionModel.setSelection(initialSelection);
 
         selectionModel.addSelectionListener(e -> {
             if (!e.isEmpty()) drawSelection();
@@ -80,7 +84,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
                 clearSelectionResources();
             } else if (!isDone) {
                 Point2D pointInCoordsys = coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
-                List<Point2D.Double> currentSelection = new LinkedList<>(selectionModel.getSelection());
+                List<Point2D.Double> currentSelection = new LinkedList<>(selectionModel.getSelection().first());
                 currentSelection.add((Point2D.Double) pointInCoordsys);
                 selectionModel.setSelection(currentSelection);
             }
@@ -89,8 +93,8 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (!selectionModel.getSelection().isEmpty() && keyMaskListener.areKeysPressed() && !isDone) {
-            Point2D.Double firstPoint = selectionModel.getSelection().get(0);
+        if (!selectionModel.getSelection().isEmpty() && !selectionModel.getSelection().first().isEmpty() && keyMaskListener.areKeysPressed() && !isDone) {
+            Point2D.Double firstPoint = selectionModel.getSelection().first().get(0);
             Point2D pointInAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
             if (e.getPoint().distanceSq(pointInAWT) < radius) {
                 this.points.getPointDetails().get(0).setColor(Color.RED);
@@ -101,7 +105,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
             if (Objects.nonNull(hoverIndicator)) {
                 this.lines.getSegments().remove(hoverIndicator);
             }
-            Point2D.Double lastPoint = selectionModel.getSelection().get(selectionModel.getSelection().size()-1);
+            Point2D.Double lastPoint = selectionModel.getSelection().first().get(selectionModel.getSelection().first().size()-1);
             hoverIndicator = this.lines.addSegment(lastPoint, coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight())).setColor(colorScheme.getColor2());
             canvas.repaint();
             canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -117,9 +121,9 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
 
     protected Path2D calculateSelectedArea() {
         Path2D selectedArea = new Path2D.Double();
-        selectedArea.moveTo(selectionModel.getSelection().get(0).getX(), selectionModel.getSelection().get(0).getY());
+        selectedArea.moveTo(selectionModel.getSelection().first().get(0).getX(), selectionModel.getSelection().first().get(0).getY());
         for (int i = 1; i < selectionModel.getSelection().size(); i++) {
-            selectedArea.lineTo(selectionModel.getSelection().get(i).getX(), selectionModel.getSelection().get(i).getY());
+            selectedArea.lineTo(selectionModel.getSelection().first().get(i).getX(), selectionModel.getSelection().first().get(i).getY());
         }
         selectedArea.closePath();
         return selectedArea;
@@ -156,14 +160,15 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
      * @param pointsToSet the coordinates to set in the coordsys (have to be given in coordsys coordinates)
      */
     public void setSelection(List<Point2D.Double> pointsToSet) {
-        selectionModel.setSelection(pointsToSet);
+        selectionModel.getSelection().first().clear();
+        selectionModel.getSelection().first().addAll(pointsToSet);
     }
 
     protected void drawSelection() {
         clearSelectionResources();
 
         List<Point2D.Double> coordinates = new LinkedList<>();
-        for (Point2D.Double pointInCoordsys: selectionModel.getSelection()) {
+        for (Point2D.Double pointInCoordsys: selectionModel.getSelection().first()) {
             coordinates.add(pointInCoordsys);
             this.points.addPoint(pointInCoordsys).setColor(colorScheme.getColor1());
 
@@ -182,7 +187,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
 
                     // call selected interface
                     areaSelected(calculateSelectedArea());
-                    selectionModel.setSelection();
+                    selectionModel.getSelection().first().clear();
                     System.out.println("Selection is done.");
                     break;
                 } else {
