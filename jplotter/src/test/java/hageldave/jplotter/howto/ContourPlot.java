@@ -7,7 +7,6 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.debugging.ui.DebuggerUI;
 import hageldave.jplotter.misc.Contours;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
@@ -16,9 +15,7 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.CurvesRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
-import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import javax.swing.*;
@@ -26,8 +23,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
@@ -92,7 +87,7 @@ public class ContourPlot {
 
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		boolean useOpenGL = false;
+		boolean useOpenGL = true;
 		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		canvas.setRenderer(coordsys);
 		canvas.asComponent().setPreferredSize(new Dimension(400, 400));
@@ -151,31 +146,5 @@ public class ContourPlot {
 				System.out.println("exported pdf");
 			});
 		}
-
-
-		DebuggerUI debugger = new DebuggerUI(canvas);
-		debugger.display();
-
-		CurvesRenderer r = new CurvesRenderer();
-		Class<?> test = r.getClass();
-
-		//test.getDeclaredMethod("getShader");
-		//System.out.println(Utils.searchReflectionMethod(test, "getShader"));
-		//Method m = Utils.searchReflectionMethod(test, "getShader");
-		//m.setAccessible(true);
-		//System.out.println(Objects.requireNonNull(m).invoke(r));
-
-
-		Utils.getReflectionMethods(test, String.class, ArrayList.class, double.class, double.class, double.class, double.class);
-		List<Method> test3 = Utils.getReflectionMethods(test, boolean.class);
-
-		System.out.println(test3);
-
-
-		//coordsys.setContent(r);
-		canvas.scheduleRepaint();
-
-
-		debugger.refresh();
 	}
 }
