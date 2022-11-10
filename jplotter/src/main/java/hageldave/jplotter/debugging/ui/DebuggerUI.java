@@ -64,7 +64,7 @@ public class DebuggerUI {
         prevDebugUI.set(changeDebuggerPanel(frame, debuggerPanel, this.debuggerList.get(0)));
         debuggerPanel.add(selectionWrapper, BorderLayout.SOUTH);
 
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.getContentPane().add(debuggerPanel);
         frame.setPreferredSize(new Dimension(950, 550));
         SwingUtilities.invokeLater(()->{
