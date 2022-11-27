@@ -871,9 +871,15 @@ public class ScatterPlot {
     }
 
 	/**
-	 * TODO:
+	 * The PointSetSelectionListener interface is responsible for notifying of point set changes.
 	 */
     public static interface PointSetSelectionListener {
+		/**
+		 * This method is called whenever the selection of points has changed.
+		 *
+		 * @param selectedPoints a list of pairs which map chunk indices to the set of points which have been selected of the corresponding chunk
+		 * @param selectionArea the area of the selection
+		 */
     	public void onPointSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Rectangle2D selectionArea);
     }
     
