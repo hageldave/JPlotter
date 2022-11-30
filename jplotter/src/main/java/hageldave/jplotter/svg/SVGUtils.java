@@ -1,38 +1,36 @@
 package hageldave.jplotter.svg;
 
-import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
-
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Font;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.swing.JLabel;
-
+import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.misc.Glyph;
+import hageldave.jplotter.renderables.NewText;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
+import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
+import org.scilab.forge.jlatexmath.DefaultTeXFont;
+import org.scilab.forge.jlatexmath.TeXConstants;
+import org.scilab.forge.jlatexmath.TeXFormula;
+import org.scilab.forge.jlatexmath.TeXIcon;
+import org.scilab.forge.jlatexmath.cyrillic.CyrillicRegistration;
+import org.scilab.forge.jlatexmath.greek.GreekRegistration;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import hageldave.imagingkit.core.Pixel;
-import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.misc.Glyph;
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 /**
  * Utility class for SVG related methods.
@@ -351,4 +349,29 @@ public class SVGUtils {
 		}
 	}
 
+	public static Element latexToSVG(NewText txt, Document doc, double x, double y) throws IOException {
+		SVGGeneratorContext ctx = SVGGeneratorContext.createDefault(doc);
+		SVGGraphics2D g2 = new SVGGraphics2D(ctx, true);
+
+		DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
+		DefaultTeXFont.registerAlphabet(new GreekRegistration());
+
+		TeXFormula formula = new TeXFormula(txt.getTextString());
+		TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
+		icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
+
+		g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
+		g2.setColor(txt.getBackground());
+		g2.fillRect((int) x, (int) y, icon.getIconWidth(), icon.getIconHeight());
+
+		JLabel jl = new JLabel();
+		jl.setForeground(txt.getColor());
+		icon.paintIcon(jl, g2, (int) x, (int) y);
+
+		Element textGroup = SVGUtils.createSVGElement(doc, "g");
+		doc.getDocumentElement().appendChild(textGroup);
+		textGroup.appendChild(g2.getTopLevelGroup(true));
+
+		return textGroup;
+	}
 }

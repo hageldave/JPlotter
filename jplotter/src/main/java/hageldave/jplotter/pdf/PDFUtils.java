@@ -3,6 +3,7 @@ package hageldave.jplotter.pdf;
 import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.FontProvider;
+import hageldave.jplotter.renderables.NewText;
 import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSInteger;
@@ -17,8 +18,15 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
 import org.apache.pdfbox.util.Matrix;
+import org.scilab.forge.jlatexmath.DefaultTeXFont;
+import org.scilab.forge.jlatexmath.TeXConstants;
+import org.scilab.forge.jlatexmath.TeXFormula;
+import org.scilab.forge.jlatexmath.TeXIcon;
+import org.scilab.forge.jlatexmath.cyrillic.CyrillicRegistration;
+import org.scilab.forge.jlatexmath.greek.GreekRegistration;
 
 import javax.imageio.stream.MemoryCacheImageOutputStream;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -362,4 +370,24 @@ public class PDFUtils {
         }
     }
 
+    public static PDDocument latexToPDF(PDDocument doc, PDPageContentStream cs, NewText txt, double x, double y) throws IOException {
+        DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
+        DefaultTeXFont.registerAlphabet(new GreekRegistration());
+
+        TeXFormula formula = new TeXFormula(txt.getTextString());
+        TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
+        icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
+
+        PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, (int) (x+icon.getIconWidth()), (int) (y+icon.getIconHeight()));
+
+        JLabel jl = new JLabel();
+        jl.setForeground(txt.getColor());
+        icon.paintIcon(jl, g2d, (int) x, icon.getIconHeight()-txt.getTextSize().height);
+
+        g2d.dispose();
+        PDFormXObject xform = g2d.getXFormObject();
+        cs.drawForm(xform);
+
+        return doc;
+    }
 }

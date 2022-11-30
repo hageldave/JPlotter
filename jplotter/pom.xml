@@ -72,6 +72,12 @@
 			<artifactId>graphics2d</artifactId>
 			<version>0.34</version>
 		</dependency>
+		<!-- JLatexMath - Render Latex expressions to images -->
+		<dependency>
+			<groupId>org.scilab.forge</groupId>
+			<artifactId>jlatexmath</artifactId>
+			<version>1.0.7</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>

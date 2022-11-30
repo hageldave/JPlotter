@@ -46,10 +46,11 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 	public final TextRenderer text = new TextRenderer();
 	public final TrianglesRenderer triangles = new TrianglesRenderer();
 	public final CurvesRenderer curves = new CurvesRenderer();
+	public final NewTextRenderer newText = new NewTextRenderer();
 
-	private final Renderer[] rendererLUT = {triangles,lines,curves,points,text};
-	public static final int TRI = 0, LIN = 1, PNT = 2, TXT = 3, CRV = 4;
-	private final int[] renderOrder = {TRI,LIN,CRV,PNT,TXT};
+	private final Renderer[] rendererLUT = {triangles,lines,curves,points,text,newText};
+	public static final int TRI = 0, LIN = 1, PNT = 2, TXT = 3, CRV = 4, NTX = 5;
+	private final int[] renderOrder = {TRI,LIN,CRV,PNT,TXT,NTX};
 	boolean isEnabled = true;
 	
 	/**
@@ -70,12 +71,13 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 	 * @return this for chaining
 	 */
 	@DebugSetter(ID = "renderOrder", creator = RenderOrderCreator.class)
-	public CompleteRenderer setRenderOrder(int first, int second, int third, int fourth, int fifth){
+	public CompleteRenderer setRenderOrder(int first, int second, int third, int fourth, int fifth, int sixth){
 		renderOrder[0] = first;
 		renderOrder[1] = second;
 		renderOrder[2] = third;
 		renderOrder[3] = fourth;
 		renderOrder[4] = fifth;
+		renderOrder[5] = sixth;
 		return this;
 	}
 
@@ -94,6 +96,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		points.setView(rect);
 		text.setView(rect);
 		curves.setView(rect);
+		newText.setView(rect);
 	}
 
 	/**
@@ -106,6 +109,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		points.glInit();
 		text.glInit();
 		curves.glInit();
+		newText.glInit();
 	}
 
 	/**
@@ -122,6 +126,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		rendererLUT[renderOrder[2]].render(vpx,vpy,w, h);
 		rendererLUT[renderOrder[3]].render(vpx,vpy,w, h);
 		rendererLUT[renderOrder[4]].render(vpx,vpy,w, h);
+		rendererLUT[renderOrder[5]].render(vpx,vpy,w, h);
 	}
 	
 	@Override
@@ -134,6 +139,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		rendererLUT[renderOrder[2]].renderFallback(g, p, w, h);
 		rendererLUT[renderOrder[3]].renderFallback(g, p, w, h);
 		rendererLUT[renderOrder[4]].renderFallback(g, p, w, h);
+		rendererLUT[renderOrder[5]].renderFallback(g, p, w, h);
 	}
 
 	/**
@@ -146,6 +152,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		points.close();
 		text.close();
 		curves.close();
+		newText.close();
 	}
 	
 	@Override
@@ -194,6 +201,9 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		} else
 		if(item instanceof Curves){
 			curves.addItemToRender((Curves) item);
+		} else
+		if(item instanceof NewText){
+			newText.addItemToRender((NewText) item);
 		} else {
 			throw new IllegalArgumentException(
 					"Cannot add Renderable of type " 
@@ -214,6 +224,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		rendererLUT[renderOrder[2]].renderSVG(doc, parent, w, h);
 		rendererLUT[renderOrder[3]].renderSVG(doc, parent, w, h);
 		rendererLUT[renderOrder[4]].renderSVG(doc, parent, w, h);
+		rendererLUT[renderOrder[5]].renderSVG(doc, parent, w, h);
 	}
 
 	@Override
@@ -226,5 +237,6 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		rendererLUT[renderOrder[2]].renderPDF(doc, page, x, y, w, h);
 		rendererLUT[renderOrder[3]].renderPDF(doc, page, x, y, w, h);
 		rendererLUT[renderOrder[4]].renderPDF(doc, page, x, y, w, h);
+		rendererLUT[renderOrder[5]].renderPDF(doc, page, x, y, w, h);
 	}
 }
