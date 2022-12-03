@@ -40,7 +40,7 @@ public class NewText implements Renderable {
      * or bitwise union BOLD|ITALIC.
      * @param textcolor color of the text
      */
-    public NewText(String textstr, int fontsize, int style, Color textcolor, boolean latex) {
+    protected NewText(String textstr, int fontsize, int style, Color textcolor, boolean latex) {
         this.txtStr = textstr;
         this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style).getBounds().getSize();
         this.fontsize = fontsize;
@@ -59,7 +59,19 @@ public class NewText implements Renderable {
      * @param textcolor color of the text (integer packed ARGB)
      */
     public NewText(String textstr, int fontsize, int style, int textcolor) {
-        this(textstr,fontsize,style, new Color(textcolor, true), false);
+        this(textstr,fontsize,style, new Color(textcolor, true), NewText.isLatex(textstr));
+    }
+
+    /**
+     * Creates a new Text object with the specified string and font configuration.
+     * @param textstr the text to be displayed
+     * @param fontsize point size of the font
+     * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
+     * or bitwise union BOLD|ITALIC.
+     * @param textcolor color of the text (integer packed ARGB)
+     */
+    public NewText(String textstr, int fontsize, int style, Color textcolor) {
+        this(textstr,fontsize,style, textcolor, NewText.isLatex(textstr));
     }
 
     /**
@@ -70,19 +82,10 @@ public class NewText implements Renderable {
      * or bitwise union BOLD|ITALIC.
      */
     public NewText(String textstr, int fontsize, int style) {
-        this(textstr,fontsize,style, new Color(96, 96, 96), false);
+        this(textstr,fontsize,style, new Color(96, 96, 96), NewText.isLatex(textstr));
     }
 
-    /**
-     * Creates a new Text object with the specified string and font configuration.
-     * @param textstr the text to be displayed
-     * @param fontsize point size of the font
-     * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
-     * or bitwise union BOLD|ITALIC.
-     */
-    public NewText(String textstr, int fontsize, int style, boolean latex) {
-        this(textstr,fontsize,style, new Color(96, 96, 96), latex);
-    }
+
 
     /**
      * Sets the color of this text
@@ -318,6 +321,10 @@ public class NewText implements Renderable {
      */
     public boolean isLatex() {
         return latex;
+    }
+
+    public static boolean isLatex(String toEvaluate) {
+        return toEvaluate.startsWith("##BEGINLATEX##");
     }
 
     /**

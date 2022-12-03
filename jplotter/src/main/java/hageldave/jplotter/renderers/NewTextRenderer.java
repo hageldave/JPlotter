@@ -211,9 +211,15 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     g_.fill(rect);
                 }
                 // draw string
-                int maxDescent = g_.getFontMetrics().getMaxDescent();
+                int maxDescent = g_.getFontMetrics().getMaxDescent() * (-1);
+
                 g_.setColor(txt.getColor());
-                g_.drawString(txt.getTextString(), 0, -maxDescent);
+
+                // TODO: is \n universal?
+                for (String line : txt.getTextString().split("\n")) {
+                    g_.drawString(line, 0, maxDescent);
+                    maxDescent += g.getFontMetrics().getHeight();
+                }
 
                 if(txt.getPickColor() != 0) {
                     p_.setColor(new Color(txt.getPickColor()));
