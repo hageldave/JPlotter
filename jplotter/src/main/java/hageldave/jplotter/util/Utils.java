@@ -441,12 +441,17 @@ public class Utils {
 
 	/**
 	 * Clips the given line to the rectangle.
+	 * If the line doesn't intersect the rectangle, clipping will be skipped and the given line object will be returned.
 	 *
 	 * @param rect {@link Rectangle2D} object where the line should be clipped to
 	 * @param line {@link Line2D} object to clip
 	 * @return the clipped line
 	 */
 	public static Line2D getClippedLine(Rectangle2D rect, Line2D line) {
+		// if line does not intersect the rectangle, clipping can be skipped altogether
+		if (!rect.intersectsLine(line))
+			return line;
+
 		Point2D intersectionPoint;
 		double x1 = line.getX1(), y1 = line.getY1(), x2 = line.getX2(), y2 = line.getY2();
 
@@ -506,7 +511,6 @@ public class Utils {
 			x2 = Objects.requireNonNull(intersectionPoint).getX();
 			y2 = Objects.requireNonNull(intersectionPoint).getY();
 		}
-
 		return new Line2D.Double(x1, y1, x2, y2);
 	}
 
