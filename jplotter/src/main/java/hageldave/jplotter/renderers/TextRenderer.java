@@ -532,14 +532,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
 					contentStream.setGraphicsStateParameters(graphicsState);
-
-					if (txt.getAngle()==0) {
-						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
-								txt.getColor(), txt.fontsize, txt.style);
-					} else {
-						PDFUtils.createPDFText(doc, contentStream, txt.getTextString(), new Point2D.Double(x1 + x, y1 + y),
-								txt.getColor(), txt.fontsize, txt.style, txt.getAngle());
-					}
+					// creates the text in the pdf document
+					PDFUtils.createPDFText(doc, contentStream, txt, new Point2D.Double(x1 + x, y1 + y));
 					// restore graphics
 					contentStream.restoreGraphicsState();
 				}

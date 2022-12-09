@@ -4,6 +4,7 @@ import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.renderables.NewText;
+import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSInteger;
@@ -232,24 +233,54 @@ public class PDFUtils {
      * @return resulting content stream
      * @throws IOException If there is an error while creating the text in the document
      */
-    public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, String txt,
-                                                    Point2D position, Color color, int fontSize, int style, float angle) throws IOException {
-        cs.setNonStrokingColor(color);
+    public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, Text txt, Point2D position) throws IOException {
+        cs.setNonStrokingColor(txt.getColor());
         cs.stroke();
         // set correct font
         PDType0Font font = (doc instanceof FontCachedPDDocument) ? 
-        		((FontCachedPDDocument)doc).getFont(style) : createPDFont(doc, style);
-        cs.setFont(font, fontSize);
+        		((FontCachedPDDocument)doc).getFont(txt.style) : createPDFont(doc, txt.style);
+        cs.setFont(font, txt.fontsize);
         cs.beginText();
-        AffineTransform at = new AffineTransform(1, 0.0, 0.0,
-               1, position.getX(), position.getY());
-        at.rotate(angle);
-        cs.setTextMatrix(new Matrix(at));
-        cs.showText(txt);
+
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX(), position.getY());
+        if (txt.getAngle() != 0)
+            affineTransform.rotate(txt.getAngle());
+        cs.setTextMatrix(new Matrix(affineTransform));
+
+        float textHeight = 0;
+        for (String newLine : txt.getTextString().split("\n")) {
+            cs.newLineAtOffset(0, -textHeight);
+            cs.showText(newLine);
+            textHeight += txt.getBounds().getHeight();
+        }
+
         cs.endText();
         return cs;
     }
-    
+
+    public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, NewText txt, Point2D position) throws IOException {
+        cs.setNonStrokingColor(txt.getColor());
+        cs.stroke();
+        // set correct font
+        PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument)doc).getFont(txt.style) : createPDFont(doc, txt.style);
+        cs.setFont(font, txt.fontsize);
+        cs.beginText();
+
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX(), position.getY());
+        if (txt.getAngle() != 0)
+            affineTransform.rotate(txt.getAngle());
+        cs.setTextMatrix(new Matrix(affineTransform));
+
+        float textHeight = 0;
+        for (String newLine : txt.getTextString().split("\n")) {
+            cs.newLineAtOffset(0, -textHeight);
+            cs.showText(newLine);
+            textHeight += txt.getBounds().getHeight();
+        }
+        cs.endText();
+        return cs;
+    }
+
     public static PDType0Font createPDFont(PDDocument doc, int style) throws IOException {
     	switch (style) {
     	case Font.BOLD:
@@ -264,24 +295,6 @@ public class PDFUtils {
     		throw new IllegalArgumentException(
     				"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
     	}
-    }
-
-    /**
-     * Creates a text string in the pdf document with angle 0.
-     *
-     * @param doc PDF document holding the content stream
-     * @param cs content stream that the curve is appended to
-     * @param txt text string that should be rendered in the document
-     * @param position position where the text should be rendered
-     * @param color color of the text
-     * @param fontSize size of font
-     * @param style style of font
-     * @return resulting content stream
-     * @throws IOException If there is an error while creating the text in the document
-     */
-    public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, String txt,
-                                                    Point2D position, Color color, int fontSize, int style) throws IOException {
-        return createPDFText(doc, cs, txt, position, color, fontSize, style, 0);
     }
 
     /**
@@ -360,7 +373,7 @@ public class PDFUtils {
                 JPlotterCanvas canvas = (JPlotterCanvas)comp;
                 if(canvas.isPDFAsImageRenderingEnabled())
                     return; // was already rendered through PdfBoxGraphics2D
-                canvas.paintPDF(doc, page, cs, new Rectangle2D.Double(canvas.asComponent().getX()+xOffset, canvas.asComponent().getY()+yOffset,
+                canvas.paintPDF(doc, page, new Rectangle2D.Double(canvas.asComponent().getX()+xOffset, canvas.asComponent().getY()+yOffset,
                         canvas.asComponent().getWidth(), canvas.asComponent().getHeight()));
             } else {
                 if(comp instanceof Container){
