@@ -742,6 +742,14 @@ public class Legend implements Renderable, Renderer {
 		if(!isEnabled()){
 			return;
 		}
+		if(w == 0 || h == 0){
+			return;
+		}
+		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
+			viewPortWidth = w;
+			viewPortHeight = h;
+			updateGL(false); // only clearGL requires GL context, but all GL resources are null, so no prob.
+		}
 		delegate.renderSVG(doc, parent, w, h);
 	}
 
@@ -749,6 +757,14 @@ public class Legend implements Renderable, Renderer {
 	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
 		if(!isEnabled()){
 			return;
+		}
+		if(w == 0 || h == 0){
+			return;
+		}
+		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
+			viewPortWidth = w;
+			viewPortHeight = h;
+			updateGL(false); // only clearGL requires GL context, but all GL resources are null, so no prob.
 		}
 		delegate.renderPDF(doc, page, x, y, w, h);
 	}
