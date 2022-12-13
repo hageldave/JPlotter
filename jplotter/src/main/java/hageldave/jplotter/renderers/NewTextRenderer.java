@@ -183,7 +183,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 AffineTransform at = new AffineTransform();
                 at.translate(x1, y1+txt.getBounds().getHeight());
                 at.scale(1, -1);
-                at.rotate(angle);
+                if(angle != 0.0)
+                    at.rotate(-angle);
 
                 g_.drawImage(image, at, null);
             } else {
@@ -293,7 +294,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 if (txt.isLatex()) {
                     try {
                         textGroup.appendChild(SVGUtils.latexToSVG(txt, doc, 0, 0));
-                        textGroup.setAttribute("transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+txt.getTextSize().height)+") scale(1,-1)");
+                        textGroup.setAttribute("transform",  "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+txt.getTextSize().height)+")" +"rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

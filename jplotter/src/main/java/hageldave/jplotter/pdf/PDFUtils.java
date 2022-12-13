@@ -391,11 +391,16 @@ public class PDFUtils {
         TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
         icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
-        PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, (int) (x+icon.getIconWidth()), (int) (y+icon.getIconHeight()));
+        PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, icon.getIconWidth(), icon.getIconHeight());
+
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(x, y-txt.getBounds().getHeight());
+        if (txt.getAngle() != 0)
+            affineTransform.rotate(txt.getAngle());
+        cs.transform(new Matrix(affineTransform));
 
         JLabel jl = new JLabel();
         jl.setForeground(txt.getColor());
-        icon.paintIcon(jl, g2d, (int) x, icon.getIconHeight()-txt.getTextSize().height);
+        icon.paintIcon(jl, g2d, 0, 0);
 
         g2d.dispose();
         PDFormXObject xform = g2d.getXFormObject();
