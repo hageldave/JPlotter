@@ -561,8 +561,8 @@ public class CoordSysRenderer implements Renderer {
 		// setup legend areas
 		if(Objects.nonNull(legendRight)){
 			legendRightViewPort.setBounds(
-					(int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4), 
-					paddingBot, 
+					(int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4),
+					paddingBot,
 					legendRightWidth, 
 					(int)(coordsysAreaRT.getY()-paddingBot)
 					);
@@ -829,7 +829,7 @@ public class CoordSysRenderer implements Renderer {
 			// create a new group for the content
 			Element legendGroup = SVGUtils.createSVGElement(doc, "g");
 			parent.appendChild(legendGroup);
-			// define the clipping rectangle for the content (rect of vieport size)
+			// define the clipping rectangle for the content (rect of viewport size)
 			Node defs = SVGUtils.getDefs(doc);
 			Element clip = SVGUtils.createSVGElement(doc, "clipPath");
 			String clipDefID = SVGUtils.newDefId();
@@ -873,10 +873,10 @@ public class CoordSysRenderer implements Renderer {
 		postContentLinesR.renderPDF(doc, page, x, y, w, h);
 		postContentTextR.renderPDF(doc, page, x, y, w, h);
 		if(Objects.nonNull(legendRight)){
-			legendRight.renderPDF(doc, page, legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+			legendRight.renderPDF(doc, page, legendRightViewPort.x, (legendRightViewPort.y + y + legendBottomHeight), legendRightViewPort.width, legendRightViewPort.height-legendBottomViewPort.height);
 		}
 		if(Objects.nonNull(legendBottom)){
-			legendBottom.renderPDF(doc, page, legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+			legendBottom.renderPDF(doc, page, legendBottomViewPort.x, (legendBottomViewPort.y + y), legendBottomViewPort.width, legendBottomViewPort.height);
 		}
 	}
 
