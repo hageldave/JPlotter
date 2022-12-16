@@ -880,7 +880,7 @@ public class BarRenderer implements Renderer {
         // setup legend areas
         if (Objects.nonNull(legendRight)) {
             legendRightViewPort.setBounds(
-                    (int) (yAxisLabelText.getOrigin().getX() + yAxisLabelText.getTextSize().getHeight() + 4),
+                    (int) (coordsysAreaRB.getX() + 10),
                     paddingBot,
                     legendRightWidth - paddingRight,
                     (int) (coordsysAreaRT.getY() - paddingBot)
@@ -1330,8 +1330,8 @@ public class BarRenderer implements Renderer {
         preContentLinesR.renderPDF(doc, page, x, y, w, h);
         preContentTextR.renderPDF(doc, page, x, y, w, h);
         if (content != null) {
-            int viewPortX = (int) coordsysAreaLB.getX();
-            int viewPortY = (int) coordsysAreaLB.getY();
+            int viewPortX = (int) coordsysAreaLB.getX()+x;
+            int viewPortY = (int) coordsysAreaLB.getY()+y;
             int viewPortW = (int) coordsysAreaLB.distance(coordsysAreaRB);
             int viewPortH = (int) coordsysAreaLB.distance(coordsysAreaLT);
             if (content instanceof AdaptableView) {
@@ -1353,12 +1353,12 @@ public class BarRenderer implements Renderer {
         // draw legends
         if (Objects.nonNull(legendRight)) {
             legendRight.renderPDF(doc, page,
-                    legendRightViewPort.x, legendRightViewPort.y,
-                    legendRightViewPort.width, legendRightViewPort.height);
+                    legendRightViewPort.x, legendRightViewPort.y + y + legendBottomHeight,
+                    legendRightViewPort.width, legendRightViewPort.height-legendBottomViewPort.height);
         }
         if (Objects.nonNull(legendBottom)) {
             legendBottom.renderPDF(doc, page,
-                    legendBottomViewPort.x, legendBottomViewPort.y,
+                    legendBottomViewPort.x, legendBottomViewPort.y + y,
                     legendBottomViewPort.width, legendBottomViewPort.height);
         }
     }
