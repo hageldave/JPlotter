@@ -924,7 +924,7 @@ public class ParallelCoordsRenderer implements Renderer {
             return;
         }
         preContentLinesR.renderPDF(doc, page, x, y, w, h);
-        preContentTextR.renderPDF(doc, page, x,y, w, h);
+        preContentTextR.renderPDF(doc, page, x, y, w, h);
         if(content != null){
             int viewPortX = (int)(coordsysAreaLB.getX()+x);
             int viewPortY = (int)(coordsysAreaLB.getY()+y);
@@ -939,10 +939,10 @@ public class ParallelCoordsRenderer implements Renderer {
         postContentLinesR.renderPDF(doc, page, x, y, w, h);
         postContentTextR.renderPDF(doc, page, x, y, w, h);
         if(Objects.nonNull(legendRight)){
-            legendRight.renderPDF(doc, page, legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+            legendRight.renderPDF(doc, page, legendRightViewPort.x + x, legendRightViewPort.y + y + legendBottomViewPort.height, legendRightViewPort.width, legendRightViewPort.height-legendBottomViewPort.height);
         }
         if(Objects.nonNull(legendBottom)){
-            legendBottom.renderPDF(doc, page, legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+            legendBottom.renderPDF(doc, page, legendBottomViewPort.x + x, legendBottomViewPort.y + y, legendBottomViewPort.width, legendBottomViewPort.height);
         }
     }
 
