@@ -1341,11 +1341,11 @@ public class BarRenderer implements Renderer {
             content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
             // render conditional content: e.g. bar identifier
             if (this.alignment == AlignmentConstants.VERTICAL) {
-                xyCondBoundsTextR.renderPDF(doc, page, viewPortX, 0, viewPortW, h);
-                xyCondBoundsLinesR.renderPDF(doc, page, viewPortX, 0, viewPortW, h);
+                xyCondBoundsTextR.renderPDF(doc, page, viewPortX, y, viewPortW, h);
+                xyCondBoundsLinesR.renderPDF(doc, page, viewPortX, y, viewPortW, h);
             } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
-                xyCondBoundsTextR.renderPDF(doc, page, 0, viewPortY, w, viewPortH);
-                xyCondBoundsLinesR.renderPDF(doc, page, 0, viewPortY, w, viewPortH);
+                xyCondBoundsTextR.renderPDF(doc, page, x, viewPortY, w, viewPortH);
+                xyCondBoundsLinesR.renderPDF(doc, page, x, viewPortY, w, viewPortH);
             }
         }
         postContentLinesR.renderPDF(doc, page, x, y, w, h);
@@ -1353,12 +1353,12 @@ public class BarRenderer implements Renderer {
         // draw legends
         if (Objects.nonNull(legendRight)) {
             legendRight.renderPDF(doc, page,
-                    legendRightViewPort.x, legendRightViewPort.y + y + legendBottomHeight,
+                    legendRightViewPort.x + x, legendRightViewPort.y + y + legendBottomViewPort.height,
                     legendRightViewPort.width, legendRightViewPort.height-legendBottomViewPort.height);
         }
         if (Objects.nonNull(legendBottom)) {
             legendBottom.renderPDF(doc, page,
-                    legendBottomViewPort.x, legendBottomViewPort.y + y,
+                    legendBottomViewPort.x + x, legendBottomViewPort.y + y,
                     legendBottomViewPort.width, legendBottomViewPort.height);
         }
     }
