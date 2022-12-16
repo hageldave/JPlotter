@@ -873,10 +873,10 @@ public class CoordSysRenderer implements Renderer {
 		postContentLinesR.renderPDF(doc, page, x, y, w, h);
 		postContentTextR.renderPDF(doc, page, x, y, w, h);
 		if(Objects.nonNull(legendRight)){
-			legendRight.renderPDF(doc, page, legendRightViewPort.x + x, (legendRightViewPort.y + y + legendBottomHeight), legendRightViewPort.width, legendRightViewPort.height-legendBottomViewPort.height);
+			legendRight.renderPDF(doc, page, legendRightViewPort.x + x, legendRightViewPort.y + y + legendBottomViewPort.height, legendRightViewPort.width, legendRightViewPort.height-legendBottomViewPort.height);
 		}
 		if(Objects.nonNull(legendBottom)){
-			legendBottom.renderPDF(doc, page, legendBottomViewPort.x + x, (legendBottomViewPort.y + y), legendBottomViewPort.width, legendBottomViewPort.height);
+			legendBottom.renderPDF(doc, page, legendBottomViewPort.x + x, legendBottomViewPort.y + y, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
 	}
 
