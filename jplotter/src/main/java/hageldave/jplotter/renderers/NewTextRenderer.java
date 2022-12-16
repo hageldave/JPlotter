@@ -185,8 +185,38 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 at.scale(1, -1);
                 if(angle != 0.0)
                     at.rotate(-angle);
-
                 g_.drawImage(image, at, null);
+
+                if(txt.getPickColor() != 0) {
+                    p_.transform(at);
+                    p_.setColor(new Color(txt.getPickColor()));
+                    p_.fillRect (0, 0, image.getWidth(), image.getHeight());
+
+//                    int index = 1;
+//                    AffineTransform initTransform = p_.getTransform();
+//                    for (String line : txt.getTextString().split("\\\\")) {
+//                        if (line.length() > 0) {
+//                            at = new AffineTransform();
+//                            at.translate(x1, y1+txt.getBounds().getHeight()*index);
+//                            at.scale(1, -1);
+//                            if(angle != 0.0)
+//                                at.rotate(-angle);
+//
+//                            p_.transform(at);
+//                            p_.transform(AffineTransform.getRotateInstance(-angle));
+//
+//                            NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
+//
+//                            p_.setColor(new Color(txt.getPickColor()));
+//                            Rectangle2D bounds = tempText.getBounds();
+//                            float rightpadding = 0.4f * ((float) bounds.getWidth() / txt.getTextString().length());
+//                            Rectangle2D rect = new Rectangle2D.Double(0.0, 0.0, bounds.getWidth()/* + rightpadding*/, bounds.getHeight());
+//                            p_.fill(rect);
+//                            p_.setTransform(initTransform);
+//                            index++;
+//                        }
+
+                }
             } else {
                 Font font = FontProvider.getUbuntuMono(txt.fontsize, txt.style);
                 g_.setFont(font);
@@ -293,8 +323,16 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                 if (txt.isLatex()) {
                     try {
-                        textGroup.appendChild(SVGUtils.latexToSVG(txt, doc, 0, 0));
-                        textGroup.setAttribute("transform",  "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+txt.getTextSize().height)+")" +"rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
+                        Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
+                        textInnerGroup.appendChild(svgLatex);
+
+                        if (txt.getAngle() != 0) {
+                            textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+txt.getTextSize().height)+")");
+                            textInnerGroup.setAttributeNS(null, "transform", "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")");
+                            svgLatex.setAttributeNS(null, "transform", "scale(1,-1)");
+                        } else {
+                            textGroup.setAttribute("transform",  "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+txt.getTextSize().height)+")" + "scale(1,-1)");
+                        }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
