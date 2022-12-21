@@ -186,7 +186,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 at.scale(1, -1);
                 if(angle != 0.0)
                     at.rotate(-angle);
-                g_.drawImage(image, at, null);
+                g_.transform(at);
+                g_.drawImage(image, null, 0, 0);
 
                 if(txt.getPickColor() != 0) {
                     p_.transform(at);
