@@ -771,6 +771,15 @@ public class CoordSysRenderer implements Renderer {
 		if(!isEnabled()){
 			return;
 		}
+		currentViewPort.setRect(0, 0, w, h);
+		if(isDirty || viewportwidth != w || viewportheight != h){
+			// update axes
+			axes.setDirty();
+			viewportwidth = w;
+			viewportheight = h;
+			setupAndLayout();
+			isDirty = false;
+		}
 		preContentLinesR.renderSVG(doc, parent, w, h);
 		preContentTextR.renderSVG(doc, parent, w, h);
 		if(content != null){
@@ -848,6 +857,15 @@ public class CoordSysRenderer implements Renderer {
 	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
 		if(!isEnabled()){
 			return;
+		}
+		currentViewPort.setRect(0, 0, w, h);
+		if(isDirty || viewportwidth != w || viewportheight != h){
+			// update axes
+			axes.setDirty();
+			viewportwidth = w;
+			viewportheight = h;
+			setupAndLayout();
+			isDirty = false;
 		}
 		preContentLinesR.renderPDF(doc, page, x, y, w, h);
 		preContentTextR.renderPDF(doc, page, x, y, w, h);
