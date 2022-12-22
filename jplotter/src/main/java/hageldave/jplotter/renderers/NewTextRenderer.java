@@ -8,6 +8,7 @@ import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.NewText;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
+import hageldave.jplotter.renderables.TextDecoration;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations;
 import hageldave.jplotter.util.ShaderRegistry;
@@ -26,11 +27,13 @@ import org.w3c.dom.Element;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -169,6 +172,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             Graphics2D g_ = (Graphics2D) g.create();
             Graphics2D p_ = (Graphics2D) p.create();
 
+            // TODO: discuss if text decoration is necessary here, as its natively supported by latex
             if (txt.isLatex()) {
                 TeXFormula formula = new TeXFormula(txt.getTextString());
                 TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
@@ -220,6 +224,19 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 g_.setFont(font);
                 p_.setFont(font);
 
+                if (txt.getTextDecoration() == TextDecoration.UNDERLINE) {
+                    Map attributes = font.getAttributes();
+                    attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+                    g_.setFont(font.deriveFont(attributes));
+                    p_.setFont(font.deriveFont(attributes));
+                }
+                if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH) {
+                    Map attributes = font.getAttributes();
+                    attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+                    g_.setFont(font.deriveFont(attributes));
+                    p_.setFont(font.deriveFont(attributes));
+                }
+
                 /* translate to text origin,
                  * flip vertically (AWT coordinates, so text is not upside down),
                  * rotate according to angle */
@@ -244,8 +261,11 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                 g_.setColor(txt.getColor());
 
+
+
                 // TODO: is \n universal?
                 for (String line : txt.getTextString().split("\n")) {
+
                     g_.drawString(line, 0, maxDescent);
                     maxDescent += g.getFontMetrics().getHeight();
                 }
@@ -350,6 +370,15 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         }
                         text.setAttributeNS(null, "x", "" + 0);
                         text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
+
+                        if (txt.getTextDecoration() == TextDecoration.UNDERLINE) {
+                            text.setAttributeNS(null, "text-decoration", "underline");
+                        }
+
+                        if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH) {
+                            text.setAttributeNS(null, "text-decoration", "line-through");
+                        }
+
                         if (txt.getAngle() != 0) {
                             textGroup.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(x1) + "," + SVGUtils.svgNumber(y1) + ")");
                             textInnerGroup.setAttributeNS(null, "transform", "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")");

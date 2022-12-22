@@ -16,6 +16,39 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
+enum TextTransform {
+    CAPITALIZE,
+    UPPERCASE,
+    LOWERCASE
+}
+
+class PositioningRectangle {
+    protected int x;
+    protected int y;
+
+    public void setX(int x) {
+        if (x < 0 || x > 2) {
+            throw new IllegalArgumentException();
+        }
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        if (x < 0 || x > 2) {
+            throw new IllegalArgumentException();
+        }
+        this.y = y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+}
+
 public class NewText implements Renderable {
     public final int fontsize;
     public final int style;
@@ -31,6 +64,7 @@ public class NewText implements Renderable {
     protected boolean hidden=false;
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
+    protected TextDecoration textDecoration;
 
     /**
      * Creates a new Text object with the specified string and font configuration.
@@ -295,6 +329,14 @@ public class NewText implements Renderable {
     public NewText setAngle(double angle) {
         this.angle = (float)angle;
         return this;
+    }
+
+    public TextDecoration getTextDecoration() {
+        return textDecoration;
+    }
+
+    public void setTextDecoration(TextDecoration textDecoration) {
+        this.textDecoration = textDecoration;
     }
 
     @Override

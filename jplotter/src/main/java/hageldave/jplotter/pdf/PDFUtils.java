@@ -5,6 +5,7 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.renderables.NewText;
 import hageldave.jplotter.renderables.Text;
+import hageldave.jplotter.renderables.TextDecoration;
 import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSInteger;
@@ -278,6 +279,26 @@ public class PDFUtils {
             textHeight += txt.getBounds().getHeight();
         }
         cs.endText();
+
+        cs.transform(new Matrix(affineTransform));
+        float lineHeight = 2;
+        for (String newLine : txt.getTextString().split("\n")) {
+            if (txt.getTextDecoration() == TextDecoration.UNDERLINE) {
+                NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
+                cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY()-lineHeight);
+                cs.lineTo((float) tempText.getBounds().getWidth(), (float) tempText.getBounds().getY()-lineHeight);
+                cs.setStrokingColor(txt.getColor());
+                cs.stroke();
+            }
+            if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH) {
+                NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
+                cs.moveTo((float) tempText.getBounds().getX(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight()/2) - lineHeight - 2));
+                cs.lineTo((float) tempText.getBounds().getWidth(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight()/2) - lineHeight - 2));
+                cs.setStrokingColor(txt.getColor());
+                cs.stroke();
+            }
+            lineHeight += txt.getBounds().getHeight();
+        }
         return cs;
     }
 
