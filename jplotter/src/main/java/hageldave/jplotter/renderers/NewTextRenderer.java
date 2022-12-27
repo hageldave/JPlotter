@@ -16,7 +16,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
-import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -172,7 +171,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             Graphics2D g_ = (Graphics2D) g.create();
             Graphics2D p_ = (Graphics2D) p.create();
 
-            // TODO: discuss if text decoration is necessary here, as its natively supported by latex
             if (txt.isLatex()) {
                 TeXFormula formula = new TeXFormula(txt.getTextString());
                 TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
@@ -186,7 +184,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 icon.paintIcon(jl, g2, 0, 0);
 
                 AffineTransform at = new AffineTransform();
-                at.translate(x1, y1+txt.getBounds().getHeight());
+                at.translate(x1-txt.getPositioningRectangle().getAnchorPoint().getX(), y1+txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint().getY());
                 at.scale(1, -1);
                 if(angle != 0.0)
                     at.rotate(-angle);
@@ -199,16 +197,15 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                     int index = 1;
                     AffineTransform initTransform = p_.getTransform();
-                    for (String line : txt.getTextString().split(Pattern.quote("\\\\"))) {
+                    for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
                         if (line.length() > 0) {
                             NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-
                             TeXFormula tempFormula = new TeXFormula(tempText.getTextString());
                             TeXIcon tempIcon = tempFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, tempText.fontsize);
                             tempIcon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
                             at = new AffineTransform();
-                            at.translate(0, txt.getBounds().getHeight() * index);
+                            at.translate(0, tempText.getBounds().getHeight() * index);
                             at.scale(1, -1);
                             p_.transform(at);
 
@@ -241,7 +238,9 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                  * flip vertically (AWT coordinates, so text is not upside down),
                  * rotate according to angle */
                 AffineTransform trnsfrm = new AffineTransform();
-                trnsfrm.translate(x1, y1);
+                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint().getX(),
+                            y1-txt.getPositioningRectangle().getAnchorPoint().getY());
+
                 trnsfrm.scale(1, -1);
                 if(angle != 0.0)
                     trnsfrm.rotate(-angle);
@@ -249,7 +248,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 p_.transform(trnsfrm);
 
                 // draw background rectangle
-                if(txt.getBackground().getRGB() != 0){
+                if(txt.getBackground().getRGB() != 0) {
                     g_.setColor(txt.getBackground());
                     Rectangle2D bounds = txt.getBounds();
                     float rightpadding = 0.4f*((float)bounds.getWidth()/txt.getTextString().length());
@@ -257,25 +256,24 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     g_.fill(rect);
                 }
                 // draw string
-                int maxDescent = g_.getFontMetrics().getMaxDescent() * (-1);
-
+                int maxDescent = (int) (g_.getFontMetrics().getHeight()-txt.getBounds().getHeight() - g.getFontMetrics().getMaxDescent());
                 g_.setColor(txt.getColor());
 
-
-
                 // TODO: is \n universal?
-                for (String line : txt.getTextString().split("\n")) {
-
+                for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
                     g_.drawString(line, 0, maxDescent);
                     maxDescent += g.getFontMetrics().getHeight();
                 }
 
                 if(txt.getPickColor() != 0) {
                     p_.setColor(new Color(txt.getPickColor()));
-                    Rectangle2D bounds = txt.getBounds();
-                    float rightpadding = 0.4f*((float)bounds.getWidth()/txt.getTextString().length());
-                    Rectangle2D rect = new Rectangle2D.Double(0.0, -bounds.getHeight(), bounds.getWidth()+rightpadding, bounds.getHeight());
-                    p_.fill(rect);
+                    int index = 0;
+                    for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
+                        NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+tempText.getBounds().getHeight()*index, tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
+                        p_.fill(rect);
+                        index++;
+                    }
                 }
             }
         }
@@ -315,6 +313,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 AffineTransform trnsfrm = new AffineTransform();
                 trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
                 trnsfrm.translate(x1, y1);
+                trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPoint().getX(), -txt.getPositioningRectangle().getAnchorPoint().getY()-txt.getBounds().getHeight());
                 bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
                 Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
                 if(!viewportRect.intersects(bounds)) {
@@ -324,40 +323,29 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 Element textGroup = SVGUtils.createSVGElement(doc, "g");
                 mainGroup.appendChild(textGroup);
 
-                Element textInnerGroup = SVGUtils.createSVGElement(doc, "g");
-                textGroup.appendChild(textInnerGroup);
-
-                if(txt.getBackground().getRGB() != 0){
-                    Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getTextSize().width,txt.getTextSize().height);
-                    textGroup.appendChild(backgroundRect);
-                    backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-                    backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
-                    if(txt.getAngle() != 0){
-                        backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+")");
-                    } else {
-                        backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")");
-                    }
-                }
-
                 if (txt.isLatex()) {
                     try {
                         Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
-                        textInnerGroup.appendChild(svgLatex);
-                        if (txt.getAngle() != 0) {
-                            textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+txt.getTextSize().height)+")");
-                            textInnerGroup.setAttributeNS(null, "transform", "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")");
-                            svgLatex.setAttributeNS(null, "transform", "scale(1,-1)");
-                        } else {
-                            textGroup.setAttribute("transform",  "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+txt.getTextSize().height)+")" + "scale(1,-1)");
-                        }
+                        textGroup.appendChild(svgLatex);
+                        textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY()+txt.getBounds().getHeight())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
                     double textHeight = 0;
-                    for (String line : txt.getTextString().split("\n")) {
+                    double rightPadding = 6 * (txt.getBounds().getWidth()/txt.getTextString().length());
+
+                    if(txt.getBackground().getRGB() != 0){
+                        Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getBounds().getWidth()+rightPadding, txt.getBounds().getHeight());
+                        textGroup.appendChild(backgroundRect);
+                        backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+                        backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
+                    }
+
+                    for (String line : txt.getTextString().split(Pattern.quote("\n"))) {
+                        NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
                         Element text = SVGUtils.createSVGElement(doc, "text");
-                        textInnerGroup.appendChild(text);
+                        textGroup.appendChild(text);
 
                         text.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
                         text.setTextContent(line);
@@ -379,14 +367,9 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                             text.setAttributeNS(null, "text-decoration", "line-through");
                         }
 
-                        if (txt.getAngle() != 0) {
-                            textGroup.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(x1) + "," + SVGUtils.svgNumber(y1) + ")");
-                            textInnerGroup.setAttributeNS(null, "transform", "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")");
-                            text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(-textHeight) + ") scale(1,-1)");
-                        } else {
-                            text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(x1) + "," + SVGUtils.svgNumber(y1 - textHeight) + ") scale(1,-1)");
-                        }
-                        textHeight += txt.getBounds().getHeight();
+                        textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")");
+                        text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
+                        textHeight += tempText.getBounds().getHeight();
                     }
                 }
             }
@@ -417,39 +400,17 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     y1 -= translateY;
                     x1 *= scaleX;
                     y1 *= scaleY;
-                    y1 += 2;
-                    x1 += 1;
 
                     // test if inside of view port
                     Rectangle2D bounds = txt.getBoundsWithRotation();
                     AffineTransform trnsfrm = new AffineTransform();
                     trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
                     trnsfrm.translate(x1, y1);
+                    trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPoint().getX(), -txt.getPositioningRectangle().getAnchorPoint().getY());
                     bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
                     Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
                     if(!viewportRect.intersects(bounds)) {
                         continue;
-                    }
-
-                    float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
-                    float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
-                    if(txt.getBackground().getRGB() != 0){
-                        contentStream.saveGraphicsState();
-                        contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x), ((float) y1+y)));
-                        contentStream.transform(new Matrix((float) Math.cos(-txt.getAngle()),(float) -Math.sin(-txt.getAngle()),
-                                (float) Math.sin(-txt.getAngle()),(float) Math.cos(-txt.getAngle()), 0, 0));
-
-                        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                        graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha())/255);
-                        contentStream.setGraphicsStateParameters(graphicsState);
-
-                        PDFUtils.createPDFPolygon(contentStream,
-                                new double[]{-rightPadding, txt.getBounds().getWidth()+rightPadding, txt.getBounds().getWidth()+rightPadding, -rightPadding},
-                                new double[]{-topPadding, -topPadding, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
-
-                        contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
-                        contentStream.fill();
-                        contentStream.restoreGraphicsState();
                     }
 
                     // clipping area
@@ -464,7 +425,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     if (txt.isLatex()) {
                         PDFUtils.latexToPDF(doc, contentStream, txt, x1+x, y1+y);
                     } else {
-                        PDFUtils.createPDFText(doc, contentStream, txt, new Point2D.Double(x1 + x, y1 + y));
+                        PDFUtils.createPDFText(doc, contentStream, txt, new Point2D.Double(x1+x, y1+y));
                     }
                     // restore graphics
                     contentStream.restoreGraphicsState();

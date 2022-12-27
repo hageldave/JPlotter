@@ -9,45 +9,16 @@ import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations;
+import org.scilab.forge.jlatexmath.TeXConstants;
+import org.scilab.forge.jlatexmath.TeXFormula;
+import org.scilab.forge.jlatexmath.TeXIcon;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
-
-enum TextTransform {
-    CAPITALIZE,
-    UPPERCASE,
-    LOWERCASE
-}
-
-class PositioningRectangle {
-    protected int x;
-    protected int y;
-
-    public void setX(int x) {
-        if (x < 0 || x > 2) {
-            throw new IllegalArgumentException();
-        }
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        if (x < 0 || x > 2) {
-            throw new IllegalArgumentException();
-        }
-        this.y = y;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-}
+import java.util.regex.Pattern;
 
 public class NewText implements Renderable {
     public final int fontsize;
@@ -65,6 +36,7 @@ public class NewText implements Renderable {
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
     protected TextDecoration textDecoration;
+    protected PositioningRectangle positioningRectangle;
 
     /**
      * Creates a new Text object with the specified string and font configuration.
@@ -118,8 +90,6 @@ public class NewText implements Renderable {
     public NewText(String textstr, int fontsize, int style) {
         this(textstr,fontsize,style, new Color(96, 96, 96), NewText.isLatex(textstr));
     }
-
-
 
     /**
      * Sets the color of this text
@@ -266,7 +236,25 @@ public class NewText implements Renderable {
      * @return the bounding rectangle of this text
      */
     public Rectangle2D getBounds() {
-        return new Rectangle2D.Double(origin.getX(), origin.getY(), textSize.getWidth(), textSize.getHeight());
+        double width = 0;
+        double height = 0;
+        for (String line : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
+            NewText tempText = new NewText(line, fontsize, style, getColor(), isLatex());
+            width = Math.max(width, getBounds(tempText).getWidth());
+            height += getBounds(tempText).getHeight();
+        }
+        return new Rectangle2D.Double(origin.getX(), origin.getY(), width, height);
+    }
+
+    // get bounds without respect for line breaks
+    private static Rectangle2D getBounds(NewText text) {
+        if (text.isLatex()) {
+            TeXFormula formula = new TeXFormula(text.getTextString());
+            TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontsize);
+            icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
+            return new Rectangle2D.Double(text.origin.getX(), text.origin.getY(), icon.getIconWidth(), icon.getIconHeight());
+        }
+        return new Rectangle2D.Double(text.origin.getX(), text.origin.getY(), text.textSize.getWidth(), text.textSize.getHeight());
     }
 
     /**
@@ -331,12 +319,33 @@ public class NewText implements Renderable {
         return this;
     }
 
+    // TODO
     public TextDecoration getTextDecoration() {
         return textDecoration;
     }
 
+    // TODO
     public void setTextDecoration(TextDecoration textDecoration) {
         this.textDecoration = textDecoration;
+    }
+
+    // TODO
+    public PositioningRectangle getPositioningRectangle() {
+        if (Objects.nonNull(positioningRectangle)) {
+            return positioningRectangle;
+        }
+        return new PositioningRectangle(this, 0,0);
+    }
+
+    // TODO
+    public void setPositioningRectangle(PositioningRectangle positioningRectangle) {
+        this.positioningRectangle = positioningRectangle;
+    }
+
+    public String getLineBreakSymbol() {
+        if (isLatex())
+            return "\\\\";
+        return "\n";
     }
 
     @Override

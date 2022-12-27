@@ -19,6 +19,7 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType4;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.scilab.forge.jlatexmath.DefaultTeXFont;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -35,6 +36,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for PDF related methods.
@@ -263,41 +265,60 @@ public class PDFUtils {
         cs.setNonStrokingColor(txt.getColor());
         cs.stroke();
         // set correct font
-        PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument)doc).getFont(txt.style) : createPDFont(doc, txt.style);
+        PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
         cs.setFont(font, txt.fontsize);
+
+        if (txt.getBackground().getRGB() != 0) {
+            float rightPadding = 0.3f * ((float) txt.getBounds().getWidth() / txt.getTextString().length());
+            float topPadding = 0.2f * (float) txt.getTextSize().getHeight();
+
+            cs.saveGraphicsState();
+            cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY())));
+            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle())));
+
+            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+            graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
+            cs.setGraphicsStateParameters(graphicsState);
+
+            PDFUtils.createPDFPolygon(cs,
+                    new double[]{-rightPadding, txt.getBounds().getWidth() + rightPadding, txt.getBounds().getWidth() + rightPadding, -rightPadding},
+                    new double[]{-topPadding, -topPadding, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
+
+            cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
+            cs.fill();
+            cs.restoreGraphicsState();
+        }
+
         cs.beginText();
 
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX(), position.getY());
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
             affineTransform.rotate(txt.getAngle());
         cs.setTextMatrix(new Matrix(affineTransform));
 
-        float textHeight = 0;
-        for (String newLine : txt.getTextString().split("\n")) {
-            cs.newLineAtOffset(0, -textHeight);
+        for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
+            cs.newLineAtOffset(0, (float) -txt.getTextSize().getHeight());
             cs.showText(newLine);
-            textHeight += txt.getBounds().getHeight();
         }
         cs.endText();
 
         cs.transform(new Matrix(affineTransform));
-        float lineHeight = 2;
-        for (String newLine : txt.getTextString().split("\n")) {
+        float lineHeight = (float) txt.getTextSize().getHeight() + 2;
+        for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
+            NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
             if (txt.getTextDecoration() == TextDecoration.UNDERLINE) {
-                NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
-                cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY()-lineHeight);
-                cs.lineTo((float) tempText.getBounds().getWidth(), (float) tempText.getBounds().getY()-lineHeight);
+                cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY() - lineHeight);
+                cs.lineTo((float) tempText.getBounds().getWidth(), (float) tempText.getBounds().getY() - lineHeight);
                 cs.setStrokingColor(txt.getColor());
                 cs.stroke();
             }
             if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH) {
-                NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
-                cs.moveTo((float) tempText.getBounds().getX(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight()/2) - lineHeight - 2));
-                cs.lineTo((float) tempText.getBounds().getWidth(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight()/2) - lineHeight - 2));
+                cs.moveTo((float) tempText.getBounds().getX(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
+                cs.lineTo((float) tempText.getBounds().getWidth(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
                 cs.setStrokingColor(txt.getColor());
                 cs.stroke();
             }
-            lineHeight += txt.getBounds().getHeight();
+            lineHeight += tempText.getBounds().getHeight();
         }
         return cs;
     }
@@ -413,8 +434,11 @@ public class PDFUtils {
         icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
         PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, icon.getIconWidth(), icon.getIconHeight());
+        g2d.setColor(txt.getBackground());
+        g2d.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
 
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(x, y-txt.getBounds().getHeight());
+
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(x - txt.getPositioningRectangle().getAnchorPoint().getX(), y - txt.getPositioningRectangle().getAnchorPoint().getY());
         if (txt.getAngle() != 0)
             affineTransform.rotate(txt.getAngle());
         cs.transform(new Matrix(affineTransform));
