@@ -36,6 +36,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
@@ -305,13 +306,13 @@ public class PDFUtils {
         float lineHeight = (float) txt.getTextSize().getHeight() + 2;
         for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
             NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
-            if (txt.getTextDecoration() == TextDecoration.UNDERLINE) {
+            if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.UNDERLINE)) {
                 cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY() - lineHeight);
                 cs.lineTo((float) tempText.getBounds().getWidth(), (float) tempText.getBounds().getY() - lineHeight);
                 cs.setStrokingColor(txt.getColor());
                 cs.stroke();
             }
-            if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH) {
+            if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.STRIKETHROUGH)) {
                 cs.moveTo((float) tempText.getBounds().getX(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
                 cs.lineTo((float) tempText.getBounds().getWidth(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
                 cs.setStrokingColor(txt.getColor());

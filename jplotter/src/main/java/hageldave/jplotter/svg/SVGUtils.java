@@ -101,9 +101,18 @@ public class SVGUtils {
 	 * @return the polygon elements
 	 */
 	public static Element createSVGTriangle(Document doc, double x0, double y0, double x1, double y1, double x2, double y2){
-		Element rect = createSVGElement(doc, "polygon");
-		rect.setAttributeNS(null, "points", svgPoints(x0,y0,x1,y1,x2,y2));
-		return rect;
+		Element polygon = createSVGElement(doc, "polygon");
+		polygon.setAttributeNS(null, "points", svgPoints(x0,y0,x1,y1,x2,y2));
+		return polygon;
+	}
+
+	public static Element createSVGLine(Document doc, double x0, double y0, double x1, double y1) {
+		Element line = createSVGElement(doc, "line");
+		line.setAttributeNS(null, "x0", SVGUtils.svgNumber(x0));
+		line.setAttributeNS(null, "y0", SVGUtils.svgNumber(y0));
+		line.setAttributeNS(null, "x1", SVGUtils.svgNumber(x1));
+		line.setAttributeNS(null, "y1", SVGUtils.svgNumber(y1));
+		return line;
 	}
 
 	/**

@@ -32,6 +32,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -217,20 +218,18 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 }
             } else {
                 Font font = FontProvider.getUbuntuMono(txt.fontsize, txt.style);
-                g_.setFont(font);
-                p_.setFont(font);
-
-                if (txt.getTextDecoration() == TextDecoration.UNDERLINE) {
-                    Map attributes = font.getAttributes();
+                Map attributes = font.getAttributes();
+                if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.UNDERLINE))
                     attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-                    g_.setFont(font.deriveFont(attributes));
-                    p_.setFont(font.deriveFont(attributes));
-                }
-                if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH) {
-                    Map attributes = font.getAttributes();
+                if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.STRIKETHROUGH))
                     attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+
+                if (!attributes.isEmpty()) {
                     g_.setFont(font.deriveFont(attributes));
                     p_.setFont(font.deriveFont(attributes));
+                } else {
+                    g_.setFont(font);
+                    p_.setFont(font);
                 }
 
                 /* translate to text origin,
@@ -354,11 +353,15 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         text.setAttributeNS(null, "x", "" + 0);
                         text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
 
-                        if (txt.getTextDecoration() == TextDecoration.UNDERLINE) {
-                            text.setAttributeNS(null, "text-decoration", "underline");
+                        if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.UNDERLINE)) {
+                            Element underline = SVGUtils.createSVGLine(doc, 0, 0, tempText.getBounds().getWidth()+rightPadding, 0);
+                            textGroup.appendChild(underline);
+                            underline.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
+                            underline.setAttributeNS(null, "stroke-width", SVGUtils.svgNumber(1.2));
+                            underline.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + ", " + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ")");
                         }
 
-                        if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH) {
+                        if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.STRIKETHROUGH)) {
                             text.setAttributeNS(null, "text-decoration", "line-through");
                         }
 
