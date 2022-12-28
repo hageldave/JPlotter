@@ -183,37 +183,36 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 jl.setForeground(txt.getColor());
                 icon.paintIcon(jl, g2, 0, 0);
 
-                AffineTransform at = new AffineTransform();
-                at.translate(x1-txt.getPositioningRectangle().getAnchorPoint().getX(), y1+txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint().getY());
-                at.scale(1, -1);
+                AffineTransform trnsfrm = new AffineTransform();
+                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint().getX(), y1/*+txt.getBounds().getHeight()*/ + icon.getIconHeight() -txt.getPositioningRectangle().getAnchorPoint().getY());
+                trnsfrm.scale(1, -1);
                 if(angle != 0.0)
-                    at.rotate(-angle);
-                g_.transform(at);
+                    trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint().getX(), icon.getIconHeight()-txt.getPositioningRectangle().getAnchorPoint().getY());
+
+                g_.transform(trnsfrm);
                 g_.drawImage(image, null, 0, 0);
 
                 if(txt.getPickColor() != 0) {
-                    p_.transform(at);
+                    p_.transform(trnsfrm);
                     p_.setColor(new Color(txt.getPickColor()));
 
                     int index = 1;
                     AffineTransform initTransform = p_.getTransform();
                     for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
-                        if (line.length() > 0) {
-                            NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-                            TeXFormula tempFormula = new TeXFormula(tempText.getTextString());
-                            TeXIcon tempIcon = tempFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, tempText.fontsize);
-                            tempIcon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
+                        NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
+                        TeXFormula tempFormula = new TeXFormula(tempText.getTextString());
+                        TeXIcon tempIcon = tempFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, tempText.fontsize);
+                        tempIcon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
-                            at = new AffineTransform();
-                            at.translate(0, tempText.getBounds().getHeight() * index);
-                            at.scale(1, -1);
-                            p_.transform(at);
+                        trnsfrm = new AffineTransform();
+                        trnsfrm.translate(0, tempText.getBounds().getHeight() * index);
+                        trnsfrm.scale(1, -1);
+                        p_.transform(trnsfrm);
 
-                            Rectangle2D rect = new Rectangle2D.Double(0.0, 0.0, tempIcon.getIconWidth(), tempIcon.getIconHeight());
-                            p_.fill(rect);
-                            p_.setTransform(initTransform);
-                            index++;
-                        }
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, 0.0, tempIcon.getIconWidth(), tempIcon.getIconHeight());
+                        p_.fill(rect);
+                        p_.setTransform(initTransform);
+                        index++;
                     }
                 }
             } else {
@@ -238,12 +237,10 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                  * flip vertically (AWT coordinates, so text is not upside down),
                  * rotate according to angle */
                 AffineTransform trnsfrm = new AffineTransform();
-                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint().getX(),
-                            y1-txt.getPositioningRectangle().getAnchorPoint().getY());
-
+                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint().getX(), y1-txt.getPositioningRectangle().getAnchorPoint().getY());
                 trnsfrm.scale(1, -1);
                 if(angle != 0.0)
-                    trnsfrm.rotate(-angle);
+                    trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint().getX(), -txt.getPositioningRectangle().getAnchorPoint().getY());
                 g_.transform(trnsfrm);
                 p_.transform(trnsfrm);
 
@@ -259,7 +256,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 int maxDescent = (int) (g_.getFontMetrics().getHeight()-txt.getBounds().getHeight() - g.getFontMetrics().getMaxDescent());
                 g_.setColor(txt.getColor());
 
-                // TODO: is \n universal?
                 for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
                     g_.drawString(line, 0, maxDescent);
                     maxDescent += g.getFontMetrics().getHeight();
@@ -270,7 +266,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     int index = 0;
                     for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
                         NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-                        Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+tempText.getBounds().getHeight()*index, tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+(tempText.getBounds().getHeight()*index), tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
                         p_.fill(rect);
                         index++;
                     }
@@ -305,7 +301,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 y1-=translateY;
                 x1*=scaleX;
                 y1*=scaleY;
-
                 y1+=1;
 
                 // test if inside of view port
@@ -367,7 +362,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                             text.setAttributeNS(null, "text-decoration", "line-through");
                         }
 
-                        textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")");
+                        textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
                         text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
                         textHeight += tempText.getBounds().getHeight();
                     }

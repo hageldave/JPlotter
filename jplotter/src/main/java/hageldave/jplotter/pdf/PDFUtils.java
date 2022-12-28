@@ -274,7 +274,7 @@ public class PDFUtils {
 
             cs.saveGraphicsState();
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY())));
-            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle())));
+            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY())));
 
             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
             graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
@@ -290,10 +290,9 @@ public class PDFUtils {
         }
 
         cs.beginText();
-
         AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle());
+            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY() - txt.getBounds().getHeight());
         cs.setTextMatrix(new Matrix(affineTransform));
 
         for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
@@ -440,7 +439,7 @@ public class PDFUtils {
 
         AffineTransform affineTransform = AffineTransform.getTranslateInstance(x - txt.getPositioningRectangle().getAnchorPoint().getX(), y - txt.getPositioningRectangle().getAnchorPoint().getY());
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle());
+            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY());
         cs.transform(new Matrix(affineTransform));
 
         JLabel jl = new JLabel();
