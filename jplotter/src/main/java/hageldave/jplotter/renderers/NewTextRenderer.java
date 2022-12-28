@@ -307,7 +307,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 AffineTransform trnsfrm = new AffineTransform();
                 trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
                 trnsfrm.translate(x1, y1);
-                trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPoint().getX(), -txt.getPositioningRectangle().getAnchorPoint().getY()-txt.getBounds().getHeight());
+                trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPoint().getX(), -txt.getPositioningRectangle().getAnchorPoint().getY());
                 bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
                 Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
                 if(!viewportRect.intersects(bounds)) {
@@ -425,6 +425,10 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     } else {
                         PDFUtils.createPDFText(doc, contentStream, txt, new Point2D.Double(x1+x, y1+y));
                     }
+
+                    contentStream.setNonStrokingColor(Color.BLACK);
+                    contentStream.addRect((float) bounds.getX(), (float) bounds.getY(), (float) bounds.getWidth(), (float) bounds.getHeight());
+                    contentStream.fill();
                     // restore graphics
                     contentStream.restoreGraphicsState();
                 }
