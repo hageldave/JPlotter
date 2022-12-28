@@ -243,7 +243,7 @@ public class NewText implements Renderable {
             width = Math.max(width, getBounds(tempText).getWidth());
             height += getBounds(tempText).getHeight();
         }
-        return new Rectangle2D.Double(origin.getX(), origin.getY(), width, height);
+        return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
     }
 
     // get bounds without respect for line breaks
@@ -252,9 +252,9 @@ public class NewText implements Renderable {
             TeXFormula formula = new TeXFormula(text.getTextString());
             TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontsize);
             icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
-            return new Rectangle2D.Double(text.origin.getX(), text.origin.getY(), icon.getIconWidth(), icon.getIconHeight());
+            return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), icon.getIconWidth(), icon.getIconHeight());
         }
-        return new Rectangle2D.Double(text.origin.getX(), text.origin.getY(), text.textSize.getWidth(), text.textSize.getHeight());
+        return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), text.getTextSize().getWidth(), text.getTextSize().getHeight());
     }
 
     /**
