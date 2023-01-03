@@ -419,16 +419,11 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                     graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
                     contentStream.setGraphicsStateParameters(graphicsState);
-
                     if (txt.isLatex()) {
                         PDFUtils.latexToPDF(doc, contentStream, txt, x1+x, y1+y);
                     } else {
                         PDFUtils.createPDFText(doc, contentStream, txt, new Point2D.Double(x1+x, y1+y));
                     }
-
-                    contentStream.setNonStrokingColor(Color.BLACK);
-                    contentStream.addRect((float) bounds.getX(), (float) bounds.getY(), (float) bounds.getWidth(), (float) bounds.getHeight());
-                    contentStream.fill();
                     // restore graphics
                     contentStream.restoreGraphicsState();
                 }

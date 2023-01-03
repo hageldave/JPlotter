@@ -262,8 +262,7 @@ public class NewText implements Renderable {
      */
     public Rectangle2D getBoundsWithRotation() {
         Rectangle2D bounds = getBounds();
-        AffineTransform transform = new AffineTransform();
-        transform.rotate(angle);
+        AffineTransform transform = AffineTransform.getRotateInstance(angle);
         return transform.createTransformedShape(bounds).getBounds2D();
     }
 
