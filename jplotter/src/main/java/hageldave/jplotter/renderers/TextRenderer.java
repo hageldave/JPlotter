@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
@@ -429,22 +428,38 @@ public class TextRenderer extends GenericRenderer<Text> {
 				
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
-				
-				if(txt.getBackground().getRGB() != 0){
-					Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getTextSize().width,txt.getTextSize().height);
-					textGroup.appendChild(backgroundRect);
-					backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-					backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
-					if(txt.getAngle() != 0){
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+")");
-					} else {
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")");
-					}
-				}
-				
+
 				Element text = SVGUtils.createSVGElement(doc, "text");
 				textGroup.appendChild(text);
-				
+
+				if(txt.getBackground().getRGB() != 0){
+					Element defs = SVGUtils.createSVGElement(doc, "defs");
+					Element filter = SVGUtils.createSVGElement(doc, "filter");
+					filter.setAttributeNS(null, "x", ""+0);
+					filter.setAttributeNS(null, "y", ""+0);
+					filter.setAttributeNS(null, "width", ""+1);
+					filter.setAttributeNS(null, "height", ""+1);
+					filter.setAttributeNS(null, "id", "background-item");
+					Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
+					feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+					feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
+					feFlood.setAttributeNS(null, "result", "bg");
+
+					Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
+					Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+					feMergeNode.setAttributeNS(null, "in", "bg");
+					Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
+					feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
+
+					feMerge.appendChild(feMergeNode);
+					feMerge.appendChild(feMergeNode2);
+					filter.appendChild(feFlood);
+					filter.appendChild(feMerge);
+					defs.appendChild(filter);
+					textGroup.appendChild(defs);
+					text.setAttributeNS(null, "filter", "url(#background-item)");
+				}
+
 				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 				text.setTextContent(txt.getTextString());
 				String fontfamily = "'Ubuntu Mono', monospace";
