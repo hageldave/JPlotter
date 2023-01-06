@@ -332,27 +332,15 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
                         String fontfamily = "'Ubuntu Mono', monospace";
 
-                        Element backgroundText = SVGUtils.createSVGElement(doc, "text");
-                        textGroup.appendChild(backgroundText);
-                        backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-                        backgroundText.setTextContent(line);
-                        backgroundText.setAttributeNS(null, "style",
-                                "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
-                        backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
-                        backgroundText.setAttributeNS(null, "fill-opacity", "0");
-                        backgroundText.setAttributeNS(null, "x", "" + 0);
-                        backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
-                        backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
-
                         if(txt.getBackground().getRGB() != 0){
-                            double random = Math.random() * 10;
+                            String defID = SVGUtils.newDefId();
                             Element defs = SVGUtils.createSVGElement(doc, "defs");
                             Element filter = SVGUtils.createSVGElement(doc, "filter");
                             filter.setAttributeNS(null, "x", ""+0);
                             filter.setAttributeNS(null, "y", ""+0);
                             filter.setAttributeNS(null, "width", ""+1);
                             filter.setAttributeNS(null, "height", ""+1);
-                            filter.setAttributeNS(null, "id", "background-item-" + random);
+                            filter.setAttributeNS(null, "id", defID);
                             Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
                             feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
                             feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
@@ -370,7 +358,19 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                             filter.appendChild(feMerge);
                             defs.appendChild(filter);
                             textGroup.appendChild(defs);
-                            backgroundText.setAttributeNS(null, "filter", "url(#background-item-" + random + ")");
+
+                            Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+                            textGroup.appendChild(backgroundText);
+                            backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+                            backgroundText.setTextContent(line);
+                            backgroundText.setAttributeNS(null, "style",
+                                    "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+                            backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
+                            backgroundText.setAttributeNS(null, "fill-opacity", "0");
+                            backgroundText.setAttributeNS(null, "x", "" + 0);
+                            backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
+                            backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
+                            backgroundText.setAttributeNS(null, "filter", "url(#" + defID + ")");
                         }
 
                         Element text = SVGUtils.createSVGElement(doc, "text");
