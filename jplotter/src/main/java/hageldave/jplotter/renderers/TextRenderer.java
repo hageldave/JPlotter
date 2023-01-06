@@ -429,18 +429,17 @@ public class TextRenderer extends GenericRenderer<Text> {
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
 
-				Element backgroundText = SVGUtils.createSVGElement(doc, "text");
-				textGroup.appendChild(backgroundText);
+				String fontfamily = "'Ubuntu Mono', monospace";
 
 				if(txt.getBackground().getRGB() != 0){
-					double random = Math.random() * 10;
+					String defID = SVGUtils.newDefId();
 					Element defs = SVGUtils.createSVGElement(doc, "defs");
 					Element filter = SVGUtils.createSVGElement(doc, "filter");
 					filter.setAttributeNS(null, "x", ""+0);
 					filter.setAttributeNS(null, "y", ""+0);
 					filter.setAttributeNS(null, "width", ""+1);
 					filter.setAttributeNS(null, "height", ""+1);
-					filter.setAttributeNS(null, "id", "background-item-" + random);
+					filter.setAttributeNS(null, "id", defID);
 					Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
 					feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
 					feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
@@ -458,16 +457,18 @@ public class TextRenderer extends GenericRenderer<Text> {
 					filter.appendChild(feMerge);
 					defs.appendChild(filter);
 					textGroup.appendChild(defs);
-					backgroundText.setAttributeNS(null, "filter", "url(#background-item-" + random + ")");
-				}
 
-				// dummy text element
-				backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
-				backgroundText.setTextContent(txt.getTextString());
-				String fontfamily = "'Ubuntu Mono', monospace";
-				backgroundText.setAttributeNS(null, "style",
-						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
-				backgroundText.setAttributeNS(null, "fill-opacity", "0");
+					// dummy text element
+					Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+					textGroup.appendChild(backgroundText);
+
+					backgroundText.setAttributeNS(null, "filter", "url(#" + defID + ")");
+					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
+					backgroundText.setTextContent(txt.getTextString());
+					backgroundText.setAttributeNS(null, "style",
+							"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
+					backgroundText.setAttributeNS(null, "fill-opacity", "0");
+				}
 
 				// transform text group
 				textGroup.setAttributeNS(null, "x", ""+0);
