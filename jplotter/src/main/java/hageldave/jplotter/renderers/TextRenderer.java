@@ -429,8 +429,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
 
-				Element text = SVGUtils.createSVGElement(doc, "text");
-				textGroup.appendChild(text);
+				Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+				textGroup.appendChild(backgroundText);
 
 				if(txt.getBackground().getRGB() != 0){
 					Element defs = SVGUtils.createSVGElement(doc, "defs");
@@ -457,24 +457,36 @@ public class TextRenderer extends GenericRenderer<Text> {
 					filter.appendChild(feMerge);
 					defs.appendChild(filter);
 					textGroup.appendChild(defs);
-					text.setAttributeNS(null, "filter", "url(#background-item)");
+					backgroundText.setAttributeNS(null, "filter", "url(#background-item)");
 				}
 
+				// dummy text element
+				backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
+				backgroundText.setTextContent(txt.getTextString());
+				String fontfamily = "'Ubuntu Mono', monospace";
+				backgroundText.setAttributeNS(null, "style",
+						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
+				backgroundText.setAttributeNS(null, "fill-opacity", "0");
+
+				// transform text group
+				textGroup.setAttributeNS(null, "x", ""+0);
+				textGroup.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
+				if(txt.getAngle() != 0){
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+				} else {
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
+				}
+
+				// actual text element
+				Element text = SVGUtils.createSVGElement(doc, "text");
+				textGroup.appendChild(text);
 				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 				text.setTextContent(txt.getTextString());
-				String fontfamily = "'Ubuntu Mono', monospace";
 				text.setAttributeNS(null, "style",
 						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
 				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
 				if(txt.getColorA() != 1){
 					text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
-				}
-				text.setAttributeNS(null, "x", ""+0);
-				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
-				if(txt.getAngle() != 0){
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
-				} else {
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
 				}
 			}
 		}
