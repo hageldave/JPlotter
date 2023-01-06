@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
@@ -327,23 +326,58 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     }
                 } else {
                     double textHeight = 0;
-                    double rightPadding = 6 * (txt.getBounds().getWidth()/txt.getTextString().length());
-
-                    if(txt.getBackground().getRGB() != 0){
-                        Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getBounds().getWidth()+rightPadding, txt.getBounds().getHeight());
-                        textGroup.appendChild(backgroundRect);
-                        backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-                        backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
-                    }
+//                    double rightPadding = 6 * (txt.getBounds().getWidth()/txt.getTextString().length());
 
                     for (String line : txt.getTextString().split(Pattern.quote("\n"))) {
                         NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
+                        String fontfamily = "'Ubuntu Mono', monospace";
+
+                        Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+                        textGroup.appendChild(backgroundText);
+                        backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+                        backgroundText.setTextContent(line);
+                        backgroundText.setAttributeNS(null, "style",
+                                "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+                        backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
+                        backgroundText.setAttributeNS(null, "fill-opacity", "0");
+                        backgroundText.setAttributeNS(null, "x", "" + 0);
+                        backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
+                        backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
+
+                        if(txt.getBackground().getRGB() != 0){
+                            double random = Math.random() * 10;
+                            Element defs = SVGUtils.createSVGElement(doc, "defs");
+                            Element filter = SVGUtils.createSVGElement(doc, "filter");
+                            filter.setAttributeNS(null, "x", ""+0);
+                            filter.setAttributeNS(null, "y", ""+0);
+                            filter.setAttributeNS(null, "width", ""+1);
+                            filter.setAttributeNS(null, "height", ""+1);
+                            filter.setAttributeNS(null, "id", "background-item-" + random);
+                            Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
+                            feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+                            feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
+                            feFlood.setAttributeNS(null, "result", "bg");
+
+                            Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
+                            Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+                            feMergeNode.setAttributeNS(null, "in", "bg");
+                            Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
+                            feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
+
+                            feMerge.appendChild(feMergeNode);
+                            feMerge.appendChild(feMergeNode2);
+                            filter.appendChild(feFlood);
+                            filter.appendChild(feMerge);
+                            defs.appendChild(filter);
+                            textGroup.appendChild(defs);
+                            backgroundText.setAttributeNS(null, "filter", "url(#background-item-" + random + ")");
+                        }
+
                         Element text = SVGUtils.createSVGElement(doc, "text");
                         textGroup.appendChild(text);
 
                         text.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
                         text.setTextContent(line);
-                        String fontfamily = "'Ubuntu Mono', monospace";
                         text.setAttributeNS(null, "style",
                                 "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
                         text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
@@ -354,9 +388,10 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
 
                         if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.UNDERLINE)) {
-                            Element underline = SVGUtils.createSVGLine(doc, 0, 0, tempText.getBounds().getWidth()+rightPadding, 0);
+                            Element underline = SVGUtils.createSVGLine(doc, 0, 0, tempText.getBounds().getWidth()/*+rightPadding*/, 0);
                             textGroup.appendChild(underline);
                             underline.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
+                            underline.setAttributeNS(null, "opacity", SVGUtils.svgNumber(txt.getColor().getAlpha() / 255.0));
                             underline.setAttributeNS(null, "stroke-width", SVGUtils.svgNumber(1.2));
                             underline.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + ", " + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ")");
                         }
