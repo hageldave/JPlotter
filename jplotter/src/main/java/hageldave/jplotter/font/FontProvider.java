@@ -1,8 +1,9 @@
 package hageldave.jplotter.font;
 
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.GraphicsEnvironment;
+import hageldave.jplotter.canvas.JPlotterCanvas;
+
+import java.awt.*;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -79,6 +80,41 @@ public final class FontProvider {
 		default:
 			throw new IllegalArgumentException(
 					"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
+		}
+	}
+
+	public static String getUbuntuMonoFontAsBaseString(int style) {
+		String data = "";
+		byte[] buffer = new byte[1024];
+		int read;
+		try {
+			switch (style) {
+				case Font.PLAIN:
+					BufferedInputStream pathPlain = (BufferedInputStream) JPlotterCanvas.class.getResource("/font/UbuntuMono-R.b64").getContent();
+					while ((read = pathPlain.read(buffer)) != -1)
+						data += new String(buffer, 0, read);
+					return data;
+				case Font.BOLD:
+					BufferedInputStream pathBold = (BufferedInputStream) JPlotterCanvas.class.getResource("/font/UbuntuMono-B.b64").getContent();
+					while ((read = pathBold.read(buffer)) != -1)
+						data += new String(buffer, 0, read);
+					return data;
+				case Font.ITALIC:
+					BufferedInputStream pathItalic = (BufferedInputStream) JPlotterCanvas.class.getResource("/font/UbuntuMono-RI.b64").getContent();
+					while ((read = pathItalic.read(buffer)) != -1)
+						data += new String(buffer, 0, read);
+					return data;
+				case (Font.BOLD | Font.ITALIC):
+					BufferedInputStream pathBoldItalic = (BufferedInputStream) JPlotterCanvas.class.getResource("/font/UbuntuMono-BI.b64").getContent();
+					while ((read = pathBoldItalic.read(buffer)) != -1)
+						data += new String(buffer, 0, read);
+					return data;
+				default:
+					throw new IllegalArgumentException(
+							"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 	
