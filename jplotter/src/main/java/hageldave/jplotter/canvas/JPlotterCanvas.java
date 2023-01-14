@@ -188,11 +188,11 @@ public interface JPlotterCanvas {
 
 			Element styleElement = SVGUtils.createSVGElement(document, "style");
 			styleElement.setTextContent(
-					"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(PLAIN) +"') format('truetype'); font-weight: normal; font-style: normal;" +
+							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(PLAIN) +"') format('truetype'); font-weight: normal; font-style: normal;" +
 							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD) +"') format('truetype'); font-weight: bold; font-style: normal;" +
 							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(ITALIC) +"') format('truetype'); font-weight: normal; font-style: italic;" +
 							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD | ITALIC) +"') format('truetype'); font-weight: bold; font-style: italic;");
-				parent.appendChild(styleElement);
+			parent.appendChild(styleElement);
 
 			paintToSVG(document, rootGroup, w,h);
 		}

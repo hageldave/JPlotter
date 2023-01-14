@@ -1,12 +1,16 @@
 package hageldave.jplotter.font;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import org.apache.commons.io.FileUtils;
 
 import java.awt.*;
-import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Base64;
+import java.util.Objects;
 
 /**
  * The FontProvider class provides the fonts JPlotter is using.
@@ -83,39 +87,35 @@ public final class FontProvider {
 		}
 	}
 
+	/**
+	 * Returns the base64 code of the Ubuntu Mono font as a string for the specified style.
+	 * @param style font style, {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
+	 * 	 * or BOLD|ITALIC
+	 * @return base64 code of the Ubuntu Mono font of specified style
+	 */
 	public static String getUbuntuMonoFontAsBaseString(int style) {
-		String data = "";
-		byte[] buffer = new byte[1024];
-		int read;
 		try {
+			byte[] fontFileArray;
 			switch (style) {
 				case Font.PLAIN:
-					BufferedInputStream pathPlain = (BufferedInputStream) JPlotterCanvas.class.getResource("/font/UbuntuMono-R.b64").getContent();
-					while ((read = pathPlain.read(buffer)) != -1)
-						data += new String(buffer, 0, read);
-					return data;
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-R.ttf")).toURI()));
+					break;
 				case Font.BOLD:
-					BufferedInputStream pathBold = (BufferedInputStream) JPlotterCanvas.class.getResource("/font/UbuntuMono-B.b64").getContent();
-					while ((read = pathBold.read(buffer)) != -1)
-						data += new String(buffer, 0, read);
-					return data;
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-B.ttf")).toURI()));
+					break;
 				case Font.ITALIC:
-					BufferedInputStream pathItalic = (BufferedInputStream) JPlotterCanvas.class.getResource("/font/UbuntuMono-RI.b64").getContent();
-					while ((read = pathItalic.read(buffer)) != -1)
-						data += new String(buffer, 0, read);
-					return data;
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-RI.ttf")).toURI()));
+					break;
 				case (Font.BOLD | Font.ITALIC):
-					BufferedInputStream pathBoldItalic = (BufferedInputStream) JPlotterCanvas.class.getResource("/font/UbuntuMono-BI.b64").getContent();
-					while ((read = pathBoldItalic.read(buffer)) != -1)
-						data += new String(buffer, 0, read);
-					return data;
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-BI.ttf")).toURI()));
+					break;
 				default:
 					throw new IllegalArgumentException(
 							"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
 			}
-		} catch (IOException e) {
+			return Base64.getEncoder().encodeToString(fontFileArray);
+		} catch (IOException | URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
 	}
-	
 }
