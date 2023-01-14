@@ -166,55 +166,51 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             if(!txtrect.intersects(vpRect)) {
                 continue;
             }
-            // create a proxy graphics object to draw the string to
-            Graphics2D g_ = (Graphics2D) g.create();
-            Graphics2D p_ = (Graphics2D) p.create();
+
+
 
             if (txt.isLatex()) {
-                TeXFormula formula = new TeXFormula(txt.getTextString());
-                TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
-                icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
-                BufferedImage image = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g2 = image.createGraphics();
-                g2.setColor(txt.getBackground());
-                g2.fillRect(0,0, icon.getIconWidth(), icon.getIconHeight());
-                JLabel jl = new JLabel();
-                jl.setForeground(txt.getColor());
-                icon.paintIcon(jl, g2, 0, 0);
+                int index = 0;
+                for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
+                    // create a proxy graphics object to draw the string to
+                    Graphics2D g_ = (Graphics2D) g.create();
+                    Graphics2D p_ = (Graphics2D) p.create();
 
-                AffineTransform trnsfrm = new AffineTransform();
-                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint().getX(), y1/*+txt.getBounds().getHeight()*/ + icon.getIconHeight() -txt.getPositioningRectangle().getAnchorPoint().getY());
-                trnsfrm.scale(1, -1);
-                if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint().getX(), icon.getIconHeight()-txt.getPositioningRectangle().getAnchorPoint().getY());
+                    NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
-                g_.transform(trnsfrm);
-                g_.drawImage(image, null, 0, 0);
+                    TeXFormula formula = new TeXFormula(tempText.getTextString());
+                    TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
+                    icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
+                    BufferedImage image = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g2 = image.createGraphics();
+                    g2.setColor(txt.getBackground());
+                    g2.fillRect(0,0, icon.getIconWidth(), icon.getIconHeight());
+                    JLabel jl = new JLabel();
+                    jl.setForeground(txt.getColor());
+                    icon.paintIcon(jl, g2, 0, 0);
 
-                if(txt.getPickColor() != 0) {
+                    AffineTransform trnsfrm = new AffineTransform();
+                    trnsfrm.translate(x1-tempText.getPositioningRectangle().getAnchorPoint().getX(), y1+txt.getBounds().getHeight()-(txt.getTextSize().getHeight()*index) - txt.getPositioningRectangle().getAnchorPoint().getY());
+                    trnsfrm.scale(1, -1);
+                    if(angle != 0.0)
+                        trnsfrm.rotate(-angle, tempText.getPositioningRectangle().getAnchorPoint().getX(), icon.getIconHeight()-tempText.getPositioningRectangle().getAnchorPoint().getY());
+
+                    g_.transform(trnsfrm);
                     p_.transform(trnsfrm);
-                    p_.setColor(new Color(txt.getPickColor()));
+                    g_.drawImage(image, null, 0, 0);
 
-                    int index = 1;
-                    AffineTransform initTransform = p_.getTransform();
-                    for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
-                        NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-                        TeXFormula tempFormula = new TeXFormula(tempText.getTextString());
-                        TeXIcon tempIcon = tempFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, tempText.fontsize);
-                        tempIcon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
-
-                        trnsfrm = new AffineTransform();
-                        trnsfrm.translate(0, tempText.getBounds().getHeight() * index);
-                        trnsfrm.scale(1, -1);
-                        p_.transform(trnsfrm);
-
-                        Rectangle2D rect = new Rectangle2D.Double(0.0, 0.0, tempIcon.getIconWidth(), tempIcon.getIconHeight());
+                    if(txt.getPickColor() != 0) {
+                        p_.setColor(new Color(txt.getPickColor()));
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, 0.0, icon.getIconWidth(), icon.getIconHeight());
                         p_.fill(rect);
-                        p_.setTransform(initTransform);
-                        index++;
                     }
+                    index++;
                 }
             } else {
+                // create a proxy graphics object to draw the string to
+                Graphics2D g_ = (Graphics2D) g.create();
+                Graphics2D p_ = (Graphics2D) p.create();
+
                 Font font = FontProvider.getUbuntuMono(txt.fontsize, txt.style);
                 Map attributes = font.getAttributes();
                 if (txt.getTextDecoration() == TextDecoration.UNDERLINE)
@@ -241,31 +237,27 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 g_.transform(trnsfrm);
                 p_.transform(trnsfrm);
 
-                // draw background rectangle
-                if(txt.getBackground().getRGB() != 0) {
-                    g_.setColor(txt.getBackground());
-                    Rectangle2D bounds = txt.getBounds();
-                    float rightpadding = 0.4f*((float)bounds.getWidth()/txt.getTextString().length());
-                    Rectangle2D rect = new Rectangle2D.Double(0.0, -bounds.getHeight(), bounds.getWidth()+rightpadding, bounds.getHeight());
-                    g_.fill(rect);
-                }
-                // draw string
                 int maxDescent = (int) (g_.getFontMetrics().getHeight()-txt.getBounds().getHeight() - g.getFontMetrics().getMaxDescent());
                 g_.setColor(txt.getColor());
-
+                int i = 0;
                 for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
+                    NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
+                    if(txt.getBackground().getRGB() != 0) {
+                        g_.setColor(txt.getBackground());
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+(tempText.getBounds().getHeight()*i), tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
+                        g_.setColor(txt.getBackground());
+                        g_.fill(rect);
+                        i++;
+                    }
+
+                    g_.setColor(txt.getColor());
                     g_.drawString(line, 0, maxDescent);
                     maxDescent += g.getFontMetrics().getHeight();
-                }
 
-                if(txt.getPickColor() != 0) {
-                    p_.setColor(new Color(txt.getPickColor()));
-                    int index = 0;
-                    for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
-                        NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-                        Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+(tempText.getBounds().getHeight()*index), tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
+                    if(txt.getPickColor() != 0) {
+                        p_.setColor(new Color(txt.getPickColor()));
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+(tempText.getBounds().getHeight()*i), tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
                         p_.fill(rect);
-                        index++;
                     }
                 }
             }
@@ -447,6 +439,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                     PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                     graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
+                    graphicsState.setStrokingAlphaConstant(txt.getColorA());
                     contentStream.setGraphicsStateParameters(graphicsState);
                     if (txt.isLatex()) {
                         PDFUtils.latexToPDF(doc, contentStream, txt, x1+x, y1+y);

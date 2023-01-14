@@ -273,17 +273,20 @@ public class PDFUtils {
             float topPadding = 0.2f * (float) txt.getTextSize().getHeight();
 
             cs.saveGraphicsState();
-            cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY())));
+            cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight())));
             cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY())));
 
             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
             graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
             cs.setGraphicsStateParameters(graphicsState);
 
-            PDFUtils.createPDFPolygon(cs,
-                    new double[]{-rightPadding, txt.getBounds().getWidth() + rightPadding, txt.getBounds().getWidth() + rightPadding, -rightPadding},
-                    new double[]{-topPadding, -topPadding, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
-
+            for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
+                NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
+                cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight())));
+                PDFUtils.createPDFPolygon(cs,
+                    new double[]{-rightPadding, tempText.getTextSize().getWidth() + rightPadding, tempText.getTextSize().getWidth() + rightPadding, -rightPadding},
+                    new double[]{-topPadding, -topPadding, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
+            }
             cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
             cs.fill();
             cs.restoreGraphicsState();
@@ -427,28 +430,32 @@ public class PDFUtils {
         DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
         DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
-        TeXFormula formula = new TeXFormula(txt.getTextString());
-        TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
-        icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
-
-        PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, icon.getIconWidth(), icon.getIconHeight());
-        g2d.setColor(txt.getBackground());
-        g2d.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
-
-
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(x - txt.getPositioningRectangle().getAnchorPoint().getX(), y - txt.getPositioningRectangle().getAnchorPoint().getY());
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(x - txt.getPositioningRectangle().getAnchorPoint().getX(), y - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
             affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY());
         cs.transform(new Matrix(affineTransform));
 
-        JLabel jl = new JLabel();
-        jl.setForeground(txt.getColor());
-        icon.paintIcon(jl, g2d, 0, 0);
+        for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
+            NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
-        g2d.dispose();
-        PDFormXObject xform = g2d.getXFormObject();
-        cs.drawForm(xform);
+            TeXFormula formula = new TeXFormula(tempText.getTextString());
+            TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
+            icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
+            PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, icon.getIconWidth(), icon.getIconHeight());
+            g2d.setColor(txt.getBackground());
+            g2d.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
+
+            cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -icon.getIconHeight())));
+
+            JLabel jl = new JLabel();
+            jl.setForeground(txt.getColor());
+            icon.paintIcon(jl, g2d, 0, 0);
+
+            g2d.dispose();
+            PDFormXObject xform = g2d.getXFormObject();
+            cs.drawForm(xform);
+        }
         return doc;
     }
 }

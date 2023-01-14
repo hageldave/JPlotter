@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
@@ -365,17 +366,23 @@ public class SVGUtils {
 		DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
 		DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
-		TeXFormula formula = new TeXFormula(txt.getTextString());
-		TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
-		icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
+		int index = 0;
+		for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
+			NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
-		g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
-		g2.setColor(txt.getBackground());
-		g2.fillRect((int) x, (int) y, icon.getIconWidth(), icon.getIconHeight());
+			TeXFormula formula = new TeXFormula(tempText.getTextString());
+			TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
+			icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
-		JLabel jl = new JLabel();
-		jl.setForeground(txt.getColor());
-		icon.paintIcon(jl, g2, (int) x, (int) y);
+			g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
+			g2.setColor(txt.getBackground());
+			g2.fillRect((int) x, (int) (y + tempText.getTextSize().getHeight()*index), icon.getIconWidth(), icon.getIconHeight());
+
+			JLabel jl = new JLabel();
+			jl.setForeground(txt.getColor());
+			icon.paintIcon(jl, g2, (int) x, (int) (y + tempText.getTextSize().getHeight()*index));
+			index++;
+		}
 
 		Element textGroup = SVGUtils.createSVGElement(doc, "g");
 		doc.getDocumentElement().appendChild(textGroup);
