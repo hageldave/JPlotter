@@ -35,7 +35,7 @@ public class NewText implements Renderable {
     protected boolean hidden=false;
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
-    protected TextDecoration[] textDecoration;
+    protected TextDecoration textDecoration;
     protected PositioningRectangle positioningRectangle;
 
     /**
@@ -318,12 +318,12 @@ public class NewText implements Renderable {
     }
 
     // TODO
-    public TextDecoration[] getTextDecoration() {
+    public TextDecoration getTextDecoration() {
         return textDecoration;
     }
 
     // TODO
-    public void setTextDecoration(TextDecoration... textDecoration) {
+    public void setTextDecoration(TextDecoration textDecoration) {
         this.textDecoration = textDecoration;
     }
 

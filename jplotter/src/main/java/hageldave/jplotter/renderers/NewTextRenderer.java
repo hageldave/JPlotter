@@ -31,7 +31,6 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -218,9 +217,9 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             } else {
                 Font font = FontProvider.getUbuntuMono(txt.fontsize, txt.style);
                 Map attributes = font.getAttributes();
-                if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.UNDERLINE))
+                if (txt.getTextDecoration() == TextDecoration.UNDERLINE)
                     attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-                if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.STRIKETHROUGH))
+                else if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH)
                     attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
 
                 if (!attributes.isEmpty()) {
@@ -316,6 +315,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 Element textGroup = SVGUtils.createSVGElement(doc, "g");
                 mainGroup.appendChild(textGroup);
 
+                String fontfamily = "'Ubuntu Mono', monospace";
+
                 if (txt.isLatex()) {
                     try {
                         Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
@@ -326,11 +327,9 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     }
                 } else {
                     double textHeight = 0;
-//                    double rightPadding = 6 * (txt.getBounds().getWidth()/txt.getTextString().length());
 
                     for (String line : txt.getTextString().split(Pattern.quote("\n"))) {
                         NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-                        String fontfamily = "'Ubuntu Mono', monospace";
 
                         if(txt.getBackground().getRGB() != 0){
                             String defID = SVGUtils.newDefId();
@@ -378,8 +377,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                         text.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
                         text.setTextContent(line);
-                        text.setAttributeNS(null, "style",
-                                "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+                        text.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
                         text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
                         if (txt.getColorA() != 1) {
                             text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
@@ -387,20 +385,16 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         text.setAttributeNS(null, "x", "" + 0);
                         text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
 
-                        if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.UNDERLINE)) {
-                            Element underline = SVGUtils.createSVGLine(doc, 0, 0, tempText.getBounds().getWidth()/*+rightPadding*/, 0);
-                            textGroup.appendChild(underline);
-                            underline.setAttributeNS(null, "stroke", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
-                            underline.setAttributeNS(null, "opacity", SVGUtils.svgNumber(txt.getColor().getAlpha() / 255.0));
-                            underline.setAttributeNS(null, "stroke-width", SVGUtils.svgNumber(1.2));
-                            underline.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + ", " + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ")");
-                        }
-
-                        if (Arrays.stream(txt.getTextDecoration()).anyMatch(e -> e == TextDecoration.STRIKETHROUGH)) {
+                        if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
+                            text.setAttributeNS(null, "text-decoration", "underline");
+                        } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
                             text.setAttributeNS(null, "text-decoration", "line-through");
                         }
 
-                        textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
+                        textGroup.setAttributeNS(null, "transform",
+                                "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
+                        textGroup.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPoint().getX() + " " + txt.getPositioningRectangle().getAnchorPoint().getY());
+
                         text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
                         textHeight += tempText.getBounds().getHeight();
                     }
