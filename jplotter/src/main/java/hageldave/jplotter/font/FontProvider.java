@@ -1,11 +1,16 @@
 package hageldave.jplotter.font;
 
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.GraphicsEnvironment;
+import hageldave.jplotter.canvas.JPlotterCanvas;
+import org.apache.commons.io.FileUtils;
+
+import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Base64;
+import java.util.Objects;
 
 /**
  * The FontProvider class provides the fonts JPlotter is using.
@@ -81,5 +86,36 @@ public final class FontProvider {
 					"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
 		}
 	}
-	
+
+	/**
+	 * Returns the base64 code of the Ubuntu Mono font as a string for the specified style.
+	 * @param style font style, {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
+	 * 	 * or BOLD|ITALIC
+	 * @return base64 code of the Ubuntu Mono font of specified style
+	 */
+	public static String getUbuntuMonoFontAsBaseString(int style) {
+		try {
+			byte[] fontFileArray;
+			switch (style) {
+				case Font.PLAIN:
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-R.ttf")).toURI()));
+					break;
+				case Font.BOLD:
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-B.ttf")).toURI()));
+					break;
+				case Font.ITALIC:
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-RI.ttf")).toURI()));
+					break;
+				case (Font.BOLD | Font.ITALIC):
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-BI.ttf")).toURI()));
+					break;
+				default:
+					throw new IllegalArgumentException(
+							"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
+			}
+			return Base64.getEncoder().encodeToString(fontFileArray);
+		} catch (IOException | URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

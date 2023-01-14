@@ -18,6 +18,9 @@ import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static hageldave.jplotter.font.FontProvider.getUbuntuMonoFontAsBaseString;
+import static java.awt.Font.*;
+
 /**
  * This interface defines the methods required by an implementation of a 
  * canvas {@link Component} for use with JPlotter {@link Renderer}s such as 
@@ -182,7 +185,15 @@ public interface JPlotterCanvas {
 			background.setAttributeNS(null, "width", ""+w);
 			background.setAttributeNS(null, "height", ""+h);
 			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(asComponent().getBackground().getRGB()));
-			
+
+			Element styleElement = SVGUtils.createSVGElement(document, "style");
+			styleElement.setTextContent(
+							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(PLAIN) +"') format('truetype'); font-weight: normal; font-style: normal;" +
+							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD) +"') format('truetype'); font-weight: bold; font-style: normal;" +
+							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(ITALIC) +"') format('truetype'); font-weight: normal; font-style: italic;" +
+							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD | ITALIC) +"') format('truetype'); font-weight: bold; font-style: italic;");
+			parent.appendChild(styleElement);
+
 			paintToSVG(document, rootGroup, w,h);
 		}
 	}
