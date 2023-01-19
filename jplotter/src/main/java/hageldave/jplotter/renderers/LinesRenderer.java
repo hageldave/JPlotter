@@ -11,6 +11,7 @@ import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.ShaderRegistry;
+import hageldave.jplotter.util.Utils;
 import org.apache.batik.ext.awt.geom.Polygon2D;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.multipdf.LayerUtility;
@@ -524,14 +525,15 @@ public class LinesRenderer extends GenericRenderer<Lines> {
                 stroke = new BasicStroke(thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f);
             }
             g.setStroke(stroke);
-            g.draw(new Line2D.Double(x1, y1, x2, y2));
+
+			// clip segments before here
+            g.draw(Utils.getClippedLine(viewportRect, new Line2D.Double(x1, y1, x2, y2)));
 
             if (seg.pickColor != 0) {
                 p.setStroke(stroke);
                 p.setColor(new Color(seg.pickColor));
                 p.draw(new Line2D.Double(x1, y1, x2, y2));
             }
-
         }
     }
 

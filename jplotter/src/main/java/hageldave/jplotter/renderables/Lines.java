@@ -386,7 +386,7 @@ public class Lines implements Renderable {
 				.filter(seg->rect.intersectsLine(seg.p0.getX(), seg.p0.getY(), seg.p1.getX(), seg.p1.getY()))
 				.collect(Collectors.toList());
 	}
-	
+
 	/**
 	 * Whether this Lines object has a stroke pattern other than 0xffff (completely solid).
 	 * @return true when stroke pattern != 0xffff
