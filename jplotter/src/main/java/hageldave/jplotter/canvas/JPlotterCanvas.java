@@ -170,6 +170,17 @@ public interface JPlotterCanvas {
 			
 			// define the clipping rectangle for the content (rect of vieport size)
 			Node defs = SVGUtils.getDefs(document);
+
+			// set Ubuntu Mono font
+			Element styleElement = SVGUtils.createSVGElement(document, "style");
+			styleElement.setAttributeNS(null, "type", "text/css");
+			styleElement.setTextContent(
+					"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(PLAIN) +"') format('truetype'); font-weight: normal; font-style: normal;" +
+							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD) +"') format('truetype'); font-weight: bold; font-style: normal;" +
+							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(ITALIC) +"') format('truetype'); font-weight: normal; font-style: italic;" +
+							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD | ITALIC) +"') format('truetype'); font-weight: bold; font-style: italic;");
+			defs.appendChild(styleElement);
+
 			Element clip = SVGUtils.createSVGElement(document, "clipPath");
 			String clipDefID = SVGUtils.newDefId();
 			clip.setAttributeNS(null, "id", clipDefID);
@@ -177,22 +188,13 @@ public interface JPlotterCanvas {
 			defs.appendChild(clip);
 			// clip the root group
 			rootGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
-			
-			
+
 			Element background = SVGUtils.createSVGElement(document, "rect");
 			rootGroup.appendChild(background);
 			background.setAttributeNS(null, "id", "background"+"@"+hashCode());
 			background.setAttributeNS(null, "width", ""+w);
 			background.setAttributeNS(null, "height", ""+h);
 			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(asComponent().getBackground().getRGB()));
-
-			Element styleElement = SVGUtils.createSVGElement(document, "style");
-			styleElement.setTextContent(
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(PLAIN) +"') format('truetype'); font-weight: normal; font-style: normal;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD) +"') format('truetype'); font-weight: bold; font-style: normal;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(ITALIC) +"') format('truetype'); font-weight: normal; font-style: italic;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD | ITALIC) +"') format('truetype'); font-weight: bold; font-style: italic;");
-			parent.appendChild(styleElement);
 
 			paintToSVG(document, rootGroup, w,h);
 		}
