@@ -393,7 +393,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 		}
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
-		
+
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
@@ -407,14 +407,14 @@ public class TextRenderer extends GenericRenderer<Text> {
 				double x1,y1;
 				x1 = txt.getOrigin().getX();
 				y1 = txt.getOrigin().getY();
-				
+
 				x1-=translateX;
 				y1-=translateY;
 				x1*=scaleX;
 				y1*=scaleY;
-				
+
 				y1+=1;
-				
+
 				// test if inside of view port
 				Rectangle2D bounds = txt.getBoundsWithRotation();
 				AffineTransform trnsfrm = new AffineTransform();
@@ -425,7 +425,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 				if(!viewportRect.intersects(bounds)) {
 					continue;
 				}
-				
+
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
 
@@ -518,7 +518,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 					y1 -= translateY;
 					x1 *= scaleX;
 					y1 *= scaleY;
-					y1 += 2;
+					y1 += 1;
 					x1 += 1;
 					
 					// test if inside of view port
@@ -531,9 +531,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 					if(!viewportRect.intersects(bounds)) {
 						continue;
 					}
-					
-					float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
-					float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
+
+					// this approximation definitely needs improvements!
+					float rightPadding = 0.2f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
+					if (txt.getBounds().getWidth() < (new Text("12", txt.fontsize, txt.style).getBounds().getWidth()))
+						rightPadding = 0;
+
 					if(txt.getBackground().getRGB() != 0){
 						contentStream.saveGraphicsState();
 						contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x), ((float) y1+y)));
@@ -545,8 +548,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.setGraphicsStateParameters(graphicsState);
 
 						PDFUtils.createPDFPolygon(contentStream,
-								new double[]{-rightPadding, txt.getBounds().getWidth()+rightPadding, txt.getBounds().getWidth()+rightPadding, -rightPadding},
-								new double[]{-topPadding, -topPadding, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
+								new double[]{0, txt.getBounds().getWidth()-rightPadding, txt.getBounds().getWidth()-rightPadding, 0},
+								new double[]{0, 0, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
 
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
