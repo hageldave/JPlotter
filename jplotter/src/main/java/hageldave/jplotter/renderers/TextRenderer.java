@@ -14,6 +14,7 @@ import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
@@ -29,6 +30,8 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Objects;
+
+import static hageldave.jplotter.pdf.PDFUtils.createPDFont;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -426,6 +429,18 @@ public class TextRenderer extends GenericRenderer<Text> {
 					continue;
 				}
 
+
+				// TODO: works for now, maybe we should consider creating a helper function for this
+				double height = 0;
+				try {
+					PDDocument pdDoc = new PDDocument();
+					PDType0Font font = createPDFont(pdDoc, txt.style);
+					height = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
+					pdDoc.close();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
 
@@ -474,9 +489,9 @@ public class TextRenderer extends GenericRenderer<Text> {
 				textGroup.setAttributeNS(null, "x", ""+0);
 				textGroup.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
 				if(txt.getAngle() != 0){
-					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1-height)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
 				} else {
-					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1-height)+") scale(1,-1)");
 				}
 
 				// actual text element

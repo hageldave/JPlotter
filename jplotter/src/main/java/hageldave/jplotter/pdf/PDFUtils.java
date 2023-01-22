@@ -250,7 +250,7 @@ public class PDFUtils {
             affineTransform.rotate(txt.getAngle());
         cs.setTextMatrix(new Matrix(affineTransform));
 
-        float textHeight = 0;
+        float textHeight = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
         for (String newLine : txt.getTextString().split("\n")) {
             cs.newLineAtOffset(0, -textHeight);
             cs.showText(newLine);
