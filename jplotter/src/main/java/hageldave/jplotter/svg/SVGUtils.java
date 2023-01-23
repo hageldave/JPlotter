@@ -376,7 +376,8 @@ public class SVGUtils {
 
 			g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
 			g2.setColor(txt.getBackground());
-			g2.fillRect((int) x, (int) tempY, icon.getIconWidth(), icon.getIconHeight());
+			if (line.length() > 0)
+				g2.fillRect((int) x, (int) tempY, icon.getIconWidth(), icon.getIconHeight());
 
 			JLabel jl = new JLabel();
 			jl.setForeground(txt.getColor());

@@ -449,7 +449,8 @@ public class PDFUtils {
 
             PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, icon.getIconWidth(), icon.getIconHeight());
             g2d.setColor(txt.getBackground());
-            g2d.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
+            if (line.length() > 0)
+                g2d.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
 
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -icon.getIconHeight())));
 

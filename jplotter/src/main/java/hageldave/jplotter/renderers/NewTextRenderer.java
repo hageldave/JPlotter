@@ -196,7 +196,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                     g_.transform(trnsfrm);
                     p_.transform(trnsfrm);
-                    g_.drawImage(image, null, 0, 0);
+                    if (line.length() > 0)
+                        g_.drawImage(image, null, 0, 0);
 
                     // translate line up
                     trnsfrm.translate(0, icon.getIconHeight());
