@@ -281,8 +281,9 @@ public class PDFUtils {
                 NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
                 cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight())));
                 if (newLine.length() > 0) {
+                    float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
                     PDFUtils.createPDFPolygon(cs,
-                            new double[]{0, tempText.getTextSize().getWidth(), tempText.getTextSize().getWidth(), 0},
+                            new double[]{0, width, width, 0},
                             new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
                 }
             }
@@ -309,14 +310,15 @@ public class PDFUtils {
         float lineHeight = (float) (txt.getTextSize().getHeight() + 2 + fontDescent);
         for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
             NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
+            float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
             if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
                 cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY() - lineHeight);
-                cs.lineTo((float) tempText.getBounds().getWidth(), (float) tempText.getBounds().getY() - lineHeight);
+                cs.lineTo(width, (float) tempText.getBounds().getY() - lineHeight);
                 cs.setStrokingColor(txt.getColor());
                 cs.stroke();
             } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
                 cs.moveTo((float) tempText.getBounds().getX(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
-                cs.lineTo((float) tempText.getBounds().getWidth(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
+                cs.lineTo(width, (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
                 cs.setStrokingColor(txt.getColor());
                 cs.stroke();
             }
