@@ -269,8 +269,9 @@ public class PDFUtils {
         cs.setFont(font, txt.fontsize);
 
         if (txt.getBackground().getRGB() != 0) {
-            float rightPadding = 0.3f * ((float) txt.getBounds().getWidth() / txt.getTextString().length());
-            float topPadding = 0.2f * (float) txt.getTextSize().getHeight();
+            float rightPadding = 0.2f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
+            if (txt.getBounds().getWidth() < (new Text("12", txt.fontsize, txt.style).getBounds().getWidth()))
+                rightPadding = 0;
 
             cs.saveGraphicsState();
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight())));
@@ -285,7 +286,7 @@ public class PDFUtils {
                 cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight())));
                 PDFUtils.createPDFPolygon(cs,
                     new double[]{-rightPadding, tempText.getTextSize().getWidth() + rightPadding, tempText.getTextSize().getWidth() + rightPadding, -rightPadding},
-                    new double[]{-topPadding, -topPadding, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
+                    new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
             }
             cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
             cs.fill();
@@ -298,6 +299,8 @@ public class PDFUtils {
             affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY() - txt.getBounds().getHeight());
         cs.setTextMatrix(new Matrix(affineTransform));
 
+        double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
+        cs.newLineAtOffset(0, (float) -fontDescent);
         for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
             cs.newLineAtOffset(0, (float) -txt.getTextSize().getHeight());
             cs.showText(newLine);
@@ -305,7 +308,7 @@ public class PDFUtils {
         cs.endText();
 
         cs.transform(new Matrix(affineTransform));
-        float lineHeight = (float) txt.getTextSize().getHeight() + 2;
+        float lineHeight = (float) (txt.getTextSize().getHeight() + 2 + fontDescent);
         for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
             NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
             if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {

@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderers;
 
+import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
@@ -168,7 +169,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             }
 
 
-
             if (txt.isLatex()) {
                 int index = 0;
                 for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
@@ -237,7 +237,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 g_.transform(trnsfrm);
                 p_.transform(trnsfrm);
 
-                int maxDescent = (int) (g_.getFontMetrics().getHeight()-txt.getBounds().getHeight() - g.getFontMetrics().getMaxDescent());
+                double textHeight = txt.getBounds().getHeight()-g.getFontMetrics().getHeight()+g.getFontMetrics().getMaxDescent();
                 g_.setColor(txt.getColor());
                 int i = 0;
                 for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
@@ -251,8 +251,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     }
 
                     g_.setColor(txt.getColor());
-                    g_.drawString(line, 0, maxDescent);
-                    maxDescent += g.getFontMetrics().getHeight();
+                    g_.drawString(line, 0, (int) -textHeight);
+                    textHeight -= tempText.getBounds().getHeight();
 
                     if(txt.getPickColor() != 0) {
                         p_.setColor(new Color(txt.getPickColor()));
@@ -318,7 +318,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    double textHeight = 0;
+                    double textHeight = 1;
 
                     for (String line : txt.getTextString().split(Pattern.quote("\n"))) {
                         NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
@@ -383,8 +383,9 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                             text.setAttributeNS(null, "text-decoration", "line-through");
                         }
 
+                        double fontDescent = CharacterAtlas.getFontMetrics(txt.fontsize, txt.style).getMaxDescent();
                         textGroup.setAttributeNS(null, "transform",
-                                "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
+                                "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1+fontDescent-txt.getPositioningRectangle().getAnchorPoint().getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
                         textGroup.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPoint().getX() + " " + txt.getPositioningRectangle().getAnchorPoint().getY());
 
                         text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
