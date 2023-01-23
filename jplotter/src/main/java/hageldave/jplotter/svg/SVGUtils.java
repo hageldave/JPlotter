@@ -366,7 +366,7 @@ public class SVGUtils {
 		DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
 		DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
-		int index = 0;
+		double tempY = y;
 		for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
 			NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
@@ -376,18 +376,17 @@ public class SVGUtils {
 
 			g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
 			g2.setColor(txt.getBackground());
-			g2.fillRect((int) x, (int) (y + tempText.getTextSize().getHeight()*index), icon.getIconWidth(), icon.getIconHeight());
+			g2.fillRect((int) x, (int) tempY, icon.getIconWidth(), icon.getIconHeight());
 
 			JLabel jl = new JLabel();
 			jl.setForeground(txt.getColor());
-			icon.paintIcon(jl, g2, (int) x, (int) (y + tempText.getTextSize().getHeight()*index));
-			index++;
-		}
+			icon.paintIcon(jl, g2, (int) x, (int) tempY);
 
+			tempY += icon.getIconHeight();
+		}
 		Element textGroup = SVGUtils.createSVGElement(doc, "g");
 		doc.getDocumentElement().appendChild(textGroup);
 		textGroup.appendChild(g2.getTopLevelGroup(true));
-
 		return textGroup;
 	}
 }

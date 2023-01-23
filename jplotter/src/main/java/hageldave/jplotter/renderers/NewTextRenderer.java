@@ -170,7 +170,12 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
 
             if (txt.isLatex()) {
-                int index = 0;
+                AffineTransform trnsfrm = new AffineTransform();
+                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint().getX(), y1+txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint().getY());
+                trnsfrm.scale(1, -1);
+                if(angle != 0.0)
+                    trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint().getY());
+
                 for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
                     // create a proxy graphics object to draw the string to
                     Graphics2D g_ = (Graphics2D) g.create();
@@ -189,22 +194,18 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     jl.setForeground(txt.getColor());
                     icon.paintIcon(jl, g2, 0, 0);
 
-                    AffineTransform trnsfrm = new AffineTransform();
-                    trnsfrm.translate(x1-tempText.getPositioningRectangle().getAnchorPoint().getX(), y1+txt.getBounds().getHeight()-(txt.getTextSize().getHeight()*index) - txt.getPositioningRectangle().getAnchorPoint().getY());
-                    trnsfrm.scale(1, -1);
-                    if(angle != 0.0)
-                        trnsfrm.rotate(-angle, tempText.getPositioningRectangle().getAnchorPoint().getX(), icon.getIconHeight()-tempText.getPositioningRectangle().getAnchorPoint().getY());
-
                     g_.transform(trnsfrm);
                     p_.transform(trnsfrm);
                     g_.drawImage(image, null, 0, 0);
+
+                    // translate line up
+                    trnsfrm.translate(0, icon.getIconHeight());
 
                     if(txt.getPickColor() != 0) {
                         p_.setColor(new Color(txt.getPickColor()));
                         Rectangle2D rect = new Rectangle2D.Double(0.0, 0.0, icon.getIconWidth(), icon.getIconHeight());
                         p_.fill(rect);
                     }
-                    index++;
                 }
             } else {
                 // create a proxy graphics object to draw the string to
@@ -313,7 +314,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     try {
                         Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
                         textGroup.appendChild(svgLatex);
-                        textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY()+txt.getBounds().getHeight())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
+                        textGroup.setAttributeNS(null, "transform",
+                                "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPoint().getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPoint().getY()+txt.getBounds().getHeight())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
