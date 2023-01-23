@@ -284,9 +284,11 @@ public class PDFUtils {
             for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
                 NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
                 cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight())));
-                PDFUtils.createPDFPolygon(cs,
-                    new double[]{-rightPadding, tempText.getTextSize().getWidth() + rightPadding, tempText.getTextSize().getWidth() + rightPadding, -rightPadding},
-                    new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
+                if (newLine.length() > 0) {
+                    PDFUtils.createPDFPolygon(cs,
+                            new double[]{-rightPadding, tempText.getTextSize().getWidth() + rightPadding, tempText.getTextSize().getWidth() + rightPadding, -rightPadding},
+                            new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
+                }
             }
             cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
             cs.fill();
