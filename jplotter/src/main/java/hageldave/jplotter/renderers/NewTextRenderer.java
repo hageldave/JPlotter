@@ -249,7 +249,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+(tempText.getBounds().getHeight()*i), tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
                         g_.setColor(txt.getBackground());
                         g_.fill(rect);
-                        i++;
                     }
 
                     g_.setColor(txt.getColor());
@@ -261,6 +260,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+(tempText.getBounds().getHeight()*i), tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
                         p_.fill(rect);
                     }
+                    i++;
                 }
             }
         }
