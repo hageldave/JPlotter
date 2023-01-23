@@ -431,37 +431,9 @@ public class TextRenderer extends GenericRenderer<Text> {
 				String fontfamily = "'Ubuntu Mono', monospace";
 
 				if(txt.getBackground().getRGB() != 0){
-					String defID = SVGUtils.newDefId();
-					Element defs = SVGUtils.createSVGElement(doc, "defs");
-					Element filter = SVGUtils.createSVGElement(doc, "filter");
-					filter.setAttributeNS(null, "x", ""+0);
-					filter.setAttributeNS(null, "y", ""+0);
-					filter.setAttributeNS(null, "width", ""+1);
-					filter.setAttributeNS(null, "height", ""+1);
-					filter.setAttributeNS(null, "id", defID);
-					Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
-					feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-					feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
-					feFlood.setAttributeNS(null, "result", "bg");
-
-					Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
-					Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
-					feMergeNode.setAttributeNS(null, "in", "bg");
-					Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
-					feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
-
-					feMerge.appendChild(feMergeNode);
-					feMerge.appendChild(feMergeNode2);
-					filter.appendChild(feFlood);
-					filter.appendChild(feMerge);
-					defs.appendChild(filter);
-					textGroup.appendChild(defs);
-
 					// dummy text element
-					Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+					Element backgroundText = SVGUtils.createTextBackground(doc, textGroup, txt.getBackground());
 					textGroup.appendChild(backgroundText);
-
-					backgroundText.setAttributeNS(null, "filter", "url(#" + defID + ")");
 					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 					backgroundText.setTextContent(txt.getTextString());
 					backgroundText.setAttributeNS(null, "style",

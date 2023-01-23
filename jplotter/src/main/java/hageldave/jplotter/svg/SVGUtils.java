@@ -35,7 +35,7 @@ import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 /**
  * Utility class for SVG related methods.
- * 
+ *
  * @author hageldave
  */
 public class SVGUtils {
@@ -146,7 +146,7 @@ public class SVGUtils {
 	 * Serializes the specified document as xml formatted string.
 	 * @param doc to serialize
 	 * @return xml representation of the specified document
-	 * @throws RuntimeException when either an 
+	 * @throws RuntimeException when either an
 	 * {@link IOException} or {@link TranscoderException} occurs during the process.
 	 */
 	public static String documentToXMLString(Document doc){
@@ -174,8 +174,8 @@ public class SVGUtils {
 	/**
 	 * Writes the specified document to file in xml format.
 	 * @param doc document to serialize
-	 * @param file to write to 
-	 * @throws RuntimeException when either an 
+	 * @param file to write to
+	 * @throws RuntimeException when either an
 	 * {@link IOException} or {@link TranscoderException} occurs during the process.
 	 */
 	public static void documentToXMLFile(Document doc, File file){
@@ -206,7 +206,7 @@ public class SVGUtils {
 	/**
 	 * A new id string for use within the definitions section.
 	 * A global atomic counter is incremented to retrieve a
-	 * unique number and an id string of the form "def_2dh" is returned 
+	 * unique number and an id string of the form "def_2dh" is returned
 	 * where the part after the underscore is the unique number formatted
 	 * as 32-system number.
 	 * @return new unique definitions id string
@@ -307,9 +307,9 @@ public class SVGUtils {
 	 * using their {@link JPlotterCanvas#paintSVG(Document, Element)} method
 	 * to create their part of the DOM that cannot be generated from {@link SVGGraphics2D}.
 	 * <p>
-	 * For drawing a single {@link JPlotterCanvas} to SVG the method {@link JPlotterCanvas#paintSVG()} 
+	 * For drawing a single {@link JPlotterCanvas} to SVG the method {@link JPlotterCanvas#paintSVG()}
 	 * can be used instead of this method.
-	 * 
+	 *
 	 * @param c container to be converted to SVG
 	 * @return SVG document representing the specified container.
 	 */
@@ -319,8 +319,8 @@ public class SVGUtils {
 		Element defs = createSVGElement(document, "defs");
 		defs.setAttributeNS(null, "id", "JPlotterDefs");
 		document.getDocumentElement().appendChild(defs);
-		{ /* draw all non JPlotterCanvas components 
-	       * (and those that are isSvgAsImageRenderingEnabled()==true 
+		{ /* draw all non JPlotterCanvas components
+	       * (and those that are isSvgAsImageRenderingEnabled()==true
 		   * which is checked by respective implementation's paint methods)
 		   */
 			SVGGraphics2D g2d = new SVGPatchedGraphics2D(document);
@@ -343,14 +343,14 @@ public class SVGUtils {
 				if(canvas.isSvgAsImageRenderingEnabled())
 					return; // was already rendered through SVGGraphics2D
 				Element group = SVGUtils.createSVGElement(doc, "g");
-				group.setAttributeNS(null, "transform", 
+				group.setAttributeNS(null, "transform",
 						"translate("+(canvas.asComponent().getX())+","+(canvas.asComponent().getY())+")");
 				parent.appendChild(group);
 				canvas.paintSVG(doc, group);
-			} else { 
+			} else {
 				if(comp instanceof Container){
 					Element group = SVGUtils.createSVGElement(doc, "g");
-					group.setAttributeNS(null, "transform", 
+					group.setAttributeNS(null, "transform",
 							"translate("+(comp.getX())+","+(comp.getY())+")");
 					parent.appendChild(group);
 					containerToSVG((Container)comp, doc, group);
@@ -389,5 +389,38 @@ public class SVGUtils {
 		doc.getDocumentElement().appendChild(textGroup);
 		textGroup.appendChild(g2.getTopLevelGroup(true));
 		return textGroup;
+	}
+
+	public static Element createTextBackground(Document doc, Element parent, Color backgroundColor) {
+        String defID = SVGUtils.newDefId();
+        Element defs = SVGUtils.createSVGElement(doc, "defs");
+        Element filter = SVGUtils.createSVGElement(doc, "filter");
+        filter.setAttributeNS(null, "x", "" + 0);
+        filter.setAttributeNS(null, "y", "" + 0);
+        filter.setAttributeNS(null, "width", "" + 1);
+        filter.setAttributeNS(null, "height", "" + 1);
+        filter.setAttributeNS(null, "id", defID);
+        Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
+        feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(backgroundColor.getRGB()));
+        feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(backgroundColor.getAlpha() / 255.0));
+        feFlood.setAttributeNS(null, "result", "bg");
+
+        Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
+        Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+        feMergeNode.setAttributeNS(null, "in", "bg");
+        Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
+        feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
+
+        feMerge.appendChild(feMergeNode);
+        feMerge.appendChild(feMergeNode2);
+        filter.appendChild(feFlood);
+        filter.appendChild(feMerge);
+        defs.appendChild(filter);
+        parent.appendChild(defs);
+
+        Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+        parent.appendChild(backgroundText);
+        backgroundText.setAttributeNS(null, "filter", "url(#" + defID + ")");
+        return backgroundText;
 	}
 }

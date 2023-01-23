@@ -327,34 +327,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
                         if(txt.getBackground().getRGB() != 0){
-                            String defID = SVGUtils.newDefId();
-                            Element defs = SVGUtils.createSVGElement(doc, "defs");
-                            Element filter = SVGUtils.createSVGElement(doc, "filter");
-                            filter.setAttributeNS(null, "x", ""+0);
-                            filter.setAttributeNS(null, "y", ""+0);
-                            filter.setAttributeNS(null, "width", ""+1);
-                            filter.setAttributeNS(null, "height", ""+1);
-                            filter.setAttributeNS(null, "id", defID);
-                            Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
-                            feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-                            feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
-                            feFlood.setAttributeNS(null, "result", "bg");
-
-                            Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
-                            Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
-                            feMergeNode.setAttributeNS(null, "in", "bg");
-                            Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
-                            feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
-
-                            feMerge.appendChild(feMergeNode);
-                            feMerge.appendChild(feMergeNode2);
-                            filter.appendChild(feFlood);
-                            filter.appendChild(feMerge);
-                            defs.appendChild(filter);
-                            textGroup.appendChild(defs);
-
-                            Element backgroundText = SVGUtils.createSVGElement(doc, "text");
-                            textGroup.appendChild(backgroundText);
+                            Element backgroundText = SVGUtils.createTextBackground(doc, textGroup, txt.getBackground());
                             backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
                             backgroundText.setTextContent(line);
                             backgroundText.setAttributeNS(null, "style",
@@ -364,7 +337,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                             backgroundText.setAttributeNS(null, "x", "" + 0);
                             backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
                             backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
-                            backgroundText.setAttributeNS(null, "filter", "url(#" + defID + ")");
                         }
 
                         Element text = SVGUtils.createSVGElement(doc, "text");
