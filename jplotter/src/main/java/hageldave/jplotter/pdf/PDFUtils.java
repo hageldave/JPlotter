@@ -269,13 +269,9 @@ public class PDFUtils {
         cs.setFont(font, txt.fontsize);
 
         if (txt.getBackground().getRGB() != 0) {
-            float rightPadding = 0.2f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
-            if (txt.getBounds().getWidth() < (new Text("12", txt.fontsize, txt.style).getBounds().getWidth()))
-                rightPadding = 0;
-
             cs.saveGraphicsState();
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight())));
-            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY())));
+            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY() - txt.getBounds().getHeight())));
 
             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
             graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
@@ -286,7 +282,7 @@ public class PDFUtils {
                 cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight())));
                 if (newLine.length() > 0) {
                     PDFUtils.createPDFPolygon(cs,
-                            new double[]{-rightPadding, tempText.getTextSize().getWidth() + rightPadding, tempText.getTextSize().getWidth() + rightPadding, -rightPadding},
+                            new double[]{0, tempText.getTextSize().getWidth(), tempText.getTextSize().getWidth(), 0},
                             new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
                 }
             }
