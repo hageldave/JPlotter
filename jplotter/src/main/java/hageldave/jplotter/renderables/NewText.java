@@ -8,6 +8,7 @@ import hageldave.jplotter.debugging.panelcreators.control.*;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.util.Annotations;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -17,6 +18,7 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -248,13 +250,66 @@ public class NewText implements Renderable {
 
     // get bounds without respect for line breaks
     private static Rectangle2D getBounds(NewText text) {
-        if (text.isLatex()) {
-            TeXFormula formula = new TeXFormula(text.getTextString());
-            TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontsize);
-            icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
-            return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), icon.getIconWidth(), icon.getIconHeight());
-        }
+        if (text.isLatex())
+            return getLatexBounds(text);
         return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), text.getTextSize().getWidth(), text.getTextSize().getHeight());
+    }
+
+
+    /**
+     * @return the bounding rectangle of this text
+     */
+    public Rectangle2D getBoundsPDF() {
+        double width = 0;
+        double height = 0;
+        for (String line : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
+            try {
+                NewText tempText = new NewText(line, fontsize, style, getColor(), isLatex());
+                width = Math.max(width, getBoundsPDF(tempText).getWidth());
+                height += getBoundsPDF(tempText).getHeight();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
+    }
+
+    private static Rectangle2D getBoundsPDF(NewText text) throws IOException {
+        if (text.isLatex())
+            return getLatexBounds(text);
+        return PDFUtils.getPDFTextLineBounds(text);
+    }
+
+
+    /**
+     * @return the bounding rectangle of this text
+     */
+    public Rectangle2D getBoundsSVG() {
+        double width = 0;
+        double height = 0;
+        for (String line : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
+            try {
+                NewText tempText = new NewText(line, fontsize, style, getColor(), isLatex());
+                width = Math.max(width, getBoundsSVG(tempText).getWidth());
+                height += getBoundsSVG(tempText).getHeight();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
+    }
+
+    private static Rectangle2D getBoundsSVG(NewText text) throws IOException {
+        if (text.isLatex())
+            return getLatexBounds(text);
+        return PDFUtils.getPDFTextLineBounds(text);
+    }
+
+    private static Rectangle2D getLatexBounds(NewText text) {
+        TeXFormula formula = new TeXFormula(text.getTextString());
+        TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontsize);
+        icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
+        return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), icon.getIconWidth(), icon.getIconHeight());
     }
 
     /**
@@ -332,7 +387,7 @@ public class NewText implements Renderable {
         if (Objects.nonNull(positioningRectangle)) {
             return positioningRectangle;
         }
-        return new PositioningRectangle(this, 0,0);
+        return new PositioningRectangle(0,0);
     }
 
     // TODO

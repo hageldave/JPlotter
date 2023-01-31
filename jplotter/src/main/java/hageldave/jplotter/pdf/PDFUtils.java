@@ -270,8 +270,8 @@ public class PDFUtils {
 
         if (txt.getBackground().getRGB() != 0) {
             cs.saveGraphicsState();
-            cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight())));
-            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY() - txt.getBounds().getHeight())));
+            cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight())));
+            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight())));
 
             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
             graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
@@ -293,9 +293,10 @@ public class PDFUtils {
         }
 
         cs.beginText();
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPoint().getX(), position.getY() - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight());
+//        float textWidth = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY() - txt.getBounds().getHeight());
+            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
         cs.setTextMatrix(new Matrix(affineTransform));
 
         double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
@@ -433,9 +434,9 @@ public class PDFUtils {
         DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
         DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(x - txt.getPositioningRectangle().getAnchorPoint().getX(), y - txt.getPositioningRectangle().getAnchorPoint().getY() + txt.getBounds().getHeight());
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(x - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), y - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPoint().getX(), txt.getPositioningRectangle().getAnchorPoint().getY());
+            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY());
         cs.transform(new Matrix(affineTransform));
 
         for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
@@ -461,5 +462,14 @@ public class PDFUtils {
             cs.drawForm(xform);
         }
         return doc;
+    }
+
+    public static Rectangle2D getPDFTextLineBounds(NewText txt) throws IOException {
+        PDDocument doc = new PDDocument();
+        PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
+        double width = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
+        double height = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * txt.fontsize;
+        doc.close();
+        return new Rectangle2D.Double(txt.getOrigin().getX(), txt.getOrigin().getY(), width, height);
     }
 }
