@@ -168,20 +168,23 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 continue;
             }
 
+            /* translate to text origin,
+             * flip vertically (AWT coordinates, so text is not upside down),
+             * rotate according to angle */
+            AffineTransform trnsfrm = new AffineTransform();
+            trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint(txt).getX(), y1-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
+            trnsfrm.scale(1, -1);
+            if(angle != 0.0)
+                trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint(txt).getX(), txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
 
             if (txt.isLatex()) {
-                AffineTransform trnsfrm = new AffineTransform();
-                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint(txt).getX(), y1+txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
-                trnsfrm.scale(1, -1);
-                if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint(txt).getX(), txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
-
+                trnsfrm.translate(0, -txt.getBounds().getHeight());
                 for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
+                    NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
+
                     // create a proxy graphics object to draw the string to
                     Graphics2D g_ = (Graphics2D) g.create();
                     Graphics2D p_ = (Graphics2D) p.create();
-
-                    NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
                     TeXFormula formula = new TeXFormula(tempText.getTextString());
                     TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
@@ -228,14 +231,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     p_.setFont(font);
                 }
 
-                /* translate to text origin,
-                 * flip vertically (AWT coordinates, so text is not upside down),
-                 * rotate according to angle */
-                AffineTransform trnsfrm = new AffineTransform();
-                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint(txt).getX(), y1-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
-                trnsfrm.scale(1, -1);
-                if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint(txt).getX(), -txt.getPositioningRectangle().getAnchorPoint(txt).getY());
                 g_.transform(trnsfrm);
                 p_.transform(trnsfrm);
 

@@ -268,63 +268,114 @@ public class PDFUtils {
         PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
         cs.setFont(font, txt.fontsize);
 
-        if (txt.getBackground().getRGB() != 0) {
-            cs.saveGraphicsState();
-            cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight())));
-            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight())));
-
-            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-            graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
-            cs.setGraphicsStateParameters(graphicsState);
-
-            for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
-                NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
-                cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight())));
-                if (newLine.length() > 0) {
-                    float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
-                    PDFUtils.createPDFPolygon(cs,
-                            new double[]{0, width, width, 0},
-                            new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
-                }
-            }
-            cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
-            cs.fill();
-            cs.restoreGraphicsState();
-        }
-
-        cs.beginText();
-//        float textWidth = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight());
-        if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
-        cs.setTextMatrix(new Matrix(affineTransform));
-
         double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
-        cs.newLineAtOffset(0, (float) -fontDescent);
-        for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
-            cs.newLineAtOffset(0, (float) -txt.getTextSize().getHeight());
-            cs.showText(newLine);
-        }
-        cs.endText();
-
-        cs.transform(new Matrix(affineTransform));
         float lineHeight = (float) (txt.getTextSize().getHeight() + 2 + fontDescent);
         for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
-            NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
+            NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
+            if (txt.getBackground().getRGB() != 0) {
+                cs.saveGraphicsState();
+                cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - tempText.getTextSize().getHeight())));
+                cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight())));
+
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
+                cs.setGraphicsStateParameters(graphicsState);
+
+                if (newLine.length() > 0) {
+                    float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
+                    PDFUtils.createPDFPolygon(cs, new double[]{0, width, width, 0},
+                            new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
+                }
+                cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
+                cs.fill();
+                cs.restoreGraphicsState();
+            }
+
+            cs.saveGraphicsState();
+            AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - fontDescent);
+            if (txt.getAngle() != 0)
+                affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
+            cs.transform(new Matrix(affineTransform));
+
+            cs.beginText();
+            cs.setTextMatrix(new Matrix(AffineTransform.getTranslateInstance(0, (float) -txt.getTextSize().getHeight())));
+            cs.newLine();
+            cs.showText(newLine);
+            cs.endText();
+
             float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
+            cs.setStrokingColor(txt.getColor());
             if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
-                cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY() - lineHeight);
-                cs.lineTo(width, (float) tempText.getBounds().getY() - lineHeight);
-                cs.setStrokingColor(txt.getColor());
+                cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY() - lineHeight - 2);
+                cs.lineTo(width, (float) tempText.getBounds().getY() - lineHeight - 2);
                 cs.stroke();
             } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
                 cs.moveTo((float) tempText.getBounds().getX(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
                 cs.lineTo(width, (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
-                cs.setStrokingColor(txt.getColor());
                 cs.stroke();
             }
-            lineHeight += tempText.getBounds().getHeight();
+            cs.restoreGraphicsState();
+            cs.transform(new Matrix(AffineTransform.getTranslateInstance(0,  (float) -txt.getTextSize().getHeight())));
         }
+
+        // TODO: remove this if the above works
+        //////////////////////////////////////////
+//        if (txt.getBackground().getRGB() != 0) {
+//            cs.saveGraphicsState();
+//            cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight())));
+//            cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight())));
+//
+//            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+//            graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
+//            cs.setGraphicsStateParameters(graphicsState);
+//
+//            for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
+//                NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
+//                cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight())));
+//                if (newLine.length() > 0) {
+//                    float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
+//                    PDFUtils.createPDFPolygon(cs,
+//                            new double[]{0, width, width, 0},
+//                            new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
+//                }
+//            }
+//            cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
+//            cs.fill();
+//            cs.restoreGraphicsState();
+//        }
+//
+//        cs.beginText();
+//        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight());
+//        if (txt.getAngle() != 0)
+//            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
+//        cs.setTextMatrix(new Matrix(affineTransform));
+//
+//        double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
+//        cs.newLineAtOffset(0, (float) -fontDescent);
+//        for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
+//            cs.newLineAtOffset(0, (float) -txt.getTextSize().getHeight());
+//            cs.showText(newLine);
+//        }
+//        cs.endText();
+//
+//        cs.transform(new Matrix(affineTransform));
+//        float lineHeight = (float) (txt.getTextSize().getHeight() + 2 + fontDescent);
+//        for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
+//            NewText tempText = new NewText(newLine, txt.fontsize, txt.style, txt.getColor());
+//            float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
+//            if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
+//                cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY() - lineHeight);
+//                cs.lineTo(width, (float) tempText.getBounds().getY() - lineHeight);
+//                cs.setStrokingColor(txt.getColor());
+//                cs.stroke();
+//            } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
+//                cs.moveTo((float) tempText.getBounds().getX(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
+//                cs.lineTo(width, (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
+//                cs.setStrokingColor(txt.getColor());
+//                cs.stroke();
+//            }
+//            lineHeight += tempText.getBounds().getHeight();
+//        }
         return cs;
     }
 
@@ -465,8 +516,8 @@ public class PDFUtils {
     }
 
     public static Rectangle2D getPDFTextLineBounds(NewText txt) throws IOException {
-        PDDocument doc = new PDDocument();
-        PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
+        FontCachedPDDocument doc = new FontCachedPDDocument();
+        PDType0Font font = doc.getFont(txt.style);
         double width = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
         double height = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * txt.fontsize;
         doc.close();
