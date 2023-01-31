@@ -5,6 +5,7 @@ import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
@@ -15,6 +16,7 @@ import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
@@ -30,6 +32,8 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Objects;
+
+import static hageldave.jplotter.pdf.PDFUtils.createPDFont;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -441,7 +445,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")");
 					}
 				}
-				
+
 				Element text = SVGUtils.createSVGElement(doc, "text");
 				textGroup.appendChild(text);
 				
@@ -457,9 +461,9 @@ public class TextRenderer extends GenericRenderer<Text> {
 				text.setAttributeNS(null, "x", ""+0);
 				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
 				if(txt.getAngle() != 0){
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
 				} else {
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
+					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+1)+") scale(1,-1)");
 				}
 			}
 		}
@@ -489,8 +493,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 					y1 -= translateY;
 					x1 *= scaleX;
 					y1 *= scaleY;
-					y1 += 2;
-					x1 += 1;
+					y1 += 3;
 					
 					// test if inside of view port
 					Rectangle2D bounds = txt.getBoundsWithRotation();
@@ -502,9 +505,11 @@ public class TextRenderer extends GenericRenderer<Text> {
 					if(!viewportRect.intersects(bounds)) {
 						continue;
 					}
-					
-					float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
-					float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
+
+					PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument)doc).getFont(txt.style) : createPDFont(doc, txt.style);
+					float textWidth = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
+					float fontDescent = -font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
+
 					if(txt.getBackground().getRGB() != 0){
 						contentStream.saveGraphicsState();
 						contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x), ((float) y1+y)));
@@ -516,8 +521,8 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.setGraphicsStateParameters(graphicsState);
 
 						PDFUtils.createPDFPolygon(contentStream,
-								new double[]{-rightPadding, txt.getBounds().getWidth()+rightPadding, txt.getBounds().getWidth()+rightPadding, -rightPadding},
-								new double[]{-topPadding, -topPadding, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
+								new double[]{0, textWidth, textWidth, 0},
+								new double[]{-fontDescent, -fontDescent, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
 
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
