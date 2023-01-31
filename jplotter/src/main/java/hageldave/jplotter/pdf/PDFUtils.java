@@ -270,18 +270,21 @@ public class PDFUtils {
 
         double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
         float lineHeight = (float) (txt.getTextSize().getHeight() + 2 + fontDescent);
+
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - fontDescent);
+        if (txt.getAngle() != 0)
+            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
+        cs.transform(new Matrix(affineTransform));
+
         for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
             NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
             if (txt.getBackground().getRGB() != 0) {
                 cs.saveGraphicsState();
-                cs.transform(new Matrix(AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - tempText.getTextSize().getHeight())));
-                cs.transform(new Matrix(AffineTransform.getRotateInstance(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight())));
-
                 PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                 graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
                 cs.setGraphicsStateParameters(graphicsState);
-
                 if (newLine.length() > 0) {
+                    cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight() + fontDescent)));
                     float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
                     PDFUtils.createPDFPolygon(cs, new double[]{0, width, width, 0},
                             new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
@@ -292,11 +295,6 @@ public class PDFUtils {
             }
 
             cs.saveGraphicsState();
-            AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - fontDescent);
-            if (txt.getAngle() != 0)
-                affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
-            cs.transform(new Matrix(affineTransform));
-
             cs.beginText();
             cs.setTextMatrix(new Matrix(AffineTransform.getTranslateInstance(0, (float) -txt.getTextSize().getHeight())));
             cs.newLine();

@@ -315,7 +315,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-
             }
         }
     }
