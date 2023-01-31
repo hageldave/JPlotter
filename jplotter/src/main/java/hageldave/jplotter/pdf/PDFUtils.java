@@ -481,11 +481,11 @@ public class PDFUtils {
         }
     }
 
-    public static PDDocument latexToPDF(PDDocument doc, PDPageContentStream cs, NewText txt, double x, double y) throws IOException {
+    public static PDDocument latexToPDF(PDDocument doc, PDPageContentStream cs, NewText txt, Point2D position) throws IOException {
         DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
         DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(x - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), y - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight());
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
             affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY());
         cs.transform(new Matrix(affineTransform));

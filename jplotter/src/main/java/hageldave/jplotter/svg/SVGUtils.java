@@ -2,8 +2,10 @@ package hageldave.jplotter.svg;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.NewText;
+import hageldave.jplotter.renderables.TextDecoration;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
@@ -389,6 +391,57 @@ public class SVGUtils {
 		doc.getDocumentElement().appendChild(textGroup);
 		textGroup.appendChild(g2.getTopLevelGroup(true));
 		return textGroup;
+	}
+
+	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) throws IOException {
+		String fontfamily = "'Ubuntu Mono', monospace";
+
+		double textHeight = 1;
+
+		for (String line : txt.getTextString().split(Pattern.quote("\n"))) {
+			NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
+
+			if(txt.getBackground().getRGB() != 0){
+				Element backgroundText = SVGUtils.createTextBackground(doc, parent, txt.getBackground());
+				backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+				backgroundText.setTextContent(line);
+				backgroundText.setAttributeNS(null, "style",
+						"font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+				backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
+				backgroundText.setAttributeNS(null, "fill-opacity", "0");
+				backgroundText.setAttributeNS(null, "x", "" + 0);
+				backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
+				backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
+			}
+
+			Element text = SVGUtils.createSVGElement(doc, "text");
+			parent.appendChild(text);
+
+			text.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+			text.setTextContent(line);
+			text.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+			text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
+			if (txt.getColorA() != 1) {
+				text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
+			}
+			text.setAttributeNS(null, "x", "" + 0);
+			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
+
+			if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
+				text.setAttributeNS(null, "text-decoration", "underline");
+			} else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
+				text.setAttributeNS(null, "text-decoration", "line-through");
+			}
+
+			double fontDescent = CharacterAtlas.getFontMetrics(txt.fontsize, txt.style).getMaxDescent();
+			parent.setAttributeNS(null, "transform",
+					"translate("+SVGUtils.svgNumber(x-txt.getPositioningRectangle().getAnchorPointSVG(txt).getX())+","+SVGUtils.svgNumber(y+fontDescent-txt.getPositioningRectangle().getAnchorPointSVG(txt).getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
+			parent.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPointSVG(txt).getX() + " " + txt.getPositioningRectangle().getAnchorPointSVG(txt).getY());
+
+			text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
+			textHeight += tempText.getBounds().getHeight();
+		}
+		return parent;
 	}
 
 	public static Element createTextBackground(Document doc, Element parent, Color backgroundColor) {

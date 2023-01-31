@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
@@ -304,64 +303,19 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 Element textGroup = SVGUtils.createSVGElement(doc, "g");
                 mainGroup.appendChild(textGroup);
 
-                String fontfamily = "'Ubuntu Mono', monospace";
-
-                if (txt.isLatex()) {
-                    try {
+                try {
+                    if (txt.isLatex()) {
                         Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
                         textGroup.appendChild(svgLatex);
                         textGroup.setAttributeNS(null, "transform",
-                                "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPointSVG(txt).getX())+","+SVGUtils.svgNumber(y1-txt.getPositioningRectangle().getAnchorPointSVG(txt).getY()+txt.getBounds().getHeight())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                                "translate(" + SVGUtils.svgNumber(x1 - txt.getPositioningRectangle().getAnchorPointSVG(txt).getX()) + "," + SVGUtils.svgNumber(y1 - txt.getPositioningRectangle().getAnchorPointSVG(txt).getY() + txt.getBounds().getHeight()) + ")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
+                    } else {
+                        SVGUtils.textToSVG(txt, doc, textGroup, x1, y1);
                     }
-                } else {
-                    double textHeight = 1;
-
-                    for (String line : txt.getTextString().split(Pattern.quote("\n"))) {
-                        NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-
-                        if(txt.getBackground().getRGB() != 0){
-                            Element backgroundText = SVGUtils.createTextBackground(doc, textGroup, txt.getBackground());
-                            backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-                            backgroundText.setTextContent(line);
-                            backgroundText.setAttributeNS(null, "style",
-                                    "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
-                            backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
-                            backgroundText.setAttributeNS(null, "fill-opacity", "0");
-                            backgroundText.setAttributeNS(null, "x", "" + 0);
-                            backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
-                            backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
-                        }
-
-                        Element text = SVGUtils.createSVGElement(doc, "text");
-                        textGroup.appendChild(text);
-
-                        text.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-                        text.setTextContent(line);
-                        text.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
-                        text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
-                        if (txt.getColorA() != 1) {
-                            text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
-                        }
-                        text.setAttributeNS(null, "x", "" + 0);
-                        text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
-
-                        if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
-                            text.setAttributeNS(null, "text-decoration", "underline");
-                        } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
-                            text.setAttributeNS(null, "text-decoration", "line-through");
-                        }
-
-                        double fontDescent = CharacterAtlas.getFontMetrics(txt.fontsize, txt.style).getMaxDescent();
-                        textGroup.setAttributeNS(null, "transform",
-                                "translate("+SVGUtils.svgNumber(x1-txt.getPositioningRectangle().getAnchorPointSVG(txt).getX())+","+SVGUtils.svgNumber(y1+fontDescent-txt.getPositioningRectangle().getAnchorPointSVG(txt).getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
-                        textGroup.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPointSVG(txt).getX() + " " + txt.getPositioningRectangle().getAnchorPointSVG(txt).getY());
-
-                        text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
-                        textHeight += tempText.getBounds().getHeight();
-                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
+
             }
         }
     }
@@ -413,7 +367,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     if (txt.isLatex()) {
                         graphicsState.setNonStrokingAlphaConstant((float) (txt.getBackground().getAlpha()/255.0));
                         contentStream.setGraphicsStateParameters(graphicsState);
-                        PDFUtils.latexToPDF(doc, contentStream, txt, x1+x, y1+y);
+                        PDFUtils.latexToPDF(doc, contentStream, txt, new Point2D.Double(x1+x, y1+y));
                     } else {
                         graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
                         contentStream.setGraphicsStateParameters(graphicsState);
