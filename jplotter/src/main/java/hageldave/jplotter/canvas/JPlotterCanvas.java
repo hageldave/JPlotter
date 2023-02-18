@@ -244,7 +244,7 @@ public interface JPlotterCanvas {
 		}
 	}
 
-
+	// This paintPDF method is responsible for drawing the background color of the canvas in the given render location
 	public default void paintPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) throws IOException {
 		PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, false);
 		contentStream.addRect((float) renderLoc.getBounds2D().getX(), (float) (page.getMediaBox().getHeight()-renderLoc.getBounds2D().getY()-renderLoc.getBounds2D().getHeight()),
