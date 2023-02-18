@@ -1,38 +1,25 @@
 package hageldave.jplotter.svg;
 
-import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
-
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Font;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.swing.JLabel;
-
+import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.misc.Glyph;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import org.w3c.dom.*;
 
-import hageldave.imagingkit.core.Pixel;
-import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.misc.Glyph;
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 /**
  * Utility class for SVG related methods.
@@ -287,6 +274,10 @@ public class SVGUtils {
 		Element root = document.getDocumentElement();
 		root.setAttributeNS(null,"width",""+w);
 		root.setAttributeNS(null, "height", ""+h);
+
+		Comment licenceComment = document.createComment("This file contains the Ubuntu Font, which is published under the Ubuntu Font Licence, Version\n" +
+				"1.0. https://launchpad.net/ubuntu-font-licence");
+		document.getDocumentElement().appendChild(licenceComment);
 		return document;
 	}
 

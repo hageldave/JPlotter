@@ -1,7 +1,6 @@
 package hageldave.jplotter.canvas;
 
 import hageldave.imagingkit.core.Img;
-import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -173,10 +172,10 @@ public interface JPlotterCanvas {
 			Node defs = SVGUtils.getDefs(document);
 
 			// set Ubuntu Mono font licence
-			Element licenseElement = SVGUtils.createSVGElement(document, "style");
-			licenseElement.setAttributeNS(null, "type", "text/css");
-			licenseElement.setTextContent(FontProvider.getUbuntuMonoFontLicence());
-			defs.appendChild(licenseElement);
+//			Element licenseElement = SVGUtils.createSVGElement(document, "style");
+//			licenseElement.setAttributeNS(null, "type", "text/css");
+//			licenseElement.setTextContent(FontProvider.getUbuntuMonoFontLicence());
+//			defs.appendChild(licenseElement);
 
 			// set Ubuntu Mono font
 			Element styleElement = SVGUtils.createSVGElement(document, "style");
