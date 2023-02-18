@@ -22,7 +22,11 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * TODO
+ */
 public class NewText implements Renderable {
+    public static final String latexInstruction = "##BEGINLATEX##";
     public final int fontsize;
     public final int style;
     protected Dimension textSize;
@@ -47,6 +51,7 @@ public class NewText implements Renderable {
      * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
      * or bitwise union BOLD|ITALIC.
      * @param textcolor color of the text
+     * @param latex TODO
      */
     protected NewText(String textstr, int fontsize, int style, Color textcolor, boolean latex) {
         this.txtStr = textstr;
@@ -308,7 +313,7 @@ public class NewText implements Renderable {
     private static Rectangle2D getLatexBounds(NewText text) {
         TeXFormula formula = new TeXFormula(text.getTextString());
         TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontsize);
-        icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
+//        icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
         return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), icon.getIconWidth(), icon.getIconHeight());
     }
 
@@ -372,17 +377,28 @@ public class NewText implements Renderable {
         return this;
     }
 
-    // TODO
+    /**
+     * @return the TextDecoration of the text object (underline or strikethrough).
+     */
     public TextDecoration getTextDecoration() {
         return textDecoration;
     }
 
-    // TODO
-    public void setTextDecoration(TextDecoration textDecoration) {
+    /**
+     * Sets a new {@link TextDecoration} (underline or strikethrough) to the text object.
+     * Only one of both (underline or strikethrough) can be active at a time.
+     *
+     * @param textDecoration the new text decoration
+     * this for chaining
+     */
+    public NewText setTextDecoration(TextDecoration textDecoration) {
         this.textDecoration = textDecoration;
+        return this;
     }
 
-    // TODO
+    /**
+     * @return the currently active {@link PositioningRectangle}
+     */
     public PositioningRectangle getPositioningRectangle() {
         if (Objects.nonNull(positioningRectangle)) {
             return positioningRectangle;
@@ -390,11 +406,24 @@ public class NewText implements Renderable {
         return new PositioningRectangle(0,0);
     }
 
-    // TODO
-    public void setPositioningRectangle(PositioningRectangle positioningRectangle) {
+    /**
+     * Sets the {@link PositioningRectangle}.
+     *
+     * @param positioningRectangle the new {@link PositioningRectangle}
+     * @return this for chaining
+     */
+    public NewText setPositioningRectangle(PositioningRectangle positioningRectangle) {
         this.positioningRectangle = positioningRectangle;
+        return this;
     }
 
+    /**
+     * Returns the line breaking symbol.
+     * The symbol is different in normal mode and in latex mode,
+     * so this method returns the one which is currently valid.
+     *
+     * @return returns the line break symbol which is currently valid
+     */
     public String getLineBreakSymbol() {
         if (isLatex())
             return "\\\\";
@@ -420,30 +449,51 @@ public class NewText implements Renderable {
     }
 
     /**
-     * TODO
-     * @return
+     * @return if the text object is written in latex
      */
     public boolean isLatex() {
         return latex;
     }
 
+
+    /**
+     * Determines if the given String will be evaluated as a latex string by the {@link NewText} object.
+     * This is dependent on the beginning of the String, as it has to start with the specified {@link #latexInstruction}
+     *
+     * @param toEvaluate the string which will be evaluated if it will be interpreted as a latex string
+     * @return true if it will be interpreted as a latex string, false if not
+     */
     public static boolean isLatex(String toEvaluate) {
-        return toEvaluate.startsWith("##BEGINLATEX##");
+        return toEvaluate.startsWith(latexInstruction);
     }
 
     /**
-     * TODO
+     * Determines if latex mode should be switched on or off.
+     *
+     * @param latex true if latex mode should be switched on, false if off
+     * @return this for chaining
      */
-    public void setLatex(boolean latex) {
+    public NewText setLatex(boolean latex) {
         this.latex = latex;
+        return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public Insets getInsets() {
         return insets;
     }
 
-    public void setInsets(Insets insets) {
+    /**
+     *
+     * @param insets
+     * @return this for chaining
+     */
+    public NewText setInsets(Insets insets) {
         this.insets = insets;
+        return this;
     }
 
     /**
