@@ -1,6 +1,7 @@
 package hageldave.jplotter.canvas;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -163,13 +164,19 @@ public interface JPlotterCanvas {
 				defs.setAttributeNS(null, "id", "JPlotterDefs");
 				document.getDocumentElement().appendChild(defs);
 			}
-			
+
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
 			parent.appendChild(rootGroup);
 			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
 			
 			// define the clipping rectangle for the content (rect of vieport size)
 			Node defs = SVGUtils.getDefs(document);
+
+			// set Ubuntu Mono font licence
+			Element licenseElement = SVGUtils.createSVGElement(document, "style");
+			licenseElement.setAttributeNS(null, "type", "text/css");
+			licenseElement.setTextContent(FontProvider.getUbuntuMonoFontLicence());
+			defs.appendChild(licenseElement);
 
 			// set Ubuntu Mono font
 			Element styleElement = SVGUtils.createSVGElement(document, "style");

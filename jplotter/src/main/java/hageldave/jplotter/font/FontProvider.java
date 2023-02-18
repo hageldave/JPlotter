@@ -1,6 +1,5 @@
 package hageldave.jplotter.font;
 
-import hageldave.jplotter.canvas.JPlotterCanvas;
 import org.apache.commons.io.FileUtils;
 
 import java.awt.*;
@@ -98,22 +97,35 @@ public final class FontProvider {
 			byte[] fontFileArray;
 			switch (style) {
 				case Font.PLAIN:
-					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-R.ttf")).toURI()));
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/UbuntuMono-R.ttf")).toURI()));
 					break;
 				case Font.BOLD:
-					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-B.ttf")).toURI()));
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/UbuntuMono-B.ttf")).toURI()));
 					break;
 				case Font.ITALIC:
-					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-RI.ttf")).toURI()));
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/UbuntuMono-RI.ttf")).toURI()));
 					break;
 				case (Font.BOLD | Font.ITALIC):
-					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(JPlotterCanvas.class.getResource("/font/UbuntuMono-BI.ttf")).toURI()));
+					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/UbuntuMono-BI.ttf")).toURI()));
 					break;
 				default:
 					throw new IllegalArgumentException(
 							"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
 			}
 			return Base64.getEncoder().encodeToString(fontFileArray);
+		} catch (IOException | URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Returns the Ubuntu mono font licence as a string
+	 *
+	 * @return ubuntu mono font licence as a string
+	 */
+	public static String getUbuntuMonoFontLicence() {
+		try {
+			return FileUtils.readFileToString(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/LICENCE.txt")).toURI()));
 		} catch (IOException | URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
