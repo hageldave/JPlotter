@@ -247,6 +247,7 @@ public class NewText implements Renderable {
         double height = 0;
         for (String line : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
             NewText tempText = new NewText(line, fontsize, style, getColor(), isLatex());
+            tempText.setInsets(getInsets());
             width = Math.max(width, getBounds(tempText).getWidth());
             height += getBounds(tempText).getHeight();
         }
@@ -257,7 +258,7 @@ public class NewText implements Renderable {
     private static Rectangle2D getBounds(NewText text) {
         if (text.isLatex())
             return getLatexBounds(text);
-        return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), text.getTextSize().getWidth(), text.getTextSize().getHeight());
+        return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), text.getTextSize().getWidth() + (text.getInsets().left+text.getInsets().right), text.getTextSize().getHeight() + (text.getInsets().bottom+text.getInsets().top));
     }
 
 
@@ -313,7 +314,7 @@ public class NewText implements Renderable {
     private static Rectangle2D getLatexBounds(NewText text) {
         TeXFormula formula = new TeXFormula(text.getTextString());
         TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontsize);
-//        icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
+        icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
         return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), icon.getIconWidth(), icon.getIconHeight());
     }
 
@@ -492,6 +493,7 @@ public class NewText implements Renderable {
      * @return this for chaining
      */
     public NewText setInsets(Insets insets) {
+//        System.out.println(insets);
         this.insets = insets;
         return this;
     }

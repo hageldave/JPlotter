@@ -2,6 +2,9 @@ package hageldave.jplotter.renderables;
 
 import java.awt.geom.Point2D;
 
+/**
+ * TODO
+ */
 public class PositioningRectangle {
     protected int x;
     protected int y;
@@ -20,9 +23,10 @@ public class PositioningRectangle {
     }
 
 
+    // TODO: respect the inset too here
     public Point2D.Double getAnchorPoint(NewText txt) {
         Point2D.Double anchorPoint = new Point2D.Double();
-        switch (this.x) {
+        switch (x) {
             case 0:
                 anchorPoint.setLocation(0, anchorPoint.getY());
                 break;
@@ -49,7 +53,7 @@ public class PositioningRectangle {
 
     public Point2D.Double getAnchorPointPDF(NewText txt) {
         Point2D.Double anchorPoint = new Point2D.Double();
-        switch (this.x) {
+        switch (x) {
             case 0:
                 anchorPoint.setLocation(0, anchorPoint.getY());
                 break;
@@ -76,7 +80,7 @@ public class PositioningRectangle {
 
     public Point2D.Double getAnchorPointSVG(NewText txt) {
         Point2D.Double anchorPoint = new Point2D.Double();
-        switch (this.x) {
+        switch (x) {
             case 0:
                 anchorPoint.setLocation(0, anchorPoint.getY());
                 break;

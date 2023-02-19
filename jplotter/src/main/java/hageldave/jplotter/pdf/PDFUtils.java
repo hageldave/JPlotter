@@ -268,14 +268,19 @@ public class PDFUtils {
         PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
         cs.setFont(font, txt.fontsize);
 
+        int verticalInset = txt.getInsets().top + txt.getInsets().bottom;
+        int horizontalInset = txt.getInsets().left+txt.getInsets().right;
+
         double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
         float lineHeight = (float) (txt.getTextSize().getHeight() + 2 + fontDescent);
 
         AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - fontDescent);
         if (txt.getAngle() != 0)
+            // TODO: rotating doesn't work correctly at the moment
             affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
         cs.transform(new Matrix(affineTransform));
 
+        int accumulatedHeight = 0;
         for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
             NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
             if (txt.getBackground().getRGB() != 0) {
@@ -284,10 +289,10 @@ public class PDFUtils {
                 graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
                 cs.setGraphicsStateParameters(graphicsState);
                 if (newLine.length() > 0) {
-                    cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight() + fontDescent)));
+                    cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight() + fontDescent - accumulatedHeight)));
                     float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
-                    PDFUtils.createPDFPolygon(cs, new double[]{0, width, width, 0},
-                            new double[]{0, 0, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
+                    PDFUtils.createPDFPolygon(cs, new double[]{-horizontalInset, width, width, -horizontalInset},
+                            new double[]{-verticalInset, -verticalInset, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
                 }
                 cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
                 cs.fill();
@@ -296,7 +301,7 @@ public class PDFUtils {
 
             cs.saveGraphicsState();
             cs.beginText();
-            cs.setTextMatrix(new Matrix(AffineTransform.getTranslateInstance(0, (float) -txt.getTextSize().getHeight())));
+            cs.setTextMatrix(new Matrix(AffineTransform.getTranslateInstance(-txt.getInsets().right, (float) -txt.getTextSize().getHeight() - txt.getInsets().top - accumulatedHeight)));
             cs.newLine();
             cs.showText(newLine);
             cs.endText();
@@ -304,16 +309,17 @@ public class PDFUtils {
             float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
             cs.setStrokingColor(txt.getColor());
             if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
-                cs.moveTo((float) tempText.getBounds().getX(), (float) tempText.getBounds().getY() - lineHeight - 2);
-                cs.lineTo(width, (float) tempText.getBounds().getY() - lineHeight - 2);
+                cs.moveTo((float) tempText.getBounds().getX() - txt.getInsets().right, (float) tempText.getBounds().getY() - lineHeight - 2 - txt.getInsets().top - accumulatedHeight);
+                cs.lineTo(width - txt.getInsets().right, (float) tempText.getBounds().getY() - lineHeight - 2 - txt.getInsets().top - accumulatedHeight);
                 cs.stroke();
             } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
-                cs.moveTo((float) tempText.getBounds().getX(), (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
-                cs.lineTo(width, (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2));
+                cs.moveTo((float) tempText.getBounds().getX() - txt.getInsets().right, (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2 - txt.getInsets().top - accumulatedHeight));
+                cs.lineTo(width - txt.getInsets().right, (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2 - txt.getInsets().top - accumulatedHeight));
                 cs.stroke();
             }
             cs.restoreGraphicsState();
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(0,  (float) -txt.getTextSize().getHeight())));
+            accumulatedHeight += verticalInset;
         }
 
         // TODO: remove this if the above works
@@ -479,6 +485,15 @@ public class PDFUtils {
         }
     }
 
+    /**
+     *
+     * @param doc
+     * @param cs
+     * @param txt
+     * @param position
+     * @return
+     * @throws IOException
+     */
     public static PDDocument latexToPDF(PDDocument doc, PDPageContentStream cs, NewText txt, Point2D position) throws IOException {
         DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
         DefaultTeXFont.registerAlphabet(new GreekRegistration());
@@ -513,6 +528,12 @@ public class PDFUtils {
         return doc;
     }
 
+    /**
+     *
+     * @param txt
+     * @return
+     * @throws IOException
+     */
     public static Rectangle2D getPDFTextLineBounds(NewText txt) throws IOException {
         FontCachedPDDocument doc = new FontCachedPDDocument();
         PDType0Font font = doc.getFont(txt.style);

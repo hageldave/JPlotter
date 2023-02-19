@@ -432,7 +432,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 
 				if(txt.getBackground().getRGB() != 0){
 					// dummy text element
-					Element backgroundText = SVGUtils.createTextBackground(doc, textGroup, txt.getBackground());
+					Element backgroundText = SVGUtils.createTextBackgroundFilter(doc, textGroup, txt.getBackground());
 					textGroup.appendChild(backgroundText);
 					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 					backgroundText.setTextContent(txt.getTextString());

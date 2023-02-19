@@ -35,6 +35,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * TODO
+ */
 public class NewTextRenderer extends GenericRenderer<NewText> {
     protected static final char NL = '\n';
 
@@ -237,21 +240,26 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 g_.transform(trnsfrm);
                 p_.transform(trnsfrm);
 
-                double textHeight = txt.getBounds().getHeight()-g.getFontMetrics().getHeight()+g.getFontMetrics().getMaxDescent();
+                double textHeight = txt.getBounds().getHeight();
+                double fontMetricsHeight = -g.getFontMetrics().getHeight()+g.getFontMetrics().getMaxDescent();
                 g_.setColor(txt.getColor());
+
                 int i = 0;
+                int verticalInset = txt.getInsets().top + txt.getInsets().bottom;
+                int horizontalInset = txt.getInsets().left+txt.getInsets().right;
                 for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
                     NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-                    if(txt.getBackground().getRGB() != 0) {
+
+                    if (txt.getBackground().getRGB() != 0) {
                         g_.setColor(txt.getBackground());
-                        Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+(tempText.getBounds().getHeight()*i), tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, -textHeight, tempText.getBounds().getWidth() + horizontalInset, tempText.getBounds().getHeight() + verticalInset);
                         g_.setColor(txt.getBackground());
                         g_.fill(rect);
                     }
 
                     g_.setColor(txt.getColor());
-                    g_.drawString(line, 0, (int) -textHeight);
-                    textHeight -= tempText.getBounds().getHeight();
+                    g_.drawString(line, txt.getInsets().left, (int) (-textHeight - fontMetricsHeight + txt.getInsets().top));
+                    textHeight -= tempText.getBounds().getHeight() + verticalInset;
 
                     if(txt.getPickColor() != 0) {
                         p_.setColor(new Color(txt.getPickColor()));

@@ -395,23 +395,39 @@ public class SVGUtils {
 
 	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) throws IOException {
 		String fontfamily = "'Ubuntu Mono', monospace";
-
 		double textHeight = 1;
 
 		for (String line : txt.getTextString().split(Pattern.quote("\n"))) {
 			NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
-			if(txt.getBackground().getRGB() != 0){
-				Element backgroundText = SVGUtils.createTextBackground(doc, parent, txt.getBackground());
-				backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-				backgroundText.setTextContent(line);
-				backgroundText.setAttributeNS(null, "style",
-						"font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
-				backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
-				backgroundText.setAttributeNS(null, "fill-opacity", "0");
-				backgroundText.setAttributeNS(null, "x", "" + 0);
-				backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
-				backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
+			int verticalInset = txt.getInsets().top + txt.getInsets().bottom;
+			int horizontalInset = txt.getInsets().left+txt.getInsets().right;
+
+			if (txt.getBackground().getRGB() != 0) {
+				if (txt.getInsets().right != 0 || txt.getInsets().left != 0 || txt.getInsets().top != 0 || txt.getInsets().bottom != 0) {
+					Element backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, tempText.getBounds().getWidth() + horizontalInset, tempText.getBounds().getHeight() + verticalInset);
+					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+					backgroundText.setTextContent(line);
+					backgroundText.setAttributeNS(null, "style",
+							"font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+					backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+					backgroundText.setAttributeNS(null, "x", "" + 0);
+					backgroundText.setAttributeNS(null, "y", "" + (txt.getTextSize().height - txt.fontsize));
+					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight())) + ") scale(1,-1)");
+					parent.appendChild(backgroundText);
+				} else {
+					Element backgroundText = SVGUtils.createTextBackgroundFilter(doc, parent, txt.getBackground());
+					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+					backgroundText.setTextContent(line);
+					backgroundText.setAttributeNS(null, "style",
+							"font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+					backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
+					backgroundText.setAttributeNS(null, "fill-opacity", "0");
+					backgroundText.setAttributeNS(null, "x", "" + 0);
+					backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
+					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
+
+				}
 			}
 
 			Element text = SVGUtils.createSVGElement(doc, "text");
@@ -425,7 +441,7 @@ public class SVGUtils {
 				text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
 			}
 			text.setAttributeNS(null, "x", "" + 0);
-			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
+			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize));
 
 			if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
 				text.setAttributeNS(null, "text-decoration", "underline");
@@ -438,13 +454,13 @@ public class SVGUtils {
 					"translate("+SVGUtils.svgNumber(x-txt.getPositioningRectangle().getAnchorPointSVG(txt).getX())+","+SVGUtils.svgNumber(y+fontDescent-txt.getPositioningRectangle().getAnchorPointSVG(txt).getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
 			parent.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPointSVG(txt).getX() + " " + txt.getPositioningRectangle().getAnchorPointSVG(txt).getY());
 
-			text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
-			textHeight += tempText.getBounds().getHeight();
+			text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(txt.getInsets().left) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight() - txt.getInsets().top)) + ") scale(1,-1)");
+			textHeight += tempText.getBounds().getHeight() + verticalInset;
 		}
 		return parent;
 	}
 
-	public static Element createTextBackground(Document doc, Element parent, Color backgroundColor) {
+	public static Element createTextBackgroundFilter(Document doc, Element parent, Color backgroundColor) {
         String defID = SVGUtils.newDefId();
         Element defs = SVGUtils.createSVGElement(doc, "defs");
         Element filter = SVGUtils.createSVGElement(doc, "filter");
