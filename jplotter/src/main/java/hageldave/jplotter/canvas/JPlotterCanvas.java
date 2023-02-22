@@ -1,6 +1,7 @@
 package hageldave.jplotter.canvas;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -8,6 +9,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -171,12 +173,6 @@ public interface JPlotterCanvas {
 			// define the clipping rectangle for the content (rect of vieport size)
 			Node defs = SVGUtils.getDefs(document);
 
-			// set Ubuntu Mono font licence
-//			Element licenseElement = SVGUtils.createSVGElement(document, "style");
-//			licenseElement.setAttributeNS(null, "type", "text/css");
-//			licenseElement.setTextContent(FontProvider.getUbuntuMonoFontLicence());
-//			defs.appendChild(licenseElement);
-
 			// set Ubuntu Mono font
 			Element styleElement = SVGUtils.createSVGElement(document, "style");
 			styleElement.setAttributeNS(null, "type", "text/css");
@@ -185,6 +181,16 @@ public interface JPlotterCanvas {
 							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD) +"') format('truetype'); font-weight: bold; font-style: normal;" +
 							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(ITALIC) +"') format('truetype'); font-weight: normal; font-style: italic;" +
 							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD | ITALIC) +"') format('truetype'); font-weight: bold; font-style: italic;");
+
+			// includes the ubuntu mono font licence
+			String licenceString = FontProvider.getUbuntuMonoFontLicence();
+			for (String line : licenceString.split("[\\r\\n]{2}")) {
+				// remove "--" as those characters as they aren't allowed inside comments
+				String cleanedLine = line.replaceAll("-", "");
+				// create comment with cleaned line
+				Comment comment = document.createComment(cleanedLine);
+				styleElement.appendChild(comment);
+			}
 			defs.appendChild(styleElement);
 
 			Element clip = SVGUtils.createSVGElement(document, "clipPath");

@@ -9,7 +9,10 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
-import org.w3c.dom.*;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import javax.swing.*;
 import java.awt.*;
@@ -274,10 +277,6 @@ public class SVGUtils {
 		Element root = document.getDocumentElement();
 		root.setAttributeNS(null,"width",""+w);
 		root.setAttributeNS(null, "height", ""+h);
-
-		Comment licenceComment = document.createComment("This file contains the Ubuntu Font, which is published under the Ubuntu Font Licence, Version\n" +
-				"1.0. https://launchpad.net/ubuntu-font-licence");
-		document.getDocumentElement().appendChild(licenceComment);
 		return document;
 	}
 
