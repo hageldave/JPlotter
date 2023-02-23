@@ -765,7 +765,7 @@ public class Legend implements Renderable, Renderer {
 
 	@Override
 	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
-		closeCollectedGLObjects();
+		toCloseLater.clear();
 		if(!isEnabled()){
 			return;
 		}
