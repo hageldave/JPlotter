@@ -4,6 +4,7 @@ import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
+import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.NewText;
 import hageldave.jplotter.renderables.TextDecoration;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
@@ -13,6 +14,8 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.scilab.forge.jlatexmath.DefaultTeXFont;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -31,7 +34,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Pattern;
 
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
@@ -368,24 +370,24 @@ public class SVGUtils {
 		DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
 		DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
-		double tempY = y;
-		for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
-			NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
+		double iconHeight = y;
+//		for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
+		for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
+//			NewText singleLineText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
-			TeXFormula formula = new TeXFormula(tempText.getTextString());
+			TeXFormula formula = new TeXFormula(singleLineText.getTextString());
 			TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
 			icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
 			g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
 			g2.setColor(txt.getBackground());
-			if (line.length() > 0)
-				g2.fillRect((int) x, (int) tempY, icon.getIconWidth(), icon.getIconHeight());
+			if (singleLineText.getTextString().length() > 0)
+				g2.fillRect((int) x, (int) iconHeight, icon.getIconWidth(), icon.getIconHeight());
 
 			JLabel jl = new JLabel();
 			jl.setForeground(txt.getColor());
-			icon.paintIcon(jl, g2, (int) x, (int) tempY);
-
-			tempY += icon.getIconHeight();
+			icon.paintIcon(jl, g2, (int) x, (int) iconHeight);
+			iconHeight += icon.getIconHeight();
 		}
 		Element textGroup = SVGUtils.createSVGElement(doc, "g");
 		doc.getDocumentElement().appendChild(textGroup);
@@ -396,17 +398,18 @@ public class SVGUtils {
 	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) throws IOException {
 		String fontfamily = "'Ubuntu Mono', monospace";
 		double textHeight = 1;
+		double horizontalInsets = txt.getInsets().left+txt.getInsets().right;
 
-		for (String line : txt.getTextString().split(Pattern.quote("\n"))) {
-			NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-
-			int verticalInset = txt.getInsets().top + txt.getInsets().bottom;
-			int horizontalInset = txt.getInsets().left+txt.getInsets().right;
-
+		for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
 			if (txt.getBackground().getRGB() != 0) {
 				Element backgroundText;
 				if (txt.getInsets().right != 0 || txt.getInsets().left != 0 || txt.getInsets().top != 0 || txt.getInsets().bottom != 0) {
-					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, tempText.getBounds().getWidth() + horizontalInset, tempText.getBounds().getHeight() + verticalInset);
+					// still hacky
+					PDDocument pddoc = new PDDocument();
+					PDType0Font font = PDFUtils.createPDFont(pddoc, txt.style);
+					float width = font.getStringWidth(singleLineText.getTextString()) / 1000 * txt.fontsize;
+					pddoc.close();
+					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, width+horizontalInsets, singleLineText.getBounds().getHeight());
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight())) + ") scale(1,-1)");
 					parent.appendChild(backgroundText);
 				} else {
@@ -414,7 +417,7 @@ public class SVGUtils {
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
 				}
 				backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-				backgroundText.setTextContent(line);
+				backgroundText.setTextContent(singleLineText.getTextString());
 				backgroundText.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
 				backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
 				backgroundText.setAttributeNS(null, "x", "" + 0);
@@ -425,7 +428,7 @@ public class SVGUtils {
 			parent.appendChild(text);
 
 			text.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-			text.setTextContent(line);
+			text.setTextContent(singleLineText.getTextString());
 			text.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
 			text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
 			if (txt.getColorA() != 1) {
@@ -446,7 +449,7 @@ public class SVGUtils {
 			parent.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPointSVG(txt).getX() + " " + txt.getPositioningRectangle().getAnchorPointSVG(txt).getY());
 
 			text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(txt.getInsets().left) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight() - txt.getInsets().top)) + ") scale(1,-1)");
-			textHeight += tempText.getBounds().getHeight() + verticalInset;
+			textHeight += singleLineText.getBounds().getHeight();
 		}
 		return parent;
 	}

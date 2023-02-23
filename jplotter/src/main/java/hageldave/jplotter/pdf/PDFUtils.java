@@ -36,7 +36,6 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.regex.Pattern;
 
 /**
  * Utility class for PDF related methods.
@@ -272,27 +271,27 @@ public class PDFUtils {
         int horizontalInset = txt.getInsets().left+txt.getInsets().right;
 
         double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
-        float lineHeight = (float) (txt.getTextSize().getHeight() + 2 + fontDescent);
 
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - fontDescent);
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(
+                position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX()/*-horizontalInset*/,
+                position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - fontDescent);
         if (txt.getAngle() != 0)
-            // TODO: rotating doesn't work correctly at the moment
             affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
         cs.transform(new Matrix(affineTransform));
 
-        int accumulatedHeight = 0;
-        for (String newLine : txt.getTextString().split(Pattern.quote("\n"))) {
-            NewText tempText = new NewText(newLine, txt.fontsize, txt.style);
+        int textHeight = 0;
+        for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
+            float width = font.getStringWidth(singleLineText.getTextString()) / 1000 * txt.fontsize;
+
             if (txt.getBackground().getRGB() != 0) {
                 cs.saveGraphicsState();
                 PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                 graphicsState.setNonStrokingAlphaConstant(((float) txt.getBackground().getAlpha()) / 255);
                 cs.setGraphicsStateParameters(graphicsState);
-                if (newLine.length() > 0) {
-                    cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -tempText.getTextSize().getHeight() + fontDescent - accumulatedHeight)));
-                    float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
-                    PDFUtils.createPDFPolygon(cs, new double[]{-horizontalInset, width, width, -horizontalInset},
-                            new double[]{-verticalInset, -verticalInset, tempText.getTextSize().getHeight(), tempText.getTextSize().getHeight()});
+                if (singleLineText.getTextString().length() > 0) {
+                    cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -singleLineText.getTextSize().getHeight() + fontDescent - textHeight)));
+                    PDFUtils.createPDFPolygon(cs, new double[]{0, width + horizontalInset, width + horizontalInset, 0},
+                            new double[]{-verticalInset, -verticalInset, singleLineText.getTextSize().getHeight(), singleLineText.getTextSize().getHeight()});
                 }
                 cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
                 cs.fill();
@@ -301,25 +300,24 @@ public class PDFUtils {
 
             cs.saveGraphicsState();
             cs.beginText();
-            cs.setTextMatrix(new Matrix(AffineTransform.getTranslateInstance(-txt.getInsets().right, (float) -txt.getTextSize().getHeight() - txt.getInsets().top - accumulatedHeight)));
+            cs.setTextMatrix(new Matrix(AffineTransform.getTranslateInstance(txt.getInsets().left, (float) -txt.getTextSize().getHeight() - txt.getInsets().top - textHeight)));
             cs.newLine();
-            cs.showText(newLine);
+            cs.showText(singleLineText.getTextString());
             cs.endText();
 
-            float width = font.getStringWidth(newLine) / 1000 * txt.fontsize;
             cs.setStrokingColor(txt.getColor());
             if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
-                cs.moveTo((float) tempText.getBounds().getX() - txt.getInsets().right, (float) tempText.getBounds().getY() - lineHeight - 2 - txt.getInsets().top - accumulatedHeight);
-                cs.lineTo(width - txt.getInsets().right, (float) tempText.getBounds().getY() - lineHeight - 2 - txt.getInsets().top - accumulatedHeight);
+                cs.moveTo((float) txt.getInsets().left, (float) (-singleLineText.getTextSize().getHeight() + fontDescent - textHeight - verticalInset + txt.getInsets().bottom));
+                cs.lineTo(width + txt.getInsets().left, (float) (-singleLineText.getTextSize().getHeight() + fontDescent - textHeight - verticalInset + txt.getInsets().bottom));
                 cs.stroke();
             } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
-                cs.moveTo((float) tempText.getBounds().getX() - txt.getInsets().right, (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2 - txt.getInsets().top - accumulatedHeight));
-                cs.lineTo(width - txt.getInsets().right, (float) (tempText.getBounds().getY() + (tempText.getBounds().getHeight() / 2) - lineHeight - 2 - txt.getInsets().top - accumulatedHeight));
+                cs.moveTo((float) txt.getInsets().left, (float) (- txt.getInsets().top - textHeight - txt.getTextSize().getHeight() - fontDescent));
+                cs.lineTo(width + txt.getInsets().left , (float) (- txt.getInsets().top - textHeight - txt.getTextSize().getHeight() - fontDescent));
                 cs.stroke();
             }
             cs.restoreGraphicsState();
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(0,  (float) -txt.getTextSize().getHeight())));
-            accumulatedHeight += verticalInset;
+            textHeight += verticalInset;
         }
 
         // TODO: remove this if the above works
@@ -503,16 +501,14 @@ public class PDFUtils {
             affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY());
         cs.transform(new Matrix(affineTransform));
 
-        for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
-            NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-
-            TeXFormula formula = new TeXFormula(tempText.getTextString());
+        for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
+            TeXFormula formula = new TeXFormula(singleLineText.getTextString());
             TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
             icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
             PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, icon.getIconWidth(), icon.getIconHeight());
             g2d.setColor(txt.getBackground());
-            if (line.length() > 0)
+            if (singleLineText.getTextString().length() > 0)
                 g2d.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
 
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(0, -icon.getIconHeight())));
@@ -540,6 +536,8 @@ public class PDFUtils {
         double width = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
         double height = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * txt.fontsize;
         doc.close();
-        return new Rectangle2D.Double(txt.getOrigin().getX(), txt.getOrigin().getY(), width, height);
+        double horizontalInsets = txt.getInsets().left + txt.getInsets().right;
+        double verticalInsets = txt.getInsets().top + txt.getInsets().bottom;
+        return new Rectangle2D.Double(txt.getOrigin().getX(), txt.getOrigin().getY(), width+horizontalInsets, height+verticalInsets);
     }
 }

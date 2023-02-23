@@ -19,6 +19,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -240,16 +242,77 @@ public class NewText implements Renderable {
     }
 
     /**
+     *
+     * @return
+     */
+    public double getBaselineCoordinates() {
+        return 0;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public double getDescentCoordinates() {
+        return 0;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public double getMedianCoordinates() {
+        String[] textLines = getTextString().split(Pattern.quote(getLineBreakSymbol()));
+        double lineHeight = 0;
+        if (textLines.length > 0) {
+            String firstLine = getTextString().split(Pattern.quote(getLineBreakSymbol()))[0];
+            System.out.println(firstLine);
+            NewText singleLineObject = new NewText(firstLine, fontsize, style, getColor(), isLatex());
+            singleLineObject.setInsets(this.getInsets());
+            System.out.println(this.getInsets());
+            System.out.println(singleLineObject.getInsets());
+            lineHeight = getBounds(singleLineObject).getHeight() / 2;
+        }
+        return lineHeight;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public double getAscentCoordinates() {
+        return 0;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public NewText[] generateTextObjectForEachLine() {
+        List<NewText> singleLineTextObjects = new LinkedList<>();
+        for (String newLine : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
+            NewText singleLineText = new NewText(newLine, fontsize, style, getColor(), isLatex());
+            singleLineText.setTextDecoration(getTextDecoration());
+            singleLineText.setInsets(getInsets());
+            singleLineText.setBackground(getBackground());
+            singleLineText.setOrigin(getOrigin());
+            singleLineText.setPositioningRectangle(getPositioningRectangle());
+            singleLineText.setPickColor(getPickColor());
+            singleLineText.setAngle(getAngle());
+            singleLineTextObjects.add(singleLineText);
+        }
+        return singleLineTextObjects.toArray(new NewText[0]);
+    }
+
+    /**
      * @return the bounding rectangle of this text
      */
     public Rectangle2D getBounds() {
         double width = 0;
         double height = 0;
-        for (String line : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
-            NewText tempText = new NewText(line, fontsize, style, getColor(), isLatex());
-            tempText.setInsets(getInsets());
-            width = Math.max(width, getBounds(tempText).getWidth());
-            height += getBounds(tempText).getHeight();
+        for (NewText lineTextObject : generateTextObjectForEachLine()) {
+            width = Math.max(width, getBounds(lineTextObject).getWidth());
+            height += getBounds(lineTextObject).getHeight();
         }
         return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
     }
@@ -268,11 +331,10 @@ public class NewText implements Renderable {
     public Rectangle2D getBoundsPDF() {
         double width = 0;
         double height = 0;
-        for (String line : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
+        for (NewText lineTextObject : generateTextObjectForEachLine()) {
             try {
-                NewText tempText = new NewText(line, fontsize, style, getColor(), isLatex());
-                width = Math.max(width, getBoundsPDF(tempText).getWidth());
-                height += getBoundsPDF(tempText).getHeight();
+                width = Math.max(width, getBoundsPDF(lineTextObject).getWidth());
+                height += getBoundsPDF(lineTextObject).getHeight();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -293,11 +355,10 @@ public class NewText implements Renderable {
     public Rectangle2D getBoundsSVG() {
         double width = 0;
         double height = 0;
-        for (String line : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
+        for (NewText lineTextObject : generateTextObjectForEachLine()) {
             try {
-                NewText tempText = new NewText(line, fontsize, style, getColor(), isLatex());
-                width = Math.max(width, getBoundsSVG(tempText).getWidth());
-                height += getBoundsSVG(tempText).getHeight();
+                width = Math.max(width, getBoundsSVG(lineTextObject).getWidth());
+                height += getBoundsSVG(lineTextObject).getHeight();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

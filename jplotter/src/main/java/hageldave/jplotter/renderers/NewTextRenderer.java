@@ -33,7 +33,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /**
  * TODO
@@ -177,14 +176,12 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 if(angle != 0.0)
                     trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint(txt).getX(), txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
 
-                for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
-                    NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-
+                for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
                     // create a proxy graphics object to draw the string to
                     Graphics2D g_ = (Graphics2D) g.create();
                     Graphics2D p_ = (Graphics2D) p.create();
 
-                    TeXFormula formula = new TeXFormula(tempText.getTextString());
+                    TeXFormula formula = new TeXFormula(singleLineText.getTextString());
                     TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
                     icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
                     BufferedImage image = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -197,7 +194,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                     g_.transform(trnsfrm);
                     p_.transform(trnsfrm);
-                    if (line.length() > 0)
+                    if (singleLineText.getTextString().length() > 0)
                         g_.drawImage(image, null, 0, 0);
 
                     // translate line up
@@ -206,7 +203,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     if(txt.getPickColor() != 0) {
                         p_.setColor(new Color(txt.getPickColor()));
                         Rectangle2D rect = new Rectangle2D.Double(0.0, 0.0, icon.getIconWidth(), icon.getIconHeight());
-                        if (line.length() > 0)
+                        if (singleLineText.getTextString().length() > 0)
                             p_.fill(rect);
                     }
                 }
@@ -242,29 +239,25 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 p_.transform(trnsfrm);
 
                 double textHeight = txt.getBounds().getHeight();
-                double fontMetricsHeight = -g.getFontMetrics().getHeight()+g.getFontMetrics().getMaxDescent();
                 g_.setColor(txt.getColor());
 
-                int verticalInset = txt.getInsets().top + txt.getInsets().bottom;
-                int horizontalInset = txt.getInsets().left+txt.getInsets().right;
-                for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
-                    NewText tempText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
-
+                for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
                     if (txt.getBackground().getRGB() != 0) {
-                        g_.setColor(txt.getBackground());
-                        Rectangle2D rect = new Rectangle2D.Double(0.0, -textHeight, tempText.getBounds().getWidth() + horizontalInset, tempText.getBounds().getHeight() + verticalInset);
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, -textHeight, singleLineText.getBounds().getWidth(), singleLineText.getBounds().getHeight());
                         g_.setColor(txt.getBackground());
                         g_.fill(rect);
                     }
-                    g_.setColor(txt.getColor());
-                    g_.drawString(line, txt.getInsets().left, (int) (-textHeight - fontMetricsHeight + txt.getInsets().top));
 
                     if (txt.getPickColor() != 0) {
                         p_.setColor(new Color(txt.getPickColor()));
-                        Rectangle2D rect = new Rectangle2D.Double(0.0, -textHeight, tempText.getBounds().getWidth() + horizontalInset, tempText.getBounds().getHeight() + verticalInset);
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, -textHeight, singleLineText.getBounds().getWidth(), singleLineText.getBounds().getHeight());
                         p_.fill(rect);
                     }
-                    textHeight -= tempText.getBounds().getHeight() + verticalInset;
+
+                    textHeight -= singleLineText.getBounds().getHeight();
+
+                    g_.setColor(txt.getColor());
+                    g_.drawString(singleLineText.getTextString(), txt.getInsets().left, (int) (-textHeight - g.getFontMetrics().getMaxDescent() - txt.getInsets().bottom));
                 }
             }
         }
