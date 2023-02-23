@@ -206,7 +206,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     if(txt.getPickColor() != 0) {
                         p_.setColor(new Color(txt.getPickColor()));
                         Rectangle2D rect = new Rectangle2D.Double(0.0, 0.0, icon.getIconWidth(), icon.getIconHeight());
-                        p_.fill(rect);
+                        if (line.length() > 0)
+                            p_.fill(rect);
                     }
                 }
             } else {
@@ -244,7 +245,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 double fontMetricsHeight = -g.getFontMetrics().getHeight()+g.getFontMetrics().getMaxDescent();
                 g_.setColor(txt.getColor());
 
-                int i = 0;
                 int verticalInset = txt.getInsets().top + txt.getInsets().bottom;
                 int horizontalInset = txt.getInsets().left+txt.getInsets().right;
                 for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
@@ -256,17 +256,15 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         g_.setColor(txt.getBackground());
                         g_.fill(rect);
                     }
-
                     g_.setColor(txt.getColor());
                     g_.drawString(line, txt.getInsets().left, (int) (-textHeight - fontMetricsHeight + txt.getInsets().top));
-                    textHeight -= tempText.getBounds().getHeight() + verticalInset;
 
-                    if(txt.getPickColor() != 0) {
+                    if (txt.getPickColor() != 0) {
                         p_.setColor(new Color(txt.getPickColor()));
-                        Rectangle2D rect = new Rectangle2D.Double(0.0, -txt.getBounds().getHeight()+(tempText.getBounds().getHeight()*i), tempText.getBounds().getWidth(), tempText.getBounds().getHeight());
+                        Rectangle2D rect = new Rectangle2D.Double(0.0, -textHeight, tempText.getBounds().getWidth() + horizontalInset, tempText.getBounds().getHeight() + verticalInset);
                         p_.fill(rect);
                     }
-                    i++;
+                    textHeight -= tempText.getBounds().getHeight() + verticalInset;
                 }
             }
         }
