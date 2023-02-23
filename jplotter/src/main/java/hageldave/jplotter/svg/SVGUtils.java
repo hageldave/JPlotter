@@ -404,30 +404,21 @@ public class SVGUtils {
 			int horizontalInset = txt.getInsets().left+txt.getInsets().right;
 
 			if (txt.getBackground().getRGB() != 0) {
+				Element backgroundText;
 				if (txt.getInsets().right != 0 || txt.getInsets().left != 0 || txt.getInsets().top != 0 || txt.getInsets().bottom != 0) {
-					Element backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, tempText.getBounds().getWidth() + horizontalInset, tempText.getBounds().getHeight() + verticalInset);
-					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-					backgroundText.setTextContent(line);
-					backgroundText.setAttributeNS(null, "style",
-							"font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
-					backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-					backgroundText.setAttributeNS(null, "x", "" + 0);
-					backgroundText.setAttributeNS(null, "y", "" + (txt.getTextSize().height - txt.fontsize));
+					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, tempText.getBounds().getWidth() + horizontalInset, tempText.getBounds().getHeight() + verticalInset);
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight())) + ") scale(1,-1)");
 					parent.appendChild(backgroundText);
 				} else {
-					Element backgroundText = SVGUtils.createTextBackgroundFilter(doc, parent, txt.getBackground());
-					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-					backgroundText.setTextContent(line);
-					backgroundText.setAttributeNS(null, "style",
-							"font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
-					backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
-					backgroundText.setAttributeNS(null, "fill-opacity", "0");
-					backgroundText.setAttributeNS(null, "x", "" + 0);
-					backgroundText.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize) );
+					backgroundText = SVGUtils.createTextBackgroundFilter(doc, parent, txt.getBackground());
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
-
 				}
+				backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+				backgroundText.setTextContent(line);
+				backgroundText.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+				backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+				backgroundText.setAttributeNS(null, "x", "" + 0);
+				backgroundText.setAttributeNS(null, "y", "" + (txt.getTextSize().height - txt.fontsize));
 			}
 
 			Element text = SVGUtils.createSVGElement(doc, "text");
