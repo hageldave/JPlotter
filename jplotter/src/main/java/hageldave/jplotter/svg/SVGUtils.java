@@ -371,9 +371,7 @@ public class SVGUtils {
 		DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
 		double iconHeight = y;
-//		for (String line : txt.getTextString().split(Pattern.quote(txt.getLineBreakSymbol()))) {
 		for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
-//			NewText singleLineText = new NewText(line, txt.fontsize, txt.style, txt.getColor());
 
 			TeXFormula formula = new TeXFormula(singleLineText.getTextString());
 			TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
@@ -398,7 +396,6 @@ public class SVGUtils {
 	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) throws IOException {
 		String fontfamily = "'Ubuntu Mono', monospace";
 		double textHeight = 1;
-		double horizontalInsets = txt.getInsets().left+txt.getInsets().right;
 
 		for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
 			if (txt.getBackground().getRGB() != 0) {
@@ -409,7 +406,7 @@ public class SVGUtils {
 					PDType0Font font = PDFUtils.createPDFont(pddoc, txt.style);
 					float width = font.getStringWidth(singleLineText.getTextString()) / 1000 * txt.fontsize;
 					pddoc.close();
-					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, width+horizontalInsets, singleLineText.getBounds().getHeight());
+					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, width+txt.getHorizontalInsets(), singleLineText.getBounds().getHeight());
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight())) + ") scale(1,-1)");
 					parent.appendChild(backgroundText);
 				} else {
@@ -445,8 +442,8 @@ public class SVGUtils {
 
 			double fontDescent = CharacterAtlas.getFontMetrics(txt.fontsize, txt.style).getMaxDescent();
 			parent.setAttributeNS(null, "transform",
-					"translate("+SVGUtils.svgNumber(x-txt.getPositioningRectangle().getAnchorPointSVG(txt).getX())+","+SVGUtils.svgNumber(y+fontDescent-txt.getPositioningRectangle().getAnchorPointSVG(txt).getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
-			parent.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPointSVG(txt).getX() + " " + txt.getPositioningRectangle().getAnchorPointSVG(txt).getY());
+					"translate("+SVGUtils.svgNumber(x-txt.getPositioningRectangle().getAnchorPointExport(txt).getX())+","+SVGUtils.svgNumber(y+fontDescent-txt.getPositioningRectangle().getAnchorPointExport(txt).getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
+			parent.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPointExport(txt).getX() + " " + txt.getPositioningRectangle().getAnchorPointExport(txt).getY());
 
 			text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(txt.getInsets().left) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight() - txt.getInsets().top)) + ") scale(1,-1)");
 			textHeight += singleLineText.getBounds().getHeight();

@@ -10,6 +10,7 @@ import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.util.Annotations;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
@@ -245,16 +246,30 @@ public class NewText implements Renderable {
      *
      * @return
      */
-    public double getBaselineCoordinates() {
-        return 0;
+    public double getDescentCoordinates(PDFontDescriptor fontDescriptor) {
+        return getBaselineCoordinates() - (fontDescriptor.getDescent() / 1000 * fontsize);
     }
 
     /**
      *
      * @return
      */
-    public double getDescentCoordinates() {
-        return 0;
+    public double getDescentCoordinates(FontMetrics fontMetrics) {
+        return getBaselineCoordinates() + fontMetrics.getMaxDescent();
+    }
+
+    /**
+     *
+     * @return
+     */
+    public double getBaselineCoordinates() {
+        NewText[] singleLineObjects = generateTextObjectForEachLine();
+        double lineHeight = getOrigin().getY()-getPositioningRectangle().getAnchorPoint(this).getY();
+        if (singleLineObjects.length > 0) {
+            NewText firstLineObject = singleLineObjects[0];
+            lineHeight = firstLineObject.getTextSize().getHeight();
+        }
+        return lineHeight;
     }
 
     /**
@@ -262,16 +277,11 @@ public class NewText implements Renderable {
      * @return
      */
     public double getMedianCoordinates() {
-        String[] textLines = getTextString().split(Pattern.quote(getLineBreakSymbol()));
-        double lineHeight = 0;
-        if (textLines.length > 0) {
-            String firstLine = getTextString().split(Pattern.quote(getLineBreakSymbol()))[0];
-            System.out.println(firstLine);
-            NewText singleLineObject = new NewText(firstLine, fontsize, style, getColor(), isLatex());
-            singleLineObject.setInsets(this.getInsets());
-            System.out.println(this.getInsets());
-            System.out.println(singleLineObject.getInsets());
-            lineHeight = getBounds(singleLineObject).getHeight() / 2;
+        NewText[] singleLineObjects = generateTextObjectForEachLine();
+        double lineHeight = getOrigin().getY()-getPositioningRectangle().getAnchorPoint(this).getY();
+        if (singleLineObjects.length > 0) {
+            NewText firstLineObject = singleLineObjects[0];
+            lineHeight = firstLineObject.getTextSize().getHeight() / 2;
         }
         return lineHeight;
     }
@@ -311,30 +321,22 @@ public class NewText implements Renderable {
         double width = 0;
         double height = 0;
         for (NewText lineTextObject : generateTextObjectForEachLine()) {
-            width = Math.max(width, getBounds(lineTextObject).getWidth());
-            height += getBounds(lineTextObject).getHeight();
+            width = Math.max(width, lineTextObject.getTextSize().getWidth() + getHorizontalInsets());
+            height += lineTextObject.getTextSize().getHeight() + getVerticalInsets();
         }
         return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
     }
 
-    // get bounds without respect for line breaks
-    private static Rectangle2D getBounds(NewText text) {
-        if (text.isLatex())
-            return getLatexBounds(text);
-        return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), text.getTextSize().getWidth() + (text.getInsets().left+text.getInsets().right), text.getTextSize().getHeight() + (text.getInsets().bottom+text.getInsets().top));
-    }
-
-
     /**
      * @return the bounding rectangle of this text
      */
-    public Rectangle2D getBoundsPDF() {
+    public Rectangle2D getBoundsExport() {
         double width = 0;
         double height = 0;
         for (NewText lineTextObject : generateTextObjectForEachLine()) {
             try {
-                width = Math.max(width, getBoundsPDF(lineTextObject).getWidth());
-                height += getBoundsPDF(lineTextObject).getHeight();
+                width = Math.max(width, getBoundsExport(lineTextObject).getWidth());
+                height += getBoundsExport(lineTextObject).getHeight();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -342,31 +344,7 @@ public class NewText implements Renderable {
         return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
     }
 
-    private static Rectangle2D getBoundsPDF(NewText text) throws IOException {
-        if (text.isLatex())
-            return getLatexBounds(text);
-        return PDFUtils.getPDFTextLineBounds(text);
-    }
-
-
-    /**
-     * @return the bounding rectangle of this text
-     */
-    public Rectangle2D getBoundsSVG() {
-        double width = 0;
-        double height = 0;
-        for (NewText lineTextObject : generateTextObjectForEachLine()) {
-            try {
-                width = Math.max(width, getBoundsSVG(lineTextObject).getWidth());
-                height += getBoundsSVG(lineTextObject).getHeight();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
-    }
-
-    private static Rectangle2D getBoundsSVG(NewText text) throws IOException {
+    private static Rectangle2D getBoundsExport(NewText text) throws IOException {
         if (text.isLatex())
             return getLatexBounds(text);
         return PDFUtils.getPDFTextLineBounds(text);
@@ -554,9 +532,24 @@ public class NewText implements Renderable {
      * @return this for chaining
      */
     public NewText setInsets(Insets insets) {
-//        System.out.println(insets);
         this.insets = insets;
         return this;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public double getVerticalInsets() {
+        return getInsets().top + getInsets().bottom;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public double getHorizontalInsets() {
+        return getInsets().left + getInsets().right;
     }
 
     /**

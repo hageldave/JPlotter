@@ -267,16 +267,16 @@ public class PDFUtils {
         PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
         cs.setFont(font, txt.fontsize);
 
-        int verticalInset = txt.getInsets().top + txt.getInsets().bottom;
-        int horizontalInset = txt.getInsets().left+txt.getInsets().right;
+        double verticalInset = txt.getVerticalInsets();
+        double horizontalInset = txt.getHorizontalInsets();
 
         double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
 
         AffineTransform affineTransform = AffineTransform.getTranslateInstance(
-                position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX()/*-horizontalInset*/,
-                position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight() - fontDescent);
+                position.getX() - txt.getPositioningRectangle().getAnchorPointExport(txt).getX(),
+                position.getY() - txt.getPositioningRectangle().getAnchorPointExport(txt).getY() + txt.getBounds().getHeight() - fontDescent);
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() - txt.getBounds().getHeight());
+            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointExport(txt).getX(), txt.getPositioningRectangle().getAnchorPointExport(txt).getY() - txt.getBounds().getHeight());
         cs.transform(new Matrix(affineTransform));
 
         int textHeight = 0;
@@ -307,12 +307,22 @@ public class PDFUtils {
 
             cs.setStrokingColor(txt.getColor());
             if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
-                cs.moveTo((float) txt.getInsets().left, (float) (-singleLineText.getTextSize().getHeight() + fontDescent - textHeight - verticalInset + txt.getInsets().bottom));
-                cs.lineTo(width + txt.getInsets().left, (float) (-singleLineText.getTextSize().getHeight() + fontDescent - textHeight - verticalInset + txt.getInsets().bottom));
+                // TODO: this works!
+//                cs.moveTo((float) txt.getInsets().left, (float) (-singleLineText.getTextSize().getHeight() + fontDescent - textHeight - verticalInset + txt.getInsets().bottom));
+//                cs.lineTo(width + txt.getInsets().left, (float) (-singleLineText.getTextSize().getHeight() + fontDescent - textHeight - verticalInset + txt.getInsets().bottom));
+//                cs.stroke();
+                // TODO: this needs to be reviewed, but is cleaner
+                cs.moveTo((float) txt.getInsets().left, (float) -txt.getDescentCoordinates(font.getFontDescriptor()));
+                cs.lineTo(width + txt.getInsets().left , (float) -txt.getDescentCoordinates(font.getFontDescriptor()));
                 cs.stroke();
             } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
-                cs.moveTo((float) txt.getInsets().left, (float) (- txt.getInsets().top - textHeight - txt.getTextSize().getHeight() - fontDescent));
-                cs.lineTo(width + txt.getInsets().left , (float) (- txt.getInsets().top - textHeight - txt.getTextSize().getHeight() - fontDescent));
+                // TODO: this works!
+//                cs.moveTo((float) txt.getInsets().left, (float) (- txt.getInsets().top - textHeight - txt.getTextSize().getHeight() - fontDescent));
+//                cs.lineTo(width + txt.getInsets().left , (float) (- txt.getInsets().top - textHeight - txt.getTextSize().getHeight() - fontDescent));
+//                cs.stroke();
+                // TODO: this needs to be reviewed, but is cleaner
+                cs.moveTo((float) txt.getInsets().left, (float) (-txt.getMedianCoordinates()+fontDescent));
+                cs.lineTo(width + txt.getInsets().left , (float) (-txt.getMedianCoordinates()));
                 cs.stroke();
             }
             cs.restoreGraphicsState();
@@ -496,9 +506,9 @@ public class PDFUtils {
         DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
         DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointPDF(txt).getY() + txt.getBounds().getHeight());
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getPositioningRectangle().getAnchorPointExport(txt).getX(), position.getY() - txt.getPositioningRectangle().getAnchorPointExport(txt).getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), txt.getPositioningRectangle().getAnchorPointPDF(txt).getY());
+            affineTransform.rotate(txt.getAngle(), txt.getPositioningRectangle().getAnchorPointExport(txt).getX(), txt.getPositioningRectangle().getAnchorPointExport(txt).getY());
         cs.transform(new Matrix(affineTransform));
 
         for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
@@ -536,8 +546,6 @@ public class PDFUtils {
         double width = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
         double height = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * txt.fontsize;
         doc.close();
-        double horizontalInsets = txt.getInsets().left + txt.getInsets().right;
-        double verticalInsets = txt.getInsets().top + txt.getInsets().bottom;
-        return new Rectangle2D.Double(txt.getOrigin().getX(), txt.getOrigin().getY(), width+horizontalInsets, height+verticalInsets);
+        return new Rectangle2D.Double(txt.getOrigin().getX(), txt.getOrigin().getY(), width+txt.getHorizontalInsets(), height+txt.getVerticalInsets());
     }
 }

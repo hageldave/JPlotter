@@ -296,7 +296,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 AffineTransform trnsfrm = new AffineTransform();
                 trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
                 trnsfrm.translate(x1, y1);
-                trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPointSVG(txt).getX(), -txt.getPositioningRectangle().getAnchorPointSVG(txt).getY());
+                trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPointExport(txt).getX(), -txt.getPositioningRectangle().getAnchorPointExport(txt).getY());
                 bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
                 Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
                 if(!viewportRect.intersects(bounds)) {
@@ -311,7 +311,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
                         textGroup.appendChild(svgLatex);
                         textGroup.setAttributeNS(null, "transform",
-                                "translate(" + SVGUtils.svgNumber(x1 - txt.getPositioningRectangle().getAnchorPointSVG(txt).getX()) + "," + SVGUtils.svgNumber(y1 - txt.getPositioningRectangle().getAnchorPointSVG(txt).getY() + txt.getBounds().getHeight()) + ")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
+                                "translate(" + SVGUtils.svgNumber(x1 - txt.getPositioningRectangle().getAnchorPointExport(txt).getX()) + "," + SVGUtils.svgNumber(y1 - txt.getPositioningRectangle().getAnchorPointExport(txt).getY() + txt.getBounds().getHeight()) + ")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
                     } else {
                         SVGUtils.textToSVG(txt, doc, textGroup, x1, y1);
                     }
@@ -352,7 +352,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     AffineTransform trnsfrm = new AffineTransform();
                     trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
                     trnsfrm.translate(x1, y1);
-                    trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPointPDF(txt).getX(), -txt.getPositioningRectangle().getAnchorPointPDF(txt).getY());
+                    trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPointExport(txt).getX(), -txt.getPositioningRectangle().getAnchorPointExport(txt).getY());
                     bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
                     Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
                     if(!viewportRect.intersects(bounds)) {

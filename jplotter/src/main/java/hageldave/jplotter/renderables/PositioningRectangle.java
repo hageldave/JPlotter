@@ -51,17 +51,17 @@ public class PositioningRectangle {
         return anchorPoint;
     }
 
-    public Point2D.Double getAnchorPointPDF(NewText txt) {
+    public Point2D.Double getAnchorPointExport(NewText txt) {
         Point2D.Double anchorPoint = new Point2D.Double();
         switch (x) {
             case 0:
                 anchorPoint.setLocation(0, anchorPoint.getY());
                 break;
             case 1:
-                anchorPoint.setLocation(txt.getBoundsPDF().getWidth() / 2, anchorPoint.getY());
+                anchorPoint.setLocation(txt.getBoundsExport().getWidth() / 2, anchorPoint.getY());
                 break;
             case 2:
-                anchorPoint.setLocation(txt.getBoundsPDF().getWidth(), anchorPoint.getY());
+                anchorPoint.setLocation(txt.getBoundsExport().getWidth(), anchorPoint.getY());
                 break;
         }
         switch (y) {
@@ -69,37 +69,10 @@ public class PositioningRectangle {
                 anchorPoint.setLocation(anchorPoint.getX(), 0);
                 break;
             case 1:
-                anchorPoint.setLocation(anchorPoint.getX(), txt.getBoundsPDF().getHeight() / 2);
+                anchorPoint.setLocation(anchorPoint.getX(), txt.getBoundsExport().getHeight() / 2);
                 break;
             case 2:
-                anchorPoint.setLocation(anchorPoint.getX(), txt.getBoundsPDF().getHeight());
-                break;
-        }
-        return anchorPoint;
-    }
-
-    public Point2D.Double getAnchorPointSVG(NewText txt) {
-        Point2D.Double anchorPoint = new Point2D.Double();
-        switch (x) {
-            case 0:
-                anchorPoint.setLocation(0, anchorPoint.getY());
-                break;
-            case 1:
-                anchorPoint.setLocation(txt.getBoundsSVG().getWidth() / 2, anchorPoint.getY());
-                break;
-            case 2:
-                anchorPoint.setLocation(txt.getBoundsSVG().getWidth(), anchorPoint.getY());
-                break;
-        }
-        switch (y) {
-            case 0:
-                anchorPoint.setLocation(anchorPoint.getX(), 0);
-                break;
-            case 1:
-                anchorPoint.setLocation(anchorPoint.getX(), txt.getBoundsSVG().getHeight() / 2);
-                break;
-            case 2:
-                anchorPoint.setLocation(anchorPoint.getX(), txt.getBoundsSVG().getHeight());
+                anchorPoint.setLocation(anchorPoint.getX(), txt.getBoundsExport().getHeight());
                 break;
         }
         return anchorPoint;
