@@ -502,6 +502,11 @@ public class TextRenderer extends GenericRenderer<Text> {
 					if(!viewportRect.intersects(bounds)) {
 						continue;
 					}
+
+					// clipping area
+					contentStream.saveGraphicsState();
+					contentStream.addRect(x, y, w, h);
+					contentStream.clip();
 					
 					float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
 					float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
@@ -523,11 +528,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.fill();
 						contentStream.restoreGraphicsState();
 					}
-
-					// clipping area
-					contentStream.saveGraphicsState();
-					contentStream.addRect(x, y, w, h);
-					contentStream.clip();
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
