@@ -301,28 +301,20 @@ public class PDFUtils {
             cs.saveGraphicsState();
             cs.beginText();
             cs.setTextMatrix(new Matrix(AffineTransform.getTranslateInstance(txt.getInsets().left, (float) -txt.getTextSize().getHeight() - txt.getInsets().top - textHeight)));
+
             cs.newLine();
             cs.showText(singleLineText.getTextString());
             cs.endText();
 
+            cs.transform(new Matrix(AffineTransform.getTranslateInstance(txt.getInsets().left, (float) -txt.getTextSize().getHeight() - txt.getInsets().top - textHeight)));
             cs.setStrokingColor(txt.getColor());
             if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
-                // TODO: this works!
-//                cs.moveTo((float) txt.getInsets().left, (float) (-singleLineText.getTextSize().getHeight() + fontDescent - textHeight - verticalInset + txt.getInsets().bottom));
-//                cs.lineTo(width + txt.getInsets().left, (float) (-singleLineText.getTextSize().getHeight() + fontDescent - textHeight - verticalInset + txt.getInsets().bottom));
-//                cs.stroke();
-                // TODO: this needs to be reviewed, but is cleaner
-                cs.moveTo((float) txt.getInsets().left, (float) -txt.getDescentCoordinates(font.getFontDescriptor()));
-                cs.lineTo(width + txt.getInsets().left , (float) -txt.getDescentCoordinates(font.getFontDescriptor()));
+                cs.moveTo((float) txt.getInsets().left, (float) txt.getDescentHeight(font.getFontDescriptor()));
+                cs.lineTo(width + txt.getInsets().left , (float) txt.getDescentHeight(font.getFontDescriptor()));
                 cs.stroke();
             } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
-                // TODO: this works!
-//                cs.moveTo((float) txt.getInsets().left, (float) (- txt.getInsets().top - textHeight - txt.getTextSize().getHeight() - fontDescent));
-//                cs.lineTo(width + txt.getInsets().left , (float) (- txt.getInsets().top - textHeight - txt.getTextSize().getHeight() - fontDescent));
-//                cs.stroke();
-                // TODO: this needs to be reviewed, but is cleaner
-                cs.moveTo((float) txt.getInsets().left, (float) (-txt.getMedianCoordinates()+fontDescent));
-                cs.lineTo(width + txt.getInsets().left , (float) (-txt.getMedianCoordinates()));
+                cs.moveTo((float) txt.getInsets().left, (float) (txt.getMedianHeight(font.getFontDescriptor())));
+                cs.lineTo(width + txt.getInsets().left , (float) (txt.getMedianHeight(font.getFontDescriptor())));
                 cs.stroke();
             }
             cs.restoreGraphicsState();

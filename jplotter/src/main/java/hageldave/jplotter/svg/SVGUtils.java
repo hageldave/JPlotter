@@ -402,10 +402,10 @@ public class SVGUtils {
 				Element backgroundText;
 				if (txt.getInsets().right != 0 || txt.getInsets().left != 0 || txt.getInsets().top != 0 || txt.getInsets().bottom != 0) {
 					// still hacky
-					PDDocument pddoc = new PDDocument();
-					PDType0Font font = PDFUtils.createPDFont(pddoc, txt.style);
+					PDDocument pdDoc = new PDDocument();
+					PDType0Font font = PDFUtils.createPDFont(pdDoc, txt.style);
 					float width = font.getStringWidth(singleLineText.getTextString()) / 1000 * txt.fontsize;
-					pddoc.close();
+					pdDoc.close();
 					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, width+txt.getHorizontalInsets(), singleLineText.getBounds().getHeight());
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight())) + ") scale(1,-1)");
 					parent.appendChild(backgroundText);

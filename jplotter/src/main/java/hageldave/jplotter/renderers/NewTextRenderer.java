@@ -255,9 +255,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     }
 
                     textHeight -= singleLineText.getBounds().getHeight();
-
                     g_.setColor(txt.getColor());
-                    g_.drawString(singleLineText.getTextString(), txt.getInsets().left, (int) (-textHeight - g.getFontMetrics().getMaxDescent() - txt.getInsets().bottom));
+                    g_.drawString(singleLineText.getTextString(), txt.getInsets().left, (int) (-textHeight - g_.getFontMetrics().getMaxDescent() - txt.getInsets().bottom));
                 }
             }
         }
