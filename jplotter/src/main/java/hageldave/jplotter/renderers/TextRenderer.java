@@ -504,6 +504,11 @@ public class TextRenderer extends GenericRenderer<Text> {
 						continue;
 					}
 
+					// clipping area
+					contentStream.saveGraphicsState();
+					contentStream.addRect(x, y, w, h);
+					contentStream.clip();
+
 					// this approximation definitely needs improvements!
 					float rightPadding = 0.2f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
 					if (txt.getBounds().getWidth() < (new Text("12", txt.fontsize, txt.style).getBounds().getWidth()))
@@ -527,11 +532,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.fill();
 						contentStream.restoreGraphicsState();
 					}
-
-					// clipping area
-					contentStream.saveGraphicsState();
-					contentStream.addRect(x, y, w, h);
-					contentStream.clip();
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
