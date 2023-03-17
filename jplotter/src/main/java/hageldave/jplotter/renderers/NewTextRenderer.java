@@ -160,8 +160,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             // test if inside of view port
             Rectangle2D txtrect = txt.getBoundsWithRotation();
             txtrect.setRect(
-                    txtrect.getX()+effectiveTx,
-                    txtrect.getY()+effectiveTy,
+                    txtrect.getX()+effectiveTx-txt.getPositioningRectangle().getAnchorPoint(txt).getX(),
+                    txtrect.getY()+effectiveTy-txt.getPositioningRectangle().getAnchorPoint(txt).getY(),
                     txtrect.getWidth(), txtrect.getHeight()
             );
 

@@ -7,12 +7,9 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.CharacterAtlas;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
-import hageldave.jplotter.interaction.CoordSysViewSelector;
+import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.pdf.PDFUtils;
-import hageldave.jplotter.renderables.Legend;
-import hageldave.jplotter.renderables.Lines;
-import hageldave.jplotter.renderables.NewText;
+import hageldave.jplotter.renderables.*;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -23,7 +20,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 
@@ -31,83 +27,135 @@ public class TestTextHeights {
 
     @SuppressWarnings("resource" /* compiler is too dumb to realize there is no leak */)
     public static void main(String[] args) {
-        int fontsize = 24;
-        int xPos = 10;
+        int fontsize = 19;
+//        int xPos = 10;
         int fontstyle = Font.PLAIN;
-        double correctionFactor = 1.0 / 400 * 90;
+
+//        int coordHeight = 150;
+//        double correctionFactor = 1.0 / (345) * coordHeight + 28;
 
         Lines textLines = new Lines();
         FontMetrics fm = CharacterAtlas.getFontMetrics(fontsize, fontstyle);
         CoordSysRenderer coordsys = new CoordSysRenderer();
 
+
+
         // Testing baseline height calculation
-        NewText textBaseline = new NewText("Testing text baseline", fontsize, fontstyle);
-        textBaseline.setOrigin(xPos, 10);
+//        NewText textBaseline = new NewText("Testing text baseline", fontsize, fontstyle);
+//        textBaseline.setOrigin(xPos, 10);
+//
+//        double textBaselineHeight = textBaseline.getTextSize().getHeight() * correctionFactor;
+//        double baselineHeight = textBaseline.getBaselineHeight(fm);
+//        textLines.addSegment(
+//                new Point2D.Double(textBaseline.getOrigin().getX(), textBaseline.getOrigin().getY() + baselineHeight / textBaselineHeight),
+//                new Point2D.Double(textBaseline.getOrigin().getX()+textBaseline.getBounds().getWidth(), textBaseline.getOrigin().getY() + baselineHeight / textBaselineHeight)
+//                ).setColor(Color.RED);
+//
+//        // Testing median height calculation
+//        NewText textMedian = new NewText("Testing text median", fontsize, fontstyle);
+//        textMedian.setOrigin(xPos, 20);
+//
+//        double textMedianHeight = textMedian.getTextSize().getHeight() * correctionFactor;
+//        double medianHeight = textMedian.getMedianHeight(fm);
+//        textLines.addSegment(
+//                new Point2D.Double(textMedian.getOrigin().getX(), textMedian.getOrigin().getY() + medianHeight/textMedianHeight),
+//                new Point2D.Double(textMedian.getOrigin().getX()+textMedian.getBounds().getWidth(), textMedian.getOrigin().getY() + medianHeight/textMedianHeight)
+//        ).setColor(Color.BLUE);
+//
+//        // Testing descent height calculation
+//        NewText textDescent = new NewText("Testing text descent", fontsize, fontstyle);
+//        textDescent.setOrigin(xPos, 30);
+//
+//        double textDescentHeight = textDescent.getTextSize().getHeight() * correctionFactor;
+//        double descentHeight = textDescent.getDescentHeight();
+//        textLines.addSegment(
+//                new Point2D.Double(textDescent.getOrigin().getX(), textDescent.getOrigin().getY() + descentHeight / textDescentHeight),
+//                new Point2D.Double(textDescent.getOrigin().getX()+textDescent.getBounds().getWidth(), textDescent.getOrigin().getY() + descentHeight / textDescentHeight)
+//        ).setColor(Color.GREEN);
+//
+//        // Testing text height calculation
+//        NewText textHeight = new NewText("Testing text height", fontsize, fontstyle);
+//        textHeight.setOrigin(xPos, 40);
+//
+//        double textHeightHeight = textHeight.getTextSize().getHeight() * correctionFactor;
+//        textLines.addSegment(
+//                new Point2D.Double(textHeight.getOrigin().getX(), textHeight.getOrigin().getY() + textHeightHeight),
+//                new Point2D.Double(textHeight.getOrigin().getX()+textHeight.getTextSize().getWidth(), textHeight.getOrigin().getY() + textHeightHeight)
+//        ).setColor(Color.MAGENTA);
+//
+//
+//        // Testing old text height calculation
+//        NewText oldTextHeight = new NewText("Testing strikethrough text height", fontsize, fontstyle);
+//        oldTextHeight.setOrigin(xPos, 50);
+//
+//        double strikethroughTextHeight = oldTextHeight.getBounds().getHeight() * correctionFactor;
+//        double strikethroughHeight = oldTextHeight.getStrikethroughHeight(fm);
+//        textLines.addSegment(
+//                new Point2D.Double(oldTextHeight.getOrigin().getX(), oldTextHeight.getOrigin().getY() + strikethroughHeight / strikethroughTextHeight),
+//                new Point2D.Double(oldTextHeight.getOrigin().getX()+oldTextHeight.getTextSize().getWidth(), oldTextHeight.getOrigin().getY() + strikethroughHeight / strikethroughTextHeight)
+//        ).setColor(Color.PINK);
 
-        double textBaselineHeight = textBaseline.getTextSize().getHeight() * correctionFactor;
-        double baselineHeight = textBaseline.getBaselineHeight(fm);
-        textLines.addSegment(
-                new Point2D.Double(textBaseline.getOrigin().getX(), textBaseline.getOrigin().getY() + baselineHeight / textBaselineHeight),
-                new Point2D.Double(textBaseline.getOrigin().getX()+textBaseline.getBounds().getWidth(), textBaseline.getOrigin().getY() + baselineHeight / textBaselineHeight)
-                ).setColor(Color.RED);
 
-        // Testing median height calculation
-        NewText textMedian = new NewText("Testing text median", fontsize, fontstyle);
-        textMedian.setOrigin(xPos, 20);
+        // Test text features
 
-        double textMedianHeight = textMedian.getTextSize().getHeight() * correctionFactor;
-        double medianHeight = textMedian.getMedianHeight(fm);
-        textLines.addSegment(
-                new Point2D.Double(textMedian.getOrigin().getX(), textMedian.getOrigin().getY() + medianHeight/textMedianHeight),
-                new Point2D.Double(textMedian.getOrigin().getX()+textMedian.getBounds().getWidth(), textMedian.getOrigin().getY() + medianHeight/textMedianHeight)
-        ).setColor(Color.BLUE);
+        // Test anchor points
+        NewText anchorpoints = new NewText("testing the anchorpoint \n (2, 2)", fontsize, fontstyle);
+        anchorpoints.setOrigin(0, 100);
+        anchorpoints.setBackground(Color.ORANGE);
+        anchorpoints.setPositioningRectangle(new PositioningRectangle(2, 2));
 
-        // Testing descent height calculation
-        NewText textDescent = new NewText("Testing text descent", fontsize, fontstyle);
-        textDescent.setOrigin(xPos, 30);
+        // Test text decoration
+        NewText textUnderline = new NewText("testing the underlining", fontsize, fontstyle);
+        textUnderline.setOrigin(0, 120);
+        textUnderline.setColor(Color.RED);
+        textUnderline.setTextDecoration(TextDecoration.UNDERLINE);
+        textUnderline.setPositioningRectangle(new PositioningRectangle(2, 2));
 
-        double textDescentHeight = textDescent.getTextSize().getHeight() * correctionFactor;
-        double descentHeight = textDescent.getDescentHeight();
-        textLines.addSegment(
-                new Point2D.Double(textDescent.getOrigin().getX(), textDescent.getOrigin().getY() + descentHeight / textDescentHeight),
-                new Point2D.Double(textDescent.getOrigin().getX()+textDescent.getBounds().getWidth(), textDescent.getOrigin().getY() + descentHeight / textDescentHeight)
-        ).setColor(Color.GREEN);
+        NewText textStrikeThrough = new NewText("testing the underlining", fontsize, fontstyle);
+        textStrikeThrough.setOrigin(0, 140);
+        textStrikeThrough.setColor(Color.BLUE);
+        textStrikeThrough.setTextDecoration(TextDecoration.STRIKETHROUGH);
+        textStrikeThrough.setPositioningRectangle(new PositioningRectangle(2, 2));
 
-        // Testing text height calculation
-        NewText textHeight = new NewText("Testing text height", fontsize, fontstyle);
-        textHeight.setOrigin(xPos, 40);
+        // Test text insets with background
+        NewText textInsets = new NewText("testing the insets", fontsize, fontstyle);
+        textInsets.setOrigin(0, 60);
+        textInsets.setBackground(Color.MAGENTA);
+        textInsets.setTextDecoration(TextDecoration.UNDERLINE);
+        textInsets.setInsets(new Insets(10, 10, 10, 10));
+        textInsets.setPositioningRectangle(new PositioningRectangle(2, 2));
 
-        double textHeightHeight = textHeight.getTextSize().getHeight() * correctionFactor;
-        textLines.addSegment(
-                new Point2D.Double(textHeight.getOrigin().getX(), textHeight.getOrigin().getY() + textHeightHeight),
-                new Point2D.Double(textHeight.getOrigin().getX()+textHeight.getTextSize().getWidth(), textHeight.getOrigin().getY() + textHeightHeight)
-        ).setColor(Color.MAGENTA);
+        // Test text insets with background
+        NewText textInsetsWithRotation = new NewText("testing the insets \n with rotation", fontsize, fontstyle);
+        textInsetsWithRotation.setOrigin(0, 30);
+        textInsetsWithRotation.setBackground(Color.GREEN);
+        textInsetsWithRotation.setInsets(new Insets(10, 10, 10, 10));
+        textInsetsWithRotation.setAngle(0.2);
+        textInsetsWithRotation.setPositioningRectangle(new PositioningRectangle(2, 2));
 
-
-        // Testing old text height calculation
-        NewText oldTextHeight = new NewText("Testing strikethrough text height", fontsize, fontstyle);
-        oldTextHeight.setOrigin(xPos, 50);
-
-        double strikethroughTextHeight = oldTextHeight.getBounds().getHeight() * correctionFactor;
-        double strikethroughHeight = oldTextHeight.getStrikethroughHeight(fm);
-        textLines.addSegment(
-                new Point2D.Double(oldTextHeight.getOrigin().getX(), oldTextHeight.getOrigin().getY() + strikethroughHeight / strikethroughTextHeight),
-                new Point2D.Double(oldTextHeight.getOrigin().getX()+oldTextHeight.getTextSize().getWidth(), oldTextHeight.getOrigin().getY() + strikethroughHeight / strikethroughTextHeight)
-        ).setColor(Color.PINK);
-
-
+        // Testing latex rendering
+        NewText textLatex = new NewText("##BEGINLATEX## testing the \\\\ latex rendering", fontsize, fontstyle);
+        textLatex.setOrigin(0, 200);
+        textLatex.setBackground(Color.ORANGE);
+        textLatex.setTextDecoration(TextDecoration.UNDERLINE);
+        textLatex.setInsets(new Insets(5, 10, 5, 10));
+        textLatex.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // okay we're good to go, lets display the data in a coordinate system
         CompleteRenderer content = new CompleteRenderer();
         coordsys.setContent(content
-                .addItemToRender(textBaseline)
-                .addItemToRender(textMedian)
-                .addItemToRender(textDescent)
-                .addItemToRender(textHeight)
-                .addItemToRender(oldTextHeight)
-                .addItemToRender(textLines));
+//                .addItemToRender(textBaseline)
+//                .addItemToRender(textMedian)
+//                .addItemToRender(textDescent)
+//                .addItemToRender(textHeight)
+//                .addItemToRender(oldTextHeight)
+                .addItemToRender(textLines)
+                .addItemToRender(anchorpoints)
+                .addItemToRender(textUnderline)
+                .addItemToRender(textStrikeThrough)
+                .addItemToRender(textInsets).addItemToRender(textInsetsWithRotation).addItemToRender(textLatex));
         // lets set the coordinate view to cover the whole sampling space
-        coordsys.setCoordinateView(0, 0, 200, 90);
+        coordsys.setCoordinateView(-600, 0, 100, 220);
 
         // lets add a legend so the viewer can make sense of the data
         Legend legend = new Legend();
@@ -118,14 +166,8 @@ public class TestTextHeights {
         JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
         canvas.setRenderer(coordsys);
         // lets add some controls for exploring the data
-        new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
-        new CoordSysViewSelector(canvas,coordsys) {
-            {extModifierMask=0;/* no need for shift to be pressed */}
-            @Override
-            public void areaSelected(double minX, double minY, double maxX, double maxY) {
-                coordsys.setCoordinateView(minX, minY, maxX, maxY);
-            }
-        }.register();
+//        new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
+        new CoordSysPanning(canvas, coordsys).register();
 
         // lets put a JFrame around it all and launch
         JFrame frame = new JFrame("Example Viz");
@@ -134,11 +176,14 @@ public class TestTextHeights {
         canvas.asComponent().setPreferredSize(new Dimension(480, 400));
         canvas.asComponent().setBackground(Color.WHITE);
 
+
+
         canvas.addCleanupOnWindowClosingListener(frame);
 
         SwingUtilities.invokeLater(()->{
             frame.pack();
             frame.setVisible(true);
+
         });
 
         // add a pop up menu (on right click) for exporting to SVG or PNG

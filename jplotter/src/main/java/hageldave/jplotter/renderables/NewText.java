@@ -57,7 +57,11 @@ public class NewText implements Renderable {
      * @param latex TODO
      */
     protected NewText(String textstr, int fontsize, int style, Color textcolor, boolean latex) {
-        this.txtStr = textstr;
+        if (latex && textstr.startsWith(latexInstruction)) {
+            this.txtStr = textstr.replace(latexInstruction, "");
+        } else {
+            this.txtStr = textstr;
+        }
         this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style).getBounds().getSize();
         this.fontsize = fontsize;
         this.style = style;
@@ -250,60 +254,8 @@ public class NewText implements Renderable {
         return fontDescriptor.getDescent() / 1000 * fontsize;
     }
 
-    /**
-     *
-     * @return
-     */
-    public double getDescentHeight(FontMetrics fontMetrics) {
-        return getBaselineHeight() + fontMetrics.getMaxDescent();
-    }
-
-    /**
-     *
-     * @return
-     */
-    public double getBaselineHeight() {
-        NewText[] singleLineObjects = generateTextObjectForEachLine();
-        double lineHeight = getOrigin().getY()-getPositioningRectangle().getAnchorPoint(this).getY();
-        if (singleLineObjects.length > 0) {
-            NewText firstLineObject = singleLineObjects[0];
-            lineHeight = firstLineObject.getTextSize().getHeight();
-        }
-        return lineHeight;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public double getMedianHeight(PDFontDescriptor fontDescriptor) {
+    public double getStrikethroughHeight(PDFontDescriptor fontDescriptor) {
         return (fontDescriptor.getAscent() / 1000 * fontsize)/2.0 + (fontDescriptor.getDescent() / 1000 * fontsize);
-    }
-
-    /**
-     *
-     * @return
-     */
-    public double getMedianHeight(FontMetrics fontMetrics) {
-        return getMedianHeight() + fontMetrics.getMaxDescent();
-    }
-
-    protected double getMedianHeight() {
-        NewText[] singleLineObjects = generateTextObjectForEachLine();
-        double lineHeight = getOrigin().getY()-getPositioningRectangle().getAnchorPoint(this).getY();
-        if (singleLineObjects.length > 0) {
-            NewText firstLineObject = singleLineObjects[0];
-            lineHeight = firstLineObject.getBounds().getHeight() / 2.0;
-        }
-        return lineHeight;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public double getAscentHeight(PDFontDescriptor fontDescriptor) {
-        return fontDescriptor.getAscent() / 1000 * fontsize;
     }
 
     /**
@@ -336,7 +288,7 @@ public class NewText implements Renderable {
             if (lineTextObject.isLatex()) {
                 Rectangle2D latexBounds = getLatexBounds(lineTextObject);
                 width = Math.max(width, latexBounds.getWidth());
-                height += latexBounds.getHeight() + getVerticalInsets();
+                height += latexBounds.getHeight();
             } else {
                 width = Math.max(width, lineTextObject.getTextSize().getWidth() + getHorizontalInsets());
                 height += lineTextObject.getTextSize().getHeight() + getVerticalInsets();
@@ -381,7 +333,7 @@ public class NewText implements Renderable {
      */
     public Rectangle2D getBoundsWithRotation() {
         Rectangle2D bounds = getBounds();
-        AffineTransform transform = AffineTransform.getRotateInstance(angle);
+        AffineTransform transform = AffineTransform.getRotateInstance(angle, getPositioningRectangle().getAnchorPoint(this).getX(), getPositioningRectangle().getAnchorPoint(this).getY());
         return transform.createTransformedShape(bounds).getBounds2D();
     }
 

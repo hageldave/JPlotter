@@ -313,8 +313,8 @@ public class PDFUtils {
                 cs.lineTo(width + txt.getInsets().left , (float) txt.getDescentHeight(font.getFontDescriptor()));
                 cs.stroke();
             } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
-                cs.moveTo((float) txt.getInsets().left, (float) (txt.getMedianHeight(font.getFontDescriptor())));
-                cs.lineTo(width + txt.getInsets().left , (float) (txt.getMedianHeight(font.getFontDescriptor())));
+                cs.moveTo((float) txt.getInsets().left, (float) (txt.getStrikethroughHeight(font.getFontDescriptor())));
+                cs.lineTo(width + txt.getInsets().left , (float) (txt.getStrikethroughHeight(font.getFontDescriptor())));
                 cs.stroke();
             }
             cs.restoreGraphicsState();
