@@ -309,12 +309,12 @@ public class PDFUtils {
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(txt.getInsets().left, (float) -txt.getTextSize().getHeight() - txt.getInsets().top - textHeight)));
             cs.setStrokingColor(txt.getColor());
             if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
-                cs.moveTo((float) txt.getInsets().left, (float) txt.getDescentHeight(font.getFontDescriptor()));
-                cs.lineTo(width + txt.getInsets().left , (float) txt.getDescentHeight(font.getFontDescriptor()));
+                cs.moveTo(0, (float) txt.getDescentHeight(font.getFontDescriptor()));
+                cs.lineTo(width, (float) txt.getDescentHeight(font.getFontDescriptor()));
                 cs.stroke();
             } else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
-                cs.moveTo((float) txt.getInsets().left, (float) (txt.getStrikethroughHeight(font.getFontDescriptor())));
-                cs.lineTo(width + txt.getInsets().left , (float) (txt.getStrikethroughHeight(font.getFontDescriptor())));
+                cs.moveTo(0, (float) (txt.getStrikethroughHeight(font.getFontDescriptor())));
+                cs.lineTo(width, (float) (txt.getStrikethroughHeight(font.getFontDescriptor())));
                 cs.stroke();
             }
             cs.restoreGraphicsState();
