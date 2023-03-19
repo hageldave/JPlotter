@@ -6,10 +6,12 @@ import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.pdf.PDFUtils;
-import hageldave.jplotter.renderables.*;
+import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.NewText;
+import hageldave.jplotter.renderables.PositioningRectangle;
+import hageldave.jplotter.renderables.TextDecoration;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -28,17 +30,10 @@ public class TestTextHeights {
     @SuppressWarnings("resource" /* compiler is too dumb to realize there is no leak */)
     public static void main(String[] args) {
         int fontsize = 19;
-//        int xPos = 10;
         int fontstyle = Font.PLAIN;
 
-//        int coordHeight = 150;
-//        double correctionFactor = 1.0 / (345) * coordHeight + 28;
-
         Lines textLines = new Lines();
-        FontMetrics fm = CharacterAtlas.getFontMetrics(fontsize, fontstyle);
         CoordSysRenderer coordsys = new CoordSysRenderer();
-
-
 
         // Testing baseline height calculation
 //        NewText textBaseline = new NewText("Testing text baseline", fontsize, fontstyle);
@@ -98,36 +93,38 @@ public class TestTextHeights {
 
         // Test text features
 
-        // Test anchor points
-        NewText anchorpoints = new NewText("testing the anchorpoint \n (2, 2)", fontsize, fontstyle);
-        anchorpoints.setOrigin(0, 100);
-        anchorpoints.setBackground(Color.ORANGE);
-        anchorpoints.setPositioningRectangle(new PositioningRectangle(2, 2));
-
         // Test text decoration
+        // Test text underlining
         NewText textUnderline = new NewText("testing the underlining", fontsize, fontstyle);
-        textUnderline.setOrigin(0, 120);
+        textUnderline.setOrigin(0, 135);
         textUnderline.setColor(Color.RED);
         textUnderline.setTextDecoration(TextDecoration.UNDERLINE);
         textUnderline.setPositioningRectangle(new PositioningRectangle(2, 2));
 
-        NewText textStrikeThrough = new NewText("testing the underlining", fontsize, fontstyle);
-        textStrikeThrough.setOrigin(0, 140);
+        // Test text strikethrough
+        NewText textStrikeThrough = new NewText("testing the strikethrough", fontsize, fontstyle);
+        textStrikeThrough.setOrigin(10, 135);
         textStrikeThrough.setColor(Color.BLUE);
         textStrikeThrough.setTextDecoration(TextDecoration.STRIKETHROUGH);
-        textStrikeThrough.setPositioningRectangle(new PositioningRectangle(2, 2));
+        textStrikeThrough.setPositioningRectangle(new PositioningRectangle(0, 2));
+
+        // Test anchor points
+        NewText anchorpoints = new NewText("testing the anchorpoint \n (2, 2)", fontsize, fontstyle);
+        anchorpoints.setOrigin(0, 110);
+        anchorpoints.setBackground(Color.ORANGE);
+        anchorpoints.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Test text insets with background
         NewText textInsets = new NewText("testing the insets \n with multiple lines", fontsize, fontstyle);
-        textInsets.setOrigin(0, 60);
+        textInsets.setOrigin(10, 110);
         textInsets.setBackground(Color.MAGENTA);
         textInsets.setTextDecoration(TextDecoration.UNDERLINE);
         textInsets.setInsets(new Insets(10, 10, 10, 10));
-        textInsets.setPositioningRectangle(new PositioningRectangle(2, 2));
+        textInsets.setPositioningRectangle(new PositioningRectangle(0, 2));
 
-        // Test text insets with background
+        // Test text insets with background and rotation
         NewText textInsetsWithRotation = new NewText("testing the insets \n with rotation", fontsize, fontstyle);
-        textInsetsWithRotation.setOrigin(0, 30);
+        textInsetsWithRotation.setOrigin(0, 50);
         textInsetsWithRotation.setBackground(Color.GREEN);
         textInsetsWithRotation.setInsets(new Insets(10, 10, 10, 10));
         textInsetsWithRotation.setAngle(0.2);
@@ -136,18 +133,17 @@ public class TestTextHeights {
         // Testing latex rendering in text mode
         NewText textLatex = new NewText("##BEGINLATEX## \\text{testing the latex rendering} \\\\ \\text{in text mode}", fontsize, fontstyle);
         textLatex.setOrigin(0, 200);
-        textLatex.setBackground(Color.ORANGE);
+        textLatex.setBackground(Color.LIGHT_GRAY);
         textLatex.setTextDecoration(TextDecoration.UNDERLINE);
         textLatex.setInsets(new Insets(5, 10, 5, 10));
         textLatex.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Testing latex rendering in math mode
-        NewText textLatexMath = new NewText("##BEGINLATEX## ", fontsize, fontstyle);
-        textLatexMath.setOrigin(0, 200);
-        textLatexMath.setBackground(Color.ORANGE);
-        textLatexMath.setTextDecoration(TextDecoration.UNDERLINE);
+        NewText textLatexMath = new NewText("##BEGINLATEX## (\\bigwedge_{i=1}^{1} F_i) \\wedge (\\bigwedge_{i=1}^{1} G_i) \\equiv \\bigwedge_{i=1}^{1} (F_i \\wedge G_i)", fontsize, fontstyle);
+        textLatexMath.setOrigin(10, 200);
+        textLatexMath.setBackground(Color.PINK);
         textLatexMath.setInsets(new Insets(5, 10, 5, 10));
-        textLatexMath.setPositioningRectangle(new PositioningRectangle(2, 2));
+        textLatexMath.setPositioningRectangle(new PositioningRectangle(0, 2));
 
         // okay we're good to go, lets display the data in a coordinate system
         CompleteRenderer content = new CompleteRenderer();
@@ -161,35 +157,28 @@ public class TestTextHeights {
                 .addItemToRender(textLatex)
                 .addItemToRender(textLatexMath));
         // lets set the coordinate view to cover the whole sampling space
-        coordsys.setCoordinateView(-600, 0, 100, 220);
+        coordsys.setCoordinateView(-550, -20, 550, 210);
 
-        // lets add a legend so the viewer can make sense of the data
-        Legend legend = new Legend();
-        coordsys.setLegendRightWidth(80);
 
         // display the coordinate system on a blank canvas
         boolean useOpenGL = false;
         JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
         canvas.setRenderer(coordsys);
-        // lets add some controls for exploring the data
-//        new CoordSysScrollZoom(canvas,coordsys).setZoomFactor(1.7).register();
+
         new CoordSysPanning(canvas, coordsys).register();
 
         // lets put a JFrame around it all and launch
         JFrame frame = new JFrame("Example Viz");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(canvas.asComponent());
-        canvas.asComponent().setPreferredSize(new Dimension(480, 400));
+        canvas.asComponent().setPreferredSize(new Dimension(650, 500));
         canvas.asComponent().setBackground(Color.WHITE);
-
-
 
         canvas.addCleanupOnWindowClosingListener(frame);
 
         SwingUtilities.invokeLater(()->{
             frame.pack();
             frame.setVisible(true);
-
         });
 
         // add a pop up menu (on right click) for exporting to SVG or PNG
