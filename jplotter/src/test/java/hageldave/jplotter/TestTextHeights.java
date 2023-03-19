@@ -118,7 +118,7 @@ public class TestTextHeights {
         textStrikeThrough.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Test text insets with background
-        NewText textInsets = new NewText("testing the insets", fontsize, fontstyle);
+        NewText textInsets = new NewText("testing the insets \n with multiple lines", fontsize, fontstyle);
         textInsets.setOrigin(0, 60);
         textInsets.setBackground(Color.MAGENTA);
         textInsets.setTextDecoration(TextDecoration.UNDERLINE);
@@ -133,27 +133,33 @@ public class TestTextHeights {
         textInsetsWithRotation.setAngle(0.2);
         textInsetsWithRotation.setPositioningRectangle(new PositioningRectangle(2, 2));
 
-        // Testing latex rendering
-        NewText textLatex = new NewText("##BEGINLATEX## testing the \\\\ latex rendering", fontsize, fontstyle);
+        // Testing latex rendering in text mode
+        NewText textLatex = new NewText("##BEGINLATEX## \\text{testing the latex rendering} \\\\ \\text{in text mode}", fontsize, fontstyle);
         textLatex.setOrigin(0, 200);
         textLatex.setBackground(Color.ORANGE);
         textLatex.setTextDecoration(TextDecoration.UNDERLINE);
         textLatex.setInsets(new Insets(5, 10, 5, 10));
         textLatex.setPositioningRectangle(new PositioningRectangle(2, 2));
 
+        // Testing latex rendering in math mode
+        NewText textLatexMath = new NewText("##BEGINLATEX## ", fontsize, fontstyle);
+        textLatexMath.setOrigin(0, 200);
+        textLatexMath.setBackground(Color.ORANGE);
+        textLatexMath.setTextDecoration(TextDecoration.UNDERLINE);
+        textLatexMath.setInsets(new Insets(5, 10, 5, 10));
+        textLatexMath.setPositioningRectangle(new PositioningRectangle(2, 2));
+
         // okay we're good to go, lets display the data in a coordinate system
         CompleteRenderer content = new CompleteRenderer();
         coordsys.setContent(content
-//                .addItemToRender(textBaseline)
-//                .addItemToRender(textMedian)
-//                .addItemToRender(textDescent)
-//                .addItemToRender(textHeight)
-//                .addItemToRender(oldTextHeight)
                 .addItemToRender(textLines)
                 .addItemToRender(anchorpoints)
                 .addItemToRender(textUnderline)
                 .addItemToRender(textStrikeThrough)
-                .addItemToRender(textInsets).addItemToRender(textInsetsWithRotation).addItemToRender(textLatex));
+                .addItemToRender(textInsets)
+                .addItemToRender(textInsetsWithRotation)
+                .addItemToRender(textLatex)
+                .addItemToRender(textLatexMath));
         // lets set the coordinate view to cover the whole sampling space
         coordsys.setCoordinateView(-600, 0, 100, 220);
 
