@@ -14,8 +14,10 @@ import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordinateViewListener;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Annotations.GLCoordinates;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
@@ -33,6 +35,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.IntSupplier;
@@ -87,6 +90,8 @@ public class CoordSysRenderer implements Renderer {
 	
 	protected int legendRightWidth = 70;
 	protected int legendBottomHeight = 20;
+	
+	protected Deque<Renderable> toCloseLater = new LinkedList<>();
 	
 	@GLCoordinates
 	protected Rectangle legendRightViewPort = new Rectangle();
@@ -509,7 +514,7 @@ public class CoordSysRenderer implements Renderer {
 		guides.removeAllSegments();
 		for(Text txt:tickMarkLabels){
 			preContentTextR.removeItemToRender(txt);
-			txt.close();
+			toCloseLater.add(txt);
 		}
 		tickMarkLabels.clear();
 
@@ -655,6 +660,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	@Override
 	public void render(int vpx, int vpy, int w, int h) {
+		closeCollectedGLObjects();
 		if(!isEnabled()){
 			return;
 		}
@@ -714,6 +720,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	@Override
 	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		closeCollectedGLObjects(); // close will be noop in this case, no problem
 		if(!isEnabled()){
 			return;
 		}
@@ -1077,7 +1084,9 @@ public class CoordSysRenderer implements Renderer {
 	}
 	
 	@Override
+	@GLContextRequired
 	public void close() {
+		closeCollectedGLObjects();
 		if(Objects.nonNull(preContentTextR))
 			preContentTextR.close();
 		if(Objects.nonNull(preContentLinesR))
@@ -1095,10 +1104,20 @@ public class CoordSysRenderer implements Renderer {
 		if(Objects.nonNull(overlay))
 			overlay.close();
 	}
+	
+	@GLContextRequired
+	protected void closeCollectedGLObjects() {
+		while(!toCloseLater.isEmpty()) {
+			Renderable toClose = toCloseLater.remove();
+			toClose.close();
+		}
+	}
+	
 	@Override
 	public void setEnabled(boolean enable) {
 		this.isEnabled = enable;
 	}
+	
 	@Override
 	public boolean isEnabled() {
 		return this.isEnabled;
