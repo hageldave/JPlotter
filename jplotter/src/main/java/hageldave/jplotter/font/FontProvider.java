@@ -89,29 +89,31 @@ public final class FontProvider {
 	/**
 	 * Returns the base64 code of the Ubuntu Mono font as a string for the specified style.
 	 * @param style font style, {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
-	 * 	 * or BOLD|ITALIC
+	 * or BOLD|ITALIC
 	 * @return base64 code of the Ubuntu Mono font of specified style
 	 */
 	public static String getUbuntuMonoFontAsBaseString(int style) {
+		String resource;
+		switch (style) {
+			case Font.PLAIN:
+				resource = UBUNTU_MONO_PLAIN_RESOURCE;
+				break;
+			case Font.BOLD:
+				resource = UBUNTU_MONO_BOLD_RESOURCE;
+				break;
+			case Font.ITALIC:
+				resource = UBUNTU_MONO_ITALIC_RESOURCE;
+				break;
+			case (Font.BOLD | Font.ITALIC):
+				resource = UBUNTU_MONO_BOLDITALIC_RESOURCE;
+				break;
+			default:
+				throw new IllegalArgumentException(
+						"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
+		}
 		try {
-			byte[] fontFileArray;
-			switch (style) {
-				case Font.PLAIN:
-					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/UbuntuMono-R.ttf")).toURI()));
-					break;
-				case Font.BOLD:
-					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/UbuntuMono-B.ttf")).toURI()));
-					break;
-				case Font.ITALIC:
-					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/UbuntuMono-RI.ttf")).toURI()));
-					break;
-				case (Font.BOLD | Font.ITALIC):
-					fontFileArray = FileUtils.readFileToByteArray(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/UbuntuMono-BI.ttf")).toURI()));
-					break;
-				default:
-					throw new IllegalArgumentException(
-							"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
-			}
+			byte[] fontFileArray = FileUtils.readFileToByteArray(new File(
+					Objects.requireNonNull(FontProvider.class.getResource(resource)).toURI()));
 			return Base64.getEncoder().encodeToString(fontFileArray);
 		} catch (IOException | URISyntaxException e) {
 			throw new RuntimeException(e);
