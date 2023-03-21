@@ -233,25 +233,22 @@ public interface JPlotterCanvas {
 	public default void paintPDF(PDDocument document, PDPage page) throws IOException {
 		int w,h;
 		if ((w=asComponent().getWidth()) > 0 && (h=asComponent().getHeight()) > 0) {
+			// do we need the mediabox?
 			page.setMediaBox(new PDRectangle(w, h));
-			PDPageContentStream contentStream = new PDPageContentStream(document, page,
-					PDPageContentStream.AppendMode.APPEND, false);
-			contentStream.addRect(0, 0, w, h);
-			contentStream.setNonStrokingColor(asComponent().getBackground());
-			contentStream.fill();
-			contentStream.close();
-			paintToPDF(document, page, w, h);
+			paintPDF(document, page, new Rectangle2D.Float(0, 0, w, h));
 		}
 	}
 
-	// This paintPDF method is responsible for drawing the background color of the canvas in the given render location
+	
 	public default void paintPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) throws IOException {
 		PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, false);
+		// drawing the background color of the canvas in the given render location
 		contentStream.addRect((float) renderLoc.getBounds2D().getX(), (float) (page.getMediaBox().getHeight()-renderLoc.getBounds2D().getY()-renderLoc.getBounds2D().getHeight()),
 				(float) renderLoc.getBounds2D().getWidth(), (float) renderLoc.getBounds2D().getHeight());
 		contentStream.setNonStrokingColor(asComponent().getBackground());
 		contentStream.fill();
 		contentStream.close();
+		// draw the rest (render to pdf)
 		paintToPDF(document, page, renderLoc);
 	}
 
