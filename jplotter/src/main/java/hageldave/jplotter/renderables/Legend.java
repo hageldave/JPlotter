@@ -56,7 +56,8 @@ public class Legend implements Renderable, Renderer {
 	protected LinkedList<Triangles> triangles = new LinkedList<>();
 
 	protected LinkedList<Text> texts = new LinkedList<>();
-	List<AutoCloseable> toCloseLater = new LinkedList<>();
+	
+	protected Deque<Renderable> toCloseLater = new LinkedList<>();
 
 	protected CompleteRenderer delegate = new CompleteRenderer();
 
@@ -325,12 +326,9 @@ public class Legend implements Renderable, Renderer {
 	 * Then these Renderables are created again while laying them out according to
 	 * the available viewport size.
 	 */
-	// TODO: why is the useGLDoublePrecision passed here?
-	// TODO: for now clear is the new method we use to clean old objects
 	@Override
 	@GLContextRequired
 	public void updateGL(boolean useGLDoublePrecision) {
-//		clearGL();
 		clear();
 		setup();
 	}
@@ -675,45 +673,16 @@ public class Legend implements Renderable, Renderer {
 		delegate.close();
 	}
 
-	// TODO
+	
 	@GLContextRequired
 	protected void closeCollectedGLObjects() {
-		for (AutoCloseable toClose: toCloseLater) {
-			try {
-				toClose.close();
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+		while(!toCloseLater.isEmpty()) {
+			Renderable toClose = toCloseLater.remove();
+			toClose.close();
 		}
-		toCloseLater.clear();
 	}
 
-	// TODO: To remove
-//	@GLContextRequired
-//	protected void clearGL() {
-//		glyph2points.values().forEach(p->{
-//			delegate.points.removeItemToRender(p);
-//			p.close();
-//		});
-//		glyph2points.clear();
-//		pattern2lines.values().forEach(l->{
-//			delegate.lines.removeItemToRender(l);
-//			l.close();
-//		});
-//		pattern2lines.clear();
-//		triangles.forEach(t->{
-//			t.close();
-//			delegate.triangles.removeItemToRender(t);
-//		});
-//		triangles.clear();
-//		texts.forEach(t->{
-//			delegate.text.removeItemToRender(t);
-//			t.close();
-//		});
-//		texts.clear();
-//	}
-
-	// TODO: to review
+	
 	protected void clear() {
 		glyph2points.values().forEach(p->{
 			delegate.points.removeItemToRender(p);
