@@ -5,10 +5,12 @@ import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -175,13 +177,32 @@ public interface JPlotterCanvas {
 
 			// set Ubuntu Mono font
 			Element styleElement = SVGUtils.createSVGElement(document, "style");
-			styleElement.setAttributeNS(null, "type", "text/css");
-			styleElement.setTextContent(
-					"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(PLAIN) +"') format('truetype'); font-weight: normal; font-style: normal;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD) +"') format('truetype'); font-weight: bold; font-style: normal;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(ITALIC) +"') format('truetype'); font-weight: normal; font-style: italic;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD | ITALIC) +"') format('truetype'); font-weight: bold; font-style: italic;");
-
+			styleElement.setAttributeNS(null, "type", "text/css"); 
+			String fontface_css = new StringBuilder(1024*16)
+					.append(System.lineSeparator())
+					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+					.append(getUbuntuMonoFontAsBaseString(PLAIN))
+					.append("\") format(\"truetype\"); font-weight: normal; font-style: normal;")
+					.append(System.lineSeparator())
+					
+					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+					.append(getUbuntuMonoFontAsBaseString(BOLD))
+					.append("\") format(\"truetype\"); font-weight: bold; font-style: normal;")
+					.append(System.lineSeparator())
+					
+					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+					.append(getUbuntuMonoFontAsBaseString(ITALIC))
+					.append("\") format(\"truetype\"); font-weight: normal; font-style: italic;")
+					.append(System.lineSeparator())
+					
+					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+					.append(getUbuntuMonoFontAsBaseString(BOLD | ITALIC))
+					.append("\") format(\"truetype\"); font-weight: bold; font-style: italic;")
+					.append(System.lineSeparator())
+					.toString();
+			CDATASection cdatasection_fontface_css = document.createCDATASection(fontface_css);
+			styleElement.appendChild(cdatasection_fontface_css);
+//			styleElement.setTextContent(fontface_css);
 			// includes the ubuntu mono font licence
 			String licenceString = FontProvider.getUbuntuMonoFontLicence();
 			for (String line : licenceString.split("[\\r\\n]{2}")) {
