@@ -159,8 +159,8 @@ public class Legend implements Renderable, Renderer {
 
 	/**
 	 * Sets the {@link #isDirty()} state of this legend to true.
-	 * This indicates that a call to {@link #updateGL(boolean)} is necessary
-	 * to sync GL resources with this legends state.
+	 * This indicates that a call to {@link #update()} is necessary
+	 * to re-layout this legends elements.
 	 * @return this for chaining
 	 */
 	public Legend setDirty() {
@@ -326,17 +326,23 @@ public class Legend implements Renderable, Renderer {
 	 * Then these Renderables are created again while laying them out according to
 	 * the available viewport size.
 	 */
-	@Override
-	@GLContextRequired
-	public void updateGL(boolean useGLDoublePrecision) {
+	public void update() {
 		clear();
 		setup();
+	}
+	
+	@Override
+	@Deprecated(
+		/* Legend has no own GL objects, but when isDirty(), it indicates that elements need to be 
+		 * layouted again. update() is the method to call then.
+		 */
+	)
+	public void updateGL(boolean useGLDoublePrecision) {
+		update();
 	}
 
 	/**
 	 * creates the legend elements and computes the layout
-	 *
-	 *
 	 */
 	protected void setup() {
 		// do layout
@@ -727,14 +733,14 @@ public class Legend implements Renderable, Renderer {
 		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
 			viewPortWidth = w;
 			viewPortHeight = h;
-			updateGL(false);
+			update();
 		}
 		delegate.render(vpx, vpy, w, h);
 	}
 
 	@Override
 	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
-		toCloseLater.clear();
+		closeCollectedGLObjects(); // no GL resources are allocated in fallback, so this will clear the list and close() will noop
 		if(!isEnabled()){
 			return;
 		}
@@ -744,7 +750,7 @@ public class Legend implements Renderable, Renderer {
 		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
 			viewPortWidth = w;
 			viewPortHeight = h;
-			updateGL(false); // only clearGL requires GL context, but all GL resources are null, so no prob.
+			update();
 		}
 		delegate.renderFallback(g, p, w, h);
 	}
@@ -760,7 +766,7 @@ public class Legend implements Renderable, Renderer {
 		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
 			viewPortWidth = w;
 			viewPortHeight = h;
-			updateGL(false); // only clearGL requires GL context, but all GL resources are null, so no prob.
+			update();
 		}
 		delegate.renderSVG(doc, parent, w, h);
 	}
@@ -776,7 +782,7 @@ public class Legend implements Renderable, Renderer {
 		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
 			viewPortWidth = w;
 			viewPortHeight = h;
-			updateGL(false); // only clearGL requires GL context, but all GL resources are null, so no prob.
+			update();
 		}
 		delegate.renderPDF(doc, page, x, y, w, h);
 	}
