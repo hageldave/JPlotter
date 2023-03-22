@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 /**
  * TODO
  */
-public class NewText implements Renderable {
+public class NewText implements Renderable, Cloneable {
     public static final String latexInstruction = "##BEGINLATEX##";
     public final int fontsize;
     public final int style;
@@ -45,7 +45,7 @@ public class NewText implements Renderable {
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
     protected TextDecoration textDecoration;
-    protected PositioningRectangle positioningRectangle;
+    protected PositioningRectangle positioningRectangle = null;
 
     /**
      * Creates a new Text object with the specified string and font configuration.
@@ -258,22 +258,35 @@ public class NewText implements Renderable {
         return (fontDescriptor.getAscent() / 1000 * fontsize)/2.0 + (fontDescriptor.getDescent() / 1000 * fontsize);
     }
 
+    // TODO: look if this is correct due to deep/shallow copies
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        NewText clonedTextObject = new NewText(getTextString(), fontsize, style, getColor(), isLatex());
+        clonedTextObject.setTextDecoration(getTextDecoration());
+        clonedTextObject.setInsets(getInsets());
+        clonedTextObject.setBackground(getBackground());
+        clonedTextObject.setOrigin(getOrigin());
+        clonedTextObject.setPositioningRectangle(getPositioningRectangle());
+        clonedTextObject.setPickColor(getPickColor());
+        clonedTextObject.setAngle(getAngle());
+        return clonedTextObject;
+    }
+
     /**
+     *
      *
      * @return
      */
     public NewText[] generateTextObjectForEachLine() {
         List<NewText> singleLineTextObjects = new LinkedList<>();
         for (String newLine : getTextString().split(Pattern.quote(getLineBreakSymbol()))) {
-            NewText singleLineText = new NewText(newLine, fontsize, style, getColor(), isLatex());
-            singleLineText.setTextDecoration(getTextDecoration());
-            singleLineText.setInsets(getInsets());
-            singleLineText.setBackground(getBackground());
-            singleLineText.setOrigin(getOrigin());
-            singleLineText.setPositioningRectangle(getPositioningRectangle());
-            singleLineText.setPickColor(getPickColor());
-            singleLineText.setAngle(getAngle());
-            singleLineTextObjects.add(singleLineText);
+            try {
+                NewText singleLineText = (NewText) this.clone();
+                singleLineText.setTextString(newLine);
+                singleLineTextObjects.add(singleLineText);
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
         }
         return singleLineTextObjects.toArray(new NewText[0]);
     }
@@ -490,16 +503,17 @@ public class NewText implements Renderable {
     }
 
     /**
-     *
-     * @return
+     * @return the {@link Insets} of the text object
      */
     public Insets getInsets() {
         return insets;
     }
 
     /**
+     * Sets the {@link Insets} of the {@link NewText} object.
+     * The insets define the padding between the actual text and the border of the text object.
      *
-     * @param insets
+     * @param insets Insets object defining the size of the insets
      * @return this for chaining
      */
     public NewText setInsets(Insets insets) {
@@ -508,16 +522,18 @@ public class NewText implements Renderable {
     }
 
     /**
+     * Returns the height of the vertical insets, which are the sum of the top and bottom insets.
      *
-     * @return
+     * @return the sum of the top and bottom inset
      */
     public double getVerticalInsets() {
         return getInsets().top + getInsets().bottom;
     }
 
     /**
+     * Returns the width of the horizontal insets, which are the sum of the left and right insets.
      *
-     * @return
+     * @return the sum of the left and right inset
      */
     public double getHorizontalInsets() {
         return getInsets().left + getInsets().right;

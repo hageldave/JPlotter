@@ -71,7 +71,7 @@ public class NewTextTest {
         textInsetsWithRotation.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Testing strikethrough, insets, rotation all in one
-        NewText textInsetsWithRotationAndStrikethrough = new NewText("testing the insets \n with rotation and striketrhough", fontSize, fontStyle);
+        NewText textInsetsWithRotationAndStrikethrough = new NewText("testing the insets \n with rotation and strikethrough", fontSize, fontStyle);
         textInsetsWithRotationAndStrikethrough.setOrigin(0, 50);
         textInsetsWithRotationAndStrikethrough.setBackground(Color.CYAN);
         textInsetsWithRotationAndStrikethrough.setInsets(new Insets(10, 10, 10, 10));
