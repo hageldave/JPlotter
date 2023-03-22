@@ -167,7 +167,6 @@ public interface JPlotterCanvas {
 				defs.setAttributeNS(null, "id", "JPlotterDefs");
 				document.getDocumentElement().appendChild(defs);
 			}
-
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
 			parent.appendChild(rootGroup);
 			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
@@ -175,44 +174,45 @@ public interface JPlotterCanvas {
 			// define the clipping rectangle for the content (rect of vieport size)
 			Node defs = SVGUtils.getDefs(document);
 
-			// set Ubuntu Mono font
-			Element styleElement = SVGUtils.createSVGElement(document, "style");
-			styleElement.setAttributeNS(null, "type", "text/css"); 
-			String fontface_css = new StringBuilder(1024*16)
-					.append(System.lineSeparator())
-					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
-					.append(getUbuntuMonoFontAsBaseString(PLAIN))
-					.append("\") format(\"truetype\"); font-weight: normal; font-style: normal;")
-					.append(System.lineSeparator())
-					
-					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
-					.append(getUbuntuMonoFontAsBaseString(BOLD))
-					.append("\") format(\"truetype\"); font-weight: bold; font-style: normal;")
-					.append(System.lineSeparator())
-					
-					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
-					.append(getUbuntuMonoFontAsBaseString(ITALIC))
-					.append("\") format(\"truetype\"); font-weight: normal; font-style: italic;")
-					.append(System.lineSeparator())
-					
-					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
-					.append(getUbuntuMonoFontAsBaseString(BOLD | ITALIC))
-					.append("\") format(\"truetype\"); font-weight: bold; font-style: italic;")
-					.append(System.lineSeparator())
-					.toString();
-			CDATASection cdatasection_fontface_css = document.createCDATASection(fontface_css);
-			styleElement.appendChild(cdatasection_fontface_css);
-//			styleElement.setTextContent(fontface_css);
-			// includes the ubuntu mono font licence
-			String licenceString = FontProvider.getUbuntuMonoFontLicence();
-			for (String line : licenceString.split("[\\r\\n]{2}")) {
-				// remove "--" as those characters as they aren't allowed inside comments
-				String cleanedLine = line.replaceAll("-", "");
-				// create comment with cleaned line
-				Comment comment = document.createComment(cleanedLine);
-				styleElement.appendChild(comment);
-			}
-			defs.appendChild(styleElement);
+			SVGUtils.createFontDefinitionStyleElement(document);
+//			// set Ubuntu Mono font
+//			Element styleElement = SVGUtils.createSVGElement(document, "style");
+//			styleElement.setAttributeNS(null, "type", "text/css"); 
+//			String fontface_css = new StringBuilder(1024*16)
+//					.append(System.lineSeparator())
+//					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+//					.append(getUbuntuMonoFontAsBaseString(PLAIN))
+//					.append("\") format(\"truetype\"); font-weight: normal; font-style: normal;")
+//					.append(System.lineSeparator())
+//					
+//					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+//					.append(getUbuntuMonoFontAsBaseString(BOLD))
+//					.append("\") format(\"truetype\"); font-weight: bold; font-style: normal;")
+//					.append(System.lineSeparator())
+//					
+//					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+//					.append(getUbuntuMonoFontAsBaseString(ITALIC))
+//					.append("\") format(\"truetype\"); font-weight: normal; font-style: italic;")
+//					.append(System.lineSeparator())
+//					
+//					.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+//					.append(getUbuntuMonoFontAsBaseString(BOLD | ITALIC))
+//					.append("\") format(\"truetype\"); font-weight: bold; font-style: italic;")
+//					.append(System.lineSeparator())
+//					.toString();
+//			CDATASection cdatasection_fontface_css = document.createCDATASection(fontface_css);
+//			styleElement.appendChild(cdatasection_fontface_css);
+////			styleElement.setTextContent(fontface_css);
+//			// includes the ubuntu mono font licence
+//			String licenceString = FontProvider.getUbuntuMonoFontLicence();
+//			for (String line : licenceString.split("[\\r\\n]{2}")) {
+//				// remove "--" as those characters as they aren't allowed inside comments
+//				String cleanedLine = line.replaceAll("-", "");
+//				// create comment with cleaned line
+//				Comment comment = document.createComment(cleanedLine);
+//				styleElement.appendChild(comment);
+//			}
+//			defs.appendChild(styleElement);
 
 			Element clip = SVGUtils.createSVGElement(document, "clipPath");
 			String clipDefID = SVGUtils.newDefId();
