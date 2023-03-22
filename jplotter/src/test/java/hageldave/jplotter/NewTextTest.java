@@ -25,97 +25,37 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 
-public class TestTextHeights {
-
+public class NewTextTest {
     @SuppressWarnings("resource" /* compiler is too dumb to realize there is no leak */)
     public static void main(String[] args) {
-        int fontsize = 19;
-        int fontstyle = Font.PLAIN;
+        int fontSize = 19;
+        int fontStyle = Font.PLAIN;
 
         Lines textLines = new Lines();
         CoordSysRenderer coordsys = new CoordSysRenderer();
 
-        // Testing baseline height calculation
-//        NewText textBaseline = new NewText("Testing text baseline", fontsize, fontstyle);
-//        textBaseline.setOrigin(xPos, 10);
-//
-//        double textBaselineHeight = textBaseline.getTextSize().getHeight() * correctionFactor;
-//        double baselineHeight = textBaseline.getBaselineHeight(fm);
-//        textLines.addSegment(
-//                new Point2D.Double(textBaseline.getOrigin().getX(), textBaseline.getOrigin().getY() + baselineHeight / textBaselineHeight),
-//                new Point2D.Double(textBaseline.getOrigin().getX()+textBaseline.getBounds().getWidth(), textBaseline.getOrigin().getY() + baselineHeight / textBaselineHeight)
-//                ).setColor(Color.RED);
-//
-//        // Testing median height calculation
-//        NewText textMedian = new NewText("Testing text median", fontsize, fontstyle);
-//        textMedian.setOrigin(xPos, 20);
-//
-//        double textMedianHeight = textMedian.getTextSize().getHeight() * correctionFactor;
-//        double medianHeight = textMedian.getMedianHeight(fm);
-//        textLines.addSegment(
-//                new Point2D.Double(textMedian.getOrigin().getX(), textMedian.getOrigin().getY() + medianHeight/textMedianHeight),
-//                new Point2D.Double(textMedian.getOrigin().getX()+textMedian.getBounds().getWidth(), textMedian.getOrigin().getY() + medianHeight/textMedianHeight)
-//        ).setColor(Color.BLUE);
-//
-//        // Testing descent height calculation
-//        NewText textDescent = new NewText("Testing text descent", fontsize, fontstyle);
-//        textDescent.setOrigin(xPos, 30);
-//
-//        double textDescentHeight = textDescent.getTextSize().getHeight() * correctionFactor;
-//        double descentHeight = textDescent.getDescentHeight();
-//        textLines.addSegment(
-//                new Point2D.Double(textDescent.getOrigin().getX(), textDescent.getOrigin().getY() + descentHeight / textDescentHeight),
-//                new Point2D.Double(textDescent.getOrigin().getX()+textDescent.getBounds().getWidth(), textDescent.getOrigin().getY() + descentHeight / textDescentHeight)
-//        ).setColor(Color.GREEN);
-//
-//        // Testing text height calculation
-//        NewText textHeight = new NewText("Testing text height", fontsize, fontstyle);
-//        textHeight.setOrigin(xPos, 40);
-//
-//        double textHeightHeight = textHeight.getTextSize().getHeight() * correctionFactor;
-//        textLines.addSegment(
-//                new Point2D.Double(textHeight.getOrigin().getX(), textHeight.getOrigin().getY() + textHeightHeight),
-//                new Point2D.Double(textHeight.getOrigin().getX()+textHeight.getTextSize().getWidth(), textHeight.getOrigin().getY() + textHeightHeight)
-//        ).setColor(Color.MAGENTA);
-//
-//
-//        // Testing old text height calculation
-//        NewText oldTextHeight = new NewText("Testing strikethrough text height", fontsize, fontstyle);
-//        oldTextHeight.setOrigin(xPos, 50);
-//
-//        double strikethroughTextHeight = oldTextHeight.getBounds().getHeight() * correctionFactor;
-//        double strikethroughHeight = oldTextHeight.getStrikethroughHeight(fm);
-//        textLines.addSegment(
-//                new Point2D.Double(oldTextHeight.getOrigin().getX(), oldTextHeight.getOrigin().getY() + strikethroughHeight / strikethroughTextHeight),
-//                new Point2D.Double(oldTextHeight.getOrigin().getX()+oldTextHeight.getTextSize().getWidth(), oldTextHeight.getOrigin().getY() + strikethroughHeight / strikethroughTextHeight)
-//        ).setColor(Color.PINK);
-
-
-        // Test text features
-
-        // Test text decoration
         // Test text underlining
-        NewText textUnderline = new NewText("testing the underlining", fontsize, fontstyle);
+        NewText textUnderline = new NewText("testing the underlining", fontSize, fontStyle);
         textUnderline.setOrigin(0, 135);
         textUnderline.setColor(Color.RED);
         textUnderline.setTextDecoration(TextDecoration.UNDERLINE);
         textUnderline.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Test text strikethrough
-        NewText textStrikeThrough = new NewText("testing the strikethrough", fontsize, fontstyle);
+        NewText textStrikeThrough = new NewText("testing the strikethrough", fontSize, fontStyle);
         textStrikeThrough.setOrigin(10, 135);
         textStrikeThrough.setColor(Color.BLUE);
         textStrikeThrough.setTextDecoration(TextDecoration.STRIKETHROUGH);
         textStrikeThrough.setPositioningRectangle(new PositioningRectangle(0, 2));
 
         // Test anchor points
-        NewText anchorpoints = new NewText("testing the anchorpoint \n (2, 2)", fontsize, fontstyle);
-        anchorpoints.setOrigin(0, 110);
-        anchorpoints.setBackground(Color.ORANGE);
-        anchorpoints.setPositioningRectangle(new PositioningRectangle(2, 2));
+        NewText anchorPoints = new NewText("testing the anchorpoint \n (2, 2)", fontSize, fontStyle);
+        anchorPoints.setOrigin(0, 110);
+        anchorPoints.setBackground(Color.ORANGE);
+        anchorPoints.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Test text insets with background
-        NewText textInsets = new NewText("testing the insets \n with multiple lines", fontsize, fontstyle);
+        NewText textInsets = new NewText("testing the insets \n with multiple lines", fontSize, fontStyle);
         textInsets.setOrigin(10, 110);
         textInsets.setBackground(Color.MAGENTA);
         textInsets.setTextDecoration(TextDecoration.UNDERLINE);
@@ -123,15 +63,24 @@ public class TestTextHeights {
         textInsets.setPositioningRectangle(new PositioningRectangle(0, 2));
 
         // Test text insets with background and rotation
-        NewText textInsetsWithRotation = new NewText("testing the insets \n with rotation", fontsize, fontstyle);
+        NewText textInsetsWithRotation = new NewText("testing the insets \n with rotation", fontSize, fontStyle);
         textInsetsWithRotation.setOrigin(0, 50);
         textInsetsWithRotation.setBackground(Color.GREEN);
         textInsetsWithRotation.setInsets(new Insets(10, 10, 10, 10));
         textInsetsWithRotation.setAngle(0.2);
         textInsetsWithRotation.setPositioningRectangle(new PositioningRectangle(2, 2));
 
+        // Testing strikethrough, insets, rotation all in one
+        NewText textInsetsWithRotationAndStrikethrough = new NewText("testing the insets \n with rotation and striketrhough", fontSize, fontStyle);
+        textInsetsWithRotationAndStrikethrough.setOrigin(0, 50);
+        textInsetsWithRotationAndStrikethrough.setBackground(Color.CYAN);
+        textInsetsWithRotationAndStrikethrough.setInsets(new Insets(10, 10, 10, 10));
+        textInsetsWithRotationAndStrikethrough.setAngle(0.2);
+        textInsetsWithRotationAndStrikethrough.setTextDecoration(TextDecoration.STRIKETHROUGH);
+        textInsetsWithRotationAndStrikethrough.setPositioningRectangle(new PositioningRectangle(0, 2));
+
         // Testing latex rendering in text mode
-        NewText textLatex = new NewText("##BEGINLATEX## \\text{testing the latex rendering} \\\\ \\text{in text mode}", fontsize, fontstyle);
+        NewText textLatex = new NewText("##BEGINLATEX## \\text{testing the latex rendering} \\\\ \\text{in text mode}", fontSize, fontStyle);
         textLatex.setOrigin(0, 200);
         textLatex.setBackground(Color.LIGHT_GRAY);
         textLatex.setTextDecoration(TextDecoration.UNDERLINE);
@@ -139,7 +88,7 @@ public class TestTextHeights {
         textLatex.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Testing latex rendering in math mode
-        NewText textLatexMath = new NewText("##BEGINLATEX## (\\bigwedge_{i=1}^{1} F_i) \\wedge (\\bigwedge_{i=1}^{1} G_i) \\equiv \\bigwedge_{i=1}^{1} (F_i \\wedge G_i)", fontsize, fontstyle);
+        NewText textLatexMath = new NewText("##BEGINLATEX## (\\bigwedge_{i=1}^{1} F_i) \\wedge (\\bigwedge_{i=1}^{1} G_i) \\equiv \\bigwedge_{i=1}^{1} (F_i \\wedge G_i)", fontSize, fontStyle);
         textLatexMath.setOrigin(10, 200);
         textLatexMath.setBackground(Color.PINK);
         textLatexMath.setInsets(new Insets(5, 10, 5, 10));
@@ -149,16 +98,16 @@ public class TestTextHeights {
         CompleteRenderer content = new CompleteRenderer();
         coordsys.setContent(content
                 .addItemToRender(textLines)
-                .addItemToRender(anchorpoints)
+                .addItemToRender(anchorPoints)
                 .addItemToRender(textUnderline)
                 .addItemToRender(textStrikeThrough)
                 .addItemToRender(textInsets)
                 .addItemToRender(textInsetsWithRotation)
+                .addItemToRender(textInsetsWithRotationAndStrikethrough)
                 .addItemToRender(textLatex)
                 .addItemToRender(textLatexMath));
         // lets set the coordinate view to cover the whole sampling space
         coordsys.setCoordinateView(-550, -20, 550, 210);
-
 
         // display the coordinate system on a blank canvas
         boolean useOpenGL = false;
@@ -168,10 +117,10 @@ public class TestTextHeights {
         new CoordSysPanning(canvas, coordsys).register();
 
         // lets put a JFrame around it all and launch
-        JFrame frame = new JFrame("Example Viz");
+        JFrame frame = new JFrame("Text features example");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(canvas.asComponent());
-        canvas.asComponent().setPreferredSize(new Dimension(650, 500));
+        canvas.asComponent().setPreferredSize(new Dimension(800, 500));
         canvas.asComponent().setBackground(Color.WHITE);
 
         canvas.addCleanupOnWindowClosingListener(frame);
@@ -194,7 +143,7 @@ public class TestTextHeights {
         MenuItem svgExport = new MenuItem("SVG export");
         svgExport.addActionListener(e->{
             Document svg = SVGUtils.containerToSVG(frame.getContentPane());
-            SVGUtils.documentToXMLFile(svg, new File("text_heights_export.svg"));
+            SVGUtils.documentToXMLFile(svg, new File("new_text_test.svg"));
             System.out.println("exported SVG.");
         });
         menu.add(svgExport);
@@ -203,7 +152,7 @@ public class TestTextHeights {
         pdfExport.addActionListener(e->{
             try {
                 PDDocument pdf = PDFUtils.containerToPDF(frame.getContentPane());
-                pdf.save("text_heights_export.pdf");
+                pdf.save("new_text_test.pdf");
                 pdf.close();
                 System.out.println("exported PDF.");
             } catch (IOException ex) {
@@ -217,11 +166,10 @@ public class TestTextHeights {
         pngExport.addActionListener(e->{
             Img img = new Img(frame.getContentPane().getSize());
             img.paint(g -> frame.getContentPane().paintAll(g));
-            ImageSaver.saveImage(img.getRemoteBufferedImage(), "text_heights_export.png");
+            ImageSaver.saveImage(img.getRemoteBufferedImage(), "new_text_test.png");
             System.out.println("exported PNG.");
         });
         menu.add(pngExport);
 
     }
 }
-
