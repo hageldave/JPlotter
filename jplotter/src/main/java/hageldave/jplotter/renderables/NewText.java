@@ -9,6 +9,7 @@ import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
+import hageldave.jplotter.renderers.NewTextRenderer;
 import hageldave.jplotter.util.Annotations;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -26,7 +27,25 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * TODO
+ * Abstract class for {@link Renderable}s representing text that can be rendered using the
+ * {@link NewTextRenderer}.
+ * A text object describes a line of characters together with the following attributes:
+ * <ul>
+ * <li>fontsize (e.g. 12 pts.)</li>
+ * <li>font style (e.g. Font{@link Font#BOLD})</li>
+ * <li>color</li>
+ * <li>origin - the bottom left corner of the rectangle enclosing the text</li>
+ * <li>angle - the rotation of the text (around origin)</li>
+ * <li>picking color - the picking color with which the text is rendered into the (invisible) picking color attachment
+ * of an {@link FBO}. This color may serve as an identifier of the object that can be queried from a location of the
+ * rendering canvas. It may take on a value in range of 0xff000001 to 0xffffffff (16.777.214 possible values) or 0.
+ * </li>
+ * <li>latex - true if latex mode is on, false if it's off</li>
+ * <li>text decoration - the text decoration of the text, which can be either set to underline or strikethrough</li>
+ * <li>insets - the padding of the text object</li>
+ * <li>positioning rectangle - the {@link PositioningRectangle} of the text object, so that the text object can be aligned at its right upper corner for example</li>
+ * </ul>
+ * @author hageldave
  */
 public class NewText implements Renderable, Cloneable {
     public static final String latexInstruction = "##BEGINLATEX##";
@@ -54,7 +73,7 @@ public class NewText implements Renderable, Cloneable {
      * @param style of the font - one of {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
      * or bitwise union BOLD|ITALIC.
      * @param textcolor color of the text
-     * @param latex TODO
+     * @param latex determines if latex mode will be turned on or not
      */
     protected NewText(String textstr, int fontsize, int style, Color textcolor, boolean latex) {
         if (latex && textstr.startsWith(latexInstruction)) {
@@ -301,15 +320,14 @@ public class NewText implements Renderable, Cloneable {
         double width = 0;
         double height = 0;
         for (NewText lineTextObject : generateTextObjectForEachLine()) {
+            Rectangle2D boundsExport;
             if (lineTextObject.isLatex()) {
-                Rectangle2D boundsExport = getLatexBounds(lineTextObject);
-                width = Math.max(width, boundsExport.getWidth());
-                height += boundsExport.getHeight();
+                boundsExport = getLatexBounds(lineTextObject);
             } else {
-                Rectangle2D boundsExport = getPDFTextBoundsWithoutLineBreaks(lineTextObject);
-                width = Math.max(width, boundsExport.getWidth());
-                height += boundsExport.getHeight();
+                boundsExport = getPDFTextBoundsWithoutLineBreaks(lineTextObject);
             }
+            width = Math.max(width, boundsExport.getWidth());
+            height += boundsExport.getHeight();
         }
         return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
     }
