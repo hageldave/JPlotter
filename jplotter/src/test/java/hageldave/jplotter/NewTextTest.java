@@ -15,6 +15,7 @@ import hageldave.jplotter.renderables.TextDecoration;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.PickingRegistry;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
 
@@ -33,12 +34,15 @@ public class NewTextTest {
 
         Lines textLines = new Lines();
         CoordSysRenderer coordsys = new CoordSysRenderer();
+        PickingRegistry<NewText> pr = new PickingRegistry<>();
+
 
         // Test text underlining
         NewText textUnderline = new NewText("testing the underlining", fontSize, fontStyle);
         textUnderline.setOrigin(0, 135);
         textUnderline.setColor(Color.RED);
         textUnderline.setTextDecoration(TextDecoration.UNDERLINE);
+        textUnderline.setPickColor(pr.getNewID());
         textUnderline.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Test text strikethrough
@@ -46,12 +50,14 @@ public class NewTextTest {
         textStrikeThrough.setOrigin(10, 135);
         textStrikeThrough.setColor(Color.BLUE);
         textStrikeThrough.setTextDecoration(TextDecoration.STRIKETHROUGH);
+        textStrikeThrough.setPickColor(pr.getNewID());
         textStrikeThrough.setPositioningRectangle(new PositioningRectangle(0, 2));
 
         // Test anchor points
         NewText anchorPoints = new NewText("testing the anchorpoint \n (2, 2)", fontSize, fontStyle);
         anchorPoints.setOrigin(0, 110);
         anchorPoints.setBackground(Color.ORANGE);
+        anchorPoints.setPickColor(pr.getNewID());
         anchorPoints.setPositioningRectangle(new PositioningRectangle(2, 2));
 
         // Test text insets with background
@@ -59,6 +65,7 @@ public class NewTextTest {
         textInsets.setOrigin(10, 110);
         textInsets.setBackground(Color.MAGENTA);
         textInsets.setTextDecoration(TextDecoration.UNDERLINE);
+        textInsets.setPickColor(pr.getNewID());
         textInsets.setInsets(new Insets(10, 10, 10, 10));
         textInsets.setPositioningRectangle(new PositioningRectangle(0, 2));
 
@@ -66,6 +73,7 @@ public class NewTextTest {
         NewText textInsetsWithRotation = new NewText("testing the insets \n with rotation", fontSize, fontStyle);
         textInsetsWithRotation.setOrigin(0, 50);
         textInsetsWithRotation.setBackground(Color.GREEN);
+        textInsetsWithRotation.setPickColor(pr.getNewID());
         textInsetsWithRotation.setInsets(new Insets(10, 10, 10, 10));
         textInsetsWithRotation.setAngle(0.2);
         textInsetsWithRotation.setPositioningRectangle(new PositioningRectangle(2, 2));
@@ -76,6 +84,7 @@ public class NewTextTest {
         textInsetsWithRotationAndStrikethrough.setBackground(Color.CYAN);
         textInsetsWithRotationAndStrikethrough.setInsets(new Insets(10, 10, 10, 10));
         textInsetsWithRotationAndStrikethrough.setAngle(0.2);
+        textInsetsWithRotationAndStrikethrough.setPickColor(pr.getNewID());
         textInsetsWithRotationAndStrikethrough.setTextDecoration(TextDecoration.STRIKETHROUGH);
         textInsetsWithRotationAndStrikethrough.setPositioningRectangle(new PositioningRectangle(0, 2));
 
@@ -84,6 +93,7 @@ public class NewTextTest {
         textLatex.setOrigin(0, 200);
         textLatex.setBackground(Color.LIGHT_GRAY);
         textLatex.setTextDecoration(TextDecoration.UNDERLINE);
+        textLatex.setPickColor(pr.getNewID());
         textLatex.setInsets(new Insets(5, 10, 5, 10));
         textLatex.setPositioningRectangle(new PositioningRectangle(2, 2));
 
@@ -91,6 +101,7 @@ public class NewTextTest {
         NewText textLatexMath = new NewText("##BEGINLATEX## (\\bigwedge_{i=1}^{1} F_i) \\wedge (\\bigwedge_{i=1}^{1} G_i) \\equiv \\bigwedge_{i=1}^{1} (F_i \\wedge G_i)", fontSize, fontStyle);
         textLatexMath.setOrigin(10, 200);
         textLatexMath.setBackground(Color.PINK);
+        textLatexMath.setPickColor(pr.getNewID());
         textLatexMath.setInsets(new Insets(5, 10, 5, 10));
         textLatexMath.setPositioningRectangle(new PositioningRectangle(0, 2));
 
