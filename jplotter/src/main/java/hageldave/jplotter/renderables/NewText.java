@@ -8,9 +8,9 @@ import hageldave.jplotter.debugging.panelcreators.control.*;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
-import hageldave.jplotter.pdf.PDFUtils;
+import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.util.Annotations;
-import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
@@ -246,36 +246,20 @@ public class NewText implements Renderable, Cloneable {
         return textSize;
     }
 
-    /**
-     *
-     * @return
-     */
-    public double getDescentHeight(PDFontDescriptor fontDescriptor) {
-        return fontDescriptor.getDescent() / 1000 * fontsize;
-    }
-
-    public double getStrikethroughHeight(PDFontDescriptor fontDescriptor) {
-        return (fontDescriptor.getAscent() / 1000 * fontsize)/2.0 + (fontDescriptor.getDescent() / 1000 * fontsize);
-    }
-
-    // TODO: look if this is correct due to deep/shallow copies
     @Override
     protected Object clone() throws CloneNotSupportedException {
-        NewText clonedTextObject = new NewText(getTextString(), fontsize, style, getColor(), isLatex());
-        clonedTextObject.setTextDecoration(getTextDecoration());
-        clonedTextObject.setInsets(getInsets());
-        clonedTextObject.setBackground(getBackground());
-        clonedTextObject.setOrigin(getOrigin());
-        clonedTextObject.setPositioningRectangle(getPositioningRectangle());
-        clonedTextObject.setPickColor(getPickColor());
-        clonedTextObject.setAngle(getAngle());
+        NewText clonedTextObject = (NewText) super.clone();
+        clonedTextObject.setOrigin((Point2D) clonedTextObject.getOrigin().clone());
+        clonedTextObject.setInsets((Insets) clonedTextObject.getInsets().clone());
         return clonedTextObject;
     }
 
     /**
+     * As the {@link NewText} object supports line breaks,
+     * this method splits the text object into multiple new ones at each line break symbol (e.g. \n in normal text rendering or \\ in latex rendering).
+     * The resulting text objects only contain single lines.
      *
-     *
-     * @return
+     * @return array containing each single line {@link NewText} object
      */
     public NewText[] generateTextObjectForEachLine() {
         List<NewText> singleLineTextObjects = new LinkedList<>();
@@ -317,24 +301,34 @@ public class NewText implements Renderable, Cloneable {
         double width = 0;
         double height = 0;
         for (NewText lineTextObject : generateTextObjectForEachLine()) {
-            try {
-                Rectangle2D boundsExport = getBoundsExport(lineTextObject);
+            if (lineTextObject.isLatex()) {
+                Rectangle2D boundsExport = getLatexBounds(lineTextObject);
                 width = Math.max(width, boundsExport.getWidth());
                 height += boundsExport.getHeight();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } else {
+                Rectangle2D boundsExport = getPDFTextBoundsWithoutLineBreaks(lineTextObject);
+                width = Math.max(width, boundsExport.getWidth());
+                height += boundsExport.getHeight();
             }
         }
         return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
     }
 
-    private static Rectangle2D getBoundsExport(NewText text) throws IOException {
-        if (text.isLatex())
-            return getLatexBounds(text);
-        return PDFUtils.getPDFTextLineBounds(text);
+
+    protected static Rectangle2D getPDFTextBoundsWithoutLineBreaks(NewText txt) {
+        FontCachedPDDocument doc = new FontCachedPDDocument();
+        PDType0Font font = doc.getFont(txt.style);
+        try {
+            double width = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
+            double height = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * txt.fontsize;
+            doc.close();
+            return new Rectangle2D.Double(txt.getOrigin().getX(), txt.getOrigin().getY(), width + txt.getHorizontalInsets(), height + txt.getVerticalInsets());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private static Rectangle2D getLatexBounds(NewText text) {
+    protected static Rectangle2D getLatexBounds(NewText text) {
         TeXFormula formula = new TeXFormula(text.getTextString());
         TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontsize);
         icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
