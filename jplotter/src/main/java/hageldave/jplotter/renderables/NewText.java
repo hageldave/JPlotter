@@ -11,6 +11,7 @@ import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.NewTextRenderer;
 import hageldave.jplotter.util.Annotations;
+import hageldave.jplotter.util.Pair;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -64,7 +65,7 @@ public class NewText implements Renderable, Cloneable {
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
     protected TextDecoration textDecoration;
-    protected NewPosRect positioningRectangle = null;
+    protected Pair<Double, Double> textPositioning = new Pair<>(0.0, 0.0);
 
     /**
      * Creates a new Text object with the specified string and font configuration.
@@ -358,7 +359,7 @@ public class NewText implements Renderable, Cloneable {
      */
     public Rectangle2D getBoundsWithRotation() {
         Rectangle2D bounds = getBounds();
-        AffineTransform transform = AffineTransform.getRotateInstance(angle, getPositioningRectangle().getAnchorPoint(this).getX(), getPositioningRectangle().getAnchorPoint(this).getY());
+        AffineTransform transform = AffineTransform.getRotateInstance(angle, getAnchorPoint().getX(), getAnchorPoint().getY());
         return transform.createTransformedShape(bounds).getBounds2D();
     }
 
@@ -433,12 +434,25 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
+     * @return
+     */
+    public Point2D.Double getAnchorPoint() {
+        return new Point2D.Double(this.getBounds().getWidth()*textPositioning.first, this.getBounds().getHeight()*textPositioning.second);
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Point2D.Double getAnchorPointExport() {
+        return new Point2D.Double(this.getBoundsExport().getWidth()*textPositioning.first, this.getBoundsExport().getHeight()*textPositioning.second);
+    }
+
+    /**
      * @return the currently active {@link PositioningRectangle}
      */
-    public NewPosRect getPositioningRectangle() {
-        if(Objects.isNull(positioningRectangle))
-            positioningRectangle = new NewPosRect(0, 0);
-        return positioningRectangle;
+    public Pair<Double, Double> getPositioningRectangle() {
+        return this.textPositioning;
     }
 
     /**
@@ -447,9 +461,16 @@ public class NewText implements Renderable, Cloneable {
      * @param positioningRectangle the new {@link PositioningRectangle}
      * @return this for chaining
      */
-    public NewText setPositioningRectangle(NewPosRect positioningRectangle) {
-        this.positioningRectangle = positioningRectangle;
+    public NewText setPositioningRectangle(Pair<Double, Double> textPositioning) {
+        if (textPositioning.first < 0 || textPositioning.first > 1 || textPositioning.second < 0 || textPositioning.second > 1) {
+            throw new IllegalArgumentException("Values have to be between 0 and 1");
+        }
+        this.textPositioning = textPositioning;
         return this;
+    }
+
+    public NewText setPositioningRectangle(double x, double y) {
+        return setPositioningRectangle(new Pair<>(x, y));
     }
 
     /**

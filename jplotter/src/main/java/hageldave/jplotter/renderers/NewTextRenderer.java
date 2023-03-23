@@ -160,8 +160,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             // test if inside of view port
             Rectangle2D txtrect = txt.getBoundsWithRotation();
             txtrect.setRect(
-                    txtrect.getX()+effectiveTx-txt.getPositioningRectangle().getAnchorPoint(txt).getX(),
-                    txtrect.getY()+effectiveTy-txt.getPositioningRectangle().getAnchorPoint(txt).getY(),
+                    txtrect.getX()+effectiveTx-txt.getAnchorPoint().getX(),
+                    txtrect.getY()+effectiveTy-txt.getAnchorPoint().getY(),
                     txtrect.getWidth(), txtrect.getHeight()
             );
 
@@ -171,10 +171,10 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
             if (txt.isLatex()) {
                 AffineTransform trnsfrm = new AffineTransform();
-                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint(txt).getX(), y1+txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
+                trnsfrm.translate(x1-txt.getAnchorPoint().getX(), y1+txt.getBounds().getHeight()-txt.getAnchorPoint().getY());
                 trnsfrm.scale(1, -1);
                 if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint(txt).getX(), txt.getBounds().getHeight()-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
+                    trnsfrm.rotate(-angle, txt.getAnchorPoint().getX(), txt.getBounds().getHeight()-txt.getAnchorPoint().getY());
 
                 for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
                     // create a proxy graphics object to draw the string to
@@ -231,10 +231,10 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                  * flip vertically (AWT coordinates, so text is not upside down),
                  * rotate according to angle */
                 AffineTransform trnsfrm = new AffineTransform();
-                trnsfrm.translate(x1-txt.getPositioningRectangle().getAnchorPoint(txt).getX(), y1-txt.getPositioningRectangle().getAnchorPoint(txt).getY());
+                trnsfrm.translate(x1-txt.getAnchorPoint().getX(), y1-txt.getAnchorPoint().getY());
                 trnsfrm.scale(1, -1);
                 if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getPositioningRectangle().getAnchorPoint(txt).getX(), -txt.getPositioningRectangle().getAnchorPoint(txt).getY());
+                    trnsfrm.rotate(-angle, txt.getAnchorPoint().getX(), -txt.getAnchorPoint().getY());
                 g_.transform(trnsfrm);
                 p_.transform(trnsfrm);
 
@@ -295,7 +295,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 AffineTransform trnsfrm = new AffineTransform();
                 trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
                 trnsfrm.translate(x1, y1);
-                trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPointExport(txt).getX(), -txt.getPositioningRectangle().getAnchorPointExport(txt).getY());
+                trnsfrm.translate(-txt.getAnchorPointExport().getX(), -txt.getAnchorPointExport().getY());
                 bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
                 Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
                 if(!viewportRect.intersects(bounds)) {
@@ -310,7 +310,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                         Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
                         textGroup.appendChild(svgLatex);
                         textGroup.setAttributeNS(null, "transform",
-                                "translate(" + SVGUtils.svgNumber(x1 - txt.getPositioningRectangle().getAnchorPointExport(txt).getX()) + "," + SVGUtils.svgNumber(y1 - txt.getPositioningRectangle().getAnchorPointExport(txt).getY() + txt.getBounds().getHeight()) + ")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
+                                "translate(" + SVGUtils.svgNumber(x1 - txt.getAnchorPointExport().getX()) + "," + SVGUtils.svgNumber(y1 - txt.getAnchorPointExport().getY() + txt.getBounds().getHeight()) + ")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")" + "scale(1,-1)");
                     } else {
                         SVGUtils.textToSVG(txt, doc, textGroup, x1, y1);
                     }
@@ -351,7 +351,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     AffineTransform trnsfrm = new AffineTransform();
                     trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
                     trnsfrm.translate(x1, y1);
-                    trnsfrm.translate(-txt.getPositioningRectangle().getAnchorPointExport(txt).getX(), -txt.getPositioningRectangle().getAnchorPointExport(txt).getY());
+                    trnsfrm.translate(-txt.getAnchorPointExport().getX(), -txt.getAnchorPointExport().getY());
                     bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
                     Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
                     if(!viewportRect.intersects(bounds)) {

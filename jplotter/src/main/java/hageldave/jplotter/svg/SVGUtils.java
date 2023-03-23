@@ -442,8 +442,8 @@ public class SVGUtils {
 
 			double fontDescent = CharacterAtlas.getFontMetrics(txt.fontsize, txt.style).getMaxDescent();
 			parent.setAttributeNS(null, "transform",
-					"translate("+SVGUtils.svgNumber(x-txt.getPositioningRectangle().getAnchorPointExport(txt).getX())+","+SVGUtils.svgNumber(y+fontDescent-txt.getPositioningRectangle().getAnchorPointExport(txt).getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
-			parent.setAttributeNS(null, "transform-origin", txt.getPositioningRectangle().getAnchorPointExport(txt).getX() + " " + txt.getPositioningRectangle().getAnchorPointExport(txt).getY());
+					"translate("+SVGUtils.svgNumber(x-txt.getAnchorPointExport().getX())+","+SVGUtils.svgNumber(y+fontDescent-txt.getAnchorPointExport().getY())+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
+			parent.setAttributeNS(null, "transform-origin", txt.getAnchorPointExport().getX() + " " + txt.getAnchorPointExport().getY());
 
 			text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(txt.getInsets().left) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight() - txt.getInsets().top)) + ") scale(1,-1)");
 			textHeight += singleLineText.getBounds().getHeight();

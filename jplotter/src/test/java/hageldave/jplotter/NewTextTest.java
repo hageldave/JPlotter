@@ -9,7 +9,6 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Lines;
-import hageldave.jplotter.renderables.NewPosRect;
 import hageldave.jplotter.renderables.NewText;
 import hageldave.jplotter.renderables.TextDecoration;
 import hageldave.jplotter.renderers.CompleteRenderer;
@@ -42,7 +41,7 @@ public class NewTextTest {
         textUnderline.setColor(Color.RED);
         textUnderline.setTextDecoration(TextDecoration.UNDERLINE);
         textUnderline.setPickColor(pr.getNewID());
-        textUnderline.setPositioningRectangle(new NewPosRect(1, 1));
+        textUnderline.setPositioningRectangle(1.0, 1.0);
 
         // Test text strikethrough
         NewText textStrikeThrough = new NewText("testing the strikethrough", fontSize, fontStyle);
@@ -50,14 +49,14 @@ public class NewTextTest {
         textStrikeThrough.setColor(Color.BLUE);
         textStrikeThrough.setTextDecoration(TextDecoration.STRIKETHROUGH);
         textStrikeThrough.setPickColor(pr.getNewID());
-        textStrikeThrough.setPositioningRectangle(new NewPosRect(0, 1));
+        textStrikeThrough.setPositioningRectangle(0.0, 1.0);
 
         // Test anchor points
         NewText anchorPoints = new NewText("testing the anchorpoint \n (2, 2)", fontSize, fontStyle);
         anchorPoints.setOrigin(0, 100);
         anchorPoints.setBackground(Color.ORANGE);
         anchorPoints.setPickColor(pr.getNewID());
-        anchorPoints.setPositioningRectangle(new NewPosRect(1, 0));
+        anchorPoints.setPositioningRectangle(1.0, 0.0);
 
         // Test text insets with background
         NewText textInsets = new NewText("testing the insets \n with multiple lines", fontSize, fontStyle);
@@ -66,7 +65,7 @@ public class NewTextTest {
         textInsets.setTextDecoration(TextDecoration.UNDERLINE);
         textInsets.setPickColor(pr.getNewID());
         textInsets.setInsets(new Insets(10, 10, 10, 10));
-        textInsets.setPositioningRectangle(new NewPosRect(0, 1));
+        textInsets.setPositioningRectangle(0.0, 1.0);
 
         // Test text insets with background and rotation
         NewText textInsetsWithRotation = new NewText("testing the insets \n with rotation", fontSize, fontStyle);
@@ -75,7 +74,7 @@ public class NewTextTest {
         textInsetsWithRotation.setPickColor(pr.getNewID());
         textInsetsWithRotation.setInsets(new Insets(10, 10, 10, 10));
         textInsetsWithRotation.setAngle(0.2);
-        textInsetsWithRotation.setPositioningRectangle(new NewPosRect(1, 1));
+        textInsetsWithRotation.setPositioningRectangle(1.0, 1.0);
 
         // Testing strikethrough, insets, rotation all in one
         NewText textInsetsWithRotationAndStrikethrough = new NewText("testing the insets \n with rotation and strikethrough", fontSize, fontStyle);
@@ -85,7 +84,7 @@ public class NewTextTest {
         textInsetsWithRotationAndStrikethrough.setAngle(0.2);
         textInsetsWithRotationAndStrikethrough.setPickColor(pr.getNewID());
         textInsetsWithRotationAndStrikethrough.setTextDecoration(TextDecoration.STRIKETHROUGH);
-        textInsetsWithRotationAndStrikethrough.setPositioningRectangle(new NewPosRect(0, 1));
+        textInsetsWithRotationAndStrikethrough.setPositioningRectangle(0.0, 1.0);
 
         // Testing latex rendering in text mode
         NewText textLatex = new NewText("##BEGINLATEX## \\text{testing the latex rendering} \\\\ \\text{in text mode}", fontSize, fontStyle);
@@ -94,7 +93,7 @@ public class NewTextTest {
         textLatex.setTextDecoration(TextDecoration.UNDERLINE);
         textLatex.setPickColor(pr.getNewID());
         textLatex.setInsets(new Insets(5, 10, 5, 10));
-        textLatex.setPositioningRectangle(new NewPosRect(1, 1));
+        textLatex.setPositioningRectangle(1.0, 1.0);
 
         // Testing latex rendering in math mode
         NewText textLatexMath = new NewText("##BEGINLATEX## (\\bigwedge_{i=1}^{1} F_i) \\wedge (\\bigwedge_{i=1}^{1} G_i) \\equiv \\bigwedge_{i=1}^{1} (F_i \\wedge G_i)", fontSize, fontStyle);
@@ -102,7 +101,7 @@ public class NewTextTest {
         textLatexMath.setBackground(Color.PINK);
         textLatexMath.setPickColor(pr.getNewID());
         textLatexMath.setInsets(new Insets(5, 10, 5, 10));
-        textLatexMath.setPositioningRectangle(new NewPosRect(0, 1));
+        textLatexMath.setPositioningRectangle(0.0, 1.0);
 
         // okay we're good to go, lets display the data in a coordinate system
         CompleteRenderer content = new CompleteRenderer();
