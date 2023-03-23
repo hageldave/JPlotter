@@ -64,7 +64,7 @@ public class NewText implements Renderable, Cloneable {
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
     protected TextDecoration textDecoration;
-    protected PositioningRectangle positioningRectangle = null;
+    protected NewPosRect positioningRectangle = null;
 
     /**
      * Creates a new Text object with the specified string and font configuration.
@@ -435,11 +435,10 @@ public class NewText implements Renderable, Cloneable {
     /**
      * @return the currently active {@link PositioningRectangle}
      */
-    public PositioningRectangle getPositioningRectangle() {
-        if (Objects.nonNull(positioningRectangle)) {
-            return positioningRectangle;
-        }
-        return new PositioningRectangle(0,0);
+    public NewPosRect getPositioningRectangle() {
+        if(Objects.isNull(positioningRectangle))
+            positioningRectangle = new NewPosRect(0, 0);
+        return positioningRectangle;
     }
 
     /**
@@ -448,7 +447,7 @@ public class NewText implements Renderable, Cloneable {
      * @param positioningRectangle the new {@link PositioningRectangle}
      * @return this for chaining
      */
-    public NewText setPositioningRectangle(PositioningRectangle positioningRectangle) {
+    public NewText setPositioningRectangle(NewPosRect positioningRectangle) {
         this.positioningRectangle = positioningRectangle;
         return this;
     }
