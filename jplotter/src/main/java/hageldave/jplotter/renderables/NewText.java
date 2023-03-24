@@ -78,12 +78,7 @@ public class NewText implements Renderable, Cloneable {
      * @param latex determines if latex mode will be turned on or not
      */
     protected NewText(String textstr, int fontsize, int style, Color textcolor, boolean latex) {
-        if (latex && textstr.startsWith(latexInstruction)) {
-            this.txtStr = textstr.replace(latexInstruction, "");
-        } else {
-            this.txtStr = textstr;
-        }
-        this.textSize = CharacterAtlas.boundsForText(textstr.length(), fontsize, style).getBounds().getSize();
+        setTextString(textstr);
         this.fontsize = fontsize;
         this.style = style;
         this.color = textcolor;
@@ -691,7 +686,11 @@ public class NewText implements Renderable, Cloneable {
      */
     @DebugSetter(ID ="txtStr", creator = TextfieldCreator.class)
     public NewText setTextString(String txtStr) {
-        this.txtStr = txtStr;
+        if (latex && txtStr.startsWith(latexInstruction)) {
+            this.txtStr = txtStr.replace(latexInstruction, "");
+        } else {
+            this.txtStr = txtStr;
+        }
         this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontsize, style).getBounds().getSize();
         return setDirty();
     }
