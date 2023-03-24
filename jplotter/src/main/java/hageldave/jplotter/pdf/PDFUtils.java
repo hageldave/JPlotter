@@ -225,18 +225,12 @@ public class PDFUtils {
     }
 
     /**
-     * TODO
-     *
      * Creates a text string in the pdf document.
      *
      * @param doc      PDF document holding the content stream
      * @param cs       content stream that the text is appended to
      * @param txt      text string that should be rendered in the document
      * @param position position where the text should be rendered
-     * @param color    color of the text
-     * @param fontSize size of font
-     * @param style    style of font
-     * @param angle    rotation of the text
      * @return resulting content stream
      * @throws IOException If there is an error while creating the text in the document
      */
@@ -266,13 +260,53 @@ public class PDFUtils {
     }
 
     /**
+     * Creates a text string in the pdf document.
      *
-     * @param doc
-     * @param cs
-     * @param txt
-     * @param position
-     * @return
-     * @throws IOException
+     * @param doc      PDF document holding the content stream
+     * @param cs       content stream that the text is appended to
+     * @param txt      text string that should be rendered in the document
+     * @param position position where the text should be rendered
+     * @param color    color of the text
+     * @param fontSize size of font
+     * @param style    style of font
+     * @param angle    rotation of the text
+     * @return resulting content stream
+     * @throws IOException If there is an error while creating the text in the document
+     */
+    public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, Text txt, Point2D position, Color color, int fontSize, int style, double angle) throws IOException {
+        cs.setNonStrokingColor(txt.getColor());
+        cs.stroke();
+        // set correct font
+        PDType0Font font = (doc instanceof FontCachedPDDocument) ?
+                ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
+        cs.setFont(font, txt.fontsize);
+        cs.beginText();
+
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX(), position.getY());
+        if (txt.getAngle() != 0)
+            affineTransform.rotate(txt.getAngle());
+        cs.setTextMatrix(new Matrix(affineTransform));
+
+        float textHeight = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
+        for (String newLine : txt.getTextString().split("\n")) {
+            cs.newLineAtOffset(0, -textHeight);
+            cs.showText(newLine);
+            textHeight += txt.getBounds().getHeight();
+        }
+
+        cs.endText();
+        return cs;
+    }
+
+    /**
+     * This helper method renders text in a PDF document.
+     *
+     * @param doc {@link PDDocument} where the latex text will be inserted
+     * @param cs {@link PDPageContentStream} which contains the latex text
+     * @param txt the text object that should be rendered
+     * @param position the position where the text object should be rendered
+     * @return the modified PDDocument for chaining
+     * @throws IOException If there is an error while creating the text in the document
      */
     public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, NewText txt, Point2D position) throws IOException {
         cs.setNonStrokingColor(txt.getColor());
@@ -440,13 +474,14 @@ public class PDFUtils {
     }
 
     /**
-     * TODO
-     * @param doc
-     * @param cs
-     * @param txt
-     * @param position
-     * @return
-     * @throws IOException
+     * This helper method renders latex text in a PDF document.
+     *
+     * @param doc {@link PDDocument} where the latex text will be inserted
+     * @param cs {@link PDPageContentStream} which contains the latex text
+     * @param txt the text object that should be rendered
+     * @param position the position where the text object should be rendered
+     * @return the modified PDDocument for chaining
+     * @throws IOException If there is an error while creating the text in the document
      */
     public static PDDocument latexToPDF(PDDocument doc, PDPageContentStream cs, NewText txt, Point2D position) throws IOException {
         DefaultTeXFont.registerAlphabet(new CyrillicRegistration());

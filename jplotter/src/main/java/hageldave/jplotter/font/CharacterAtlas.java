@@ -171,10 +171,12 @@ public class CharacterAtlas implements AutoCloseable {
 	}
 
 	/**
-	 * TODO
-	 * @param fontSize
-	 * @param style
-	 * @return
+	 * Returns the {@link FontMetrics} of Ubuntu Mono given the font size and -style,
+	 * which is constructed from a {@link Graphics2D} object.
+	 *
+	 * @param fontSize point size of the font
+	 * @param style of the font e.g. {@link Font#PLAIN}.
+	 * @return Ubuntu Mono FontMetrics given the parameters
 	 */
 	public static FontMetrics getFontMetrics(int fontSize, int style) {
 		Font font = FontProvider.getUbuntuMono(fontSize, style);

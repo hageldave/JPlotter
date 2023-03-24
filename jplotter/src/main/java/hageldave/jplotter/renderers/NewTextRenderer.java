@@ -38,10 +38,9 @@ import static hageldave.jplotter.renderables.NewText.STRIKETHROUGH;
 import static hageldave.jplotter.renderables.NewText.UNDERLINE;
 
 /**
- * TODO:
  * The NewTextRenderer is an implementation of the {@link GenericRenderer}
  * for {@link Text}.
- * It draws the vertex arrays of its Text objects and uses the texture of the
+ * It draws the vertex arrays of its {@link NewText} objects and uses the texture of the
  * {@link CharacterAtlas} corresponding to the Text's font to texture
  * the drawn quads in order to display text.
  * <br>
