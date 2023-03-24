@@ -64,7 +64,7 @@ public class NewText implements Renderable, Cloneable {
     protected boolean hidden=false;
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
-    protected int textDecoration;
+    protected int textDecoration = -1;
     protected Pair<Double, Double> transformationCenter = new Pair<>(0.0, 0.0);
     public final static int UNDERLINE = 0, STRIKETHROUGH = 1;
 
@@ -414,6 +414,7 @@ public class NewText implements Renderable, Cloneable {
     /**
      * @return the TextDecoration of the text object (underline [0] or strikethrough [1]).
      */
+    @DebugGetter(ID = "textDecoration")
     public int getTextDecoration() {
         return textDecoration;
     }
@@ -428,7 +429,11 @@ public class NewText implements Renderable, Cloneable {
      * @param textDecoration the new text decoration
      * this for chaining
      */
+    @DebugSetter(ID = "textDecoration", creator = TextDecorationCreator.class)
     public NewText setTextDecoration(int textDecoration) {
+        if (textDecoration > 1 || textDecoration < -1) {
+            throw new IllegalArgumentException("Only value between -1 and 1 allowed");
+        }
         this.textDecoration = textDecoration;
         return this;
     }
@@ -450,6 +455,7 @@ public class NewText implements Renderable, Cloneable {
     /**
      * @return the transformation center of this text object
      */
+    @DebugGetter(ID = "transformationCenter")
     public Pair<Double, Double> getTransformationCenter() {
         return this.transformationCenter;
     }
@@ -494,6 +500,7 @@ public class NewText implements Renderable, Cloneable {
      * @param y the value for the transformation center that influences the y coordinate
      * @return this for chaining
      */
+    @DebugSetter(ID = "transformationCenter", creator = Interpolation2DCreator.class)
     public NewText setTransformationCenter(double x, double y) {
         return setTransformationCenter(new Pair<>(x, y));
     }
@@ -532,6 +539,7 @@ public class NewText implements Renderable, Cloneable {
     /**
      * @return if the text object is written in latex
      */
+    @DebugGetter(ID = "latex")
     public boolean isLatex() {
         return latex;
     }
@@ -554,6 +562,7 @@ public class NewText implements Renderable, Cloneable {
      * @param latex true if latex mode should be switched on, false if off
      * @return this for chaining
      */
+    @DebugSetter(ID = "latex", creator = ButtonCreator.class)
     public NewText setLatex(boolean latex) {
         this.latex = latex;
         return this;
@@ -562,6 +571,7 @@ public class NewText implements Renderable, Cloneable {
     /**
      * @return the {@link Insets} of the text object
      */
+    @DebugGetter(ID = "insets")
     public Insets getInsets() {
         return insets;
     }
@@ -573,6 +583,7 @@ public class NewText implements Renderable, Cloneable {
      * @param insets Insets object defining the size of the insets
      * @return this for chaining
      */
+    @DebugSetter(ID = "insets", creator = InsetsCreator.class)
     public NewText setInsets(Insets insets) {
         this.insets = insets;
         return this;
@@ -680,6 +691,7 @@ public class NewText implements Renderable, Cloneable {
      * Sets the string of this text.
      * Only characters that are ASCII printable (more precisely ASCII characters [32..126]) will be
      * displayed, other characters are mapped to whitespace for rendering.
+     * The method also detects if the string starts with the {@link #latexInstruction} and renders it in latex if it's the case.
      * This set the {@link #isDirty()} state of this {@link Renderable} to true.
      * @param txtStr the text string this object should display.
      * @return this for chaining

@@ -6,6 +6,7 @@ import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.debugging.ui.DebuggerUI;
 import hageldave.jplotter.interaction.CoordSysPanning;
 import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Lines;
@@ -142,6 +143,9 @@ public class NewTextTest {
             frame.pack();
             frame.setVisible(true);
         });
+
+        DebuggerUI debuggerUI = new DebuggerUI(canvas);
+        debuggerUI.display();
 
         // add a pop up menu (on right click) for exporting to SVG or PNG
         PopupMenu menu = new PopupMenu();
