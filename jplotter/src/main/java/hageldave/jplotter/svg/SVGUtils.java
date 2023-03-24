@@ -4,7 +4,6 @@ import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
-import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.NewText;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.svggen.SVGGeneratorContext;
@@ -13,8 +12,6 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.scilab.forge.jlatexmath.DefaultTeXFont;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -364,6 +361,15 @@ public class SVGUtils {
 		}
 	}
 
+	/**
+	 * TODO
+	 * @param txt
+	 * @param doc
+	 * @param x
+	 * @param y
+	 * @return
+	 * @throws IOException
+	 */
 	public static Element latexToSVG(NewText txt, Document doc, double x, double y) throws IOException {
 		SVGGeneratorContext ctx = SVGGeneratorContext.createDefault(doc);
 		SVGGraphics2D g2 = new SVGGraphics2D(ctx, true);
@@ -394,6 +400,16 @@ public class SVGUtils {
 		return textGroup;
 	}
 
+	/**
+	 * TODO
+	 * @param txt
+	 * @param doc
+	 * @param parent
+	 * @param x
+	 * @param y
+	 * @return
+	 * @throws IOException
+	 */
 	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) throws IOException {
 		String fontfamily = "'Ubuntu Mono', monospace";
 		double textHeight = 1;
@@ -402,12 +418,7 @@ public class SVGUtils {
 			if (txt.getBackground().getRGB() != 0) {
 				Element backgroundText;
 				if (txt.getInsets().right != 0 || txt.getInsets().left != 0 || txt.getInsets().top != 0 || txt.getInsets().bottom != 0) {
-					// still hacky
-					PDDocument pdDoc = new PDDocument();
-					PDType0Font font = PDFUtils.createPDFont(pdDoc, txt.style);
-					float width = font.getStringWidth(singleLineText.getTextString()) / 1000 * txt.fontsize;
-					pdDoc.close();
-					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, width+txt.getHorizontalInsets(), singleLineText.getBounds().getHeight());
+					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, singleLineText.getExportBounds().getWidth()+txt.getHorizontalInsets(), singleLineText.getBounds().getHeight());
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight())) + ") scale(1,-1)");
 					parent.appendChild(backgroundText);
 				} else {
@@ -452,6 +463,13 @@ public class SVGUtils {
 		return parent;
 	}
 
+	/**
+	 * TODO
+	 * @param doc
+	 * @param parent
+	 * @param backgroundColor
+	 * @return
+	 */
 	public static Element createTextBackgroundFilter(Document doc, Element parent, Color backgroundColor) {
         String defID = SVGUtils.newDefId();
         Element defs = SVGUtils.createSVGElement(doc, "defs");
@@ -469,11 +487,11 @@ public class SVGUtils {
         Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
         Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
         feMergeNode.setAttributeNS(null, "in", "bg");
-        Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
-        feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
+        Element feMergeNodeSourceGraphic = SVGUtils.createSVGElement(doc, "feMergeNode");
+        feMergeNodeSourceGraphic.setAttributeNS(null, "in", "SourceGraphic");
 
         feMerge.appendChild(feMergeNode);
-        feMerge.appendChild(feMergeNode2);
+        feMerge.appendChild(feMergeNodeSourceGraphic);
         filter.appendChild(feFlood);
         filter.appendChild(feMerge);
         defs.appendChild(filter);
