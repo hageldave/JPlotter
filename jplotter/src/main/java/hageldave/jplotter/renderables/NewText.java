@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  * <li>latex - true if latex mode is on, false if it's off</li>
  * <li>text decoration - the text decoration of the text, which can be either set to underline or strikethrough</li>
  * <li>insets - the padding of the text object</li>
- * <li>positioning rectangle - the {@link PositioningRectangle} of the text object, so that the text object can be aligned at its right upper corner for example</li>
+ * <li>transformationCenter - the transformation center of the text object, so that the text object can be aligned at its right upper corner for example</li>
  * </ul>
  * @author hageldave
  */
@@ -64,8 +64,9 @@ public class NewText implements Renderable, Cloneable {
     protected boolean hidden=false;
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
-    protected TextDecoration textDecoration;
-    protected Pair<Double, Double> textPositioning = new Pair<>(0.0, 0.0);
+    protected int textDecoration;
+    protected Pair<Double, Double> transformationCenter = new Pair<>(0.0, 0.0);
+    public final static int UNDERLINE = 0, STRIKETHROUGH = 1;
 
     /**
      * Creates a new Text object with the specified string and font configuration.
@@ -315,9 +316,10 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
-     * @return the bounding rectangle of this text
+     * @return the bounding rectangle of this text, when exported
+     * The bounds can differ from the normal {{@link #getBounds()}} method because of font rendering differences.
      */
-    public Rectangle2D getBoundsExport() {
+    public Rectangle2D getExportBounds() {
         double width = 0;
         double height = 0;
         for (NewText lineTextObject : generateTextObjectForEachLine()) {
@@ -359,7 +361,7 @@ public class NewText implements Renderable, Cloneable {
      */
     public Rectangle2D getBoundsWithRotation() {
         Rectangle2D bounds = getBounds();
-        AffineTransform transform = AffineTransform.getRotateInstance(angle, getAnchorPoint().getX(), getAnchorPoint().getY());
+        AffineTransform transform = AffineTransform.getRotateInstance(angle, getTransformedBounds().getX(), getTransformedBounds().getY());
         return transform.createTransformedShape(bounds).getBounds2D();
     }
 
@@ -415,62 +417,90 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
-     * @return the TextDecoration of the text object (underline or strikethrough).
+     * @return the TextDecoration of the text object (underline [0] or strikethrough [1]).
      */
-    public TextDecoration getTextDecoration() {
+    public int getTextDecoration() {
         return textDecoration;
     }
 
     /**
-     * Sets a new {@link TextDecoration} (underline or strikethrough) to the text object.
+     * Sets a new text decoration (underline [0] or strikethrough [1]) to the text object.
      * Only one of both (underline or strikethrough) can be active at a time.
+     * <br>
+     * Warning: This does not style the text object if it's in latex mode,
+     * as the styling has to be done in latex commands.
      *
      * @param textDecoration the new text decoration
      * this for chaining
      */
-    public NewText setTextDecoration(TextDecoration textDecoration) {
+    public NewText setTextDecoration(int textDecoration) {
         this.textDecoration = textDecoration;
         return this;
     }
 
     /**
-     * @return
+     * @return the bounds of the text object with the transformation center taken into account
      */
-    public Point2D.Double getAnchorPoint() {
-        return new Point2D.Double(this.getBounds().getWidth()*textPositioning.first, this.getBounds().getHeight()*textPositioning.second);
+    public Point2D.Double getTransformedBounds() {
+        return new Point2D.Double(this.getBounds().getWidth()*transformationCenter.first, this.getBounds().getHeight()*transformationCenter.second);
     }
 
     /**
+     * @return the export bounds of the text object with the transformation center taken into account
+     */
+    public Point2D.Double getTransformedExportBounds() {
+        return new Point2D.Double(this.getExportBounds().getWidth()*transformationCenter.first, this.getExportBounds().getHeight()*transformationCenter.second);
+    }
+
+    /**
+     * @return the transformation center of this text object
+     */
+    public Pair<Double, Double> getTransformationCenter() {
+        return this.transformationCenter;
+    }
+
+    /**
+     * Sets the transformation center of the text object, which influences both rotation and translation.
+     * The translation center determines at which point the text object will be translated.
+     * The x and y parameters therefore can be between 0 and 1, where
+     * - for x 0 means left, 0.5 middle and 1 right
+     * - for y 0 means bottom, 0.5 middle and 1 top.
+     * <br>
+     * If a text object should be aligned with its right border at the x-coordinate 2.0,
+     * the origin (2, 2) can be set, with a transformation center of (1, 0).
+     * <br>
+     * The default behavior is a transformation center of (0, 0), where each transformation will be oriented around the lower left corner.
      *
-     * @return
-     */
-    public Point2D.Double getAnchorPointExport() {
-        return new Point2D.Double(this.getBoundsExport().getWidth()*textPositioning.first, this.getBoundsExport().getHeight()*textPositioning.second);
-    }
-
-    /**
-     * @return the currently active {@link PositioningRectangle}
-     */
-    public Pair<Double, Double> getPositioningRectangle() {
-        return this.textPositioning;
-    }
-
-    /**
-     * Sets the {@link PositioningRectangle}.
-     *
-     * @param positioningRectangle the new {@link PositioningRectangle}
+     * @param transformationCenter the values for the transformation center that influences the x and y coordinates
+     *                             The first value of the {@link Pair} data structure correlates to the x coordinate, the second to the y coordinate.
      * @return this for chaining
      */
-    public NewText setPositioningRectangle(Pair<Double, Double> textPositioning) {
-        if (textPositioning.first < 0 || textPositioning.first > 1 || textPositioning.second < 0 || textPositioning.second > 1) {
+    public NewText setTransformationCenter(Pair<Double, Double> transformationCenter) {
+        if (transformationCenter.first < 0 || transformationCenter.first > 1 || transformationCenter.second < 0 || transformationCenter.second > 1) {
             throw new IllegalArgumentException("Values have to be between 0 and 1");
         }
-        this.textPositioning = textPositioning;
+        this.transformationCenter = transformationCenter;
         return this;
     }
 
-    public NewText setPositioningRectangle(double x, double y) {
-        return setPositioningRectangle(new Pair<>(x, y));
+    /**
+     * Sets the transformation center of the text object, which influences both rotation and translation.
+     * The translation center determines at which point the text object will be translated.
+     * The x and y parameters therefore can be between 0 and 1, where
+     * - for x 0 means left, 0.5 middle and 1 right
+     * - for y 0 means bottom, 0.5 middle and 1 top.
+     * <br>
+     * If a text object should be aligned with its right border at the x-coordinate 2.0,
+     * the origin (2, 2) can be set, with a transformation center of (1, 0).
+     * <br>
+     * The default behavior is a transformation center of (0, 0), where each transformation will be oriented around the lower left corner.
+     *
+     * @param x the value for the transformation center that influences the x coordinate
+     * @param y the value for the transformation center that influences the y coordinate
+     * @return this for chaining
+     */
+    public NewText setTransformationCenter(double x, double y) {
+        return setTransformationCenter(new Pair<>(x, y));
     }
 
     /**

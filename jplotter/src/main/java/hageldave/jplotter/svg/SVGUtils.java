@@ -6,7 +6,6 @@ import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.NewText;
-import hageldave.jplotter.renderables.TextDecoration;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
@@ -35,6 +34,8 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static hageldave.jplotter.renderables.NewText.STRIKETHROUGH;
+import static hageldave.jplotter.renderables.NewText.UNDERLINE;
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 /**
@@ -434,16 +435,16 @@ public class SVGUtils {
 			text.setAttributeNS(null, "x", "" + 0);
 			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize));
 
-			if (txt.getTextDecoration() ==  TextDecoration.UNDERLINE) {
+			if (txt.getTextDecoration() ==  UNDERLINE) {
 				text.setAttributeNS(null, "text-decoration", "underline");
-			} else if (txt.getTextDecoration() ==  TextDecoration.STRIKETHROUGH) {
+			} else if (txt.getTextDecoration() ==  STRIKETHROUGH) {
 				text.setAttributeNS(null, "text-decoration", "line-through");
 			}
 
 			double fontDescent = CharacterAtlas.getFontMetrics(txt.fontsize, txt.style).getMaxDescent();
 			parent.setAttributeNS(null, "transform",
 					"translate("+SVGUtils.svgNumber(x)+","+SVGUtils.svgNumber(y+fontDescent)+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
-			parent.setAttributeNS(null, "transform-origin", txt.getAnchorPointExport().getX() + " " + txt.getAnchorPointExport().getY());
+			parent.setAttributeNS(null, "transform-origin", txt.getTransformedExportBounds().getX() + " " + txt.getTransformedExportBounds().getY());
 
 			text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(txt.getInsets().left) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight() - txt.getInsets().top)) + ") scale(1,-1)");
 			textHeight += singleLineText.getBounds().getHeight();

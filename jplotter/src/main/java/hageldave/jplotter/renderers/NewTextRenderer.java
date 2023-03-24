@@ -1,5 +1,6 @@
 package hageldave.jplotter.renderers;
 
+import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
@@ -7,7 +8,6 @@ import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.NewText;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
-import hageldave.jplotter.renderables.TextDecoration;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Annotations;
 import hageldave.jplotter.util.ShaderRegistry;
@@ -34,8 +34,21 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
+import static hageldave.jplotter.renderables.NewText.STRIKETHROUGH;
+import static hageldave.jplotter.renderables.NewText.UNDERLINE;
+
 /**
- * TODO
+ * TODO:
+ * The NewTextRenderer is an implementation of the {@link GenericRenderer}
+ * for {@link Text}.
+ * It draws the vertex arrays of its Text objects and uses the texture of the
+ * {@link CharacterAtlas} corresponding to the Text's font to texture
+ * the drawn quads in order to display text.
+ * <br>
+ * Its fragment shader draws the picking color into the second render buffer
+ * alongside the 'visible' color that is drawn into the first render buffer.
+ *
+ * @author hageldave
  */
 public class NewTextRenderer extends GenericRenderer<NewText> {
     protected static final char NL = '\n';
@@ -153,8 +166,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             x1*=scaleX;
             y1*=scaleY;
 
-            x1 -= txt.getAnchorPoint().getX();
-            y1 -= txt.getAnchorPoint().getY();
+            x1 -= txt.getTransformedBounds().getX();
+            y1 -= txt.getTransformedBounds().getY();
 
             y1+=1;
 
@@ -177,7 +190,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 trnsfrm.translate(x1, y1+txt.getBounds().getHeight());
                 trnsfrm.scale(1, -1);
                 if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getAnchorPoint().getX(), txt.getBounds().getHeight()-txt.getAnchorPoint().getY());
+                    trnsfrm.rotate(-angle, txt.getTransformedBounds().getX(), txt.getBounds().getHeight()-txt.getTransformedBounds().getY());
 
                 for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
                     // create a proxy graphics object to draw the string to
@@ -217,9 +230,9 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                 Font font = FontProvider.getUbuntuMono(txt.fontsize, txt.style);
                 Map attributes = font.getAttributes();
-                if (txt.getTextDecoration() == TextDecoration.UNDERLINE)
+                if (txt.getTextDecoration() == UNDERLINE)
                     attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-                else if (txt.getTextDecoration() == TextDecoration.STRIKETHROUGH)
+                else if (txt.getTextDecoration() == STRIKETHROUGH)
                     attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
 
                 if (!attributes.isEmpty()) {
@@ -237,7 +250,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 trnsfrm.translate(x1, y1);
                 trnsfrm.scale(1, -1);
                 if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getAnchorPoint().getX(), -txt.getAnchorPoint().getY());
+                    trnsfrm.rotate(-angle, txt.getTransformedBounds().getX(), -txt.getTransformedBounds().getY());
                 g_.transform(trnsfrm);
                 p_.transform(trnsfrm);
 
@@ -292,8 +305,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 x1*=scaleX;
                 y1*=scaleY;
 
-                x1 -= txt.getAnchorPointExport().getX();
-                y1 -= txt.getAnchorPointExport().getY();
+                x1 -= txt.getTransformedExportBounds().getX();
+                y1 -= txt.getTransformedExportBounds().getY();
 
                 y1+=1;
 
@@ -317,7 +330,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                         Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
                         textGroupParent.appendChild(svgLatex);
-                        textGroup.setAttributeNS(null, "transform-origin", txt.getAnchorPointExport().getX() + " " + txt.getAnchorPointExport().getY());
+                        textGroup.setAttributeNS(null, "transform-origin", txt.getTransformedExportBounds().getX() + " " + txt.getTransformedExportBounds().getY());
                         textGroup.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(x1) + "," + SVGUtils.svgNumber(y1) + ")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")");
                         textGroupParent.setAttributeNS(null, "transform",
                                 "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(txt.getBounds().getHeight()) + ")" + "scale(1,-1)");
@@ -357,8 +370,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     x1 *= scaleX;
                     y1 *= scaleY;
 
-                    x1 -= txt.getAnchorPointExport().getX();
-                    y1 -= txt.getAnchorPointExport().getY();
+                    x1 -= txt.getTransformedExportBounds().getX();
+                    y1 -= txt.getTransformedExportBounds().getY();
 
                     // test if inside of view port
                     Rectangle2D bounds = txt.getBoundsWithRotation();
