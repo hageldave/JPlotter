@@ -274,8 +274,8 @@ public class PDFUtils {
         double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
 
         AffineTransform affineTransform = AffineTransform.getTranslateInstance(
-                position.getX() - txt.getAnchorPointExport().getX(),
-                position.getY() - txt.getAnchorPointExport().getY() + txt.getBounds().getHeight() - fontDescent);
+                position.getX(),
+                position.getY() + txt.getBounds().getHeight()/* - fontDescent*/);
         if (txt.getAngle() != 0)
             affineTransform.rotate(txt.getAngle(), txt.getAnchorPointExport().getX(), txt.getAnchorPointExport().getY() - txt.getBounds().getHeight());
         cs.transform(new Matrix(affineTransform));
@@ -438,9 +438,9 @@ public class PDFUtils {
         DefaultTeXFont.registerAlphabet(new CyrillicRegistration());
         DefaultTeXFont.registerAlphabet(new GreekRegistration());
 
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX() - txt.getAnchorPointExport().getX(), position.getY() - txt.getAnchorPointExport().getY() + txt.getBounds().getHeight());
+        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX(), position.getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle(), txt.getAnchorPointExport().getX(), txt.getAnchorPointExport().getY());
+            affineTransform.rotate(txt.getAngle(), txt.getAnchorPointExport().getX(), -txt.getAnchorPointExport().getY() + txt.getBounds().getHeight());
         cs.transform(new Matrix(affineTransform));
 
         for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
