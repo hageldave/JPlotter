@@ -78,12 +78,12 @@ public class NewText implements Renderable, Cloneable {
      * @param latex determines if latex mode will be turned on or not
      */
     protected NewText(String textstr, int fontsize, int style, Color textcolor, boolean latex) {
-        setTextString(textstr);
         this.fontsize = fontsize;
         this.style = style;
         this.color = textcolor;
         this.origin = new Point(0, 0);
         this.latex = latex;
+        setTextString(textstr);
     }
 
     /**
@@ -265,6 +265,7 @@ public class NewText implements Renderable, Cloneable {
     @Override
     protected Object clone() throws CloneNotSupportedException {
         NewText clonedTextObject = (NewText) super.clone();
+        clonedTextObject.textSize = (Dimension) clonedTextObject.getTextSize().clone();
         clonedTextObject.setOrigin((Point2D) clonedTextObject.getOrigin().clone());
         clonedTextObject.setInsets((Insets) clonedTextObject.getInsets().clone());
         return clonedTextObject;
@@ -698,7 +699,7 @@ public class NewText implements Renderable, Cloneable {
      */
     @DebugSetter(ID ="txtStr", creator = TextfieldCreator.class)
     public NewText setTextString(String txtStr) {
-        if (latex && txtStr.startsWith(latexInstruction)) {
+        if (txtStr.startsWith(latexInstruction)) {
             this.txtStr = txtStr.replace(latexInstruction, "");
         } else {
             this.txtStr = txtStr;
