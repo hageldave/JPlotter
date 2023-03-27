@@ -21,9 +21,18 @@ public class TextfieldCreator implements ControlPanelCreator {
         inlineContainer.setLayout(new BoxLayout(inlineContainer, BoxLayout.X_AXIS));
         inlineContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel textLabel = new JLabel("Current string: " + getter.invoke(obj), SwingConstants.LEFT);
+        JLabel textLabel = new JLabel("<html>Current string: <b>" + getter.invoke(obj) + "</b></html>", SwingConstants.LEFT);
+
+        JPanel textFieldPanel = new JPanel();
+        JLabel textFieldLabel = new JLabel("Enter new text here:", SwingConstants.LEFT);
+        textFieldPanel.setLayout(new BoxLayout(textFieldPanel, BoxLayout.Y_AXIS));
+        textFieldPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        textFieldPanel.setBorder(new EmptyBorder(15, 0, 7, 0));
         JTextField textField = new JTextField("", 20);
         textField.setMaximumSize(textField.getPreferredSize());
+        textFieldPanel.add(textFieldLabel);
+        textFieldPanel.add(textField);
+
         JButton editBtn = new JButton("Edit text");
         editBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -36,10 +45,10 @@ public class TextfieldCreator implements ControlPanelCreator {
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
                 if (expanded.get()) {
-                    panelContainer.remove(textField);
+                    panelContainer.remove(textFieldPanel);
                     editBtn.setText("Edit text");
                 } else {
-                    panelContainer.add(textField);
+                    panelContainer.add(textFieldPanel);
                     editBtn.setText("Close");
                 }
                 expanded.set(!expanded.get());

@@ -37,6 +37,9 @@ public class InsetsCreator implements ControlPanelCreator {
         bottomContainer.add(constructCoordContainer(leftModel, "Left", setter, obj, canvas));
         bottomContainer.add(constructCoordContainer(rightModel, "Right", setter, obj, canvas));
 
+        topContainer.setToolTipText("Determines the vertical padding of the Text object");
+        bottomContainer.setToolTipText("Determines the horizontal padding of the Text object");
+
         panelContainer.add(topContainer);
         panelContainer.add(bottomContainer);
         return panelContainer;

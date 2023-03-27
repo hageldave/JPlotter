@@ -19,6 +19,7 @@ public class TextDecorationCreator implements ControlPanelCreator {
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         AtomicInteger current = new AtomicInteger((int) getter.invoke(obj));
         JButton button = new JButton(String.valueOf(decorations[current.get()+1]));
+        button.setToolTipText("Click to change text decoration");
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.addActionListener(e -> {
             try {
