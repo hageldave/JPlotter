@@ -277,6 +277,7 @@ class DebuggerPanel extends JPanel {
             String fileName = "export-" + timeSubstring + ".svg";
             Document doc = canvas.paintSVG();
             SVGUtils.documentToXMLFile(doc, new File(fileName));
+            System.out.println("export-" + timeSubstring + ".svg has been exported.");
         });
 
         exportPdfBtn.addActionListener(e -> {
@@ -286,6 +287,7 @@ class DebuggerPanel extends JPanel {
                 PDDocument doc = canvas.paintPDF();
                 doc.save(fileName);
                 doc.close();
+                System.out.println("export-" + timeSubstring + ".pdf has been exported.");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
