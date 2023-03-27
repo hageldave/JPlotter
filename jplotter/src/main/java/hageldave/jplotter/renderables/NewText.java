@@ -699,7 +699,7 @@ public class NewText implements Renderable, Cloneable {
      */
     @DebugSetter(ID ="txtStr", creator = TextfieldCreator.class)
     public NewText setTextString(String txtStr) {
-        if (txtStr.startsWith(latexInstruction)) {
+        if (latex || txtStr.startsWith(latexInstruction)) {
             this.txtStr = txtStr.replace(latexInstruction, "");
         } else {
             this.txtStr = txtStr;
