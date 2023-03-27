@@ -197,7 +197,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     Graphics2D p_ = (Graphics2D) p.create();
 
                     TeXFormula formula = new TeXFormula(singleLineText.getTextString());
-                    TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
+                    TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.getFontSize());
                     icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
                     BufferedImage image = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
                     Graphics2D g2 = image.createGraphics();
@@ -227,7 +227,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 Graphics2D g_ = (Graphics2D) g.create();
                 Graphics2D p_ = (Graphics2D) p.create();
 
-                Font font = FontProvider.getUbuntuMono(txt.fontsize, txt.style);
+                Font font = FontProvider.getUbuntuMono(txt.getFontSize(), txt.getStyle());
                 Map attributes = font.getAttributes();
                 if (txt.getTextDecoration() == UNDERLINE)
                     attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);

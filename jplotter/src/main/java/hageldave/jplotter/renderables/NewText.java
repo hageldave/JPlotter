@@ -50,8 +50,8 @@ import java.util.regex.Pattern;
  */
 public class NewText implements Renderable, Cloneable {
     public static final String latexInstruction = "##BEGINLATEX##";
-    public final int fontsize;
-    public final int style;
+    protected int fontSize;
+    protected int style;
     protected Dimension textSize;
     protected Color color;
     protected Color background = new Color(0, true);
@@ -78,7 +78,7 @@ public class NewText implements Renderable, Cloneable {
      * @param latex determines if latex mode will be turned on or not
      */
     protected NewText(String textstr, int fontsize, int style, Color textcolor, boolean latex) {
-        this.fontsize = fontsize;
+        this.fontSize = fontsize;
         this.style = style;
         this.color = textcolor;
         this.origin = new Point(0, 0);
@@ -336,8 +336,8 @@ public class NewText implements Renderable, Cloneable {
         FontCachedPDDocument doc = new FontCachedPDDocument();
         PDType0Font font = doc.getFont(txt.style);
         try {
-            double width = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
-            double height = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * txt.fontsize;
+            double width = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontSize;
+            double height = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * txt.fontSize;
             doc.close();
             return new Rectangle2D.Double(txt.getOrigin().getX(), txt.getOrigin().getY(), width + txt.getHorizontalInsets(), height + txt.getVerticalInsets());
         } catch (IOException e) {
@@ -347,7 +347,7 @@ public class NewText implements Renderable, Cloneable {
 
     protected static Rectangle2D getLatexBounds(NewText text) {
         TeXFormula formula = new TeXFormula(text.getTextString());
-        TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontsize);
+        TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, text.fontSize);
         icon.setInsets(new Insets(text.getInsets().top, text.getInsets().left, text.getInsets().bottom, text.getInsets().right));
         return new Rectangle2D.Double(text.getOrigin().getX(), text.getOrigin().getY(), icon.getIconWidth(), icon.getIconHeight());
     }
@@ -609,6 +609,48 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
+     * @return
+     */
+    @DebugGetter(ID = "fontSize")
+    public int getFontSize() {
+        return fontSize;
+    }
+
+    /**
+     * @return
+     */
+    @DebugGetter(ID = "fontStyle")
+    public int getStyle() {
+        return style;
+    }
+
+    /**
+     *
+     *
+     * @param fontSize
+     * @return
+     */
+    @DebugSetter(ID = "fontSize", creator = IntegerSpinnerCreator.class)
+    public NewText setFontSize(int fontSize) {
+        this.fontSize = fontSize;
+        this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontSize, style).getBounds().getSize();
+        return setDirty();
+    }
+
+    /**
+     *
+     *
+     * @param style
+     * @return
+     */
+    @DebugSetter(ID = "fontStyle", creator = FontStyleCreator.class)
+    public NewText setStyle(int style) {
+        this.style = style;
+        this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontSize, style).getBounds().getSize();
+        return setDirty();
+    }
+
+    /**
      * Allocates GL resources, i.e. creates the vertex array and fills
      * it according to the contents of this {@link Text} object.
      * If the vertex array has already been created, nothing happens.
@@ -635,7 +677,7 @@ public class NewText implements Renderable, Cloneable {
          * So we only need to update when isDirty, but not on change of requested precision.
          */
         if(Objects.nonNull(va) && isDirty){
-            CharacterAtlas.get(fontsize, style).createVAforString(txtStr, va);
+            CharacterAtlas.get(fontSize, style).createVAforString(txtStr, va);
             isDirty = false;
         }
     }
@@ -677,7 +719,7 @@ public class NewText implements Renderable, Cloneable {
      */
     @Annotations.GLContextRequired
     public int getTextureID(){
-        return CharacterAtlas.get(fontsize, style).getTexID();
+        return CharacterAtlas.get(fontSize, style).getTexID();
     }
 
     /**
@@ -693,6 +735,7 @@ public class NewText implements Renderable, Cloneable {
      * Only characters that are ASCII printable (more precisely ASCII characters [32..126]) will be
      * displayed, other characters are mapped to whitespace for rendering.
      * The method also detects if the string starts with the {@link #latexInstruction} and renders it in latex if it's the case.
+     * The text will also be interpreted as a latex string, when the latex variable is true.
      * This set the {@link #isDirty()} state of this {@link Renderable} to true.
      * @param txtStr the text string this object should display.
      * @return this for chaining
@@ -704,7 +747,7 @@ public class NewText implements Renderable, Cloneable {
         } else {
             this.txtStr = txtStr;
         }
-        this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontsize, style).getBounds().getSize();
+        this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontSize, style).getBounds().getSize();
         return setDirty();
     }
 

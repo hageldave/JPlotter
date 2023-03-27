@@ -312,24 +312,24 @@ public class PDFUtils {
         cs.setNonStrokingColor(txt.getColor());
         cs.stroke();
         // set correct font
-        PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
-        cs.setFont(font, txt.fontsize);
+        PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument) doc).getFont(txt.getStyle()) : createPDFont(doc, txt.getStyle());
+        cs.setFont(font, txt.getFontSize());
 
         double verticalInset = txt.getVerticalInsets();
         double horizontalInset = txt.getHorizontalInsets();
 
-        double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
+        double fontDescent = font.getFontDescriptor().getDescent() / 1000 * txt.getFontSize();
 
         AffineTransform affineTransform = AffineTransform.getTranslateInstance(
                 position.getX(),
-                position.getY() + txt.getBounds().getHeight()/* - fontDescent*/);
+                position.getY() + txt.getBounds().getHeight() - fontDescent);
         if (txt.getAngle() != 0)
             affineTransform.rotate(txt.getAngle(), txt.getTransformedExportBounds().getX(), txt.getTransformedExportBounds().getY() - txt.getBounds().getHeight());
         cs.transform(new Matrix(affineTransform));
 
         int textHeight = 0;
         for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
-            float width = font.getStringWidth(singleLineText.getTextString()) / 1000 * txt.fontsize;
+            float width = font.getStringWidth(singleLineText.getTextString()) / 1000 * txt.getFontSize();
 
             if (txt.getBackground().getRGB() != 0) {
                 cs.saveGraphicsState();
@@ -357,12 +357,12 @@ public class PDFUtils {
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(txt.getInsets().left, (float) -txt.getTextSize().getHeight() - txt.getInsets().top - textHeight)));
             cs.setStrokingColor(txt.getColor());
             if (txt.getTextDecoration() == UNDERLINE) {
-                cs.moveTo(0, (float) getDescentHeight(font.getFontDescriptor(), txt.fontsize));
-                cs.lineTo(width, (float) getDescentHeight(font.getFontDescriptor(), txt.fontsize));
+                cs.moveTo(0, (float) getDescentHeight(font.getFontDescriptor(), txt.getFontSize()));
+                cs.lineTo(width, (float) getDescentHeight(font.getFontDescriptor(), txt.getFontSize()));
                 cs.stroke();
             } else if (txt.getTextDecoration() == STRIKETHROUGH) {
-                cs.moveTo(0, (float) (getStrikethroughHeight(font.getFontDescriptor(), txt.fontsize)));
-                cs.lineTo(width, (float) (getStrikethroughHeight(font.getFontDescriptor(), txt.fontsize)));
+                cs.moveTo(0, (float) (getStrikethroughHeight(font.getFontDescriptor(), txt.getFontSize())));
+                cs.lineTo(width, (float) (getStrikethroughHeight(font.getFontDescriptor(), txt.getFontSize())));
                 cs.stroke();
             }
             cs.restoreGraphicsState();
@@ -494,7 +494,7 @@ public class PDFUtils {
 
         for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
             TeXFormula formula = new TeXFormula(singleLineText.getTextString());
-            TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
+            TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.getFontSize());
             icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
             PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, icon.getIconWidth(), icon.getIconHeight());

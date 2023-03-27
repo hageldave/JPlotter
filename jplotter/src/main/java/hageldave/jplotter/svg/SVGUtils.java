@@ -381,7 +381,7 @@ public class SVGUtils {
 		for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
 
 			TeXFormula formula = new TeXFormula(singleLineText.getTextString());
-			TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.fontsize);
+			TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.getFontSize());
 			icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
 			g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
@@ -427,10 +427,10 @@ public class SVGUtils {
 				}
 				backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
 				backgroundText.setTextContent(singleLineText.getTextString());
-				backgroundText.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+				backgroundText.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.getFontSize() + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.getStyle()));
 				backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
 				backgroundText.setAttributeNS(null, "x", "" + 0);
-				backgroundText.setAttributeNS(null, "y", "" + (txt.getTextSize().height - txt.fontsize));
+				backgroundText.setAttributeNS(null, "y", "" + (txt.getTextSize().height - txt.getFontSize()));
 			}
 
 			Element text = SVGUtils.createSVGElement(doc, "text");
@@ -438,13 +438,13 @@ public class SVGUtils {
 
 			text.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
 			text.setTextContent(singleLineText.getTextString());
-			text.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.fontsize + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.style));
+			text.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.getFontSize() + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.getStyle()));
 			text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
 			if (txt.getColorA() != 1) {
 				text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
 			}
 			text.setAttributeNS(null, "x", "" + 0);
-			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.fontsize));
+			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.getFontSize()));
 
 			if (txt.getTextDecoration() ==  UNDERLINE) {
 				text.setAttributeNS(null, "text-decoration", "underline");
@@ -452,7 +452,7 @@ public class SVGUtils {
 				text.setAttributeNS(null, "text-decoration", "line-through");
 			}
 
-			double fontDescent = CharacterAtlas.getFontMetrics(txt.fontsize, txt.style).getMaxDescent();
+			double fontDescent = CharacterAtlas.getFontMetrics(txt.getFontSize(), txt.getStyle()).getMaxDescent();
 			parent.setAttributeNS(null, "transform",
 					"translate("+SVGUtils.svgNumber(x)+","+SVGUtils.svgNumber(y+fontDescent)+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
 			parent.setAttributeNS(null, "transform-origin", txt.getTransformedExportBounds().getX() + " " + txt.getTransformedExportBounds().getY());
