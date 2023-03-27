@@ -1,6 +1,7 @@
 package hageldave.jplotter.debugging.panelcreators.control;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.renderables.NewText;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,7 +10,8 @@ import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * TODO
+ * Creates a JButton that switches the current text decoration from None to Underline to Strikethrough.
+ * This is used to control/change the current active decoration of a {@link NewText} object.
  */
 public class TextDecorationCreator implements ControlPanelCreator {
     String[] decorations = new String[]{"None", "Underline", "Strikethrough"};

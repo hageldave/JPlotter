@@ -8,7 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * TODO:
+ * Creates four JSpinners with a range from 0 to {@link Integer#MAX_VALUE} and a step size of 1.
  */
 public class InsetsCreator implements ControlPanelCreator {
     protected SpinnerNumberModel topModel;

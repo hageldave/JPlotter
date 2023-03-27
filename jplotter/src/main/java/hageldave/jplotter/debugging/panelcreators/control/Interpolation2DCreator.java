@@ -10,7 +10,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * TODO
+ * Creates two JSpinners with a range from 0 to 1 and a step size of 0.01.
+ * This can be used if two values should be changed in the range between 0 and 1.
  */
 public class Interpolation2DCreator implements ControlPanelCreator {
     protected SpinnerNumberModel xCoordModel;
