@@ -2,11 +2,8 @@ package hageldave.jplotter.svg;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.font.FontProvider;
-import hageldave.jplotter.misc.Glyph;
-import hageldave.imagingkit.core.Pixel;
-import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.CharacterAtlas;
+import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.NewText;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
@@ -16,18 +13,13 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
-import org.w3c.dom.CDATASection;
-import org.w3c.dom.Comment;
 import org.scilab.forge.jlatexmath.DefaultTeXFont;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
 import org.scilab.forge.jlatexmath.cyrillic.CyrillicRegistration;
 import org.scilab.forge.jlatexmath.greek.GreekRegistration;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import org.w3c.dom.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -38,20 +30,9 @@ import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static hageldave.jplotter.font.FontProvider.getUbuntuMonoFontAsBaseString;
-import static java.awt.Font.BOLD;
-import static java.awt.Font.ITALIC;
-import static java.awt.Font.PLAIN;
-import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
-import javax.swing.*;
-import java.awt.*;
-import java.io.*;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicLong;
-
 import static hageldave.jplotter.renderables.NewText.STRIKETHROUGH;
 import static hageldave.jplotter.renderables.NewText.UNDERLINE;
+import static java.awt.Font.*;
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 /**
@@ -128,6 +109,16 @@ public class SVGUtils {
 		return polygon;
 	}
 
+	/**
+	 * Creates a simple line in the svg document.
+	 *
+	 * @param doc where the line will be placed in
+	 * @param x0 x coordinate of the start point
+	 * @param y0 y coordinate of the start point
+	 * @param x1 x coordinate of the end point
+	 * @param y1 x coordinate of the end point
+	 * @return the resulting line element
+	 */
 	public static Element createSVGLine(Document doc, double x0, double y0, double x1, double y1) {
 		Element line = createSVGElement(doc, "line");
 		line.setAttributeNS(null, "x0", SVGUtils.svgNumber(x0));
@@ -381,6 +372,13 @@ public class SVGUtils {
 		}
 	}
 
+	/**
+	 * Creates Ubuntu Mono font definition as a style element in the svg document.
+	 * This enables the usage of the font even if it isn't installed on the local machine as it is embedded in the file itself.
+	 * It also automatically includes the font licence as a string in the document.
+	 *
+	 * @param document where the style definition will be placed in
+	 */
 	public static void createFontDefinitionStyleElement(Document document) {
 		String styleID = "UbuntuMonoStyle";
 		if(document.getElementById(styleID) != null) {
@@ -430,12 +428,13 @@ public class SVGUtils {
 
 
 	/**
-	 * TODO
-	 * @param txt
-	 * @param doc
-	 * @param x
-	 * @param y
-	 * @return
+	 * Creates svg latex text element for the given {@link NewText} element.
+	 *
+	 * @param txt {@link NewText} element
+	 * @param doc document to create the filter definition in
+	 * @param x x position of the svg text
+	 * @param y y position of the svg text
+	 * @return the parent element for chaining
 	 * @throws IOException
 	 */
 	public static Element latexToSVG(NewText txt, Document doc, double x, double y) throws IOException {
@@ -469,14 +468,16 @@ public class SVGUtils {
 	}
 
 	/**
-	 * TODO
-	 * @param txt
-	 * @param doc
-	 * @param parent
-	 * @param x
-	 * @param y
-	 * @return
-	 * @throws IOException
+	 * Creates svg text element for the given {@link NewText} element.
+	 * It will have the Ubuntu Mono font and supports all the text features of the {@link NewText} element.
+	 *
+	 * @param txt {@link NewText} element
+	 * @param doc document to create the filter definition in
+	 * @param parent element where the text definition will be placed in
+	 * @param x x position of the svg text
+	 * @param y y position of the svg text
+	 * @return the parent element for chaining
+	 * @throws IOException TODO
 	 */
 	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) throws IOException {
 		String fontfamily = "'Ubuntu Mono', monospace";
@@ -532,11 +533,13 @@ public class SVGUtils {
 	}
 
 	/**
-	 * TODO
-	 * @param doc
-	 * @param parent
-	 * @param backgroundColor
-	 * @return
+	 * Creates a background filter for a svg element with the given background color.
+	 * The filter will be exactly the size of the backgroundText element.
+	 *
+	 * @param doc document to create the filter definition in
+	 * @param parent element where the filter definition will be placed in
+	 * @param backgroundColor color of the background filter
+	 * @return background text element
 	 */
 	public static Element createTextBackgroundFilter(Document doc, Element parent, Color backgroundColor) {
         String defID = SVGUtils.newDefId();
