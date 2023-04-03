@@ -428,7 +428,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
 
-				String fontfamily = "'Ubuntu Mono', monospace";
+				String fontfamily = "Ubuntu Mono, monospace";
 
 				if(txt.getBackground().getRGB() != 0){
 					// dummy text element

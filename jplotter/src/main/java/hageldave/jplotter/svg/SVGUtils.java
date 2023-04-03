@@ -2,6 +2,10 @@ package hageldave.jplotter.svg;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.font.FontProvider;
+import hageldave.jplotter.misc.Glyph;
+import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.NewText;
@@ -12,6 +16,8 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Comment;
 import org.scilab.forge.jlatexmath.DefaultTeXFont;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -31,13 +37,26 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static hageldave.jplotter.font.FontProvider.getUbuntuMonoFontAsBaseString;
+import static java.awt.Font.BOLD;
+import static java.awt.Font.ITALIC;
+import static java.awt.Font.PLAIN;
+import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicLong;
+
 import static hageldave.jplotter.renderables.NewText.STRIKETHROUGH;
 import static hageldave.jplotter.renderables.NewText.UNDERLINE;
 import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 /**
  * Utility class for SVG related methods.
- *
+ * 
  * @author hageldave
  */
 public class SVGUtils {
@@ -148,7 +167,7 @@ public class SVGUtils {
 	 * Serializes the specified document as xml formatted string.
 	 * @param doc to serialize
 	 * @return xml representation of the specified document
-	 * @throws RuntimeException when either an
+	 * @throws RuntimeException when either an 
 	 * {@link IOException} or {@link TranscoderException} occurs during the process.
 	 */
 	public static String documentToXMLString(Document doc){
@@ -176,8 +195,8 @@ public class SVGUtils {
 	/**
 	 * Writes the specified document to file in xml format.
 	 * @param doc document to serialize
-	 * @param file to write to
-	 * @throws RuntimeException when either an
+	 * @param file to write to 
+	 * @throws RuntimeException when either an 
 	 * {@link IOException} or {@link TranscoderException} occurs during the process.
 	 */
 	public static void documentToXMLFile(Document doc, File file){
@@ -208,7 +227,7 @@ public class SVGUtils {
 	/**
 	 * A new id string for use within the definitions section.
 	 * A global atomic counter is incremented to retrieve a
-	 * unique number and an id string of the form "def_2dh" is returned
+	 * unique number and an id string of the form "def_2dh" is returned 
 	 * where the part after the underscore is the unique number formatted
 	 * as 32-system number.
 	 * @return new unique definitions id string
@@ -309,9 +328,9 @@ public class SVGUtils {
 	 * using their {@link JPlotterCanvas#paintSVG(Document, Element)} method
 	 * to create their part of the DOM that cannot be generated from {@link SVGGraphics2D}.
 	 * <p>
-	 * For drawing a single {@link JPlotterCanvas} to SVG the method {@link JPlotterCanvas#paintSVG()}
+	 * For drawing a single {@link JPlotterCanvas} to SVG the method {@link JPlotterCanvas#paintSVG()} 
 	 * can be used instead of this method.
-	 *
+	 * 
 	 * @param c container to be converted to SVG
 	 * @return SVG document representing the specified container.
 	 */
@@ -321,8 +340,9 @@ public class SVGUtils {
 		Element defs = createSVGElement(document, "defs");
 		defs.setAttributeNS(null, "id", "JPlotterDefs");
 		document.getDocumentElement().appendChild(defs);
+		createFontDefinitionStyleElement(document);
 		{ /* draw all non JPlotterCanvas components
-	       * (and those that are isSvgAsImageRenderingEnabled()==true
+	       * (and those that are isSvgAsImageRenderingEnabled()==true 
 		   * which is checked by respective implementation's paint methods)
 		   */
 			SVGGraphics2D g2d = new SVGPatchedGraphics2D(document);
@@ -345,14 +365,14 @@ public class SVGUtils {
 				if(canvas.isSvgAsImageRenderingEnabled())
 					return; // was already rendered through SVGGraphics2D
 				Element group = SVGUtils.createSVGElement(doc, "g");
-				group.setAttributeNS(null, "transform",
+				group.setAttributeNS(null, "transform", 
 						"translate("+(canvas.asComponent().getX())+","+(canvas.asComponent().getY())+")");
 				parent.appendChild(group);
 				canvas.paintSVG(doc, group);
-			} else {
+			} else { 
 				if(comp instanceof Container){
 					Element group = SVGUtils.createSVGElement(doc, "g");
-					group.setAttributeNS(null, "transform",
+					group.setAttributeNS(null, "transform", 
 							"translate("+(comp.getX())+","+(comp.getY())+")");
 					parent.appendChild(group);
 					containerToSVG((Container)comp, doc, group);
@@ -360,6 +380,54 @@ public class SVGUtils {
 			}
 		}
 	}
+
+	public static void createFontDefinitionStyleElement(Document document) {
+		String styleID = "UbuntuMonoStyle";
+		if(document.getElementById(styleID) != null) {
+			return; // element is already present in document
+		}
+
+		// set Ubuntu Mono font
+		Element styleElement = SVGUtils.createSVGElement(document, "style");
+		styleElement.setAttributeNS(null, "id", styleID);
+		styleElement.setAttributeNS(null, "type", "text/css");
+		String fontface_css = new StringBuilder(1024*16)
+				.append(System.lineSeparator())
+				.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+				.append(getUbuntuMonoFontAsBaseString(PLAIN))
+				.append("\") format(\"truetype\"); font-weight: normal; font-style: normal;}")
+				.append(System.lineSeparator())
+
+				.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+				.append(getUbuntuMonoFontAsBaseString(BOLD))
+				.append("\") format(\"truetype\"); font-weight: bold; font-style: normal;}")
+				.append(System.lineSeparator())
+
+				.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+				.append(getUbuntuMonoFontAsBaseString(ITALIC))
+				.append("\") format(\"truetype\"); font-weight: normal; font-style: italic;}")
+				.append(System.lineSeparator())
+
+				.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+				.append(getUbuntuMonoFontAsBaseString(BOLD | ITALIC))
+				.append("\") format(\"truetype\"); font-weight: bold; font-style: italic;}")
+				.append(System.lineSeparator())
+				.toString();
+		CDATASection cdatasection_fontface_css = document.createCDATASection(fontface_css);
+		styleElement.appendChild(cdatasection_fontface_css);
+		//					styleElement.setTextContent(fontface_css);
+		// includes the ubuntu mono font licence
+		String licenceString = FontProvider.getUbuntuMonoFontLicence();
+		for (String line : licenceString.split("[\\r\\n]{2}")) {
+			// remove "--" as those characters as they aren't allowed inside comments
+			String cleanedLine = line.replaceAll("-", "");
+			// create comment with cleaned line
+			Comment comment = document.createComment(cleanedLine);
+			styleElement.appendChild(comment);
+		}
+		document.getDocumentElement().appendChild(styleElement);
+	}
+
 
 	/**
 	 * TODO

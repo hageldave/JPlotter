@@ -6,6 +6,7 @@ import hageldave.jplotter.color.ColorMap;
 import hageldave.jplotter.renderables.Triangles;
 
 import javax.swing.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
@@ -15,6 +16,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
+
+import static java.awt.geom.Rectangle2D.*;
 
 /**
  * Class containing utility methods
@@ -463,5 +466,101 @@ public class Utils {
 				toFill.addAll(getReflectionFields(interfaceClass));
 		}
 		return toFill;
+	}
+
+	/**
+	 * Clips the given line to the rectangle.
+	 * If the line doesn't intersect the rectangle, clipping will be skipped and the given line object will be returned.
+	 *
+	 * @param rect {@link Rectangle2D} object where the line should be clipped to
+	 * @param line {@link Line2D} object to clip
+	 * @return the clipped line
+	 */
+	public static Line2D getClippedLine(Rectangle2D rect, Line2D line) {
+		// if line does not intersect the rectangle, clipping can be skipped altogether
+		if (!rect.intersectsLine(line))
+			return line;
+
+		Point2D intersectionPoint;
+		double x1 = line.getX1(), y1 = line.getY1(), x2 = line.getX2(), y2 = line.getY2();
+
+		Line2D.Double unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		Line2D.Double leftBorder = new Line2D.Double(new Point2D.Double(rect.getMinX(), rect.getMinY()), new Point2D.Double(rect.getMinX(), rect.getMaxY()));
+		Line2D.Double rightBorder = new Line2D.Double(new Point2D.Double(rect.getMaxX(), rect.getMinY()), new Point2D.Double(rect.getMaxX(), rect.getMaxY()));
+		Line2D.Double topBorder = new Line2D.Double(new Point2D.Double(rect.getMinX(), rect.getMinY()), new Point2D.Double(rect.getMaxX(), rect.getMinY()));
+		Line2D.Double bottomBorder = new Line2D.Double(new Point2D.Double(rect.getMinX(), rect.getMaxY()), new Point2D.Double(rect.getMaxX(), rect.getMaxY()));
+
+		int outcode = rect.outcode(x1, y1);
+		if ((outcode & OUT_TOP)==OUT_TOP) {
+			intersectionPoint = Utils.lineIntersection(topBorder, unclippedLine);
+			x1 = Objects.requireNonNull(intersectionPoint).getX();
+			y1 = Objects.requireNonNull(intersectionPoint).getY();
+			unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		}
+		if ((outcode & OUT_BOTTOM)==OUT_BOTTOM) {
+			intersectionPoint = Utils.lineIntersection(bottomBorder, unclippedLine);
+			x1 = Objects.requireNonNull(intersectionPoint).getX();
+			y1 = Objects.requireNonNull(intersectionPoint).getY();
+			unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		}
+		if ((outcode & OUT_LEFT)==OUT_LEFT) {
+			intersectionPoint = Utils.lineIntersection(leftBorder, unclippedLine);
+			x1 = Objects.requireNonNull(intersectionPoint).getX();
+			y1 = Objects.requireNonNull(intersectionPoint).getY();
+			unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		}
+		if ((outcode & OUT_RIGHT)==OUT_RIGHT) {
+			intersectionPoint = Utils.lineIntersection(rightBorder, unclippedLine);
+			x1 = Objects.requireNonNull(intersectionPoint).getX();
+			y1 = Objects.requireNonNull(intersectionPoint).getY();
+			unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		}
+
+		outcode = rect.outcode(x2, y2);
+		if ((outcode & OUT_TOP)==OUT_TOP) {
+			intersectionPoint = Utils.lineIntersection(topBorder, unclippedLine);
+			x2 = Objects.requireNonNull(intersectionPoint).getX();
+			y2 = Objects.requireNonNull(intersectionPoint).getY();
+			unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		}
+		if ((outcode & OUT_BOTTOM)==OUT_BOTTOM) {
+			intersectionPoint = Utils.lineIntersection(bottomBorder, unclippedLine);
+			x2 = Objects.requireNonNull(intersectionPoint).getX();
+			y2 = Objects.requireNonNull(intersectionPoint).getY();
+			unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		}
+		if ((outcode & OUT_LEFT)==OUT_LEFT) {
+			intersectionPoint = Utils.lineIntersection(leftBorder, unclippedLine);
+			x2 = Objects.requireNonNull(intersectionPoint).getX();
+			y2 = Objects.requireNonNull(intersectionPoint).getY();
+			unclippedLine = new Line2D.Double(new Point2D.Double(x1, y1), new Point2D.Double(x2, y2));
+		}
+		if ((outcode & OUT_RIGHT)==OUT_RIGHT) {
+			intersectionPoint = Utils.lineIntersection(rightBorder, unclippedLine);
+			x2 = Objects.requireNonNull(intersectionPoint).getX();
+			y2 = Objects.requireNonNull(intersectionPoint).getY();
+		}
+		return new Line2D.Double(x1, y1, x2, y2);
+	}
+
+	/**
+	 * Calculates intersection between to {@link Line2D} objects.
+	 *
+	 * @param a first Line2D object
+	 * @param b second Line2D object
+	 * @return intersection point of the two lines, returns null if there's no intersection
+	 */
+	public static Point2D lineIntersection(Line2D a, Line2D b) {
+		double x1 = a.getX1(), y1 = a.getY1(), x2 = a.getX2(), y2 = a.getY2(), x3 = b.getX1(), y3 = b.getY1(),
+				x4 = b.getX2(), y4 = b.getY2();
+		double d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+		if (d == 0) {
+			return null;
+		}
+
+		double xi = ((x3 - x4) * (x1 * y2 - y1 * x2) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
+		double yi = ((y3 - y4) * (x1 * y2 - y1 * x2) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
+
+		return new Point2D.Double(xi, yi);
 	}
 }

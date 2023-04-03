@@ -1,13 +1,17 @@
 package hageldave.jplotter.canvas;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -163,7 +167,6 @@ public interface JPlotterCanvas {
 				defs.setAttributeNS(null, "id", "JPlotterDefs");
 				document.getDocumentElement().appendChild(defs);
 			}
-			
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
 			parent.appendChild(rootGroup);
 			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
@@ -171,15 +174,7 @@ public interface JPlotterCanvas {
 			// define the clipping rectangle for the content (rect of vieport size)
 			Node defs = SVGUtils.getDefs(document);
 
-			// set Ubuntu Mono font
-			Element styleElement = SVGUtils.createSVGElement(document, "style");
-			styleElement.setAttributeNS(null, "type", "text/css");
-			styleElement.setTextContent(
-					"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(PLAIN) +"') format('truetype'); font-weight: normal; font-style: normal;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD) +"') format('truetype'); font-weight: bold; font-style: normal;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(ITALIC) +"') format('truetype'); font-weight: normal; font-style: italic;" +
-							"@font-face { font-family:'Ubuntu Mono'; src: url('data:font/ttf;base64," + getUbuntuMonoFontAsBaseString(BOLD | ITALIC) +"') format('truetype'); font-weight: bold; font-style: italic;");
-			defs.appendChild(styleElement);
+			SVGUtils.createFontDefinitionStyleElement(document);
 
 			Element clip = SVGUtils.createSVGElement(document, "clipPath");
 			String clipDefID = SVGUtils.newDefId();
