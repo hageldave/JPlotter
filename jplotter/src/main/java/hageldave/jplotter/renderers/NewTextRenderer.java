@@ -139,6 +139,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
         if(!isEnabled()){
             return;

@@ -64,9 +64,9 @@ public class NewText implements Renderable, Cloneable {
     protected boolean hidden=false;
     protected boolean latex;
     protected Insets insets = new Insets(0, 0, 0, 0);
-    protected int textDecoration = -1;
+    protected int textDecoration = 0;
     protected Pair<Double, Double> transformationCenter = new Pair<>(0.0, 0.0);
-    public final static int UNDERLINE = 0, STRIKETHROUGH = 1;
+    public final static int NONE = 0, UNDERLINE = 1, STRIKETHROUGH = 2;
 
     /**
      * Creates a new Text object with the specified string and font configuration.
@@ -313,7 +313,8 @@ public class NewText implements Renderable, Cloneable {
 
     /**
      * @return the bounding rectangle of this text, when exported
-     * The bounds can differ from the normal {{@link #getBounds()}} method because of font rendering differences.
+     * The bounds can differ from the normal {{@link #getBounds()}} method because of font rendering differences between java and pdf/svg rendering.
+     * The rendering differences result in different sizes, which are the reason for the different methods.
      */
     public Rectangle2D getExportBounds() {
         double width = 0;
@@ -432,8 +433,8 @@ public class NewText implements Renderable, Cloneable {
      */
     @DebugSetter(ID = "textDecoration", creator = TextDecorationCreator.class)
     public NewText setTextDecoration(int textDecoration) {
-        if (textDecoration > 1 || textDecoration < -1) {
-            throw new IllegalArgumentException("Only value between -1 and 1 allowed");
+        if (textDecoration > 2 || textDecoration < 0) {
+            throw new IllegalArgumentException("Only value between 0 and 2 allowed");
         }
         this.textDecoration = textDecoration;
         return this;
@@ -448,6 +449,8 @@ public class NewText implements Renderable, Cloneable {
 
     /**
      * @return the export bounds of the text object with the transformation center taken into account
+     * The transformed export bounds are different from the normal transformed bounds because of rendering differences between java and pdf/svg rendering.
+     * The rendering differences result in different sizes, which are the reason for the different methods.
      */
     public Point2D.Double getTransformedExportBounds() {
         return new Point2D.Double(this.getExportBounds().getWidth()*transformationCenter.first, this.getExportBounds().getHeight()*transformationCenter.second);
@@ -609,7 +612,7 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
-     * @return
+     * @return the current font size of the text object
      */
     @DebugGetter(ID = "fontSize")
     public int getFontSize() {
@@ -617,7 +620,7 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
-     * @return
+     * @return the current font style of the text object, which can be one of {@link java.awt.Font#PLAIN}, {@link java.awt.Font#BOLD} or {@link java.awt.Font#ITALIC}
      */
     @DebugGetter(ID = "fontStyle")
     public int getStyle() {
@@ -625,10 +628,10 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
+     * Sets the font size of the text object.
      *
-     *
-     * @param fontSize
-     * @return
+     * @param fontSize font size of the text object
+     * @return this for chaining
      */
     @DebugSetter(ID = "fontSize", creator = IntegerSpinnerCreator.class)
     public NewText setFontSize(int fontSize) {
@@ -638,10 +641,14 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
+     * Sets the font style of the text object.
+     * This can be one of {@link java.awt.Font#PLAIN} = 0, {@link java.awt.Font#BOLD} = 1 or {@link java.awt.Font#ITALIC} = 2.
+     * <br>
+     * The font style choice won't be visible in the latex rendering.
+     * To change it in latex rendering the corresponding latex instruction has to be invoked.
      *
-     *
-     * @param style
-     * @return
+     * @param style font style of the text object
+     * @return this for chaining
      */
     @DebugSetter(ID = "fontStyle", creator = FontStyleCreator.class)
     public NewText setStyle(int style) {

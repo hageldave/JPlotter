@@ -18,19 +18,14 @@ public class TextDecorationCreator implements ControlPanelCreator {
     @Override
     public JPanel create(JPlotterCanvas canvas, Object obj, JPanel panelContainer, Method setter, Method getter) throws Exception {
         AtomicInteger current = new AtomicInteger((int) getter.invoke(obj));
-        JButton button = new JButton(String.valueOf(decorations[current.get()+1]));
+        JButton button = new JButton(String.valueOf(decorations[current.get()]));
         button.setToolTipText("Click to change text decoration");
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.addActionListener(e -> {
             try {
-                if (current.get() == 1) {
-                    current.set(-1);
-                    setter.invoke(obj, current.get());
-                } else {
-                    current.set((current.get() + 1) % 2);
-                    setter.invoke(obj, current.get());
-                }
-                button.setText(String.valueOf(decorations[current.get()+1]));
+                current.set((current.get() + 1) % 3);
+                setter.invoke(obj, current.get());
+                button.setText(String.valueOf(decorations[current.get()]));
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 throw new RuntimeException(ex);
             }
