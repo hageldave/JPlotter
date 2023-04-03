@@ -372,6 +372,14 @@ public class PDFUtils {
         return cs;
     }
 
+    /**
+     * Creates a {@link PDType0Font} for the Ubuntu Mono font with the given style.
+     *
+     * @param doc document where the font will be placed in
+     * @param style of the text that should be included
+     * @return the created PDType0Font
+     * @throws IOException if there's an error when loading the font
+     */
     public static PDType0Font createPDFont(PDDocument doc, int style) throws IOException {
         switch (style) {
             case Font.BOLD:
