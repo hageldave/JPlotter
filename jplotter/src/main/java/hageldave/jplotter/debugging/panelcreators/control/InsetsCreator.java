@@ -45,9 +45,9 @@ public class InsetsCreator implements ControlPanelCreator {
         return panelContainer;
     }
 
-    private void addListener(double minX, double minY, double maxX, double maxY, Method setter, Object obj, JPlotterCanvas canvas) {
+    private void addListener(int minX, int minY, int maxX, int maxY, Method setter, Object obj, JPlotterCanvas canvas) {
         try {
-            setter.invoke(obj, new Insets((int) minX, (int) minY, (int) maxX, (int) maxY));
+            setter.invoke(obj, new Insets(minX, minY, maxX,  maxY));
         } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new RuntimeException(ex);
         }
@@ -67,15 +67,14 @@ public class InsetsCreator implements ControlPanelCreator {
         coordContainer.add(coordSpinner);
 
         coordSpinner.addChangeListener(e -> addListener(
-                (double) this.topModel.getValue(),
-                (double) this.leftModel.getValue(),
-                (double) this.bottomModel.getValue(),
-                (double) this.rightModel.getValue(),
-                setter,
-                obj,
-                canvas)
+                    (int) this.topModel.getValue(),
+                    (int) this.leftModel.getValue(),
+                    (int) this.bottomModel.getValue(),
+                    (int) this.rightModel.getValue(),
+                    setter,
+                    obj,
+                    canvas)
         );
-
         return coordContainer;
     }
 }
