@@ -305,8 +305,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 x1*=scaleX;
                 y1*=scaleY;
 
-                x1 -= txt.getTransformedExportBounds().getX();
-                y1 -= txt.getTransformedExportBounds().getY();
+                x1 -= txt.getTransformedExportBounds().getWidth();
+                y1 -= txt.getTransformedExportBounds().getHeight();
 
                 y1+=1;
 
@@ -330,7 +330,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
 
                         Element svgLatex = SVGUtils.latexToSVG(txt, doc, 0, 0);
                         textGroupParent.appendChild(svgLatex);
-                        textGroup.setAttributeNS(null, "transform-origin", txt.getTransformedExportBounds().getX() + " " + txt.getTransformedExportBounds().getY());
+                        textGroup.setAttributeNS(null, "transform-origin", txt.getTransformedExportBounds().getWidth() + " " + txt.getTransformedExportBounds().getHeight());
                         textGroup.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(x1) + "," + SVGUtils.svgNumber(y1) + ")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI) + ")");
                         textGroupParent.setAttributeNS(null, "transform",
                                 "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(txt.getBounds().getHeight()) + ")" + "scale(1,-1)");
@@ -370,8 +370,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     x1 *= scaleX;
                     y1 *= scaleY;
 
-                    x1 -= txt.getTransformedExportBounds().getX();
-                    y1 -= txt.getTransformedExportBounds().getY();
+                    x1 -= txt.getTransformedExportBounds().getWidth();
+                    y1 -= txt.getTransformedExportBounds().getHeight();
 
                     // test if inside of view port
                     Rectangle2D bounds = txt.getBoundsWithRotation();
