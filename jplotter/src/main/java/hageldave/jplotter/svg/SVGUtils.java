@@ -524,7 +524,7 @@ public class SVGUtils {
 			double fontDescent = CharacterAtlas.getFontMetrics(txt.getFontSize(), txt.getStyle()).getMaxDescent();
 			parent.setAttributeNS(null, "transform",
 					"translate("+SVGUtils.svgNumber(x)+","+SVGUtils.svgNumber(y+fontDescent)+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
-			parent.setAttributeNS(null, "transform-origin", txt.getTransformedExportBounds().getX() + " " + txt.getTransformedExportBounds().getY());
+			parent.setAttributeNS(null, "transform-origin", txt.getTransformedExportBounds().getWidth() + " " + txt.getTransformedExportBounds().getHeight());
 
 			text.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(txt.getInsets().left) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight()-txt.getTextSize().getHeight() - txt.getInsets().top)) + ") scale(1,-1)");
 			textHeight += singleLineText.getBounds().getHeight();

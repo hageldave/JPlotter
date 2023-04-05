@@ -166,8 +166,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
             x1*=scaleX;
             y1*=scaleY;
 
-            x1 -= txt.getTransformedBounds().getX();
-            y1 -= txt.getTransformedBounds().getY();
+            x1 -= txt.getTransformedBounds().getWidth();
+            y1 -= txt.getTransformedBounds().getHeight();
 
             y1+=1;
 
@@ -190,7 +190,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 trnsfrm.translate(x1, y1+txt.getBounds().getHeight());
                 trnsfrm.scale(1, -1);
                 if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getTransformedBounds().getX(), txt.getBounds().getHeight()-txt.getTransformedBounds().getY());
+                    trnsfrm.rotate(-angle, txt.getTransformedBounds().getWidth(), txt.getBounds().getHeight()-txt.getTransformedBounds().getHeight());
 
                 for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
                     // create a proxy graphics object to draw the string to
@@ -250,7 +250,7 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                 trnsfrm.translate(x1, y1);
                 trnsfrm.scale(1, -1);
                 if(angle != 0.0)
-                    trnsfrm.rotate(-angle, txt.getTransformedBounds().getX(), -txt.getTransformedBounds().getY());
+                    trnsfrm.rotate(-angle, txt.getTransformedBounds().getWidth(), -txt.getTransformedBounds().getHeight());
                 g_.transform(trnsfrm);
                 p_.transform(trnsfrm);
 

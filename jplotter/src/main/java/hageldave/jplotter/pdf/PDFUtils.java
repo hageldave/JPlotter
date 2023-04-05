@@ -324,7 +324,7 @@ public class PDFUtils {
                 position.getX(),
                 position.getY() + txt.getBounds().getHeight() - fontDescent);
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle(), txt.getTransformedExportBounds().getX(), txt.getTransformedExportBounds().getY() - txt.getBounds().getHeight());
+            affineTransform.rotate(txt.getAngle(), txt.getTransformedExportBounds().getWidth(), txt.getTransformedExportBounds().getHeight() - txt.getBounds().getHeight());
         cs.transform(new Matrix(affineTransform));
 
         int textHeight = 0;
@@ -497,7 +497,7 @@ public class PDFUtils {
 
         AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX(), position.getY() + txt.getBounds().getHeight());
         if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle(), txt.getTransformedExportBounds().getX(), -txt.getTransformedExportBounds().getY() + txt.getBounds().getHeight());
+            affineTransform.rotate(txt.getAngle(), txt.getTransformedExportBounds().getWidth(), -txt.getTransformedExportBounds().getHeight() + txt.getBounds().getHeight());
         cs.transform(new Matrix(affineTransform));
 
         for (NewText singleLineText : txt.generateTextObjectForEachLine()) {

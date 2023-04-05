@@ -293,7 +293,8 @@ public class NewText implements Renderable, Cloneable {
     }
 
     /**
-     * @return the bounding rectangle of this text
+     * @return the bounding rectangle of this text for the Java rendering.
+     * This is different from the bounds when exporting to SVG/PDF. Those can be returned by the {@link #getExportBounds()} method.
      */
     public Rectangle2D getBounds() {
         double width = 0;
@@ -332,6 +333,31 @@ public class NewText implements Renderable, Cloneable {
         return new Rectangle2D.Double(getOrigin().getX(), getOrigin().getY(), width, height);
     }
 
+    /**
+     * @return the bounds of the text object with the transformation center taken into account
+     */
+    public Rectangle2D getTransformedBounds() {
+        Rectangle2D bounds = getBounds();
+        return new Rectangle2D.Double(
+                bounds.getX()-bounds.getWidth()*transformationCenter.first,
+                bounds.getY()-bounds.getHeight()*transformationCenter.second,
+                bounds.getWidth()*transformationCenter.first,
+                bounds.getHeight()*transformationCenter.second);
+    }
+
+    /**
+     * @return the export bounds of the text object with the transformation center taken into account
+     * The transformed export bounds are different from the normal transformed bounds because of rendering differences between java and pdf/svg rendering.
+     * The rendering differences result in different sizes, which are the reason for the different methods.
+     */
+    public Rectangle2D getTransformedExportBounds() {
+        Rectangle2D exportBounds = getExportBounds();
+        return new Rectangle2D.Double(
+                exportBounds.getX()-exportBounds.getWidth()*transformationCenter.first,
+                exportBounds.getY()-exportBounds.getHeight()*transformationCenter.second,
+                exportBounds.getWidth()*transformationCenter.first,
+                exportBounds.getHeight()*transformationCenter.second);
+    }
 
     protected static Rectangle2D getPDFTextBoundsWithoutLineBreaks(NewText txt) {
         FontCachedPDDocument doc = new FontCachedPDDocument();
@@ -358,7 +384,16 @@ public class NewText implements Renderable, Cloneable {
      */
     public Rectangle2D getBoundsWithRotation() {
         Rectangle2D bounds = getBounds();
-        AffineTransform transform = AffineTransform.getRotateInstance(angle, getTransformedBounds().getX(), getTransformedBounds().getY());
+        AffineTransform transform = AffineTransform.getRotateInstance(angle, getBounds().getX(), getBounds().getY());
+        return transform.createTransformedShape(bounds).getBounds2D();
+    }
+
+    /**
+     * @return the transformed bounding rectangle of this text with its rotation taken into account.
+     */
+    public Rectangle2D getTransformedBoundsWithRotation() {
+        Rectangle2D bounds = getBounds();
+        AffineTransform transform = AffineTransform.getRotateInstance(angle, getTransformedBounds().getWidth(), getTransformedBounds().getHeight());
         return transform.createTransformedShape(bounds).getBounds2D();
     }
 
@@ -434,26 +469,10 @@ public class NewText implements Renderable, Cloneable {
     @DebugSetter(ID = "textDecoration", creator = TextDecorationCreator.class)
     public NewText setTextDecoration(int textDecoration) {
         if (textDecoration > 2 || textDecoration < 0) {
-            throw new IllegalArgumentException("Only value between 0 and 2 allowed");
+            throw new IllegalArgumentException("Only values between 0 and 2 are allowed.");
         }
         this.textDecoration = textDecoration;
         return this;
-    }
-
-    /**
-     * @return the bounds of the text object with the transformation center taken into account
-     */
-    public Point2D.Double getTransformedBounds() {
-        return new Point2D.Double(this.getBounds().getWidth()*transformationCenter.first, this.getBounds().getHeight()*transformationCenter.second);
-    }
-
-    /**
-     * @return the export bounds of the text object with the transformation center taken into account
-     * The transformed export bounds are different from the normal transformed bounds because of rendering differences between java and pdf/svg rendering.
-     * The rendering differences result in different sizes, which are the reason for the different methods.
-     */
-    public Point2D.Double getTransformedExportBounds() {
-        return new Point2D.Double(this.getExportBounds().getWidth()*transformationCenter.first, this.getExportBounds().getHeight()*transformationCenter.second);
     }
 
     /**
@@ -642,7 +661,7 @@ public class NewText implements Renderable, Cloneable {
 
     /**
      * Sets the font style of the text object.
-     * This can be one of {@link java.awt.Font#PLAIN} = 0, {@link java.awt.Font#BOLD} = 1 or {@link java.awt.Font#ITALIC} = 2.
+     * This can be one of {@link java.awt.Font#PLAIN} = 0, {@link java.awt.Font#BOLD} = 1, {@link java.awt.Font#ITALIC} = 2 or BOLD+ITALIC.
      * <br>
      * The font style choice won't be visible in the latex rendering.
      * To change it in latex rendering the corresponding latex instruction has to be invoked.
@@ -691,7 +710,7 @@ public class NewText implements Renderable, Cloneable {
 
     /**
      * disposes of the GL resources of this text object,
-     * i.e deletes the vertex array.
+     * i.e. deletes the vertex array.
      */
     @Override
     @Annotations.GLContextRequired
