@@ -29,6 +29,7 @@ public class TextfieldCreator implements ControlPanelCreator {
         textFieldPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         textFieldPanel.setBorder(new EmptyBorder(15, 0, 7, 0));
         JTextField textField = new JTextField("", 20);
+        textField.setToolTipText("Press enter to save the changes");
         textField.setMaximumSize(textField.getPreferredSize());
         textFieldPanel.add(textFieldLabel);
         textFieldPanel.add(textField);
@@ -59,7 +60,7 @@ public class TextfieldCreator implements ControlPanelCreator {
         textField.addActionListener(e -> {
             try {
                 setter.invoke(obj, textField.getText());
-                textLabel.setText("Current string: " + getter.invoke(obj));
+                textLabel.setText( "<html>Current string: <b>" + getter.invoke(obj) + "</b></html>");
                 textField.setText("");
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 ex.printStackTrace();
