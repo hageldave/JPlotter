@@ -38,6 +38,9 @@ public class TextComparison {
         oldTextObject2.setOrigin(0, 50);
         oldTextObject2.setAngle(0.2);
 
+        Text oldTextObject3 = new Text("Test object 3", 24, Font.BOLD, Color.MAGENTA);
+        oldTextObject3.setOrigin(0, 150);
+
         NewText newTextObject1 = new NewText("Test object 1", fontSize, fontStyle, Color.BLUE);
         newTextObject1.setOrigin(10, 100);
         newTextObject1.setBackground(Color.RED);
@@ -47,6 +50,8 @@ public class TextComparison {
         newTextObject2.setOrigin(0, 50);
         newTextObject2.setAngle(0.2);
 
+        NewText newTextObject3 = new NewText("Test object 3", 24, Font.BOLD, Color.MAGENTA);
+        newTextObject3.setOrigin(0, 150);
 
         // This sets up the first frame, whcih tests the old text object / renderer
         CoordSysRenderer oldCoordsys = new CoordSysRenderer();
@@ -55,7 +60,8 @@ public class TextComparison {
         CompleteRenderer oldContent = new CompleteRenderer();
         oldCoordsys.setContent(oldContent
                 .addItemToRender(oldTextObject1)
-                .addItemToRender(oldTextObject2));
+                .addItemToRender(oldTextObject2)
+                .addItemToRender(oldTextObject3));
         // lets set the coordinate view to cover the whole sampling space
         oldCoordsys.setCoordinateView(-550, -20, 550, 210);
 
@@ -65,8 +71,6 @@ public class TextComparison {
         oldTextCanvas.setRenderer(oldCoordsys);
 
         new CoordSysPanning(oldTextCanvas, oldCoordsys).register();
-
-
 
         // lets put a JFrame around it all and launch
         JFrame oldTextFrame = new JFrame("Compare text objects | old");
@@ -131,7 +135,8 @@ public class TextComparison {
         CompleteRenderer newContent = new CompleteRenderer();
         newCoordsys.setContent(newContent
                 .addItemToRender(newTextObject1)
-                .addItemToRender(newTextObject2));
+                .addItemToRender(newTextObject2)
+                .addItemToRender(newTextObject3));
         // lets set the coordinate view to cover the whole sampling space
         newCoordsys.setCoordinateView(-550, -20, 550, 210);
 
