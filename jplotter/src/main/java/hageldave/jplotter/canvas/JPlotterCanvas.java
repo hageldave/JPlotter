@@ -233,7 +233,7 @@ public interface JPlotterCanvas {
 	public default void paintPDF(PDDocument document, PDPage page) throws IOException {
 		int w,h;
 		if ((w=asComponent().getWidth()) > 0 && (h=asComponent().getHeight()) > 0) {
-			// do we need the mediabox?
+			// setup mediabox (page size)
 			page.setMediaBox(new PDRectangle(w, h));
 			paintPDF(document, page, new Rectangle2D.Float(0, 0, w, h));
 		}
