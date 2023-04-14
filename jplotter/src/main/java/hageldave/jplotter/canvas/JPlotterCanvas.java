@@ -239,7 +239,7 @@ public interface JPlotterCanvas {
 		}
 	}
 
-	
+	/** This method assumes that the documents page size (mediabox) is already set up.*/ // TDDO: write rest of javadoc
 	public default void paintPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) throws IOException {
 		PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, false);
 		// drawing the background color of the canvas in the given render location
