@@ -241,22 +241,22 @@ public interface JPlotterCanvas {
 	public default void paintPDF(PDDocument document, PDPage page) throws IOException {
 		int w,h;
 		if ((w=asComponent().getWidth()) > 0 && (h=asComponent().getHeight()) > 0) {
+			// setup mediabox (page size)
 			page.setMediaBox(new PDRectangle(w, h));
-			PDPageContentStream contentStream = new PDPageContentStream(document, page,
-					PDPageContentStream.AppendMode.APPEND, false);
-			contentStream.addRect(0, 0, w, h);
-			contentStream.setNonStrokingColor(asComponent().getBackground());
-			contentStream.fill();
-			contentStream.close();
-			paintToPDF(document, page, w, h);
+			paintPDF(document, page, new Rectangle2D.Float(0, 0, w, h));
 		}
 	}
 
-
-	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream contentStream, Rectangle2D renderLoc) throws IOException {
-		contentStream.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
+	/** This method assumes that the documents page size (mediabox) is already set up.*/ // TDDO: write rest of javadoc
+	public default void paintPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) throws IOException {
+		PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, false);
+		// drawing the background color of the canvas in the given render location
+		contentStream.addRect((float) renderLoc.getBounds2D().getX(), (float) (page.getMediaBox().getHeight()-renderLoc.getBounds2D().getY()-renderLoc.getBounds2D().getHeight()),
+				(float) renderLoc.getBounds2D().getWidth(), (float) renderLoc.getBounds2D().getHeight());
 		contentStream.setNonStrokingColor(asComponent().getBackground());
 		contentStream.fill();
+		contentStream.close();
+		// draw the rest (render to pdf)
 		paintToPDF(document, page, renderLoc);
 	}
 

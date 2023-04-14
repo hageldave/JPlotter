@@ -330,33 +330,32 @@ public class PDFUtils {
         PDDocument doc = new FontCachedPDDocument();
         PDPage page = new PDPage();
         doc.addPage(page);
-        PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
-        page.setMediaBox(new PDRectangle(c.getWidth()+c.getX(), c.getHeight()+c.getY()));
+        page.setMediaBox(new PDRectangle(c.getWidth(), c.getHeight()));
 
-        containerToPDF(c, doc, page, cs, 0, 0);
         { // render gui components through PdfBoxGraphics2D
+            PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
             PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, c.getWidth(), c.getHeight());
             c.paintAll(g2d);
             g2d.dispose();
             PDFormXObject xform = g2d.getXFormObject();
             cs.drawForm(xform);
+            cs.close();
         }
-
-        cs.close();
+        containerToPDF(c, doc, page, 0, 0);
         return doc;
     }
 
-    private static void containerToPDF(Container c, PDDocument doc, PDPage page, PDPageContentStream cs, int xOffset, int yOffset) throws IOException {
+    private static void containerToPDF(Container c, PDDocument doc, PDPage page, int xOffset, int yOffset) throws IOException {
         for(Component comp:c.getComponents()) {
             if (comp instanceof JPlotterCanvas) {
                 JPlotterCanvas canvas = (JPlotterCanvas)comp;
                 if(canvas.isPDFAsImageRenderingEnabled())
                     return; // was already rendered through PdfBoxGraphics2D
-                canvas.paintPDF(doc, page, cs, new Rectangle2D.Double(canvas.asComponent().getX()+xOffset, canvas.asComponent().getY()+yOffset,
+                canvas.paintPDF(doc, page, new Rectangle2D.Double(canvas.asComponent().getX()+xOffset, canvas.asComponent().getY()+yOffset,
                         canvas.asComponent().getWidth(), canvas.asComponent().getHeight()));
             } else {
                 if(comp instanceof Container){
-                    containerToPDF((Container)comp, doc, page, cs, comp.getX()+xOffset, comp.getY()+yOffset);
+                    containerToPDF((Container)comp, doc, page, comp.getX()+xOffset, comp.getY()+yOffset);
                 }
             }
         }
