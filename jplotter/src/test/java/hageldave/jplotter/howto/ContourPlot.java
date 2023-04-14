@@ -1,18 +1,5 @@
 package hageldave.jplotter.howto;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.io.File;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.function.DoubleBinaryOperator;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
@@ -23,14 +10,26 @@ import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.misc.Contours;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Lines.SegmentDetails;
+import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.renderers.PointsRenderer;
+import org.apache.pdfbox.pdmodel.PDDocument;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.DoubleBinaryOperator;
 
 public class ContourPlot {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, ClassNotFoundException, InterruptedException {
 		// formulate bivariate function that defines the 2D surface
 		DoubleBinaryOperator bivariateFn = (x,y)->(x*y + x*x - y*y -.01);
 		// sample the function
@@ -80,7 +79,12 @@ public class ContourPlot {
 		CompleteRenderer content = new CompleteRenderer();
 		content.addItemToRender(contourbands).addItemToRender(contourlines);
 		coordsys.setContent(content);
-		
+
+		Points p = new Points();
+		PointsRenderer pr = new PointsRenderer();
+		pr.addItemToRender(p);
+		content.addItemToRender(p);
+
 		// display within a JFrame
 		JFrame frame = new JFrame();
 		boolean useOpenGL = true;
@@ -93,7 +97,7 @@ public class ContourPlot {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		canvas.addCleanupOnWindowClosingListener(frame);
 		// make visible on AWT event dispatch thread
-		SwingUtilities.invokeLater(()->{
+		SwingUtilities.invokeAndWait(()->{
 			frame.pack();
 			frame.setVisible(true);
 		});
@@ -121,12 +125,12 @@ public class ContourPlot {
 		contourbands.removeAllTriangles();
 		contourbands.getTriangleDetails().addAll(tris);
 		canvas.scheduleRepaint();
-		
-		
+
+
 		long t=System.currentTimeMillis()+2000;
 		while(t>System.currentTimeMillis());
 		if("true".equals("true")) {
-			SwingUtilities.invokeLater(()->{
+			SwingUtilities.invokeAndWait(()->{
 				Img img = new Img(frame.getSize());
 				img.paint(g2d->frame.paintAll(g2d));
 				ImageSaver.saveImage(img.getRemoteBufferedImage(), "howto_contourplot.png");
@@ -142,7 +146,5 @@ public class ContourPlot {
 				System.out.println("exported pdf");
 			});
 		}
-
 	}
-
 }

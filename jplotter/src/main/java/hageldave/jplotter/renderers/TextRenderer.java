@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
@@ -417,46 +416,79 @@ public class TextRenderer extends GenericRenderer<Text> {
 				y1+=1;
 				
 				// test if inside of view port
-				if(x1+txt.getTextSize().width < 0 || x1-txt.getTextSize().width > w){
-					continue;
-				}
-				if(y1+txt.getTextSize().width < 0 || y1-txt.getTextSize().width > h){
+				Rectangle2D bounds = txt.getBoundsWithRotation();
+				AffineTransform trnsfrm = new AffineTransform();
+				trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
+				trnsfrm.translate(x1, y1);
+				bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
+				Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+				if(!viewportRect.intersects(bounds)) {
 					continue;
 				}
 				
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
-				
+
+				String fontfamily = "Ubuntu Mono, monospace";
+
 				if(txt.getBackground().getRGB() != 0){
-					Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getTextSize().width,txt.getTextSize().height);
-					textGroup.appendChild(backgroundRect);
-					backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-					backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
-					if(txt.getAngle() != 0){
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+")");
-					} else {
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")");
-					}
+					String defID = SVGUtils.newDefId();
+					Element defs = SVGUtils.createSVGElement(doc, "defs");
+					Element filter = SVGUtils.createSVGElement(doc, "filter");
+					filter.setAttributeNS(null, "x", ""+0);
+					filter.setAttributeNS(null, "y", ""+0);
+					filter.setAttributeNS(null, "width", ""+1);
+					filter.setAttributeNS(null, "height", ""+1);
+					filter.setAttributeNS(null, "id", defID);
+					Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
+					feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+					feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
+					feFlood.setAttributeNS(null, "result", "bg");
+
+					Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
+					Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+					feMergeNode.setAttributeNS(null, "in", "bg");
+					Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
+					feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
+
+					feMerge.appendChild(feMergeNode);
+					feMerge.appendChild(feMergeNode2);
+					filter.appendChild(feFlood);
+					filter.appendChild(feMerge);
+					defs.appendChild(filter);
+					textGroup.appendChild(defs);
+
+					// dummy text element
+					Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+					textGroup.appendChild(backgroundText);
+
+					backgroundText.setAttributeNS(null, "filter", "url(#" + defID + ")");
+					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
+					backgroundText.setTextContent(txt.getTextString());
+					backgroundText.setAttributeNS(null, "style",
+							"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
+					backgroundText.setAttributeNS(null, "fill-opacity", "0");
 				}
-				
+
+				// transform text group
+				textGroup.setAttributeNS(null, "x", ""+0);
+				textGroup.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
+				if(txt.getAngle() != 0){
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+				} else {
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
+				}
+
+				// actual text element
 				Element text = SVGUtils.createSVGElement(doc, "text");
 				textGroup.appendChild(text);
-				
 				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 				text.setTextContent(txt.getTextString());
-				String fontfamily = "'Ubuntu Mono', monospace";
 				text.setAttributeNS(null, "style",
 						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
 				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
 				if(txt.getColorA() != 1){
 					text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
-				}
-				text.setAttributeNS(null, "x", ""+0);
-				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
-				if(txt.getAngle() != 0){
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
-				} else {
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
 				}
 			}
 		}
@@ -488,14 +520,23 @@ public class TextRenderer extends GenericRenderer<Text> {
 					y1 *= scaleY;
 					y1 += 2;
 					x1 += 1;
-
+					
 					// test if inside of view port
-					if (x1 + txt.getTextSize().width < 0 || x1 - txt.getTextSize().width > w) {
+					Rectangle2D bounds = txt.getBoundsWithRotation();
+					AffineTransform trnsfrm = new AffineTransform();
+					trnsfrm.translate(-txt.getOrigin().getX(), -txt.getOrigin().getY());
+					trnsfrm.translate(x1, y1);
+					bounds = trnsfrm.createTransformedShape(bounds).getBounds2D();
+					Rectangle2D viewportRect = new Rectangle2D.Double(0, 0, w, h);
+					if(!viewportRect.intersects(bounds)) {
 						continue;
 					}
-					if (y1 + txt.getTextSize().width < 0 || y1 - txt.getTextSize().width > h) {
-						continue;
-					}
+
+					// clipping area
+					contentStream.saveGraphicsState();
+					contentStream.addRect(x, y, w, h);
+					contentStream.clip();
+					
 					float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
 					float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
 					if(txt.getBackground().getRGB() != 0){
@@ -516,11 +557,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.fill();
 						contentStream.restoreGraphicsState();
 					}
-
-					// clipping area
-					contentStream.saveGraphicsState();
-					contentStream.addRect(x, y, w, h);
-					contentStream.clip();
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					graphicsState.setNonStrokingAlphaConstant(txt.getColorA());

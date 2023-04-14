@@ -1,26 +1,19 @@
 package hageldave.jplotter.interaction;
 
-import java.awt.Component;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
-import java.util.LinkedList;
-
-import javax.swing.SwingUtilities;
-
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.util.Utils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 /**
  * The CoordSysViewSelector class realizes a rectangular 
@@ -71,7 +64,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected CoordSysRenderer coordsys;
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
-	protected Point start,end;
+	protected Point2D start,end;
 	protected int extModifierMask = InputEvent.SHIFT_DOWN_MASK;
 	protected final LinkedList<Integer> extModifierMaskExcludes = new LinkedList<Integer>();
 	
@@ -94,7 +87,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	@Override
 	public void mousePressed(MouseEvent e) {
 		if(isTriggerMouseEvent(e, MouseEvent.MOUSE_PRESSED)){
-			start = e.getPoint();
+			start = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
 			overlay.addItemToRender(areaBorder);
 		}
 	}
@@ -110,17 +103,15 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			// clamp end point to area
 			double endX = Utils.clamp(coordSysArea.getMinX(), end.getX(), coordSysArea.getMaxX());
 			double endY = Utils.clamp(coordSysArea.getMinY(), end.getY(), coordSysArea.getMaxY());
-			this.end = new Point((int)endX, (int)endY);
+			this.end = coordsys.transformAWT2CoordSys(new Point((int)endX, (int)endY), canvas.getHeight());
 		}
 		createSelectionAreaBorder();
-		
-		Point2D p1 = coordsys.transformAWT2CoordSys(start, canvas.getHeight());
-		Point2D p2 = coordsys.transformAWT2CoordSys(end, canvas.getHeight());
+
 		this.areaSelectedOnGoing(
-				Math.min(p1.getX(), p2.getX()),
-				Math.min(p1.getY(), p2.getY()),
-				Math.max(p1.getX(), p2.getX()),
-				Math.max(p1.getY(), p2.getY())
+				Math.min(this.start.getX(), this.end.getX()),
+				Math.min(this.start.getY(), this.end.getY()),
+				Math.max(this.start.getX(), this.end.getX()),
+				Math.max(this.start.getY(), this.end.getY())
 		);
 		if(canvas instanceof JPlotterCanvas)
 			((JPlotterCanvas) canvas).scheduleRepaint();
@@ -129,17 +120,13 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	}
 	
 	protected void createSelectionAreaBorder() {
-		Point start_ = Utils.swapYAxis(start, canvas.getHeight());
-		Point end_ = Utils.swapYAxis(end, canvas.getHeight());
-		Rectangle vp = coordsys.getCurrentViewPort();
-		start_.setLocation(start_.getX()-vp.x, start_.getY()-vp.y);
-		end_.setLocation(end_.getX()-vp.x, end_.getY()-vp.y);
 		areaBorder.removeAllSegments();
 		int color = coordsys.getColorScheme().getColor2();
-		areaBorder.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY()).setColor(color);
-		areaBorder.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY()).setColor(color);
-		areaBorder.addSegment(start_.getX(), start_.getY(), end_.getX(), start_.getY()).setColor(color);
-		areaBorder.addSegment(start_.getX(), end_.getY(), end_.getX(), end_.getY()).setColor(color);
+
+		areaBorder.addSegment(this.start.getX(), this.start.getY(), this.start.getX(), this.end.getY()).setColor(color);
+		areaBorder.addSegment(this.end.getX(), this.start.getY(), this.end.getX(), this.end.getY()).setColor(color);
+		areaBorder.addSegment(this.start.getX(), this.start.getY(), this.end.getX(), this.start.getY()).setColor(color);
+		areaBorder.addSegment(this.start.getX(), this.end.getY(), this.end.getX(), this.end.getY()).setColor(color);
 	}
 	
 	@Override
@@ -147,13 +134,11 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		areaBorder.removeAllSegments();
 		overlay.lines.removeItemToRender(areaBorder);
 		if(start != null && end != null){
-			Point2D p1 = coordsys.transformAWT2CoordSys(start, canvas.getHeight());
-			Point2D p2 = coordsys.transformAWT2CoordSys(end, canvas.getHeight());
 			this.areaSelected(
-					Math.min(p1.getX(), p2.getX()),
-					Math.min(p1.getY(), p2.getY()),
-					Math.max(p1.getX(), p2.getX()),
-					Math.max(p1.getY(), p2.getY())
+					Math.min(this.start.getX(), this.end.getX()),
+					Math.min(this.start.getY(), this.end.getY()),
+					Math.max(this.start.getX(), this.end.getX()),
+					Math.max(this.start.getY(), this.end.getY())
 			);
 		}
 		canvas.repaint();

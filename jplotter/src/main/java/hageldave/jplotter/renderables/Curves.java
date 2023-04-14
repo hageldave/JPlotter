@@ -1,5 +1,12 @@
 package hageldave.jplotter.renderables;
 
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.customPrinter.RenderableDetailsPrinter;
+import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
+import hageldave.jplotter.debugging.panelcreators.control.DecimalSpinnerCreator;
+import hageldave.jplotter.debugging.panelcreators.control.PercentageFloatSliderCreator;
+import hageldave.jplotter.debugging.panelcreators.display.RenderableDetailsCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -41,6 +48,7 @@ public class Curves implements Renderable {
 	protected short strokePattern = (short)0xffff;
 	protected float strokeLength = 16;
 	protected boolean isDirty = true;
+
 	protected boolean hidden = false;
 	protected DoubleSupplier globalSaturationMultiplier = () -> 1.0;
 	protected DoubleSupplier globalAlphaMultiplier = () -> 1.0;
@@ -48,7 +56,7 @@ public class Curves implements Renderable {
 	protected int numEffectiveSegments = 0;
 	protected boolean isGLDoublePrecision = false;
 	
-	
+	@DebugGetter(ID = "numEffectiveSegments")
 	public int getNumEffectiveSegments() {
 		return numEffectiveSegments;
 	}
@@ -444,7 +452,6 @@ public class Curves implements Renderable {
 		return isGLDoublePrecision;
 	}
 
-
 	@Override
 	public boolean intersects(Rectangle2D rect) {
 		return streamIntersecting(rect)
@@ -472,6 +479,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the line thickness multiplier of this {@link Curves} object
 	 */
+	@DebugGetter(ID = "globalThicknessMultiplier")
 	public float getGlobalThicknessMultiplier() {
 		return (float)globalThicknessMultiplier.getAsDouble();
 	}
@@ -495,6 +503,7 @@ public class Curves implements Renderable {
 	 * @param thickness of the lines, default is 1.
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "globalThicknessMultiplier", creator = DecimalSpinnerCreator.class)
 	public Curves setGlobalThicknessMultiplier(double thickness) {
 		return setGlobalThicknessMultiplier(() -> thickness); 
 	}
@@ -517,6 +526,7 @@ public class Curves implements Renderable {
 	 * @param globalAlphaMultiplier of the curves in this collection
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Curves setGlobalAlphaMultiplier(double globalAlphaMultiplier) {
 		return setGlobalAlphaMultiplier(() -> globalAlphaMultiplier);
 	}
@@ -524,6 +534,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the global alpha multiplier of the curves in this collection
 	 */
+	@DebugGetter(ID = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -548,11 +559,13 @@ public class Curves implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Curves setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
+	@DebugGetter(ID = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
@@ -628,6 +641,7 @@ public class Curves implements Renderable {
 	/**
 	 * @return the individual curve detail objects contained in this object
 	 */
+	@DebugGetter(ID = "curves", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
 	public ArrayList<CurveDetails> getCurveDetails() {
 		return curves;
 	}
@@ -837,7 +851,25 @@ public class Curves implements Renderable {
 		this.curves.clear();
 		return this.setDirty();
 	}
-	
+
+	@Override
+	@DebugGetter(ID = "hidden")
+	public boolean isHidden() {
+		return hidden;
+	}
+
+	/**
+	 * Hides or unhides this Curves object, i.e. sets the {@link #isHidden()} field
+	 * value. When hidden, renderers will not draw it.
+	 * @param hide true when hiding
+	 * @return this for chaining
+	 */
+	@DebugSetter(ID = "hidden", creator = ButtonCreator.class)
+	public Curves hide(boolean hide) {
+		this.hidden = hide;
+		return this;
+	}
+
 	/**
 	 * Specification of a cubic Bezier curve element, comprising start/end point positions,
 	 * control point positions, as well as, line color, picking color and thickness.
