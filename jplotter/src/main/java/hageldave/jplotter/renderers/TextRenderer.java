@@ -417,7 +417,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 				x1*=scaleX;
 				y1*=scaleY;
 				
-				y1+=1;
+				y1+=3;
 				
 				// test if inside of view port
 				Rectangle2D bounds = txt.getBoundsWithRotation();
@@ -450,13 +450,13 @@ public class TextRenderer extends GenericRenderer<Text> {
 					feFlood.setAttributeNS(null, "result", "bg");
 
 					Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
-					Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
-					feMergeNode.setAttributeNS(null, "in", "bg");
-					Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
-					feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
+					Element backgroundFeMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+					backgroundFeMergeNode.setAttributeNS(null, "in", "bg");
+					Element sgFeMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+					sgFeMergeNode.setAttributeNS(null, "in", "SourceGraphic");
 
-					feMerge.appendChild(feMergeNode);
-					feMerge.appendChild(feMergeNode2);
+					feMerge.appendChild(backgroundFeMergeNode);
+					feMerge.appendChild(sgFeMergeNode);
 					filter.appendChild(feFlood);
 					filter.appendChild(feMerge);
 					defs.appendChild(filter);
@@ -484,7 +484,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 				}
 
 				// actual text element
-
 				Element text = SVGUtils.createSVGElement(doc, "text");
 				textGroup.appendChild(text);
 				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
