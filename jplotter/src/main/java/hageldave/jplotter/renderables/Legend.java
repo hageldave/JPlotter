@@ -56,6 +56,8 @@ public class Legend implements Renderable, Renderer {
 	protected LinkedList<Triangles> triangles = new LinkedList<>();
 
 	protected LinkedList<Text> texts = new LinkedList<>();
+	
+	protected Deque<Renderable> toCloseLater = new LinkedList<>();
 
 	protected CompleteRenderer delegate = new CompleteRenderer();
 
@@ -157,8 +159,8 @@ public class Legend implements Renderable, Renderer {
 
 	/**
 	 * Sets the {@link #isDirty()} state of this legend to true.
-	 * This indicates that a call to {@link #updateGL(boolean)} is necessary
-	 * to sync GL resources with this legends state.
+	 * This indicates that a call to {@link #update()} is necessary
+	 * to re-layout this legends elements.
 	 * @return this for chaining
 	 */
 	public Legend setDirty() {
@@ -324,17 +326,23 @@ public class Legend implements Renderable, Renderer {
 	 * Then these Renderables are created again while laying them out according to
 	 * the available viewport size.
 	 */
-	@Override
-	@GLContextRequired
-	public void updateGL(boolean useGLDoublePrecision) {
-		clearGL();
+	public void update() {
+		clear();
 		setup();
+	}
+	
+	@Override
+	@Deprecated(
+		/* Legend has no own GL objects, but when isDirty(), it indicates that elements need to be 
+		 * layouted again. update() is the method to call then.
+		 */
+	)
+	public void updateGL(boolean useGLDoublePrecision) {
+		update();
 	}
 
 	/**
 	 * creates the legend elements and computes the layout
-	 *
-	 *
 	 */
 	protected void setup() {
 		// do layout
@@ -667,31 +675,39 @@ public class Legend implements Renderable, Renderer {
 	@Override
 	@GLContextRequired
 	public void close() {
-		clearGL();
+		closeCollectedGLObjects();
 		delegate.close();
 	}
 
-
+	
 	@GLContextRequired
-	protected void clearGL() {
+	protected void closeCollectedGLObjects() {
+		while(!toCloseLater.isEmpty()) {
+			Renderable toClose = toCloseLater.remove();
+			toClose.close();
+		}
+	}
+
+	
+	protected void clear() {
 		glyph2points.values().forEach(p->{
 			delegate.points.removeItemToRender(p);
-			p.close();
+			toCloseLater.add(p);
 		});
 		glyph2points.clear();
 		pattern2lines.values().forEach(l->{
 			delegate.lines.removeItemToRender(l);
-			l.close();
+			toCloseLater.add(l);
 		});
 		pattern2lines.clear();
 		triangles.forEach(t->{
-			t.close();
 			delegate.triangles.removeItemToRender(t);
+			toCloseLater.add(t);
 		});
 		triangles.clear();
 		texts.forEach(t->{
 			delegate.text.removeItemToRender(t);
-			t.close();
+			toCloseLater.add(t);
 		});
 		texts.clear();
 	}
@@ -707,6 +723,7 @@ public class Legend implements Renderable, Renderer {
 
 	@Override
 	public void render(int vpx, int vpy, int w, int h) {
+		closeCollectedGLObjects();
 		if(!isEnabled()){
 			return;
 		}
@@ -716,13 +733,14 @@ public class Legend implements Renderable, Renderer {
 		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
 			viewPortWidth = w;
 			viewPortHeight = h;
-			updateGL(false);
+			update();
 		}
 		delegate.render(vpx, vpy, w, h);
 	}
 
 	@Override
 	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		closeCollectedGLObjects(); // no GL resources are allocated in fallback, so this will clear the list and close() will noop
 		if(!isEnabled()){
 			return;
 		}
@@ -732,7 +750,7 @@ public class Legend implements Renderable, Renderer {
 		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
 			viewPortWidth = w;
 			viewPortHeight = h;
-			updateGL(false); // only clearGL requires GL context, but all GL resources are null, so no prob.
+			update();
 		}
 		delegate.renderFallback(g, p, w, h);
 	}
@@ -742,6 +760,14 @@ public class Legend implements Renderable, Renderer {
 		if(!isEnabled()){
 			return;
 		}
+		if(w == 0 || h == 0){
+			return;
+		}
+		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
+			viewPortWidth = w;
+			viewPortHeight = h;
+			update();
+		}
 		delegate.renderSVG(doc, parent, w, h);
 	}
 
@@ -749,6 +775,14 @@ public class Legend implements Renderable, Renderer {
 	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
 		if(!isEnabled()){
 			return;
+		}
+		if(w == 0 || h == 0){
+			return;
+		}
+		if(isDirty() || viewPortWidth != w || viewPortHeight != h){
+			viewPortWidth = w;
+			viewPortHeight = h;
+			update();
 		}
 		delegate.renderPDF(doc, page, x, y, w, h);
 	}

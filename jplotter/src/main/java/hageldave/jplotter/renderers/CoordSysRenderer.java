@@ -14,8 +14,10 @@ import hageldave.jplotter.interaction.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.CoordinateViewListener;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.Annotations.GLCoordinates;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
@@ -33,6 +35,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.IntSupplier;
@@ -87,6 +90,8 @@ public class CoordSysRenderer implements Renderer {
 	
 	protected int legendRightWidth = 70;
 	protected int legendBottomHeight = 20;
+	
+	protected Deque<Renderable> toCloseLater = new LinkedList<>();
 	
 	@GLCoordinates
 	protected Rectangle legendRightViewPort = new Rectangle();
@@ -509,7 +514,7 @@ public class CoordSysRenderer implements Renderer {
 		guides.removeAllSegments();
 		for(Text txt:tickMarkLabels){
 			preContentTextR.removeItemToRender(txt);
-			txt.close();
+			toCloseLater.add(txt);
 		}
 		tickMarkLabels.clear();
 
@@ -561,8 +566,8 @@ public class CoordSysRenderer implements Renderer {
 		// setup legend areas
 		if(Objects.nonNull(legendRight)){
 			legendRightViewPort.setBounds(
-					(int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4), 
-					paddingBot, 
+					(int)(yAxisLabelText.getOrigin().getX()+yAxisLabelText.getTextSize().getHeight()+4),
+					paddingBot,
 					legendRightWidth, 
 					(int)(coordsysAreaRT.getY()-paddingBot)
 					);
@@ -655,6 +660,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	@Override
 	public void render(int vpx, int vpy, int w, int h) {
+		closeCollectedGLObjects();
 		if(!isEnabled()){
 			return;
 		}
@@ -714,6 +720,7 @@ public class CoordSysRenderer implements Renderer {
 	
 	@Override
 	public void renderFallback(Graphics2D g, Graphics2D p, int w, int h) {
+		closeCollectedGLObjects(); // close will be noop in this case, no problem
 		if(!isEnabled()){
 			return;
 		}
@@ -770,6 +777,15 @@ public class CoordSysRenderer implements Renderer {
 	public void renderSVG(Document doc, Element parent, int w, int h) {
 		if(!isEnabled()){
 			return;
+		}
+		currentViewPort.setRect(0, 0, w, h);
+		if(isDirty || viewportwidth != w || viewportheight != h){
+			// update axes
+			axes.setDirty();
+			viewportwidth = w;
+			viewportheight = h;
+			setupAndLayout();
+			isDirty = false;
 		}
 		preContentLinesR.renderSVG(doc, parent, w, h);
 		preContentTextR.renderSVG(doc, parent, w, h);
@@ -829,7 +845,7 @@ public class CoordSysRenderer implements Renderer {
 			// create a new group for the content
 			Element legendGroup = SVGUtils.createSVGElement(doc, "g");
 			parent.appendChild(legendGroup);
-			// define the clipping rectangle for the content (rect of vieport size)
+			// define the clipping rectangle for the content (rect of viewport size)
 			Node defs = SVGUtils.getDefs(doc);
 			Element clip = SVGUtils.createSVGElement(doc, "clipPath");
 			String clipDefID = SVGUtils.newDefId();
@@ -848,6 +864,15 @@ public class CoordSysRenderer implements Renderer {
 	public void renderPDF(PDDocument doc, PDPage page, int x, int y, int w, int h) {
 		if(!isEnabled()){
 			return;
+		}
+		currentViewPort.setRect(0, 0, w, h);
+		if(isDirty || viewportwidth != w || viewportheight != h){
+			// update axes
+			axes.setDirty();
+			viewportwidth = w;
+			viewportheight = h;
+			setupAndLayout();
+			isDirty = false;
 		}
 		preContentLinesR.renderPDF(doc, page, x, y, w, h);
 		preContentTextR.renderPDF(doc, page, x, y, w, h);
@@ -873,10 +898,10 @@ public class CoordSysRenderer implements Renderer {
 		postContentLinesR.renderPDF(doc, page, x, y, w, h);
 		postContentTextR.renderPDF(doc, page, x, y, w, h);
 		if(Objects.nonNull(legendRight)){
-			legendRight.renderPDF(doc, page, legendRightViewPort.x, legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+			legendRight.renderPDF(doc, page, legendRightViewPort.x + x, legendRightViewPort.y + y + legendBottomViewPort.height, legendRightViewPort.width, legendRightViewPort.height-legendBottomViewPort.height);
 		}
 		if(Objects.nonNull(legendBottom)){
-			legendBottom.renderPDF(doc, page, legendBottomViewPort.x, legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+			legendBottom.renderPDF(doc, page, legendBottomViewPort.x + x, legendBottomViewPort.y + y, legendBottomViewPort.width, legendBottomViewPort.height);
 		}
 	}
 
@@ -1059,7 +1084,9 @@ public class CoordSysRenderer implements Renderer {
 	}
 	
 	@Override
+	@GLContextRequired
 	public void close() {
+		closeCollectedGLObjects();
 		if(Objects.nonNull(preContentTextR))
 			preContentTextR.close();
 		if(Objects.nonNull(preContentLinesR))
@@ -1077,10 +1104,20 @@ public class CoordSysRenderer implements Renderer {
 		if(Objects.nonNull(overlay))
 			overlay.close();
 	}
+	
+	@GLContextRequired
+	protected void closeCollectedGLObjects() {
+		while(!toCloseLater.isEmpty()) {
+			Renderable toClose = toCloseLater.remove();
+			toClose.close();
+		}
+	}
+	
 	@Override
 	public void setEnabled(boolean enable) {
 		this.isEnabled = enable;
 	}
+	
 	@Override
 	public boolean isEnabled() {
 		return this.isEnabled;

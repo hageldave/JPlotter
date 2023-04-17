@@ -1,38 +1,35 @@
 package hageldave.jplotter.svg;
 
-import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
-
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Font;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.swing.JLabel;
-
+import hageldave.imagingkit.core.Pixel;
+import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.font.FontProvider;
+import hageldave.jplotter.misc.Glyph;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Comment;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import hageldave.imagingkit.core.Pixel;
-import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.misc.Glyph;
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static hageldave.jplotter.font.FontProvider.getUbuntuMonoFontAsBaseString;
+import static java.awt.Font.BOLD;
+import static java.awt.Font.ITALIC;
+import static java.awt.Font.PLAIN;
+import static org.apache.batik.anim.dom.SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 /**
  * Utility class for SVG related methods.
@@ -311,6 +308,7 @@ public class SVGUtils {
 		Element defs = createSVGElement(document, "defs");
 		defs.setAttributeNS(null, "id", "JPlotterDefs");
 		document.getDocumentElement().appendChild(defs);
+		createFontDefinitionStyleElement(document);
 		{ /* draw all non JPlotterCanvas components 
 	       * (and those that are isSvgAsImageRenderingEnabled()==true 
 		   * which is checked by respective implementation's paint methods)
@@ -349,6 +347,53 @@ public class SVGUtils {
 				}
 			}
 		}
+	}
+	
+	public static void createFontDefinitionStyleElement(Document document) {
+		String styleID = "UbuntuMonoStyle";
+		if(document.getElementById(styleID) != null) {
+			return; // element is already present in document
+		}
+		
+		// set Ubuntu Mono font
+		Element styleElement = SVGUtils.createSVGElement(document, "style");
+		styleElement.setAttributeNS(null, "id", styleID);
+		styleElement.setAttributeNS(null, "type", "text/css"); 
+		String fontface_css = new StringBuilder(1024*16)
+				.append(System.lineSeparator())
+				.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+				.append(getUbuntuMonoFontAsBaseString(PLAIN))
+				.append("\") format(\"truetype\"); font-weight: normal; font-style: normal;}")
+				.append(System.lineSeparator())
+
+				.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+				.append(getUbuntuMonoFontAsBaseString(BOLD))
+				.append("\") format(\"truetype\"); font-weight: bold; font-style: normal;}")
+				.append(System.lineSeparator())
+
+				.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+				.append(getUbuntuMonoFontAsBaseString(ITALIC))
+				.append("\") format(\"truetype\"); font-weight: normal; font-style: italic;}")
+				.append(System.lineSeparator())
+
+				.append("@font-face { font-family:\"Ubuntu Mono\"; src: url(\"data:font/ttf;base64,")
+				.append(getUbuntuMonoFontAsBaseString(BOLD | ITALIC))
+				.append("\") format(\"truetype\"); font-weight: bold; font-style: italic;}")
+				.append(System.lineSeparator())
+				.toString();
+		CDATASection cdatasection_fontface_css = document.createCDATASection(fontface_css);
+		styleElement.appendChild(cdatasection_fontface_css);
+		//					styleElement.setTextContent(fontface_css);
+		// includes the ubuntu mono font licence
+		String licenceString = FontProvider.getUbuntuMonoFontLicence();
+		for (String line : licenceString.split("[\\r\\n]{2}")) {
+			// remove "--" as those characters as they aren't allowed inside comments
+			String cleanedLine = line.replaceAll("-", "");
+			// create comment with cleaned line
+			Comment comment = document.createComment(cleanedLine);
+			styleElement.appendChild(comment);
+		}
+		document.getDocumentElement().appendChild(styleElement);
 	}
 
 }

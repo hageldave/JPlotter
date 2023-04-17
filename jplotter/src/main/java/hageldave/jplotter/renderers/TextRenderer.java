@@ -1,6 +1,5 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
@@ -433,25 +432,63 @@ public class TextRenderer extends GenericRenderer<Text> {
 				
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
-				
+
+				String fontfamily = "Ubuntu Mono, monospace";
+
 				if(txt.getBackground().getRGB() != 0){
-					Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getTextSize().width,txt.getTextSize().height);
-					textGroup.appendChild(backgroundRect);
-					backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-					backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
-					if(txt.getAngle() != 0){
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+")");
-					} else {
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")");
-					}
+					String defID = SVGUtils.newDefId();
+					Element defs = SVGUtils.createSVGElement(doc, "defs");
+					Element filter = SVGUtils.createSVGElement(doc, "filter");
+					filter.setAttributeNS(null, "x", ""+0);
+					filter.setAttributeNS(null, "y", ""+0);
+					filter.setAttributeNS(null, "width", ""+1);
+					filter.setAttributeNS(null, "height", ""+1);
+					filter.setAttributeNS(null, "id", defID);
+					Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
+					feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+					feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
+					feFlood.setAttributeNS(null, "result", "bg");
+
+					Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
+					Element feMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+					feMergeNode.setAttributeNS(null, "in", "bg");
+					Element feMergeNode2 = SVGUtils.createSVGElement(doc, "feMergeNode");
+					feMergeNode2.setAttributeNS(null, "in", "SourceGraphic");
+
+					feMerge.appendChild(feMergeNode);
+					feMerge.appendChild(feMergeNode2);
+					filter.appendChild(feFlood);
+					filter.appendChild(feMerge);
+					defs.appendChild(filter);
+					textGroup.appendChild(defs);
+
+					// dummy text element
+					Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+					textGroup.appendChild(backgroundText);
+
+					backgroundText.setAttributeNS(null, "filter", "url(#" + defID + ")");
+					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
+					backgroundText.setTextContent(txt.getTextString());
+					backgroundText.setAttributeNS(null, "style",
+							"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
+					backgroundText.setAttributeNS(null, "fill-opacity", "0");
 				}
+
+				// transform text group
+				textGroup.setAttributeNS(null, "x", ""+0);
+				textGroup.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
+				if(txt.getAngle() != 0){
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+				} else {
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
+				}
+
+				// actual text element
 
 				Element text = SVGUtils.createSVGElement(doc, "text");
 				textGroup.appendChild(text);
-				
 				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 				text.setTextContent(txt.getTextString());
-				String fontfamily = "'Ubuntu Mono', monospace";
 				text.setAttributeNS(null, "style",
 						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
 				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
@@ -510,6 +547,12 @@ public class TextRenderer extends GenericRenderer<Text> {
 					float textWidth = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
 					float fontDescent = -font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
 
+
+					// clipping area
+					contentStream.saveGraphicsState();
+					contentStream.addRect(x, y, w, h);
+					contentStream.clip();
+
 					if(txt.getBackground().getRGB() != 0){
 						contentStream.saveGraphicsState();
 						contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x), ((float) y1+y)));
@@ -528,11 +571,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.fill();
 						contentStream.restoreGraphicsState();
 					}
-
-					// clipping area
-					contentStream.saveGraphicsState();
-					contentStream.addRect(x, y, w, h);
-					contentStream.clip();
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
