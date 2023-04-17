@@ -497,11 +497,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 				}
 				text.setAttributeNS(null, "x", ""+0);
 				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
-				if(txt.getAngle() != 0){
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
-				} else {
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1+1)+") scale(1,-1)");
-				}
 			}
 		}
 	}
