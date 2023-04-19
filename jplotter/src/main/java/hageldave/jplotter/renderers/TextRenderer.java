@@ -393,7 +393,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 		}
 		Element mainGroup = SVGUtils.createSVGElement(doc, "g");
 		parent.appendChild(mainGroup);
-
+		
 		double translateX = Objects.isNull(view) ? 0:view.getX();
 		double translateY = Objects.isNull(view) ? 0:view.getY();
 		double scaleX = Objects.isNull(view) ? 1:w/view.getWidth();
@@ -407,14 +407,14 @@ public class TextRenderer extends GenericRenderer<Text> {
 				double x1,y1;
 				x1 = txt.getOrigin().getX();
 				y1 = txt.getOrigin().getY();
-
+				
 				x1-=translateX;
 				y1-=translateY;
 				x1*=scaleX;
 				y1*=scaleY;
-
+				
 				y1+=1;
-
+				
 				// test if inside of view port
 				Rectangle2D bounds = txt.getBoundsWithRotation();
 				AffineTransform trnsfrm = new AffineTransform();
@@ -425,6 +425,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 				if(!viewportRect.intersects(bounds)) {
 					continue;
 				}
+				
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
 

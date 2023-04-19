@@ -48,9 +48,9 @@ public class PDFUtils {
     /**
      * Creates a point at the specified position with the given radius.
      *
-     * @param cs     content stream that the point is appended to
-     * @param x      x coordinate of the point
-     * @param y      y coordinate of the point
+     * @param cs content stream that the point is appended to
+     * @param x x coordinate of the point
+     * @param y y coordinate of the point
      * @param radius radius of the point
      * @return resulting content stream
      * @throws IOException If there is an error while creating the point in the document
@@ -85,16 +85,16 @@ public class PDFUtils {
     /**
      * Creates a cubic bézier curve in the pdf document.
      *
-     * @param cs  content stream that the curve is appended to
-     * @param p0  starting point of the curve
+     * @param cs content stream that the curve is appended to
+     * @param p0 starting point of the curve
      * @param cP0 first control point
      * @param cP1 second control point
-     * @param p1  ending point of the curve
+     * @param p1 ending point of the curve
      * @return resulting content stream
      * @throws IOException If there is an error while creating the curve in the document
      */
     public static PDPageContentStream createPDFCurve(PDPageContentStream cs, Point2D p0, Point2D cP0,
-                                                     Point2D cP1, Point2D p1) throws IOException {
+                                                    Point2D cP1, Point2D p1) throws IOException {
         cs.moveTo((float) p0.getX(), (float) p0.getY());
         cs.curveTo((float) cP0.getX(), (float) cP0.getY(), (float) cP1.getX(),
                 (float) cP1.getY(), (float) p1.getX(), (float) p1.getY());
@@ -106,13 +106,13 @@ public class PDFUtils {
      * More information about Gouraud shading: https://en.wikipedia.org/wiki/Gouraud_shading
      *
      * @param doc PDF document holding the content stream
-     * @param cs  content stream that the shaded triangle is appended to
-     * @param p0  coordinates of first vertex of the triangle
-     * @param p1  coordinates of second vertex of the triangle
-     * @param p2  coordinates of third vertex of the triangle
-     * @param c0  color of the 'first coordinate' vertex of the triangle
-     * @param c1  color of the 'second coordinate' vertex of the triangle
-     * @param c2  color of the 'third coordinate' vertex of the triangle
+     * @param cs content stream that the shaded triangle is appended to
+     * @param p0 coordinates of first vertex of the triangle
+     * @param p1 coordinates of second vertex of the triangle
+     * @param p2 coordinates of third vertex of the triangle
+     * @param c0 color of the 'first coordinate' vertex of the triangle
+     * @param c1 color of the 'second coordinate' vertex of the triangle
+     * @param c2 color of the 'third coordinate' vertex of the triangle
      * @return resulting content stream
      * @throws IOException If there is an error while creating the shaded triangle
      */
@@ -182,12 +182,12 @@ public class PDFUtils {
      * Fills the output stream with the triangle information.
      *
      * @param outputStream holds the coordinates and colors of the triangle
-     * @param p0           coordinates of first vertex of the triangle
-     * @param p1           coordinates of second vertex of the triangle
-     * @param p2           coordinates of third vertex of the triangle
-     * @param c0           color of the 'first coordinate' vertex of the triangle
-     * @param c1           color of the 'second coordinate' vertex of the triangle
-     * @param c2           color of the 'third coordinate' vertex of the triangle
+     * @param p0 coordinates of first vertex of the triangle
+     * @param p1 coordinates of second vertex of the triangle
+     * @param p2 coordinates of third vertex of the triangle
+     * @param c0 color of the 'first coordinate' vertex of the triangle
+     * @param c1 color of the 'second coordinate' vertex of the triangle
+     * @param c2 color of the 'third coordinate' vertex of the triangle
      * @throws IOException If there is an error while writing to the output stream
      */
     public static void writeShadedTriangle(MemoryCacheImageOutputStream outputStream, Point2D p0,
@@ -262,14 +262,14 @@ public class PDFUtils {
     /**
      * Creates a text string in the pdf document.
      *
-     * @param doc      PDF document holding the content stream
-     * @param cs       content stream that the text is appended to
-     * @param txt      text string that should be rendered in the document
+     * @param doc PDF document holding the content stream
+     * @param cs content stream that the text is appended to
+     * @param txt text string that should be rendered in the document
      * @param position position where the text should be rendered
-     * @param color    color of the text
+     * @param color color of the text
      * @param fontSize size of font
-     * @param style    style of font
-     * @param angle    rotation of the text
+     * @param style style of font
+     * @param angle rotation of the text
      * @return resulting content stream
      * @throws IOException If there is an error while creating the text in the document
      */
@@ -399,11 +399,11 @@ public class PDFUtils {
     /**
      * Swaps between PDF and AWT coordinates, AWT coordinate system
      * has its origin in the top left corner of a component and downwards pointing
-     * y-axis, whereas PDF has its origin in the bottom left corner of the viewport
-     * (at least in JPlotter) and upwards pointing y-axis.
+     * y axis, whereas PDF has its origin in the bottom left corner of the viewport
+     * (at least in JPlotter) and upwards pointing y axis.
      *
-     * @param point to swap the y-axis of
-     * @param page  height of the page will be used to swap the y-axis
+     * @param point to swap the y axis of
+     * @param page height of the page will be used to swap the y axis
      * @return point in coordinates of the other reference coordinate system.
      */
     public static Point2D transformPDFToCoordSys(Point2D point, PDPage page) {
@@ -412,11 +412,11 @@ public class PDFUtils {
 
     /**
      * Creates a polygon in the pdf document.
-     * The x (and y) coordinates will be used counterclockwise.
+     * The x (and y) coordinates will be used counter clockwise.
      *
      * @param cs content stream that the polygon is appended to
-     * @param x  x coordinates of the polygon
-     * @param y  y coordinates of the polygon
+     * @param x x coordinates of the polygon
+     * @param y y coordinates of the polygon
      * @return resulting content stream
      * @throws IOException If the content stream could not be written
      */
@@ -427,7 +427,8 @@ public class PDFUtils {
         for (int i = 0; i < x.length; i++) {
             if (i == 0) {
                 cs.moveTo((float) x[i], (float) y[i]);
-            } else {
+            }
+            else {
                 cs.lineTo((float) x[i], (float) y[i]);
             }
         }
@@ -449,33 +450,32 @@ public class PDFUtils {
         PDDocument doc = new FontCachedPDDocument();
         PDPage page = new PDPage();
         doc.addPage(page);
-        PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
-        page.setMediaBox(new PDRectangle(c.getWidth() + c.getX(), c.getHeight() + c.getY()));
+        page.setMediaBox(new PDRectangle(c.getWidth(), c.getHeight()));
 
-        containerToPDF(c, doc, page, cs, 0, 0);
         { // render gui components through PdfBoxGraphics2D
+            PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false);
             PdfBoxGraphics2D g2d = new PdfBoxGraphics2D(doc, c.getWidth(), c.getHeight());
             c.paintAll(g2d);
             g2d.dispose();
             PDFormXObject xform = g2d.getXFormObject();
             cs.drawForm(xform);
+            cs.close();
         }
-
-        cs.close();
+        containerToPDF(c, doc, page, 0, 0);
         return doc;
     }
 
-    private static void containerToPDF(Container c, PDDocument doc, PDPage page, PDPageContentStream cs, int xOffset, int yOffset) throws IOException {
+    private static void containerToPDF(Container c, PDDocument doc, PDPage page, int xOffset, int yOffset) throws IOException {
         for (Component comp : c.getComponents()) {
             if (comp instanceof JPlotterCanvas) {
                 JPlotterCanvas canvas = (JPlotterCanvas) comp;
                 if (canvas.isPDFAsImageRenderingEnabled())
                     return; // was already rendered through PdfBoxGraphics2D
-                canvas.paintPDF(doc, page, cs, new Rectangle2D.Double(canvas.asComponent().getX() + xOffset, canvas.asComponent().getY() + yOffset,
+                canvas.paintPDF(doc, page, new Rectangle2D.Double(canvas.asComponent().getX() + xOffset, canvas.asComponent().getY() + yOffset,
                         canvas.asComponent().getWidth(), canvas.asComponent().getHeight()));
             } else {
-                if (comp instanceof Container) {
-                    containerToPDF((Container) comp, doc, page, cs, comp.getX() + xOffset, comp.getY() + yOffset);
+                if(comp instanceof Container){
+                    containerToPDF((Container)comp, doc, page, comp.getX()+xOffset, comp.getY()+yOffset);
                 }
             }
         }

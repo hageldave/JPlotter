@@ -51,7 +51,7 @@ public class IrisViz {
 	static boolean fallbackModeEnabled;
 	
 	public static void main(String[] args) throws IOException {
-		fallbackModeEnabled = useFallback(args);
+		fallbackModeEnabled = true;
 		ColorScheme colorScheme = DefaultColorScheme.LIGHT.get();
 		
 		// setup content
