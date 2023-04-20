@@ -5,7 +5,7 @@ package hageldave.jplotter.color;
  * for different usecases.
  * <br>
  * Each {@link DefaultColorMap} has a name starting with either of the
- * followig letters which indicate the type of color map
+ * following letters which indicate the type of color map
  * <ul>
  * <li> S - sequential color map for mapping de-/increasing values, e.g.
  * {@link #S_PLASMA}.
@@ -111,6 +111,27 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_cabbb8,
 			0xff_fdfcfc
 			),
+
+	// TODO: Add license from https://colorcet.com/download/index.html
+	S_CET_I2(0xff_70D1FF,
+			0xff_74D5E0,
+			0xff_7FD7BC,
+			0xff_9BD596,
+			0xff_C4CD7D,
+			0xff_E9C176,
+			0xff_FFB380
+	),
+
+	// TODO: Add license from https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html
+	S_TURBO(
+			0xff_30123B,
+			0xff_4685FA,
+			0xff_19E3B9,
+			0xff_9FFD3F,
+			0xff_F8BE39,
+			0xff_E84B0C,
+			0xff_850702
+	),
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_BLACK_WHITE_BLACK.png"> */
 	D_BLACK_WHITE_BLACK(0xff000000, 0xff_ffffff, 0xff_000000),
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_BLACK_GRAY_BLACK.png"> */
