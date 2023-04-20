@@ -19,6 +19,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -130,10 +131,25 @@ public class NewTextTest {
 
         new CoordSysPanning(canvas, coordsys).register();
 
+        // Setup wrapping Container
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+
+        JPanel labelWrapper = new JPanel(new BorderLayout());
+        labelWrapper.setBackground(Color.WHITE);
+        labelWrapper.setBorder(new EmptyBorder(10, 0, 10, 0));
+
+        JLabel undertitleLabel = new JLabel("Testing the new text features", SwingConstants.CENTER);
+
+        labelWrapper.add(undertitleLabel, BorderLayout.CENTER);
+
+        wrapper.add(canvas.asComponent());
+        wrapper.add(labelWrapper);
+
         // lets put a JFrame around it all and launch
         JFrame frame = new JFrame("Text features example");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(canvas.asComponent());
+        frame.getContentPane().add(wrapper);
         canvas.asComponent().setPreferredSize(new Dimension(800, 500));
         canvas.asComponent().setBackground(Color.WHITE);
 
@@ -159,16 +175,24 @@ public class NewTextTest {
         });
         MenuItem svgExport = new MenuItem("SVG export");
         svgExport.addActionListener(e->{
-            Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+            Document svg = canvas.paintSVG();
             SVGUtils.documentToXMLFile(svg, new File("new_text_test.svg"));
             System.out.println("exported SVG.");
         });
         menu.add(svgExport);
 
+        MenuItem svgContainerExport = new MenuItem("SVG container export");
+        svgContainerExport.addActionListener(e->{
+            Document svg = SVGUtils.containerToSVG(frame.getContentPane());
+            SVGUtils.documentToXMLFile(svg, new File("new_container_text_test.svg"));
+            System.out.println("exported SVG container.");
+        });
+        menu.add(svgContainerExport);
+
         MenuItem pdfExport = new MenuItem("PDF export");
         pdfExport.addActionListener(e->{
             try {
-                PDDocument pdf = PDFUtils.containerToPDF(frame.getContentPane());
+                PDDocument pdf = canvas.paintPDF();
                 pdf.save("new_text_test.pdf");
                 pdf.close();
                 System.out.println("exported PDF.");
@@ -178,6 +202,20 @@ public class NewTextTest {
 
         });
         menu.add(pdfExport);
+
+        MenuItem pdfContainerExport = new MenuItem("PDF container export");
+        pdfContainerExport.addActionListener(e->{
+            try {
+                PDDocument pdf = PDFUtils.containerToPDF(frame.getContentPane());
+                pdf.save("new_container_text_test.pdf");
+                pdf.close();
+                System.out.println("exported PDF container.");
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+        });
+        menu.add(pdfContainerExport);
 
         MenuItem pngExport = new MenuItem("PNG export");
         pngExport.addActionListener(e->{
