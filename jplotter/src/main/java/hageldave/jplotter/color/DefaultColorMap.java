@@ -132,6 +132,17 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_E84B0C,
 			0xff_850702
 	),
+
+	// TODO: Add license from https://colorcet.com/download/index.html
+	S_CET_CBL1(
+			0xff_111111,
+			0xff_06305E,
+			0xff_28518E,
+			0xff_777578,
+			0xff_AE9B59,
+			0xff_D7C386,
+			0xff_F0EDE8
+	),
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_BLACK_WHITE_BLACK.png"> */
 	D_BLACK_WHITE_BLACK(0xff000000, 0xff_ffffff, 0xff_000000),
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/D_BLACK_GRAY_BLACK.png"> */
