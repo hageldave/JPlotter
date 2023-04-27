@@ -110,7 +110,7 @@ public class ScatterPlot {
 				onDataAdded(chunkIdx, chunkData, chunkDescription, xIdx, yIdx);
 			}
         	@Override
-			public void dataChanged(int chunkIdx, double[][] chunkData) {
+			public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx) {
 				onDataChanged(chunkIdx, chunkData);
 			}
 		});
@@ -272,7 +272,6 @@ public class ScatterPlot {
     	protected ArrayList<double[][]> dataChunks = new ArrayList<>();
     	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();;
     	protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
-    	
     	protected LinkedList<ScatterPlotDataModelListener> listeners = new LinkedList<>();
 
 		/**
@@ -296,7 +295,7 @@ public class ScatterPlot {
 			 * @param chunkIdx index of the data chunk that should be updated
 			 * @param chunkData 2D array containing the updated data
 			 */
-    		public void dataChanged(int chunkIdx, double[][] chunkData);
+    		public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx);
     	}
 
 		/**
@@ -349,6 +348,11 @@ public class ScatterPlot {
     		this.dataChunks.set(chunkIdx, dataChunk);
     		this.notifyDataChanged(chunkIdx);
     	}
+
+		public synchronized void setXYIndicesPerChunk(int chunkIdx, int xIdx, int yIdx) {
+			this.xyIndicesPerChunk.set(chunkIdx, Pair.of(xIdx, yIdx));
+			notifyDataChanged(chunkIdx);
+		}
     	
     	public int getXIdx(int chunkIdx) {
     		return xyIndicesPerChunk.get(chunkIdx).first;
@@ -442,13 +446,13 @@ public class ScatterPlot {
     	}
 
 		/**
-		 * Calls the {@link ScatterPlotDataModelListener#dataChanged(int, double[][])} interface of all registered {@link ScatterPlotDataModelListener}.
+		 * Calls the {@link ScatterPlotDataModelListener#dataChanged(int, double[][], int, int)} interface of all registered {@link ScatterPlotDataModelListener}.
 		 *
 		 * @param chunkIdx data chunk id of the changed data
 		 */
 		public synchronized void notifyDataChanged(int chunkIdx) {
     		for(ScatterPlotDataModelListener l:listeners)
-    			l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
+    			l.dataChanged(chunkIdx, getDataChunk(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
     	}
     }
 
