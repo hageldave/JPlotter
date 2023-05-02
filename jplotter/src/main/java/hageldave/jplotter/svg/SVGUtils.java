@@ -6,8 +6,8 @@ import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.NewText;
-import hageldave.jplotter.util.latex.CustomTexFormula;
-import hageldave.jplotter.util.latex.CustomTexIcon;
+import hageldave.jplotter.util.latex.TexFormulaWithoutColorInterpolation;
+import hageldave.jplotter.util.latex.TexIconWithoutColorInterpolation;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
@@ -446,8 +446,8 @@ public class SVGUtils {
 
 		double iconHeight = y;
 		for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
-			CustomTexFormula formula = new CustomTexFormula(singleLineText.getTextString());
-			CustomTexIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.getFontSize());
+			TexFormulaWithoutColorInterpolation formula = new TexFormulaWithoutColorInterpolation(singleLineText.getTextString());
+			TexIconWithoutColorInterpolation icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.getFontSize());
 			icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
 			g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));

@@ -8,37 +8,37 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 
-public class CustomTexFormula extends TeXFormula {
-    public CustomTexFormula(String s) throws ParseException {
+public class TexFormulaWithoutColorInterpolation extends TeXFormula {
+    public TexFormulaWithoutColorInterpolation(String s) throws ParseException {
         super(s);
     }
 
-    public CustomTexIcon createTeXIcon(int style, float size) {
-        return (new CustomTexFormula.CustomTeXIconBuilder()).setStyle(style).setSize(size).build();
+    public TexIconWithoutColorInterpolation createTeXIcon(int style, float size) {
+        return (new TeXIconBuilderWithoutColorInterpolation()).setStyle(style).setSize(size).build();
     }
 
-    public CustomTexIcon createTeXIcon(int style, float size, int type) {
-        return (new CustomTexFormula.CustomTeXIconBuilder()).setStyle(style).setSize(size).setType(type).build();
+    public TexIconWithoutColorInterpolation createTeXIcon(int style, float size, int type) {
+        return (new TeXIconBuilderWithoutColorInterpolation()).setStyle(style).setSize(size).setType(type).build();
     }
 
-    public CustomTexIcon createTeXIcon(int style, float size, int type, Color fgcolor) {
-        return (new CustomTexFormula.CustomTeXIconBuilder()).setStyle(style).setSize(size).setType(type).setFGColor(fgcolor).build();
+    public TexIconWithoutColorInterpolation createTeXIcon(int style, float size, int type, Color fgcolor) {
+        return (new TeXIconBuilderWithoutColorInterpolation()).setStyle(style).setSize(size).setType(type).setFGColor(fgcolor).build();
     }
 
-    public CustomTexIcon createTeXIcon(int style, float size, boolean trueValues) {
-        return (new CustomTexFormula.CustomTeXIconBuilder()).setStyle(style).setSize(size).setTrueValues(trueValues).build();
+    public TexIconWithoutColorInterpolation createTeXIcon(int style, float size, boolean trueValues) {
+        return (new TeXIconBuilderWithoutColorInterpolation()).setStyle(style).setSize(size).setTrueValues(trueValues).build();
     }
 
-    public CustomTexIcon createTeXIcon(int style, float size, int widthUnit, float textwidth, int align) {
+    public TexIconWithoutColorInterpolation createTeXIcon(int style, float size, int widthUnit, float textwidth, int align) {
         return this.createTeXIcon(style, size, 0, widthUnit, textwidth, align);
     }
 
-    public CustomTexIcon createTeXIcon(int style, float size, int type, int widthUnit, float textwidth, int align) {
-        return (new CustomTexFormula.CustomTeXIconBuilder()).setStyle(style).setSize(size).setType(type).setWidth(widthUnit, textwidth, align).build();
+    public TexIconWithoutColorInterpolation createTeXIcon(int style, float size, int type, int widthUnit, float textwidth, int align) {
+        return (new TeXIconBuilderWithoutColorInterpolation()).setStyle(style).setSize(size).setType(type).setWidth(widthUnit, textwidth, align).build();
     }
 
-    public CustomTexIcon createTeXIcon(int style, float size, int type, int widthUnit, float textwidth, int align, int interlineUnit, float interline) {
-        return (new CustomTexFormula.CustomTeXIconBuilder()).setStyle(style).setSize(size).setType(type).setWidth(widthUnit, textwidth, align).setInterLineSpacing(interlineUnit, interline).build();
+    public TexIconWithoutColorInterpolation createTeXIcon(int style, float size, int type, int widthUnit, float textwidth, int align, int interlineUnit, float interline) {
+        return (new TeXIconBuilderWithoutColorInterpolation()).setStyle(style).setSize(size).setType(type).setWidth(widthUnit, textwidth, align).setInterLineSpacing(interlineUnit, interline).build();
     }
 
     public void createImage(String format, int style, float size, String out, Color bg, Color fg, boolean transparency) {
@@ -101,7 +101,7 @@ public class CustomTexFormula extends TeXFormula {
         return dtf;
     }
 
-    public class CustomTeXIconBuilder {
+    public class TeXIconBuilderWithoutColorInterpolation {
         private Integer style;
         private Float size;
         private Integer type;
@@ -114,35 +114,35 @@ public class CustomTexFormula extends TeXFormula {
         private Integer interLineUnit;
         private Float interLineSpacing;
 
-        public CustomTeXIconBuilder() {
+        public TeXIconBuilderWithoutColorInterpolation() {
         }
 
-        public CustomTexFormula.CustomTeXIconBuilder setStyle(int style) {
+        public TeXIconBuilderWithoutColorInterpolation setStyle(int style) {
             this.style = style;
             return this;
         }
 
-        public CustomTexFormula.CustomTeXIconBuilder setSize(float size) {
+        public TeXIconBuilderWithoutColorInterpolation setSize(float size) {
             this.size = size;
             return this;
         }
 
-        public CustomTexFormula.CustomTeXIconBuilder setType(int type) {
+        public TeXIconBuilderWithoutColorInterpolation setType(int type) {
             this.type = type;
             return this;
         }
 
-        public CustomTexFormula.CustomTeXIconBuilder setFGColor(Color fgcolor) {
+        public TeXIconBuilderWithoutColorInterpolation setFGColor(Color fgcolor) {
             this.fgcolor = fgcolor;
             return this;
         }
 
-        public CustomTexFormula.CustomTeXIconBuilder setTrueValues(boolean trueValues) {
+        public TeXIconBuilderWithoutColorInterpolation setTrueValues(boolean trueValues) {
             this.trueValues = trueValues;
             return this;
         }
 
-        public CustomTexFormula.CustomTeXIconBuilder setWidth(int widthUnit, float textWidth, int align) {
+        public TeXIconBuilderWithoutColorInterpolation setWidth(int widthUnit, float textWidth, int align) {
             this.widthUnit = widthUnit;
             this.textWidth = textWidth;
             this.align = align;
@@ -150,7 +150,7 @@ public class CustomTexFormula extends TeXFormula {
             return this;
         }
 
-        public CustomTexFormula.CustomTeXIconBuilder setInterLineSpacing(int interLineUnit, float interLineSpacing) {
+        public TeXIconBuilderWithoutColorInterpolation setInterLineSpacing(int interLineUnit, float interLineSpacing) {
             if (this.widthUnit == null) {
                 throw new IllegalStateException("Cannot set inter line spacing without having specified a width!");
             } else {
@@ -160,13 +160,13 @@ public class CustomTexFormula extends TeXFormula {
             }
         }
 
-        public CustomTexIcon build() {
+        public TexIconWithoutColorInterpolation build() {
             if (this.style == null) {
                 throw new IllegalStateException("A style is required. Use setStyle()");
             } else if (this.size == null) {
                 throw new IllegalStateException("A size is required. Use setStyle()");
             } else {
-                DefaultTeXFont font = this.type == null ? new DefaultTeXFont(this.size) : CustomTexFormula.this.createFont(this.size, this.type);
+                DefaultTeXFont font = this.type == null ? new DefaultTeXFont(this.size) : TexFormulaWithoutColorInterpolation.this.createFont(this.size, this.type);
                 TeXEnvironment te;
                 if (this.widthUnit != null) {
                     te = new TeXEnvironment(this.style, font, this.widthUnit, this.textWidth);
@@ -178,8 +178,8 @@ public class CustomTexFormula extends TeXFormula {
                     te.setInterline(this.interLineUnit, this.interLineSpacing);
                 }
 
-                Box box = CustomTexFormula.this.createBox(te);
-                CustomTexIcon ti;
+                Box box = TexFormulaWithoutColorInterpolation.this.createBox(te);
+                TexIconWithoutColorInterpolation ti;
                 if (this.widthUnit != null) {
                     HorizontalBox hb;
                     if (this.interLineUnit != null) {
@@ -190,9 +190,9 @@ public class CustomTexFormula extends TeXFormula {
                         hb = new HorizontalBox(box, this.isMaxWidth ? box.getWidth() : te.getTextwidth(), this.align);
                     }
 
-                    ti = new CustomTexIcon(hb, this.size, this.trueValues);
+                    ti = new TexIconWithoutColorInterpolation(hb, this.size, this.trueValues);
                 } else {
-                    ti = new CustomTexIcon(box, this.size, this.trueValues);
+                    ti = new TexIconWithoutColorInterpolation(box, this.size, this.trueValues);
                 }
 
                 if (this.fgcolor != null) {
