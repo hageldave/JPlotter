@@ -6,6 +6,8 @@ import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.NewText;
+import hageldave.jplotter.util.latex.CustomTexFormula;
+import hageldave.jplotter.util.latex.CustomTexIcon;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
@@ -15,8 +17,6 @@ import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
 import org.scilab.forge.jlatexmath.DefaultTeXFont;
 import org.scilab.forge.jlatexmath.TeXConstants;
-import org.scilab.forge.jlatexmath.TeXFormula;
-import org.scilab.forge.jlatexmath.TeXIcon;
 import org.scilab.forge.jlatexmath.cyrillic.CyrillicRegistration;
 import org.scilab.forge.jlatexmath.greek.GreekRegistration;
 import org.w3c.dom.*;
@@ -446,9 +446,8 @@ public class SVGUtils {
 
 		double iconHeight = y;
 		for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
-
-			TeXFormula formula = new TeXFormula(singleLineText.getTextString());
-			TeXIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.getFontSize());
+			CustomTexFormula formula = new CustomTexFormula(singleLineText.getTextString());
+			CustomTexIcon icon = formula.createTeXIcon(TeXConstants.STYLE_DISPLAY, txt.getFontSize());
 			icon.setInsets(new Insets(txt.getInsets().top, txt.getInsets().left, txt.getInsets().bottom, txt.getInsets().right));
 
 			g2.setSVGCanvasSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
