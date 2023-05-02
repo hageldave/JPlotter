@@ -12,6 +12,7 @@ import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.util.Pair;
+import org.apache.batik.css.engine.value.svg.ColorInterpolationManager;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -64,7 +65,7 @@ public class ReadyScatterPlot {
         }
 
         // create scatter plot of dataset
-        ScatterPlot plot = new ScatterPlot(true);
+        ScatterPlot plot = new ScatterPlot(false);
         plot.setVisualMapping(new ScatterPlotVisualMapping() {
         	// standard scatter plot glyphs excluding CROSS because we can't easily draw an outline for CROSS
         	Glyph[] glyphs = new Glyph[] {
@@ -171,11 +172,12 @@ public class ReadyScatterPlot {
 				TableModel self = this;
 				ScatterPlotDataModelListener proxyListener = new ScatterPlotDataModelListener() {
 					@Override
-					public void dataChanged(int chunkIdx, double[][] chunkData) {
+					public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
 						l.tableChanged(new TableModelEvent(self));
 					}
+
 					@Override
-					public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
+					public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx) {
 						l.tableChanged(new TableModelEvent(self));
 					}
 				};
@@ -229,11 +231,13 @@ public class ReadyScatterPlot {
         	@Override
         	public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
         		/* mouse interacting with point in the coordinate system */
-        		
+
+				ColorInterpolationManager cc = new ColorInterpolationManager();
+
         		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
         			// on click: select data point
         			selectedDataPoints.setSelection(Pair.of(chunkIdx, pointIdx));
-        		}
+				}
         		
         		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
         			// on mouse over: highlight point under cursor
