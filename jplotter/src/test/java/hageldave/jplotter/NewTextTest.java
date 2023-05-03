@@ -226,5 +226,41 @@ public class NewTextTest {
         });
         menu.add(pngExport);
 
+        MenuItem exportAll = new MenuItem("Export all");
+        exportAll.addActionListener(e->{
+            // Single SVG
+            Document svg = canvas.paintSVG();
+            SVGUtils.documentToXMLFile(svg, new File("new_text_test.svg"));
+            System.out.println("exported SVG.");
+
+            // Container SVG
+            Document containerSvg = SVGUtils.containerToSVG(frame.getContentPane());
+            SVGUtils.documentToXMLFile(containerSvg, new File("new_container_text_test.svg"));
+            System.out.println("exported SVG container.");
+
+            try {
+                // Single PDF
+                PDDocument pdf = canvas.paintPDF();
+                pdf.save("new_text_test.pdf");
+                pdf.close();
+                System.out.println("exported PDF.");
+
+                // Container PDF
+                PDDocument containerPdf = PDFUtils.containerToPDF(frame.getContentPane());
+                containerPdf.save("new_container_text_test.pdf");
+                containerPdf.close();
+                System.out.println("exported PDF container.");
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            // PNG
+            Img img = new Img(frame.getContentPane().getSize());
+            img.paint(g -> frame.getContentPane().paintAll(g));
+            ImageSaver.saveImage(img.getRemoteBufferedImage(), "new_text_test.png");
+            System.out.println("exported PNG.");
+        });
+        menu.add(exportAll);
+
     }
 }
