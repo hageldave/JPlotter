@@ -435,9 +435,8 @@ public class SVGUtils {
 	 * @param x x position of the svg text
 	 * @param y y position of the svg text
 	 * @return the parent element for chaining
-	 * @throws IOException
 	 */
-	public static Element latexToSVG(NewText txt, Document doc, double x, double y) throws IOException {
+	public static Element latexToSVG(NewText txt, Document doc, double x, double y) {
 		SVGGeneratorContext ctx = SVGGeneratorContext.createDefault(doc);
 		SVGGraphics2D g2 = new SVGGraphics2D(ctx, true);
 
@@ -476,9 +475,8 @@ public class SVGUtils {
 	 * @param x x position of the svg text
 	 * @param y y position of the svg text
 	 * @return the parent element for chaining
-	 * @throws IOException TODO
 	 */
-	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) throws IOException {
+	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) {
 		String fontfamily = "'Ubuntu Mono', monospace";
 		double textHeight = 1;
 
