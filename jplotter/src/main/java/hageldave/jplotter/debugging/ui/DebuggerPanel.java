@@ -1,5 +1,7 @@
 package hageldave.jplotter.debugging.ui;
 
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.annotations.DebugGetter;
 import hageldave.jplotter.debugging.annotations.DebugSetter;
@@ -272,6 +274,9 @@ class DebuggerPanel extends JPanel {
         JButton exportPdfBtn = new JButton("Export PDF");
         exportPdfBtn.setToolTipText("Exports the canvas as a .pdf file to the root of the project.");
 
+        JButton exportPngBtn = new JButton("Export PNG");
+        exportPngBtn.setToolTipText("Exports the canvas as a .png file to the root of the project.");
+
         exportSvgBtn.addActionListener(e -> {
             String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
             String fileName = "export-" + timeSubstring + ".svg";
@@ -291,12 +296,20 @@ class DebuggerPanel extends JPanel {
             }
         });
 
+        exportPngBtn.addActionListener(e -> {
+            String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
+            Img img = new Img(canvas.asComponent().getSize());
+            img.paint(g -> canvas.asComponent().paintAll(g));
+            ImageSaver.saveImage(img.getRemoteBufferedImage(), "export-" + timeSubstring + ".png");
+        });
+
         title.setText(canvas.getClass().getSimpleName());
         controlHeader.setText("Export canvas");
 
         exportPanel.setLayout(new BoxLayout(exportPanel, BoxLayout.X_AXIS));
         exportPanel.add(exportSvgBtn);
         exportPanel.add(exportPdfBtn);
+        exportPanel.add(exportPngBtn);
 
         exportPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         controlContainer.add(exportPanel);
