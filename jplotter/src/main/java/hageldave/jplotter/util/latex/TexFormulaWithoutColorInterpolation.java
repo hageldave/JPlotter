@@ -8,6 +8,11 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 
+/**
+ * The TexFormulaWithoutColorInterpolation extends the {@link TeXFormula} class.
+ * The changes behavior consists of modified methods that return {@link TexIconWithoutColorInterpolation} objects
+ * instead of {@link TeXIcon} objects.
+ */
 public class TexFormulaWithoutColorInterpolation extends TeXFormula {
     public TexFormulaWithoutColorInterpolation(String s) throws ParseException {
         super(s);

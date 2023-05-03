@@ -6,6 +6,11 @@ import org.scilab.forge.jlatexmath.TeXIcon;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
+/**
+ * The TexIconWithoutColorInterpolation class is an extension of the {@link TeXIcon} class.
+ * It removes the "RenderingHints.KEY_RENDERING" {@link RenderingHints} when calling the {@link #paintIcon(Component, Graphics, int, int)} method.
+ * The usage of the rendering hint resulted in SVG rendering issues in some browsers.
+ */
 public class TexIconWithoutColorInterpolation extends TeXIcon {
     private static final Color defaultColor = new Color(0, 0, 0);
     private Box box;
