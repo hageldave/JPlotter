@@ -260,45 +260,6 @@ public class PDFUtils {
     }
 
     /**
-     * Creates a text string in the pdf document.
-     *
-     * @param doc PDF document holding the content stream
-     * @param cs content stream that the text is appended to
-     * @param txt text string that should be rendered in the document
-     * @param position position where the text should be rendered
-     * @param color color of the text
-     * @param fontSize size of font
-     * @param style style of font
-     * @param angle rotation of the text
-     * @return resulting content stream
-     * @throws IOException If there is an error while creating the text in the document
-     */
-    public static PDPageContentStream createPDFText(PDDocument doc, PDPageContentStream cs, Text txt, Point2D position, Color color, int fontSize, int style, double angle) throws IOException {
-        cs.setNonStrokingColor(txt.getColor());
-        cs.stroke();
-        // set correct font
-        PDType0Font font = (doc instanceof FontCachedPDDocument) ?
-                ((FontCachedPDDocument) doc).getFont(txt.style) : createPDFont(doc, txt.style);
-        cs.setFont(font, txt.fontsize);
-        cs.beginText();
-
-        AffineTransform affineTransform = AffineTransform.getTranslateInstance(position.getX(), position.getY());
-        if (txt.getAngle() != 0)
-            affineTransform.rotate(txt.getAngle());
-        cs.setTextMatrix(new Matrix(affineTransform));
-
-        float textHeight = font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
-        for (String newLine : txt.getTextString().split("\n")) {
-            cs.newLineAtOffset(0, -textHeight);
-            cs.showText(newLine);
-            textHeight += txt.getBounds().getHeight();
-        }
-
-        cs.endText();
-        return cs;
-    }
-
-    /**
      * This helper method renders text in a PDF document.
      *
      * @param doc {@link PDDocument} where the latex text will be inserted
@@ -357,12 +318,14 @@ public class PDFUtils {
             cs.transform(new Matrix(AffineTransform.getTranslateInstance(txt.getInsets().left, (float) -txt.getTextSize().getHeight() - txt.getInsets().top - textHeight)));
             cs.setStrokingColor(txt.getColor());
             if (txt.getTextDecoration() == UNDERLINE) {
-                cs.moveTo(0, (float) getDescentHeight(font.getFontDescriptor(), txt.getFontSize()));
-                cs.lineTo(width, (float) getDescentHeight(font.getFontDescriptor(), txt.getFontSize()));
+                float descentHeight = font.getFontDescriptor().getDescent() / 1000 * txt.getFontSize();
+                cs.moveTo(0, descentHeight);
+                cs.lineTo(width, descentHeight);
                 cs.stroke();
             } else if (txt.getTextDecoration() == STRIKETHROUGH) {
-                cs.moveTo(0, (float) (getStrikethroughHeight(font.getFontDescriptor(), txt.getFontSize())));
-                cs.lineTo(width, (float) (getStrikethroughHeight(font.getFontDescriptor(), txt.getFontSize())));
+                float strikethroughHeight = (float) ((font.getFontDescriptor().getAscent() / 1000 * txt.getFontSize()) / 2.0 + (font.getFontDescriptor().getDescent() / 1000 * txt.getFontSize()));
+                cs.moveTo(0, strikethroughHeight);
+                cs.lineTo(width, strikethroughHeight);
                 cs.stroke();
             }
             cs.restoreGraphicsState();
@@ -521,27 +484,5 @@ public class PDFUtils {
             cs.drawForm(xform);
         }
         return doc;
-    }
-
-    /**
-     * Calculates the descent height of the font.
-     *
-     * @param fontDescriptor fontdescriptor of the font
-     * @param fontsize       size of the font
-     * @return descent height of the font
-     */
-    public static double getDescentHeight(PDFontDescriptor fontDescriptor, int fontsize) {
-        return fontDescriptor.getDescent() / 1000 * fontsize;
-    }
-
-    /**
-     * Calculates the strikethrough height of the font.
-     *
-     * @param fontDescriptor fontdescriptor of the font
-     * @param fontsize       size of the font
-     * @return strikethrough height of the font
-     */
-    public static double getStrikethroughHeight(PDFontDescriptor fontDescriptor, int fontsize) {
-        return (fontDescriptor.getAscent() / 1000 * fontsize) / 2.0 + (fontDescriptor.getDescent() / 1000 * fontsize);
     }
 }
