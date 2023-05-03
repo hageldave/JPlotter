@@ -103,7 +103,7 @@ public class PDFUtils {
 
     /**
      * Adds a gouraud shaded triangle to the pdf document.
-     * More information about Gouraud shading: https://en.wikipedia.org/wiki/Gouraud_shading
+     * More information about Gouraud shading: <a href="https://en.wikipedia.org/wiki/Gouraud_shading">...</a>
      *
      * @param doc PDF document holding the content stream
      * @param cs content stream that the shaded triangle is appended to
@@ -362,11 +362,11 @@ public class PDFUtils {
     /**
      * Swaps between PDF and AWT coordinates, AWT coordinate system
      * has its origin in the top left corner of a component and downwards pointing
-     * y axis, whereas PDF has its origin in the bottom left corner of the viewport
-     * (at least in JPlotter) and upwards pointing y axis.
+     * y-axis, whereas PDF has its origin in the bottom left corner of the viewport
+     * (at least in JPlotter) and upwards pointing y-axis.
      *
-     * @param point to swap the y axis of
-     * @param page height of the page will be used to swap the y axis
+     * @param point to swap the y-axis of
+     * @param page height of the page will be used to swap the y-axis
      * @return point in coordinates of the other reference coordinate system.
      */
     public static Point2D transformPDFToCoordSys(Point2D point, PDPage page) {
@@ -375,7 +375,7 @@ public class PDFUtils {
 
     /**
      * Creates a polygon in the pdf document.
-     * The x (and y) coordinates will be used counter clockwise.
+     * The x (and y) coordinates will be used counterclockwise.
      *
      * @param cs content stream that the polygon is appended to
      * @param x x coordinates of the polygon
