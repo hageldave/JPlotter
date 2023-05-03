@@ -9,6 +9,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
+import java.util.Objects;
 
 import javax.swing.SwingUtilities;
 
@@ -40,6 +41,7 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	protected CoordSysRenderer coordsys;
 	protected int extModifierMask = InputEvent.CTRL_DOWN_MASK;
 	protected int axes = X_AXIS | Y_AXIS;
+	protected CoordSysViewController coordSysViewController = null;
 	
 	/**
 	 * Creates a new {@link CoordSysPanning} for the specified canvas and corresponding coordinate system.
@@ -49,6 +51,12 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
 		this.canvas = canvas.asComponent();
 		this.coordsys = coordsys;
+	}
+
+	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys, CoordSysViewController coordSysViewController) {
+		this.canvas = canvas.asComponent();
+		this.coordsys = coordsys;
+		this.coordSysViewController = coordSysViewController;
 	}
 
 	@Override
@@ -74,12 +82,18 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 			double relativeTy = mouseTy/coordSysFrame.getHeight();
 			double areaTx = relativeTx*coordinateArea.getWidth();
 			double areaTy = relativeTy*coordinateArea.getHeight();
-			coordsys.setCoordinateView(
-					coordinateArea.getMinX()-areaTx, 
-					coordinateArea.getMinY()+areaTy,  
-					coordinateArea.getMaxX()-areaTx, 
-					coordinateArea.getMaxY()+areaTy
-			);
+
+			coordsys.setCoordinateView(coordinateArea.getMinX()-areaTx,
+					coordinateArea.getMinY()+areaTy,
+					coordinateArea.getMaxX()-areaTx,
+					coordinateArea.getMaxY()+areaTy);
+			if (Objects.nonNull(coordSysViewController)) {
+				coordSysViewController.setDesiredCoordinateView(new Rectangle2D.Double(
+						coordinateArea.getMinX()-areaTx,
+						coordinateArea.getMinY()+areaTy,
+						coordinateArea.getMaxX()-areaTx,
+						coordinateArea.getMaxY()+areaTy));
+			}
 			canvas.repaint();
 		}
 	}

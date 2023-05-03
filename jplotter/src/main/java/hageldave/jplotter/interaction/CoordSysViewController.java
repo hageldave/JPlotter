@@ -16,7 +16,7 @@ import java.util.Arrays;
 public class CoordSysViewController extends ComponentAdapter {
     protected Component canvas;
     protected CoordSysRenderer coordsys;
-    Rectangle2D desiredCoordinateView;
+    protected Rectangle2D desiredCoordinateView;
 
     /**
      * TODO
@@ -60,6 +60,14 @@ public class CoordSysViewController extends ComponentAdapter {
                 calculateViewport();
             }
         });
+    }
+
+    public Rectangle2D getDesiredCoordinateView() {
+        return desiredCoordinateView;
+    }
+
+    public void setDesiredCoordinateView(Rectangle2D desiredCoordinateView) {
+        this.desiredCoordinateView = desiredCoordinateView;
     }
 
     /**
