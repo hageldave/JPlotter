@@ -131,7 +131,7 @@ public class TexIconWithoutColorInterpolation extends TeXIcon {
         Color oldColor = g2.getColor();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2.scale((double) this.size, (double) this.size);
+        g2.scale(this.size, this.size);
         if (this.fg != null) {
             g2.setColor(this.fg);
         } else if (c != null) {
