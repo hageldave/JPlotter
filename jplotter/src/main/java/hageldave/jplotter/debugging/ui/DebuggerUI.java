@@ -5,6 +5,8 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,6 +31,14 @@ public class DebuggerUI {
     public DebuggerUI(JPlotterCanvas... canvases) {
         for (JPlotterCanvas c: canvases) {
             this.debuggerList.add(new DebuggerPanel(c));
+
+            c.asComponent().addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    super.componentResized(e);
+                    refresh();
+                }
+            });
         }
         display();
     }
@@ -41,6 +51,14 @@ public class DebuggerUI {
      */
     public DebuggerUI(JPlotterCanvas canvas) {
         this.debuggerList.add(new DebuggerPanel(canvas));
+
+        canvas.asComponent().addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                super.componentResized(e);
+                refresh();
+            }
+        });
         display();
     }
 
