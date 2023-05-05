@@ -370,6 +370,8 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     x1 -= txt.getTransformedExportBounds().getWidth();
                     y1 -= txt.getTransformedExportBounds().getHeight();
 
+                    y1 += 1;
+
                     // test if inside of view port
                     Rectangle2D bounds = txt.getBoundsWithRotation();
                     AffineTransform trnsfrm = new AffineTransform();
@@ -389,8 +391,6 @@ public class NewTextRenderer extends GenericRenderer<NewText> {
                     PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                     graphicsState.setStrokingAlphaConstant(txt.getColorA());
                     if (txt.isLatex()) {
-                        graphicsState.setNonStrokingAlphaConstant((float) (txt.getBackground().getAlpha() / 255.0));
-                        contentStream.setGraphicsStateParameters(graphicsState);
                         PDFUtils.latexToPDF(doc, contentStream, txt, new Point2D.Double(x1 + x, y1 + y));
                     } else {
                         graphicsState.setNonStrokingAlphaConstant(txt.getColorA());
