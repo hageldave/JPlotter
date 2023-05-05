@@ -74,7 +74,8 @@ public class NewTextTest {
         // Test text insets with background and rotation
         NewText textInsetsWithRotation = new NewText("testing the insets \n with rotation", fontSize, fontStyle);
         textInsetsWithRotation.setOrigin(0, 50);
-        textInsetsWithRotation.setBackground(Color.GREEN);
+        Color textInsetsWithRotationColor = new Color(Color.GREEN.getRed(), Color.GREEN.getGreen(), Color.GREEN.getBlue(), 100);
+        textInsetsWithRotation.setBackground(textInsetsWithRotationColor);
         textInsetsWithRotation.setPickColor(pr.getNewID());
         textInsetsWithRotation.setInsets(new Insets(10, 10, 10, 10));
         textInsetsWithRotation.setAngle(0.2);
@@ -86,6 +87,7 @@ public class NewTextTest {
         textInsetsWithRotationAndStrikethrough.setBackground(Color.CYAN);
         textInsetsWithRotationAndStrikethrough.setInsets(new Insets(10, 10, 10, 10));
         textInsetsWithRotationAndStrikethrough.setAngle(0.2);
+        textInsetsWithRotationAndStrikethrough.setColor(new Color(0, 0, 255, 100));
         textInsetsWithRotationAndStrikethrough.setPickColor(pr.getNewID());
         textInsetsWithRotationAndStrikethrough.setTextDecoration(STRIKETHROUGH);
         textInsetsWithRotationAndStrikethrough.setTransformationCenter(0.0, 1.0);
@@ -99,15 +101,29 @@ public class NewTextTest {
         textLatex.setAngle(0.2);
         textLatex.setInsets(new Insets(5, 10, 5, 10));
         textLatex.setTransformationCenter(1.0, 1.0);
-//        textLatex.setPositioningRectangle(0.0, 0.0);
 
         // Testing latex rendering in math mode
         NewText textLatexMath = new NewText("##BEGINLATEX## (\\bigwedge_{i=1}^{1} F_i) \\wedge (\\bigwedge_{i=1}^{1} G_i) \\equiv \\bigwedge_{i=1}^{1} (F_i \\wedge G_i)", fontSize, fontStyle);
         textLatexMath.setOrigin(10, 200);
-        textLatexMath.setBackground(Color.PINK);
+        Color textLatexMathColor = new Color(Color.PINK.getRed(), Color.PINK.getGreen(), Color.PINK.getBlue(), 100);
+        textLatexMath.setBackground(textLatexMathColor);
         textLatexMath.setPickColor(pr.getNewID());
         textLatexMath.setInsets(new Insets(5, 10, 5, 10));
         textLatexMath.setTransformationCenter(0.0, 1.0);
+
+        NewText testYPositioning = new NewText("end", fontSize, fontStyle);
+        testYPositioning.setLatex(true);
+        testYPositioning.setTransformationCenter(0, 0);
+        testYPositioning.setOrigin(-500, 10);
+        testYPositioning.setColor(new Color(0, 0, 255, 100));
+        testYPositioning.setBackground(new Color(255, 0, 0));
+
+        NewText testYPositioningWithBackground = new NewText("start", fontSize, fontStyle);
+        testYPositioningWithBackground.setLatex(true);
+        testYPositioningWithBackground.setOrigin(-500, 0);
+        testYPositioningWithBackground.setTransformationCenter(1, 0);
+        testYPositioningWithBackground.setBackground(Color.RED);
+
 
         // okay we're good to go, lets display the data in a coordinate system
         CompleteRenderer content = new CompleteRenderer();
@@ -120,7 +136,9 @@ public class NewTextTest {
                 .addItemToRender(textInsetsWithRotation)
                 .addItemToRender(textInsetsWithRotationAndStrikethrough)
                 .addItemToRender(textLatex)
-                .addItemToRender(textLatexMath));
+                .addItemToRender(textLatexMath)
+                .addItemToRender(testYPositioning)
+                .addItemToRender(testYPositioningWithBackground));
         // lets set the coordinate view to cover the whole sampling space
         coordsys.setCoordinateView(-550, -20, 550, 210);
 
