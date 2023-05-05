@@ -302,7 +302,7 @@ public class PDFUtils {
                     PDFUtils.createPDFPolygon(cs, new double[]{0, width + horizontalInset, width + horizontalInset, 0},
                             new double[]{-verticalInset, -verticalInset, singleLineText.getTextSize().getHeight(), singleLineText.getTextSize().getHeight()});
                 }
-                cs.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
+                cs.setNonStrokingColor(new Color(txt.getBackground().getRGB(), true));
                 cs.fill();
                 cs.restoreGraphicsState();
             }

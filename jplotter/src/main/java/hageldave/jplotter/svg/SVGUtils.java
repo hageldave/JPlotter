@@ -495,8 +495,9 @@ public class SVGUtils {
 				backgroundText.setTextContent(singleLineText.getTextString());
 				backgroundText.setAttributeNS(null, "style", "font-family:" + fontfamily + ";font-size:" + txt.getFontSize() + "px;" + SVGUtils.fontStyleAndWeightCSS(txt.getStyle()));
 				backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+				backgroundText.setAttributeNS(null, "opacity", String.valueOf(txt.getBackground().getAlpha()/255.0));
 				backgroundText.setAttributeNS(null, "x", "" + 0);
-				backgroundText.setAttributeNS(null, "y", "" + (txt.getTextSize().height - txt.getFontSize()));
+				backgroundText.setAttributeNS(null, "y", "" + 0);
 			}
 
 			Element text = SVGUtils.createSVGElement(doc, "text");
