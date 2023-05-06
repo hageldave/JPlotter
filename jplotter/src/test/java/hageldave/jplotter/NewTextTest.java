@@ -111,18 +111,16 @@ public class NewTextTest {
         textLatexMath.setInsets(new Insets(5, 10, 5, 10));
         textLatexMath.setTransformationCenter(0.0, 1.0);
 
-        NewText testYPositioning = new NewText("end", fontSize, fontStyle);
-        testYPositioning.setLatex(true);
+        NewText testYPositioning = new NewText("end of the text", fontSize, fontStyle);
+        testYPositioning.setLatex(false);
         testYPositioning.setTransformationCenter(0, 0);
-        testYPositioning.setOrigin(-500, 10);
-        testYPositioning.setColor(new Color(0, 0, 255, 100));
-        testYPositioning.setBackground(new Color(255, 0, 0));
+        testYPositioning.setOrigin(0, 0);
+        testYPositioning.setColor(new Color(0, 0, 255, 125));
 
-        NewText testYPositioningWithBackground = new NewText("start", fontSize, fontStyle);
+        NewText testYPositioningWithBackground = new NewText("start of the text", fontSize, fontStyle);
         testYPositioningWithBackground.setLatex(true);
-        testYPositioningWithBackground.setOrigin(-500, 0);
+        testYPositioningWithBackground.setOrigin(0, 0);
         testYPositioningWithBackground.setTransformationCenter(1, 0);
-        testYPositioningWithBackground.setBackground(Color.RED);
 
 
         // okay we're good to go, lets display the data in a coordinate system
