@@ -478,18 +478,20 @@ public class SVGUtils {
 	 */
 	public static Element textToSVG(NewText txt, Document doc, Element parent, double x, double y) {
 		String fontfamily = "'Ubuntu Mono', monospace";
+		double fontDescent = CharacterAtlas.getFontMetrics(txt.getFontSize(), txt.getStyle()).getDescent();
 		double textHeight = 1;
-
 		for (NewText singleLineText : txt.generateTextObjectForEachLine()) {
 			if (txt.getBackground().getRGB() != 0) {
 				Element backgroundText;
 				if (txt.getInsets().right != 0 || txt.getInsets().left != 0 || txt.getInsets().top != 0 || txt.getInsets().bottom != 0) {
 					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, singleLineText.getExportBounds().getWidth()+txt.getHorizontalInsets(), singleLineText.getBounds().getHeight());
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight())) + ") scale(1,-1)");
+					backgroundText.setAttributeNS(null, "y", "" + fontDescent);
 					parent.appendChild(backgroundText);
 				} else {
 					backgroundText = SVGUtils.createTextBackgroundFilter(doc, parent, txt.getBackground());
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight  +(txt.getBounds().getHeight()-txt.getTextSize().getHeight())) + ") scale(1,-1)");
+					backgroundText.setAttributeNS(null, "y", "" + 0);
 				}
 				backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
 				backgroundText.setTextContent(singleLineText.getTextString());
@@ -497,7 +499,6 @@ public class SVGUtils {
 				backgroundText.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
 				backgroundText.setAttributeNS(null, "fill-opacity", "" + (txt.getBackground().getAlpha()/255.0));
 				backgroundText.setAttributeNS(null, "x", "" + 0);
-				backgroundText.setAttributeNS(null, "y", "" + 0);
 			}
 
 			Element text = SVGUtils.createSVGElement(doc, "text");
@@ -511,7 +512,9 @@ public class SVGUtils {
 				text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
 			}
 			text.setAttributeNS(null, "x", "" + 0);
-			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.getFontSize()));
+//			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.getFontSize()));
+//			text.setAttributeNS(null, "y", "" + fontDescent);
+			text.setAttributeNS(null, "y", "" + 0);
 
 			if (txt.getTextDecoration() ==  UNDERLINE) {
 				text.setAttributeNS(null, "text-decoration", "underline");
@@ -519,7 +522,6 @@ public class SVGUtils {
 				text.setAttributeNS(null, "text-decoration", "line-through");
 			}
 
-			double fontDescent = CharacterAtlas.getFontMetrics(txt.getFontSize(), txt.getStyle()).getMaxDescent();
 			parent.setAttributeNS(null, "transform",
 					"translate("+SVGUtils.svgNumber(x)+","+SVGUtils.svgNumber(y+fontDescent)+")" + "rotate(" + SVGUtils.svgNumber(txt.getAngle() * 180 / Math.PI)+")");
 			parent.setAttributeNS(null, "transform-origin", txt.getTransformedExportBounds().getWidth() + " " + txt.getTransformedExportBounds().getHeight());
