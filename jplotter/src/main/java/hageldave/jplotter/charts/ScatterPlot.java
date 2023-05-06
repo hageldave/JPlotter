@@ -294,6 +294,8 @@ public class ScatterPlot {
 			 *
 			 * @param chunkIdx index of the data chunk that should be updated
 			 * @param chunkData 2D array containing the updated data
+			 * @param xIdx index of the x coordinate in the chunkData
+			 * @param yIdx index of the y coordinate in the chunkData
 			 */
     		public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx);
     	}
@@ -341,7 +343,13 @@ public class ScatterPlot {
     	public int chunkSize(int chunkIdx) {
     		return getDataChunk(chunkIdx).length;
     	}
-    	
+
+		/**
+		 * Update the data of the dataChunk with the given chunkIdx
+		 *
+		 * @param chunkIdx id of the chunk that should be updated
+		 * @param dataChunk updated data array
+		 */
     	public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
     		if(chunkIdx >= numChunks())
     			throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
@@ -349,19 +357,37 @@ public class ScatterPlot {
     		this.notifyDataChanged(chunkIdx);
     	}
 
+		/**
+		 * Change the x/y coordinate lookup indices of the dataChunk with the given chunkIdx.
+		 * @param chunkIdx id of the dataChunk that should be changed
+		 * @param xIdx x coordinate lookup index
+		 * @param yIdx y coordinate lookup index
+		 */
 		public synchronized void setXYIndicesPerChunk(int chunkIdx, int xIdx, int yIdx) {
 			this.xyIndicesPerChunk.set(chunkIdx, Pair.of(xIdx, yIdx));
 			notifyDataChanged(chunkIdx);
 		}
-    	
+
+		/**
+		 * @param chunkIdx id of the dataChunk whose x coordinate lookup index should be returned
+		 * @return x coordinate lookup index
+		 */
     	public int getXIdx(int chunkIdx) {
     		return xyIndicesPerChunk.get(chunkIdx).first;
     	}
-    	
+
+		/**
+		 * @param chunkIdx id of the dataChunk whose y coordinate lookup index should be returned
+		 * @return y coordinate lookup index
+		 */
     	public int getYIdx(int chunkIdx) {
     		return xyIndicesPerChunk.get(chunkIdx).second;
     	}
-    	
+
+		/**
+		 * @param chunkIdx id of the dataChunk whose chunk description should be returned
+		 * @return chunk description of the dataChunk with the given chunkIdx
+		 */
     	public String getChunkDescription(int chunkIdx) {
     		return descriptionPerChunk.get(chunkIdx);
     	}
@@ -379,7 +405,16 @@ public class ScatterPlot {
     		}
     		return containedPointIndices;
     	}
-    	
+
+		/**
+		 * The dataChunks can be seen as ordered one after the other.
+		 * Therefore, an index of a datapoint in a dataChunk can also have a global index.
+		 * To calculate the global index, the local index of a dataChunk is added to the sizes of each previous dataChunk.
+		 *
+		 * @param chunkIdx dataChunk whose local index (idx parameter) is given
+		 * @param idx local index of the dataChunk with the given chunkIdx
+		 * @return the global index of the idx in the dataChunk with the given chunkIdx
+		 */
     	public int getGlobalIndex(int chunkIdx, int idx) {
     		int globalIdx=0;
     		for(int i=0; i<chunkIdx; i++) {
@@ -458,7 +493,6 @@ public class ScatterPlot {
 
 	/**
 	 * The ScatterPlotVisualMapping is responsible for mapping the chunks to a glyph and a color.
-	 *
 	 *
 	 */
 	public static interface ScatterPlotVisualMapping {
@@ -733,7 +767,6 @@ public class ScatterPlot {
 	/**
 	 * The ScatterPlotMouseEventListener interface contains multiple methods,
 	 * notifying if an element has been hit or not (inside and outside the coordsys).
-	 *
 	 */
 	public static interface ScatterPlotMouseEventListener {
     	static final String MOUSE_EVENT_TYPE_MOVED="moved";
