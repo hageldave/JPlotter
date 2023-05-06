@@ -277,11 +277,15 @@ class DebuggerPanel extends JPanel {
         JButton exportPngBtn = new JButton("Export PNG");
         exportPngBtn.setToolTipText("Exports the canvas as a .png file to the root of the project.");
 
+        JButton exportAllBtn = new JButton("Export All");
+        exportAllBtn.setToolTipText("Exports the canvas as .svg, .pdf and .png files to the root of the project.");
+
         exportSvgBtn.addActionListener(e -> {
             String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
             String fileName = "export-" + timeSubstring + ".svg";
             Document doc = canvas.paintSVG();
             SVGUtils.documentToXMLFile(doc, new File(fileName));
+            System.out.println("Successfully exported as .svg file.");
         });
 
         exportPdfBtn.addActionListener(e -> {
@@ -291,6 +295,7 @@ class DebuggerPanel extends JPanel {
                 PDDocument doc = canvas.paintPDF();
                 doc.save(fileName);
                 doc.close();
+                System.out.println("Successfully exported as .pdf file.");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -301,6 +306,27 @@ class DebuggerPanel extends JPanel {
             Img img = new Img(canvas.asComponent().getSize());
             img.paint(g -> canvas.asComponent().paintAll(g));
             ImageSaver.saveImage(img.getRemoteBufferedImage(), "export-" + timeSubstring + ".png");
+            System.out.println("Successfully exported as .png file.");
+        });
+
+        exportAllBtn.addActionListener(e -> {
+            String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
+            Document svgDoc = canvas.paintSVG();
+            SVGUtils.documentToXMLFile(svgDoc, new File("export-" + timeSubstring + ".svg"));
+
+            try {
+                PDDocument pdfDoc = canvas.paintPDF();
+                pdfDoc.save("export-" + timeSubstring + ".pdf");
+                pdfDoc.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            Img img = new Img(canvas.asComponent().getSize());
+            img.paint(g -> canvas.asComponent().paintAll(g));
+            ImageSaver.saveImage(img.getRemoteBufferedImage(), "export-" + timeSubstring + ".png");
+
+            System.out.println("Successfully exported as .svg, .pdf and .png files.");
         });
 
         title.setText(canvas.getClass().getSimpleName());
@@ -310,6 +336,7 @@ class DebuggerPanel extends JPanel {
         exportPanel.add(exportSvgBtn);
         exportPanel.add(exportPdfBtn);
         exportPanel.add(exportPngBtn);
+        exportPanel.add(exportAllBtn);
 
         exportPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         controlContainer.add(exportPanel);
