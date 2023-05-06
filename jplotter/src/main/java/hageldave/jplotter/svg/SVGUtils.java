@@ -512,8 +512,6 @@ public class SVGUtils {
 				text.setAttributeNS(null, "fill-opacity", SVGUtils.svgNumber(txt.getColorA()));
 			}
 			text.setAttributeNS(null, "x", "" + 0);
-//			text.setAttributeNS(null, "y", "-" + (txt.getTextSize().height - txt.getFontSize()));
-//			text.setAttributeNS(null, "y", "" + fontDescent);
 			text.setAttributeNS(null, "y", "" + 0);
 
 			if (txt.getTextDecoration() ==  UNDERLINE) {
