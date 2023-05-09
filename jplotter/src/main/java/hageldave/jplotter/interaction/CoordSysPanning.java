@@ -87,13 +87,6 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 					coordinateArea.getMinY()+areaTy,
 					coordinateArea.getMaxX()-areaTx,
 					coordinateArea.getMaxY()+areaTy);
-			if (Objects.nonNull(coordSysViewController)) {
-				coordSysViewController.setDesiredCoordinateView(new Rectangle2D.Double(
-						coordinateArea.getMinX()-areaTx,
-						coordinateArea.getMinY()+areaTy,
-						coordinateArea.getMaxX()-areaTx,
-						coordinateArea.getMaxY()+areaTy));
-			}
 			canvas.repaint();
 		}
 	}

@@ -9,9 +9,7 @@ import hageldave.jplotter.debugging.annotations.DebugSetter;
 import hageldave.jplotter.debugging.panelcreators.control.IntegerSpinnerCreator;
 import hageldave.jplotter.debugging.panelcreators.control.Rectangle2DCreator;
 import hageldave.jplotter.font.CharacterAtlas;
-import hageldave.jplotter.interaction.CoordSysPanning;
-import hageldave.jplotter.interaction.CoordSysScrollZoom;
-import hageldave.jplotter.interaction.CoordinateViewListener;
+import hageldave.jplotter.interaction.*;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Renderable;
@@ -145,6 +143,7 @@ public class CoordSysRenderer implements Renderer {
 	protected boolean isEnabled=true;
 
 	protected ColorScheme colorScheme;
+	protected CoordSysViewController coordSysViewController = new DefaultViewController(this);
 
 	/**
 	 * Sets up a CoordSysRenderer with the default color scheme
@@ -951,12 +950,17 @@ public class CoordSysRenderer implements Renderer {
 			System.err.printf("hitting coordinate area precision limit, x-range:%e, y-range:%e%n", w, h);
 			return this;
 		}
-		this.coordinateView = new Rectangle2D.Double(x, y, w, h);
+
+		this.coordSysViewController.setDesiredView(new Rectangle2D.Double(x, y, w, h));
 		setDirty();
 		if(Objects.nonNull(coordviewListener)){
 			coordviewListener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_FIRST, "setCoordinateView"));
 		}
 		return this;
+	}
+
+	public void setCoordinateViewObject(Rectangle2D coordinateView) {
+		this.coordinateView = coordinateView;
 	}
 
 	/**
@@ -1121,6 +1125,14 @@ public class CoordSysRenderer implements Renderer {
 	@Override
 	public boolean isEnabled() {
 		return this.isEnabled;
+	}
+
+	public CoordSysViewController getCoordSysViewController() {
+		return coordSysViewController;
+	}
+
+	public void setCoordSysViewController(CoordSysViewController coordSysViewController) {
+		this.coordSysViewController = coordSysViewController;
 	}
 	
 }

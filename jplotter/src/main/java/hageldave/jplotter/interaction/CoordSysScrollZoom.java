@@ -57,13 +57,6 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
 		if((axes & Y_AXIS) != 0)
 			height *= zoom;
 
-		if (Objects.nonNull(coordSysViewController)) {
-			coordSysViewController.setDesiredCoordinateView(new Rectangle2D.Double(
-					centerX-width/2,
-					centerY-height/2,
-					centerX+width/2,
-					centerY+height/2));
-		}
 		coordsys.setCoordinateView(
 				centerX-width/2,
 				centerY-height/2,
