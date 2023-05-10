@@ -9,9 +9,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.w3c.dom.Document;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -58,27 +55,22 @@ public class ExportUtil {
         ImageSaver.saveImage(img.getRemoteBufferedImage(), path);
     }
 
-    public static PopupMenu createSaveMenu(JPlotterCanvas canvas, String path) {
-        // add a pop up menu (on right click) for exporting to SVG or PNG
-        PopupMenu menu = new PopupMenu();
-        canvas.asComponent().add(menu);
-        canvas.asComponent().addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if(SwingUtilities.isRightMouseButton(e))
-                    menu.show(canvas.asComponent(), e.getX(), e.getY());
-            }
-        });
-        MenuItem svgExport = new MenuItem("SVG export");
-        svgExport.addActionListener(e->{
+    public static JMenuBar createSaveMenu(JPlotterCanvas canvas, String path) {
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        JMenuBar menuBar = new JMenuBar();
+        JMenu exportMenu = new JMenu("Export");
+        menuBar.add(exportMenu);
+
+        JMenuItem svgExport = new JMenuItem("SVG export");
+        svgExport.addActionListener(e -> {
             Document svg = canvas.paintSVG();
             SVGUtils.documentToXMLFile(svg, new File(path + ".svg"));
             System.out.println("exported SVG.");
         });
-        menu.add(svgExport);
+        exportMenu.add(svgExport);
 
-        MenuItem pdfExport = new MenuItem("PDF export");
-        pdfExport.addActionListener(e->{
+        JMenuItem pdfExport = new JMenuItem("PDF export");
+        pdfExport.addActionListener(e -> {
             try {
                 PDDocument pdf = canvas.paintPDF();
                 pdf.save(path + ".pdf");
@@ -89,17 +81,75 @@ public class ExportUtil {
             }
 
         });
-        menu.add(pdfExport);
+        exportMenu.add(pdfExport);
 
-        MenuItem pngExport = new MenuItem("PNG export");
-        pngExport.addActionListener(e->{
+        JMenuItem pngExport = new JMenuItem("PNG export");
+        pngExport.addActionListener(e -> {
             Img img = new Img(canvas.asComponent().getSize());
             img.paint(g -> canvas.asComponent().paintAll(g));
             ImageSaver.saveImage(img.getRemoteBufferedImage(), path + ".png");
             System.out.println("exported PNG.");
         });
-        menu.add(pngExport);
+        exportMenu.add(pngExport);
 
-        return menu;
+        return menuBar;
+    }
+
+    public static JMenuBar createSaveFileChooserMenu(JPlotterCanvas canvas) {
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        JFileChooser chooser = new JFileChooser();
+
+        JMenuBar menuBar = new JMenuBar();
+        JMenu exportMenu = new JMenu("Export");
+        menuBar.add(exportMenu);
+
+        JMenuItem svgExport = new JMenuItem("SVG export");
+        svgExport.addActionListener(e -> {
+            int result = chooser.showSaveDialog(canvas.asComponent());
+            if (result == JFileChooser.APPROVE_OPTION) {
+                try {
+                    Document svg = canvas.paintSVG();
+                    SVGUtils.documentToXMLFile(svg, new File(chooser.getSelectedFile() + ".svg"));
+                    System.out.println("exported SVG.");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        exportMenu.add(svgExport);
+
+        JMenuItem pdfExport = new JMenuItem("PDF export");
+        pdfExport.addActionListener(e -> {
+            int result = chooser.showSaveDialog(canvas.asComponent());
+            if (result == JFileChooser.APPROVE_OPTION) {
+                try {
+                    PDDocument pdf = canvas.paintPDF();
+                    pdf.save(chooser.getSelectedFile() + ".pdf");
+                    pdf.close();
+                    System.out.println("exported PDF.");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        exportMenu.add(pdfExport);
+
+        JMenuItem pngExport = new JMenuItem("PNG export");
+        pngExport.addActionListener(e -> {
+            int result = chooser.showSaveDialog(canvas.asComponent());
+            if (result == JFileChooser.APPROVE_OPTION) {
+                try {
+                    Img img = new Img(canvas.asComponent().getSize());
+                    img.paint(g -> canvas.asComponent().paintAll(g));
+                    ImageSaver.saveImage(img.getRemoteBufferedImage(), chooser.getSelectedFile() + ".png");
+                    System.out.println("exported PNG.");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        exportMenu.add(pngExport);
+
+        return menuBar;
     }
 }
