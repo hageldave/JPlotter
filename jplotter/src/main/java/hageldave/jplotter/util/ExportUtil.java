@@ -12,6 +12,12 @@ import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * The ExportUtil class contains several methods that contain boilerplate code for
+ * exporting a {@link JPlotterCanvas} or a {@link JFrame} to either png, svg or pdf files.
+ * It also contains methods for creating different save menus.
+ *
+ */
 public class ExportUtil {
 
     /**
@@ -47,7 +53,7 @@ public class ExportUtil {
      */
     public static void frameToPDF(JFrame frame, String path) {
         try {
-            PDDocument doc = PDFUtils.containerToPDF(frame.getContentPane()); // pass the container to be exported
+            PDDocument doc = PDFUtils.containerToPDF(frame); // pass the container to be exported
             doc.save(path); // specifies the filename of the export
             doc.close();
             System.out.println("Exported as " + path);
