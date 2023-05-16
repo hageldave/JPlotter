@@ -33,7 +33,7 @@ public class ExportUtil {
     public static void canvasToPDF(JPlotterCanvas canvas, String path) {
         try {
             PDDocument doc = canvas.paintPDF();
-            doc.save(path); // specifies the filename of the export
+            doc.save(path);
             doc.close();
             System.out.println("Exported as " + path);
         } catch (IOException e) {
@@ -53,8 +53,8 @@ public class ExportUtil {
      */
     public static void frameToPDF(JFrame frame, String path) {
         try {
-            PDDocument doc = PDFUtils.containerToPDF(frame); // pass the container to be exported
-            doc.save(path); // specifies the filename of the export
+            PDDocument doc = PDFUtils.containerToPDF(frame);
+            doc.save(path);
             doc.close();
             System.out.println("Exported as " + path);
         } catch (IOException e) {
@@ -89,7 +89,7 @@ public class ExportUtil {
      * @param path location where the file will be exported to
      */
     public static void frameToSVG(JFrame frame, String path) {
-        Document svg = SVGUtils.containerToSVG(frame.getContentPane()); // pass the container to be exported
+        Document svg = SVGUtils.containerToSVG(frame.getContentPane());
         SVGUtils.documentToXMLFile(svg, new File("frame_export.svg"));
         System.out.println("Exported to " + path);
     }
