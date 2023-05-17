@@ -37,9 +37,11 @@ public class KeepAspectRatioController extends ComponentAdapter implements Coord
     }
 
     /**
-     * TODO
-     * @param canvas
-     * @param coordsys
+     * Creates a new {@link KeepAspectRatioController} for the specified canvas and corresponding coordinate system.
+     * It uses the current coordinate view of the {@link CoordSysRenderer} as the default {@link #desiredCoordinateView}.
+     *
+     * @param canvas displaying the coordsys
+     * @param coordsys the coordinate system to control
      */
     public KeepAspectRatioController(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
         Rectangle2D coordView = coordsys.getCoordinateView();
@@ -100,12 +102,12 @@ public class KeepAspectRatioController extends ComponentAdapter implements Coord
     }
 
     /**
-     * Sets a new desiredCoordinateView
+     * Sets a new desiredCoordinateView and updates the {@link CoordSysRenderer#coordinateView} of the given CoordSysRenderer.
      *
-     * @param minX
-     * @param minY
-     * @param maxX
-     * @param maxY
+     * @param minX minimal x-coordinate of the viewport
+     * @param minY minimal y-coordinate of the viewport
+     * @param maxX maximal x-coordinate of the viewport
+     * @param maxY maximal y-coordinate of the viewport
      */
     @Override
     public void setDesiredView(double minX, double minY, double maxX, double maxY) {
