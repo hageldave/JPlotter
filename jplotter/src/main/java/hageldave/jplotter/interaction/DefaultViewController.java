@@ -16,8 +16,15 @@ public class DefaultViewController implements CoordSysViewController {
         this.coordsys = coordsys;
     }
 
+    /**
+     *
+     * @param minX
+     * @param minY
+     * @param maxX
+     * @param maxY
+     */
     @Override
-    public void setDesiredView(Rectangle2D desiredCoordinateView) {
-        this.coordsys.setCoordinateViewObject(desiredCoordinateView);
+    public void setDesiredView(double minX, double minY, double maxX, double maxY) {
+        this.coordsys.setCoordinateViewObject(new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY));
     }
 }

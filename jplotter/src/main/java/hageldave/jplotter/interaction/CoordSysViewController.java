@@ -12,10 +12,16 @@ import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 
 
+/**
+ *
+ */
 public interface CoordSysViewController {
-    public default void setDesiredView(double minX, double minY, double maxX, double maxY) {
-        this.setDesiredView(new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY));
-    }
-
-    public void setDesiredView(Rectangle2D desiredCoordinateView);
+    /**
+     *
+     * @param minX
+     * @param minY
+     * @param maxX
+     * @param maxY
+     */
+    public void setDesiredView(double minX, double minY, double maxX, double maxY);
 }

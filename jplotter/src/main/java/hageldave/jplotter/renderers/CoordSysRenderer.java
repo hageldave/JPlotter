@@ -927,7 +927,7 @@ public class CoordSysRenderer implements Renderer {
 	 * @return this for chaining
 	 */
 	@DebugSetter(ID = "coordinateView", creator = Rectangle2DCreator.class)
-	public CoordSysRenderer setCoordinateView(double minX, double minY, double maxX, double maxY){
+	public CoordSysRenderer setCoordinateView(double minX, double minY, double maxX, double maxY) {
 		return setCoordinateViewRect(minX, minY, maxX-minX, maxY-minY);
 	}
 	
@@ -951,7 +951,7 @@ public class CoordSysRenderer implements Renderer {
 			return this;
 		}
 
-		this.coordSysViewController.setDesiredView(new Rectangle2D.Double(x, y, w, h));
+		this.coordSysViewController.setDesiredView(x, y, w+x, h+y);
 		setDirty();
 		if(Objects.nonNull(coordviewListener)){
 			coordviewListener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_FIRST, "setCoordinateView"));

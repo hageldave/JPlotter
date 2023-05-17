@@ -49,12 +49,12 @@ public class KeepAspectRatioController extends ComponentAdapter implements Coord
     }
 
     protected void calculateViewport(Rectangle2D desiredCoordinateView) {
-        // TODO: evt. canvas größe falsche prop.
         double canvasWidth = this.canvas.getWidth();
         double canvasHeight = this.canvas.getHeight();
         double contentAspect = desiredCoordinateView.getWidth() / desiredCoordinateView.getHeight();
         double viewportAspect = canvasWidth / canvasHeight;
         double w,h,x,y;
+
         if(viewportAspect < contentAspect) { // taller viewport
             w = desiredCoordinateView.getWidth();
             h = w/viewportAspect;
@@ -102,11 +102,15 @@ public class KeepAspectRatioController extends ComponentAdapter implements Coord
     /**
      * Sets a new desiredCoordinateView
      *
-     * @param desiredCoordinateView the minimal always visible area of the coordinate view
+     * @param minX
+     * @param minY
+     * @param maxX
+     * @param maxY
      */
     @Override
-    public void setDesiredView(Rectangle2D desiredCoordinateView) {
-        this.desiredCoordinateView = desiredCoordinateView;
-        this.calculateViewport(desiredCoordinateView);
+    public void setDesiredView(double minX, double minY, double maxX, double maxY) {
+        Rectangle2D desiredView = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+        this.desiredCoordinateView = desiredView;
+        this.calculateViewport(desiredView);
     }
 }
