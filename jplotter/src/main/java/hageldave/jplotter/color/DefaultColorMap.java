@@ -112,7 +112,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_fdfcfc
 			),
 
-	// TODO: Add license from https://colorcet.com/download/index.html
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_I2.png"> */
 	S_CET_I2(0xff_70D1FF,
 			0xff_74D5E0,
@@ -123,7 +125,11 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_FFB380
 	),
 
-	// TODO: Add license from https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html
+
+	// Copyright 2019 Google LLC.
+	// SPDX-License-Identifier: Apache-2.0
+	// Author: Anton Mikhailov
+	// The colormap (https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html) has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_TURBO.png"> */
 	S_TURBO(
 			0xff_30123B,
@@ -152,8 +158,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_C32503
 	),
 
-	// COLORBLIND
-	// TODO: Add license from https://colorcet.com/download/index.html
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_CBL1.png"> */
 	S_CET_CBL1(
 			0xff_111111,
@@ -165,6 +172,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_F0EDE8
 	),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_CBL2.png"> */
 	S_CET_CBL2(
 			0xff_111111,
@@ -177,6 +187,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_F9D73E
 	),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_I3.png"> */
 	S_CET_I3(
 			0xff_14B9E6,
@@ -193,6 +206,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_F28AB8
 	),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_C1.png"> */
 	S_CET_C1(
 			0xff_F985F8,
@@ -296,6 +312,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_5e4fa2
 			),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_CBD1.png"> */
 	D_CET_CBD1(
 			0xff_3A90FE,
@@ -308,6 +327,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_BDA64E
 	),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_D02.png"> */
 	D_CET_D02(
 
@@ -325,6 +347,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_C578E7
 	),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_D04.png"> */
 	D_CET_D04(
 			0xff_1981FA,
@@ -353,6 +378,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_BB473A
 	),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_D07.png"> */
 	D_CET_D07(
 			0xff_1431C1,
@@ -369,6 +397,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_EAD33F
 	),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_D11.png"> */
 	D_CET_D11(
 			0xff_00B6FF,
@@ -385,6 +416,9 @@ public enum DefaultColorMap implements ColorMap {
 			0xff_EB9679
 	),
 
+	// Copyright holder of the colormap is Peter Kovesi, https://arxiv.org/abs/1509.03700
+	// It has been released under the CC BY 4.0 licence: https://creativecommons.org/licenses/by/4.0/legalcode
+	// It has been downsampled and is therefore slightly modified, but is perceptually indistinguishable.
 	/** <img alt="image of colormap" src="https://raw.githubusercontent.com/wiki/hageldave/JPlotter/images/colormaps/S_CET_D13.png"> */
 	D_CET_D13(
 			0xff_112D68,
