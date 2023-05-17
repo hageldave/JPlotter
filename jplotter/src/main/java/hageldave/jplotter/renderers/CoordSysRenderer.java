@@ -1127,10 +1127,18 @@ public class CoordSysRenderer implements Renderer {
 		return this.isEnabled;
 	}
 
+	/**
+	 * @return the {@link CoordSysViewController} currently used by the CoordSysRenderer
+	 */
 	public CoordSysViewController getCoordSysViewController() {
 		return coordSysViewController;
 	}
 
+	/**
+	 * Sets a new {@link CoordSysViewController} for the CoordSysRenderer
+	 *
+	 * @param coordSysViewController to be used by this CoordSysRenderer
+	 */
 	public void setCoordSysViewController(CoordSysViewController coordSysViewController) {
 		this.coordSysViewController = coordSysViewController;
 	}
