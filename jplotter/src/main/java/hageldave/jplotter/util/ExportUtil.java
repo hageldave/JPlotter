@@ -165,7 +165,7 @@ public class ExportUtil {
     public static JMenuBar createSaveMenu(JPlotterCanvas canvas, String path) {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         JMenuBar menuBar = new JMenuBar();
-        JMenu exportMenu = new JMenu("Export");
+        JMenu exportMenu = new JMenu("Export canvas");
         menuBar.add(exportMenu);
 
         JMenuItem svgExport = new JMenuItem("SVG export");
@@ -203,7 +203,7 @@ public class ExportUtil {
     public static JMenuBar createSaveMenu(JFrame frame, String path) {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         JMenuBar menuBar = new JMenuBar();
-        JMenu exportMenu = new JMenu("Export");
+        JMenu exportMenu = new JMenu("Export frame");
         menuBar.add(exportMenu);
 
         JMenuItem svgExport = new JMenuItem("SVG export");
@@ -214,13 +214,13 @@ public class ExportUtil {
 
         JMenuItem pdfExport = new JMenuItem("PDF export");
         pdfExport.addActionListener(e -> {
-            frameToSVG(frame, path + ".pdf");
+            frameToPDF(frame, path + ".pdf");
         });
         exportMenu.add(pdfExport);
 
         JMenuItem pngExport = new JMenuItem("PNG export");
         pngExport.addActionListener(e -> {
-            frameToSVG(frame, path + ".png");
+            frameToPNG(frame, path + ".png");
         });
         exportMenu.add(pngExport);
         return menuBar;
