@@ -11,6 +11,8 @@ import org.w3c.dom.Document;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * The ExportUtil class contains several methods that contain boilerplate code for
@@ -41,6 +43,10 @@ public class ExportUtil {
         }
     }
 
+    public static void canvasToPDF(JPlotterCanvas canvas) {
+        canvasToPDF(canvas, getDateTimeAsString() + ".pdf");
+    }
+
     /**
      * Exports {@link JFrame} to PDF file.
      * It uses the given path as the export location.
@@ -62,6 +68,10 @@ public class ExportUtil {
         }
     }
 
+    public static void frameToPDF(JFrame frame) {
+        frameToPDF(frame, getDateTimeAsString() + ".pdf");
+    }
+
     /**
      * Exports {@link JPlotterCanvas} to SVG file.
      * It uses the given path as the export location.
@@ -78,6 +88,10 @@ public class ExportUtil {
         System.out.println("Exported as " + path);
     }
 
+    public static void canvasToSVG(JPlotterCanvas canvas) {
+        canvasToSVG(canvas, getDateTimeAsString() + ".svg");
+    }
+
     /**
      * Exports {@link JFrame} to SVG file.
      * It uses the given path as the export location.
@@ -90,8 +104,12 @@ public class ExportUtil {
      */
     public static void frameToSVG(JFrame frame, String path) {
         Document svg = SVGUtils.containerToSVG(frame.getContentPane());
-        SVGUtils.documentToXMLFile(svg, new File("frame_export.svg"));
+        SVGUtils.documentToXMLFile(svg, new File(path));
         System.out.println("Exported to " + path);
+    }
+
+    public static void frameToSVG(JFrame frame) {
+        frameToSVG(frame, getDateTimeAsString() + ".svg");
     }
 
     /**
@@ -111,6 +129,10 @@ public class ExportUtil {
         System.out.println("Exported to " + path);
     }
 
+    public static void canvasToPNG(JPlotterCanvas canvas) {
+        canvasToPNG(canvas, getDateTimeAsString() + ".png");
+    }
+
     /**
      * Exports {@link JFrame} to PNG file.
      * It uses the given path as the export location.
@@ -126,6 +148,10 @@ public class ExportUtil {
         img.paint(g -> frame.getContentPane().paintAll(g));
         ImageSaver.saveImage(img.getRemoteBufferedImage(), path);
         System.out.println("Exported to " + path);
+    }
+
+    public static void frameToPNG(JFrame frame) {
+        frameToPNG(frame, getDateTimeAsString() + ".png");
     }
 
     /**
@@ -162,6 +188,10 @@ public class ExportUtil {
         return menuBar;
     }
 
+    public static JMenuBar createSaveMenu(JPlotterCanvas canvas) {
+        return createSaveMenu(canvas, getDateTimeAsString());
+    }
+
     /**
      * Creates a {@link JMenuBar} with options to export canvas to PDF/SVG/PNG.
      * The desired path should not include .pdf/.svg/.png endings as they're added automatically.
@@ -194,6 +224,10 @@ public class ExportUtil {
         });
         exportMenu.add(pngExport);
         return menuBar;
+    }
+
+    public static JMenuBar createSaveMenu(JFrame frame) {
+        return createSaveMenu(frame, getDateTimeAsString());
     }
 
     /**
@@ -308,5 +342,13 @@ public class ExportUtil {
         exportMenu.add(pngExport);
 
         return menuBar;
+    }
+
+    /**
+     * @return the current {@link LocalDateTime} in the format "yyyy-MM-dd--HH-mm-ss"
+     */
+    public static String getDateTimeAsString() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+        return LocalDateTime.now().format(formatter);
     }
 }
