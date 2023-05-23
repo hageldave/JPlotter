@@ -122,6 +122,6 @@ public class ContourPlot {
 		contourbands.getTriangleDetails().addAll(tris);
 		canvas.scheduleRepaint();
 
-		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "parallel_coords"));
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "contour_plot"));
 	}
 }
