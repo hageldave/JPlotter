@@ -59,7 +59,7 @@ public class ExportUtil {
      */
     public static void frameToPDF(JFrame frame, String path) {
         try {
-            PDDocument doc = PDFUtils.containerToPDF(frame);
+            PDDocument doc = PDFUtils.containerToPDF(frame.getContentPane());
             doc.save(path);
             doc.close();
             System.out.println("Exported as " + path);
