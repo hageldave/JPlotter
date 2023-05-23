@@ -1,16 +1,5 @@
 package hageldave.jplotter.howto;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.geom.Rectangle2D;
-import java.util.function.BiFunction;
-import java.util.stream.IntStream;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -18,7 +7,14 @@ import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
+import hageldave.jplotter.util.ExportUtil;
 import hageldave.jplotter.util.Pair;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 
 public class BarChart {
 
@@ -82,16 +78,7 @@ public class BarChart {
 			frame.pack();
 			frame.setVisible(true);
 		});
-		
-		
-		long t=System.currentTimeMillis()+2000;
-		while(t>System.currentTimeMillis());
-		if("false".equals("true"))
-		SwingUtilities.invokeLater(()->{
-			Img img = new Img(frame.getSize());
-			img.paint(g2d->frame.paintAll(g2d));
-			ImageSaver.saveImage(img.getRemoteBufferedImage(), "howto_barchart.png");
-		});
+
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "howto_barchart"));
 	}
-	
 }

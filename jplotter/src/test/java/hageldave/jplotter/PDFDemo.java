@@ -7,7 +7,7 @@ import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.renderables.*;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import org.apache.pdfbox.pdmodel.PDDocument;
+import hageldave.jplotter.util.ExportUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,10 +29,7 @@ public class PDFDemo {
         return d;
     }
 
-    public void create(String file) throws IOException, InterruptedException, InvocationTargetException {
-        PDDocument document = null;
-        try {
-
+    public void create(String file) throws InterruptedException, InvocationTargetException {
             double[] seriesA_y = randomData(30);
             double[] seriesA_x = IntStream.range(0, 30).mapToDouble(i->i/1.0).toArray();
             double[] seriesB_y = randomData(6);
@@ -123,15 +120,7 @@ public class PDFDemo {
                 frame.pack();
                 frame.setVisible(true);
             });
-
-            PDDocument doc = canvas.paintPDF();
-            doc.save(file);
-            doc.close();
-        } finally {
-            if (document != null) {
-                document.close();
-            }
-        }
+            ExportUtil.canvasToPDF(canvas, file);
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {

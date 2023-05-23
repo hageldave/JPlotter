@@ -1,7 +1,5 @@
 package hageldave.jplotter.howto;
 
-import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -11,6 +9,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
+import hageldave.jplotter.util.ExportUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -70,14 +69,7 @@ public class ScatterPlot {
 			frame.pack();
 			frame.setVisible(true);
 		});
-		
-		long t=System.currentTimeMillis()+2000;
-		while(t>System.currentTimeMillis());
-		if("false".equals("true"))
-		SwingUtilities.invokeLater(()->{
-			Img img = new Img(frame.getSize());
-			img.paint(g2d->frame.paintAll(g2d));
-			ImageSaver.saveImage(img.getRemoteBufferedImage(), "scatterplot.png");
-		});
+
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "scatterplot"));
 	}
 }

@@ -16,17 +16,13 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.svg.SVGUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.w3c.dom.Document;
+import hageldave.jplotter.util.ExportUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
@@ -133,34 +129,8 @@ public class IsolinesViz {
 		};
 		canvas.asComponent().addMouseListener(contourPlacer);
 		canvas.asComponent().addMouseMotionListener(contourPlacer);
-		
-		canvas.asComponent().addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isRightMouseButton(e)){
-					Document doc = canvas.paintSVG();
-					SVGUtils.documentToXMLFile(doc, new File("svgtest.svg"));
-					System.out.println("svg exported.");
-				}
-			}
-		});
 
-		canvas.asComponent().addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isMiddleMouseButton(e)){
-					try {
-						PDDocument doc = canvas.paintPDF();
-						doc.save("pdf_isolinesViz.pdf");
-						doc.close();
-						System.out.println("pdf exported.");
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					}
-				}
-			}
-		});
-
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "isolines_viz"));
 		frame.getContentPane().add(canvas.asComponent(), BorderLayout.CENTER);
 		canvas.addCleanupOnWindowClosingListener(frame);
 		SwingUtilities.invokeLater(()->{

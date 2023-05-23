@@ -8,7 +8,6 @@ import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.interaction.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
-import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
@@ -16,9 +15,7 @@ import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.svg.SVGUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.w3c.dom.Document;
+import hageldave.jplotter.util.ExportUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,7 +25,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -391,40 +387,8 @@ public class StatLogSPLOMViz {
 				coordsys.setCoordinateView(minX, minY, maxX, maxY);
 			}
 		}
-		
-		for(JPlotterCanvas cnvs:canvasCollection){
-			// add a pop up menu (on right click) for exporting to SVG
-			PopupMenu menu = new PopupMenu();
-			MenuItem svgExport = new MenuItem("SVG export");
-			menu.add(svgExport);
-			svgExport.addActionListener(e->{
-				Document svg = SVGUtils.containerToSVG(frame.getContentPane());
-				SVGUtils.documentToXMLFile(svg, new File("iris_export.svg"));
-				System.out.println("exported iris_export.svg");
-			});
-			MenuItem pdfExport = new MenuItem("PDF export");
-			menu.add(pdfExport);
-			pdfExport.addActionListener(e->{
-				try {
-					PDDocument doc = PDFUtils.containerToPDF(frame.getContentPane());
-					doc.save("iris_export.pdf");
-					doc.close();
-					System.out.println("exported iris_export.pdf");
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-			});
 
-			cnvs.asComponent().add(menu);
-			cnvs.asComponent().addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					if(SwingUtilities.isRightMouseButton(e))
-						menu.show(cnvs.asComponent(), e.getX(), e.getY());
-				}
-			});
-		}
-		
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "splom_viz"));
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {

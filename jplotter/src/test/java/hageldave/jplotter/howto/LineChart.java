@@ -1,17 +1,5 @@
 package hageldave.jplotter.howto;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.IntStream;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -22,6 +10,14 @@ import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
+import hageldave.jplotter.util.ExportUtil;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 public class LineChart {
 
@@ -66,7 +62,7 @@ public class LineChart {
 		
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		boolean useOpenGL = true;
+		boolean useOpenGL = false;
 		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		canvas.setRenderer(coordsys);
 		canvas.asComponent().setPreferredSize(new Dimension(700, 400));
@@ -109,16 +105,7 @@ public class LineChart {
 		// append the line renderer to the triangle renderer and use as new content
 		coordsys.setContent(areaContent.withAppended(lineContent));
 		canvas.scheduleRepaint();
-		
 
-		long t=System.currentTimeMillis()+2000;
-		while(t>System.currentTimeMillis());
-		if("false".equals("true"))
-			SwingUtilities.invokeLater(()->{
-				Img img = new Img(frame.getSize());
-				img.paint(g2d->frame.paintAll(g2d));
-				ImageSaver.saveImage(img.getRemoteBufferedImage(), "linechart.png");
-			});
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "linechart"));
 	}
-
 }
