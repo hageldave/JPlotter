@@ -111,17 +111,54 @@ public class NewTextTest {
         textLatexMath.setInsets(new Insets(5, 10, 5, 10));
         textLatexMath.setTransformationCenter(0.0, 1.0);
 
-        NewText testYPositioning = new NewText("end of the text", fontSize, fontStyle);
+        // Testing text transparency
+        NewText testYPositioning = new NewText("End of the text", fontSize, fontStyle);
         testYPositioning.setLatex(false);
         testYPositioning.setTransformationCenter(0, 0);
         testYPositioning.setOrigin(0, 0);
         testYPositioning.setColor(new Color(0, 0, 255, 125));
 
-        NewText testYPositioningWithBackground = new NewText("start of the text", fontSize, fontStyle);
+        // Test latex positioning on y axis
+        NewText testYPositioningWithBackground = new NewText("Start of the text", fontSize, fontStyle);
         testYPositioningWithBackground.setLatex(true);
         testYPositioningWithBackground.setOrigin(0, 0);
         testYPositioningWithBackground.setTransformationCenter(1, 0);
 
+        // Testing background blending of two different background colors
+        NewText testBackgroundBlending1 = new NewText("B", fontSize, fontStyle);
+        testBackgroundBlending1.setOrigin(0, -200);
+        testBackgroundBlending1.setBackground(new Color(0,0, 255, 100));
+        testBackgroundBlending1.setInsets(new Insets(0,0,0,50));
+
+        NewText testBackgroundBlending2 = new NewText("B", fontSize, fontStyle);
+        testBackgroundBlending2.setOrigin(70, -200);
+        testBackgroundBlending2.setBackground(new Color(0,255, 0, 100));
+        testBackgroundBlending2.setInsets(new Insets(0,50,0,0));
+
+        // Testing italic text
+        NewText italicText = new NewText("Italics text", fontSize, Font.ITALIC);
+        italicText.setOrigin(0, -50);
+        italicText.setTransformationCenter(1, 0);
+
+        // Testing bold text
+        NewText boldText = new NewText("Bold text", fontSize, Font.BOLD);
+        boldText.setOrigin(0, -50);
+
+        // Testing if hidden text isn't shown
+        NewText hiddenText = new NewText("Hidden text (shouldn't be visible", fontSize, fontStyle);
+        hiddenText.hide(true);
+        hiddenText.setOrigin(0, -100);
+
+        // Testing negative insets
+        NewText negativeInsetsText = new NewText("Negative insets", fontSize, fontStyle);
+        negativeInsetsText.setInsets(new Insets(-5, -10, -5, -10));
+        negativeInsetsText.setBackground(Color.ORANGE);
+        negativeInsetsText.setOrigin(0, -100);
+        negativeInsetsText.setTransformationCenter(1, 0);
+
+        // Test different font size
+        NewText largeFontSizeText = new NewText("Testing the larger font size", fontSize + 10, fontStyle);
+        largeFontSizeText.setOrigin(0, -150);
 
         // okay we're good to go, lets display the data in a coordinate system
         CompleteRenderer content = new CompleteRenderer();
@@ -136,7 +173,15 @@ public class NewTextTest {
                 .addItemToRender(textLatex)
                 .addItemToRender(textLatexMath)
                 .addItemToRender(testYPositioning)
-                .addItemToRender(testYPositioningWithBackground));
+                .addItemToRender(testYPositioningWithBackground)
+                .addItemToRender(testBackgroundBlending1)
+                .addItemToRender(testBackgroundBlending2)
+                .addItemToRender(italicText)
+                .addItemToRender(boldText)
+                .addItemToRender(hiddenText)
+                .addItemToRender(negativeInsetsText)
+                .addItemToRender(largeFontSizeText)
+        );
         // lets set the coordinate view to cover the whole sampling space
         coordsys.setCoordinateView(-550, -20, 550, 210);
 
