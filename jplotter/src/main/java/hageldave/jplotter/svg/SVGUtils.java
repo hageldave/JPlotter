@@ -484,7 +484,7 @@ public class SVGUtils {
 			if (txt.getBackground().getRGB() != 0) {
 				Element backgroundText;
 				if (txt.getInsets().right != 0 || txt.getInsets().left != 0 || txt.getInsets().top != 0 || txt.getInsets().bottom != 0) {
-					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, singleLineText.getExportBounds().getWidth()+txt.getHorizontalInsets(), singleLineText.getBounds().getHeight());
+					backgroundText = SVGUtils.createSVGRect(doc, x, y + textHeight, singleLineText.getExportBounds().getWidth(), singleLineText.getBounds().getHeight());
 					backgroundText.setAttributeNS(null, "transform", "translate(" + SVGUtils.svgNumber(0) + "," + SVGUtils.svgNumber(- textHeight + (txt.getBounds().getHeight())) + ") scale(1,-1)");
 					backgroundText.setAttributeNS(null, "y", "" + fontDescent);
 					parent.appendChild(backgroundText);
