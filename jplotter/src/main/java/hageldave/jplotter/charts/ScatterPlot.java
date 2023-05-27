@@ -4,6 +4,7 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
+import hageldave.jplotter.interaction.CoordinateViewListener;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
 import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
@@ -18,6 +19,7 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
+import hageldave.jplotter.util.QuadTree;
 import hageldave.jplotter.util.Utils;
 
 import javax.swing.*;
@@ -28,6 +30,8 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
+
+import static hageldave.jplotter.util.QuadTree.insert;
 
 /**
  *
@@ -104,7 +108,7 @@ public class ScatterPlot {
         this.coordsys.setxAxisLabel(xLabel);
         this.coordsys.setyAxisLabel(yLabel);
         
-        this.dataModel.addListener(new ScatterPlotDataModel.ScatterPlotDataModelListener() {
+        this.dataModel.addListener(new ScatterPlotDataModelListener() {
 			@Override
 			public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
 				onDataAdded(chunkIdx, chunkData, chunkDescription, xIdx, yIdx);
@@ -112,6 +116,13 @@ public class ScatterPlot {
         	@Override
 			public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx) {
 				onDataChanged(chunkIdx, chunkData);
+			}
+		});
+
+		this.coordsys.addCoordinateViewListener(new CoordinateViewListener() {
+			@Override
+			public void coordinateViewChanged(CoordSysRenderer src, Rectangle2D view) {
+				// TODO: update Quadtree here (coordinates not correct anymore)
 			}
 		});
         
@@ -268,37 +279,12 @@ public class ScatterPlot {
 	 * with the new or changed data.
 	 *
 	 */
-	public static class ScatterPlotDataModel {
+	public class ScatterPlotDataModel {
     	protected ArrayList<double[][]> dataChunks = new ArrayList<>();
     	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();;
     	protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
     	protected LinkedList<ScatterPlotDataModelListener> listeners = new LinkedList<>();
-
-		/**
-		 * The ScatterPlotDataModelListener consists of multiple listener interfaces, which are called when the data model is manipulated.
-		 */
-		public static interface ScatterPlotDataModelListener {
-			/**
-			 * Whenever data is added to the ScatterPlot, this interface will be called.
-			 *
-			 * @param chunkIdx index of the dataChunk in the array where all dataChunks are stored
-			 * @param chunkData 2D array containing the data that will be rendered in the ScatterPlot
-			 * @param chunkDescription label of the data chunk which will also be shown in the legend
-			 * @param xIdx location of the x coordinate in the chunkData array
-			 * @param yIdx location of the y coordinate in the chunkData array
-			 */
-    		public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx);
-
-			/**
-			 * Whenever data is updated in the ScatterPlot, this interface will be called.
-			 *
-			 * @param chunkIdx index of the data chunk that should be updated
-			 * @param chunkData 2D array containing the updated data
-			 * @param xIdx index of the x coordinate in the chunkData
-			 * @param yIdx index of the y coordinate in the chunkData
-			 */
-    		public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx);
-    	}
+		protected ArrayList<QuadTree> quadTreePerChunk = new ArrayList<>();
 
 		/**
 		 * Adds data to the data model of the scatter plot.
@@ -313,6 +299,15 @@ public class ScatterPlot {
     		this.dataChunks.add(dataChunk);
     		this.xyIndicesPerChunk.add(Pair.of(xIdx, yIdx));
     		this.descriptionPerChunk.add(chunkDescription);
+
+			QuadTree qt = new QuadTree(0, new Rectangle2D.Double(17, 32, 115, 93));
+			int index = 0;
+			for (double[] doubles : dataChunk) {
+				double[] actualCoordinates = new double[]{doubles[xIdx], doubles[yIdx]};
+				insert(qt, new Pair<>(actualCoordinates, index));
+				index++;
+			}
+			this.quadTreePerChunk.add(qt);
     		
     		notifyDataAdded(chunkIdx);
     	}
@@ -355,6 +350,8 @@ public class ScatterPlot {
     			throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
     		this.dataChunks.set(chunkIdx, dataChunk);
     		this.notifyDataChanged(chunkIdx);
+
+			// TODO: update quad tree
     	}
 
 		/**
@@ -391,19 +388,25 @@ public class ScatterPlot {
     	public String getChunkDescription(int chunkIdx) {
     		return descriptionPerChunk.get(chunkIdx);
     	}
+
+		public QuadTree getQuadTree(int chunkIdx) {
+			return quadTreePerChunk.get(chunkIdx);
+		}
     	
-    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area){
+    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area) {
     		// naive search for contained points
     		// TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
     		int xIdx = getXIdx(chunkIdx);
     		int yIdx = getYIdx(chunkIdx);
-    		double[][] data = getDataChunk(chunkIdx);
-    		TreeSet<Integer> containedPointIndices = new TreeSet<>();
-    		for(int i=0; i<data.length; i++) {
-    			if(area.contains(data[i][xIdx], data[i][yIdx]))
-    				containedPointIndices.add(i);
-    		}
-    		return containedPointIndices;
+			QuadTree qt = getQuadTree(chunkIdx);
+			LinkedList<Pair<double[], Integer>> containedPointIndices = new LinkedList<>();
+			QuadTree.getPointsInArea(containedPointIndices, qt, area);
+			TreeSet<Integer> toReturn = new TreeSet<>();
+			for (Pair<double[], Integer> pointIndex : containedPointIndices) {
+				toReturn.add(pointIndex.second);
+			}
+
+    		return toReturn;
     	}
 
 		/**
@@ -490,6 +493,32 @@ public class ScatterPlot {
     			l.dataChanged(chunkIdx, getDataChunk(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
     	}
     }
+
+	/**
+	 * The ScatterPlotDataModelListener consists of multiple listener interfaces, which are called when the data model is manipulated.
+	 */
+	public static interface ScatterPlotDataModelListener {
+		/**
+		 * Whenever data is added to the ScatterPlot, this interface will be called.
+		 *
+		 * @param chunkIdx index of the dataChunk in the array where all dataChunks are stored
+		 * @param chunkData 2D array containing the data that will be rendered in the ScatterPlot
+		 * @param chunkDescription label of the data chunk which will also be shown in the legend
+		 * @param xIdx location of the x coordinate in the chunkData array
+		 * @param yIdx location of the y coordinate in the chunkData array
+		 */
+		public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx);
+
+		/**
+		 * Whenever data is updated in the ScatterPlot, this interface will be called.
+		 *
+		 * @param chunkIdx index of the data chunk that should be updated
+		 * @param chunkData 2D array containing the updated data
+		 * @param xIdx index of the x coordinate in the chunkData
+		 * @param yIdx index of the y coordinate in the chunkData
+		 */
+		public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx);
+	}
 
 	/**
 	 * The ScatterPlotVisualMapping is responsible for mapping the chunks to a glyph and a color.
