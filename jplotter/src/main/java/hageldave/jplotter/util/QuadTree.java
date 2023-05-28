@@ -12,8 +12,7 @@ public class QuadTree {
     protected QuadTree upperLeft;
     protected QuadTree upperRight;
     protected Rectangle2D bounds;
-    protected static final int MAX_CAPACITY = 4;
-    public static int depth = 0;
+    protected static final int MAX_CAPACITY = 8;
     protected List<Pair<double[], Integer>> nodes;
 
     public QuadTree(int level, Rectangle2D bounds) {
@@ -33,29 +32,20 @@ public class QuadTree {
         if (qt.nodes.size() < MAX_CAPACITY) {
             qt.nodes.add(coords);
         } else {
-            // Exceeded the capacity so split it in FOUR
-
-            if (depth < 16) {
-                System.out.println("level " + qt.level + " bounds " + qt.bounds);
-            }
-
+            // Exceeded the capacity so split it
             if (qt.lowerLeft == null) {
                 split(qt);
             }
 
             // Check coordinates belongs to which partition
-            if (qt.upperLeft.bounds.contains(x, y)) {
+            if (qt.upperLeft.bounds.getBounds2D().contains(x, y)) {
                 insert(qt.upperLeft, new Pair<>(coords.first, coords.second));
-            } else if (qt.upperRight.bounds.contains(x, y)) {
+            } else if (qt.upperRight.bounds.getBounds2D().contains(x, y)) {
                 insert(qt.upperRight, new Pair<>(coords.first, coords.second));
-            } else if (qt.lowerLeft.bounds.contains(x, y)) {
+            } else if (qt.lowerLeft.bounds.getBounds2D().contains(x, y)) {
                 insert(qt.lowerLeft, new Pair<>(coords.first, coords.second));
-            } else if (qt.lowerRight.bounds.contains(x, y)) {
+            } else if (qt.lowerRight.bounds.getBounds2D().contains(x, y)) {
                 insert(qt.lowerRight, new Pair<>(coords.first, coords.second));
-            } else {
-                double x_1 = x;
-                double y_1 = y;
-                System.out.printf("ERROR : Unhandled partition" + x + " " + y);
             }
         }
     }
@@ -73,20 +63,21 @@ public class QuadTree {
         qt.upperRight = new QuadTree(qt.level + 1, UR);
         qt.lowerLeft = new QuadTree(qt.level + 1, LL);
         qt.lowerRight = new QuadTree(qt.level + 1, LR);
-
-        depth+=1;
     }
 
-    public static List<Pair<double[], Integer>> getPointsInArea(LinkedList<Pair<double[], Integer>> pointsInArea, QuadTree qt, Rectangle2D area) {
+    public static void getPointsInArea(LinkedList<Pair<double[], Integer>> pointsInArea, QuadTree qt, Rectangle2D area) {
         if (qt.lowerLeft != null) {
             if (area.intersects(qt.lowerLeft.bounds)) {
-                /*pointsInArea.addAll(*/getPointsInArea(pointsInArea, qt.lowerLeft, area.getBounds().intersection(qt.lowerLeft.bounds.getBounds()));
-            } else if (area.intersects(qt.upperLeft.bounds)) {
-                /*pointsInArea.addAll(*/getPointsInArea(pointsInArea, qt.upperLeft, area.getBounds().intersection(qt.upperLeft.bounds.getBounds()));
-            } else if (area.intersects(qt.lowerRight.bounds)) {
-                /*pointsInArea.addAll(*/getPointsInArea(pointsInArea, qt.lowerRight, area.getBounds().intersection(qt.lowerRight.bounds.getBounds()));
-            } else if (area.intersects(qt.upperRight.bounds)) {
-                /*pointsInArea.addAll(*/getPointsInArea(pointsInArea, qt.upperRight, area.getBounds().intersection(qt.upperRight.bounds.getBounds()));
+                getPointsInArea(pointsInArea, qt.lowerLeft, area.createIntersection(qt.lowerLeft.bounds.getBounds2D()));
+            }
+            if (area.intersects(qt.upperLeft.bounds)) {
+                getPointsInArea(pointsInArea, qt.upperLeft, area.createIntersection(qt.upperLeft.bounds.getBounds2D()));
+            }
+            if (area.intersects(qt.lowerRight.bounds)) {
+                getPointsInArea(pointsInArea, qt.lowerRight, area.createIntersection(qt.lowerRight.bounds.getBounds2D()));
+            }
+            if (area.intersects(qt.upperRight.bounds)) {
+                getPointsInArea(pointsInArea, qt.upperRight, area.createIntersection(qt.upperRight.bounds.getBounds2D()));
             }
         }
 
@@ -95,7 +86,5 @@ public class QuadTree {
                 pointsInArea.add(node);
             }
         }
-
-        return pointsInArea;
     }
 }

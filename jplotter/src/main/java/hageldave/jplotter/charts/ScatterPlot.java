@@ -122,7 +122,9 @@ public class ScatterPlot {
 		this.coordsys.addCoordinateViewListener(new CoordinateViewListener() {
 			@Override
 			public void coordinateViewChanged(CoordSysRenderer src, Rectangle2D view) {
-				// TODO: update Quadtree here (coordinates not correct anymore)
+				for (int i = 0; i < getDataModel().numChunks(); i++) {
+					getDataModel().updateQuadTree(i, getDataModel().getDataChunk(i), getCoordsys().getCoordinateView());
+				}
 			}
 		});
         
@@ -299,16 +301,7 @@ public class ScatterPlot {
     		this.dataChunks.add(dataChunk);
     		this.xyIndicesPerChunk.add(Pair.of(xIdx, yIdx));
     		this.descriptionPerChunk.add(chunkDescription);
-
-			QuadTree qt = new QuadTree(0, new Rectangle2D.Double(17, 32, 115, 93));
-			int index = 0;
-			for (double[] doubles : dataChunk) {
-				double[] actualCoordinates = new double[]{doubles[xIdx], doubles[yIdx]};
-				insert(qt, new Pair<>(actualCoordinates, index));
-				index++;
-			}
-			this.quadTreePerChunk.add(qt);
-    		
+			updateQuadTree(chunkIdx, dataChunk, getCoordsys().getCoordinateView());
     		notifyDataAdded(chunkIdx);
     	}
 
@@ -349,9 +342,8 @@ public class ScatterPlot {
     		if(chunkIdx >= numChunks())
     			throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
     		this.dataChunks.set(chunkIdx, dataChunk);
+			updateQuadTree(chunkIdx, dataChunk, getCoordsys().getCoordinateView());
     		this.notifyDataChanged(chunkIdx);
-
-			// TODO: update quad tree
     	}
 
 		/**
@@ -393,11 +385,9 @@ public class ScatterPlot {
 			return quadTreePerChunk.get(chunkIdx);
 		}
     	
-    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area) {
+    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D.Double area) {
     		// naive search for contained points
     		// TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
-    		int xIdx = getXIdx(chunkIdx);
-    		int yIdx = getYIdx(chunkIdx);
 			QuadTree qt = getQuadTree(chunkIdx);
 			LinkedList<Pair<double[], Integer>> containedPointIndices = new LinkedList<>();
 			QuadTree.getPointsInArea(containedPointIndices, qt, area);
@@ -408,6 +398,23 @@ public class ScatterPlot {
 
     		return toReturn;
     	}
+
+		public void updateQuadTree(int chunkIndex, double[][] dataChunk, Rectangle2D view) {
+			QuadTree qt = new QuadTree(0, view);
+			int xIdx = getDataModel().getXIdx(chunkIndex);
+			int yIdx = getDataModel().getYIdx(chunkIndex);
+
+			for (int j = 0; j < dataChunk.length; j++) {
+				double[] actualCoordinates = new double[]{dataChunk[j][xIdx], dataChunk[j][yIdx]};
+				insert(qt, new Pair<>(actualCoordinates, j));
+			}
+
+			if (this.quadTreePerChunk.size() > chunkIndex) {
+				this.quadTreePerChunk.set(chunkIndex, qt);
+			} else {
+				this.quadTreePerChunk.add(qt);
+			}
+		}
 
 		/**
 		 * The dataChunks can be seen as ordered one after the other.
@@ -869,7 +876,7 @@ public class ScatterPlot {
 	 * @param area where point indices are collected
 	 * @return List of {@link Pair}, which consists of chunkIds and the corresponding point indices contained in the area
 	 */
-    public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Rectangle2D area){
+    public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Rectangle2D.Double area){
     	ArrayList<Pair<Integer, TreeSet<Integer>>> pointLocators = new ArrayList<>();
     	for(int chunkIdx=0; chunkIdx<dataModel.numChunks(); chunkIdx++) {
     		TreeSet<Integer> containedPointIndices = getDataModel().getIndicesOfPointsInArea(chunkIdx, area);
@@ -910,7 +917,7 @@ public class ScatterPlot {
     		public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
     			if(pointSetSelectionOngoingListeners.isEmpty())
     				return;
-    			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+    			Rectangle2D.Double area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
     			selectionRectMemory[0] = area;
     			selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(area));
     		}
@@ -919,7 +926,7 @@ public class ScatterPlot {
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
     			if(pointSetSelectionListeners.isEmpty())
     				return;
-    			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+    			Rectangle2D.Double area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
     			selectionRectMemory[1] = area;
     			selectedPoints.setSelection(getIndicesOfPointsInArea(area));
 			}
