@@ -8,7 +8,6 @@ import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModelListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotVisualMapping;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
-import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
@@ -23,7 +22,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -97,18 +95,27 @@ public class ReadyScatterPlot {
         // basic coordinate system interaction schemes
         plot.addPanning();
         plot.addRectangleSelectionZoom();
-		new CoordSysViewSelector(plot.getCanvas(), plot.getCoordsys()) {
-			@Override
-			public void areaSelected(double minX, double minY, double maxX, double maxY) {
-				plot.getIndicesOfPointsInArea(new Rectangle2D.Double(minX, minY, maxX, maxY));
-			}
-		}.register();
+//		new CoordSysViewSelector(plot.getCanvas(), plot.getCoordsys()) {
+//			@Override
+//			public void areaSelected(double minX, double minY, double maxX, double maxY) {
+//				ArrayList<Pair<Integer, TreeSet<Integer>>> pointsInArea = plot.getIndicesOfPointsInArea(new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY));
+//
+//				List<Pair<Integer, Integer>> toAccentuate = new LinkedList<>();
+//				for (Pair<Integer, TreeSet<Integer>> entry: pointsInArea) {
+//					for (Integer t2: entry.second) {
+//						toAccentuate.add(new Pair<>(entry.first, t2));
+//					}
+//				}
+//				plot.accentuate(toAccentuate);
+//			}
+//		}.register();
         plot.addScrollZoom();
         plot.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
         	@Override /* get focus for key events whenever mouse enters this component */
         	public void mouseEntered(MouseEvent e) {plot.getCanvas().asComponent().requestFocus();}
 		});
-        
+
+
         // create a table that uses the plot's data model 
         JTable datasetTable = new JTable(new TableModel() {
         	private ScatterPlotDataModel spdm = plot.getDataModel();
