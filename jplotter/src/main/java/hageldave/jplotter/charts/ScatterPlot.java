@@ -4,7 +4,6 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
-import hageldave.jplotter.interaction.CoordinateViewListener;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
 import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
@@ -30,8 +29,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
-
-import static hageldave.jplotter.util.QuadTree.insert;
 
 /**
  *
@@ -84,7 +81,7 @@ public class ScatterPlot {
 	 * Creates a new {@link ScatterPlot} object.
 	 *
 	 * The ScatterPlot consists of a {@link CoordSysRenderer} and multiple content layers.
-	 * It also has a data model (see {@link ScatterPlotDataModel}) and a listener (see {@link ScatterPlotDataModel.ScatterPlotDataModelListener})
+	 * It also has a data model (see {@link ScatterPlotDataModel}) and a listener (see {@link ScatterPlotDataModelListener})
 	 * linked to it, listening for data changes.
 	 *
 	 * There is also a mouse event handler created in the constructor,
@@ -116,15 +113,6 @@ public class ScatterPlot {
         	@Override
 			public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx) {
 				onDataChanged(chunkIdx, chunkData);
-			}
-		});
-
-		this.coordsys.addCoordinateViewListener(new CoordinateViewListener() {
-			@Override
-			public void coordinateViewChanged(CoordSysRenderer src, Rectangle2D view) {
-				for (int i = 0; i < getDataModel().numChunks(); i++) {
-					getDataModel().updateQuadTree(i, getDataModel().getDataChunk(i), getCoordsys().getCoordinateView());
-				}
 			}
 		});
         
@@ -286,7 +274,7 @@ public class ScatterPlot {
     	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();;
     	protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
     	protected LinkedList<ScatterPlotDataModelListener> listeners = new LinkedList<>();
-		protected ArrayList<QuadTree> quadTreePerChunk = new ArrayList<>();
+		protected ArrayList<QuadTree<Pair<double[], Integer>>> quadTreePerChunk = new ArrayList<>();
 
 		/**
 		 * Adds data to the data model of the scatter plot.
@@ -301,7 +289,7 @@ public class ScatterPlot {
     		this.dataChunks.add(dataChunk);
     		this.xyIndicesPerChunk.add(Pair.of(xIdx, yIdx));
     		this.descriptionPerChunk.add(chunkDescription);
-			updateQuadTree(chunkIdx, dataChunk, getCoordsys().getCoordinateView());
+			updateQuadTree(chunkIdx, dataChunk);
     		notifyDataAdded(chunkIdx);
     	}
 
@@ -342,7 +330,7 @@ public class ScatterPlot {
     		if(chunkIdx >= numChunks())
     			throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
     		this.dataChunks.set(chunkIdx, dataChunk);
-			updateQuadTree(chunkIdx, dataChunk, getCoordsys().getCoordinateView());
+			updateQuadTree(chunkIdx, dataChunk);
     		this.notifyDataChanged(chunkIdx);
     	}
 
@@ -381,14 +369,12 @@ public class ScatterPlot {
     		return descriptionPerChunk.get(chunkIdx);
     	}
 
-		public QuadTree getQuadTree(int chunkIdx) {
+		public QuadTree<Pair<double[], Integer>> getQuadTree(int chunkIdx) {
 			return quadTreePerChunk.get(chunkIdx);
 		}
     	
     	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D.Double area) {
-    		// naive search for contained points
-    		// TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
-			QuadTree qt = getQuadTree(chunkIdx);
+			QuadTree<Pair<double[], Integer>> qt = getQuadTree(chunkIdx);
 			LinkedList<Pair<double[], Integer>> containedPointIndices = new LinkedList<>();
 			QuadTree.getPointsInArea(containedPointIndices, qt, area);
 			TreeSet<Integer> toReturn = new TreeSet<>();
@@ -399,14 +385,25 @@ public class ScatterPlot {
     		return toReturn;
     	}
 
-		public void updateQuadTree(int chunkIndex, double[][] dataChunk, Rectangle2D view) {
-			QuadTree qt = new QuadTree(0, view);
+		public void updateQuadTree(int chunkIndex, double[][] dataChunk) {
 			int xIdx = getDataModel().getXIdx(chunkIndex);
 			int yIdx = getDataModel().getYIdx(chunkIndex);
 
+			double minX = Integer.MAX_VALUE;
+			double maxX = Integer.MIN_VALUE;
+			double minY = Integer.MAX_VALUE;
+			double maxY = Integer.MIN_VALUE;
+			for (double[] coords: dataChunk) {
+				minX = Math.min(minX, coords[xIdx]);
+				maxX = Math.max(maxX, coords[xIdx]);
+				minY = Math.min(minY, coords[yIdx]);
+				maxY = Math.max(maxY, coords[yIdx]);
+			}
+			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, maxX-minX+0.01, maxY-minY+0.01);
+			QuadTree<Pair<double[], Integer>> qt = new QuadTree<>(0, boundingBox, ScatterPlot::accessCoordinates);
 			for (int j = 0; j < dataChunk.length; j++) {
 				double[] actualCoordinates = new double[]{dataChunk[j][xIdx], dataChunk[j][yIdx]};
-				insert(qt, new Pair<>(actualCoordinates, j));
+				QuadTree.insert(qt, new Pair<>(actualCoordinates, j));
 			}
 
 			if (this.quadTreePerChunk.size() > chunkIndex) {
@@ -500,6 +497,11 @@ public class ScatterPlot {
     			l.dataChanged(chunkIdx, getDataChunk(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
     	}
     }
+
+	public static Point2D accessCoordinates(Pair<double[], Integer> entry) {
+		double[] coords = entry.first;
+		return new Point2D.Double(coords[0], coords[1]);
+	}
 
 	/**
 	 * The ScatterPlotDataModelListener consists of multiple listener interfaces, which are called when the data model is manipulated.
