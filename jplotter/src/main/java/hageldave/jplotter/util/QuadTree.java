@@ -3,7 +3,6 @@ package hageldave.jplotter.util;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -79,7 +78,7 @@ public class QuadTree<T> {
         qt.setLowerRight(new QuadTree<>(newLevel, LR, accessor));
     }
 
-    public static <T> void getPointsInArea(LinkedList<T> pointsInArea, QuadTree<T> qt, Rectangle2D area) {
+    public static <T> void getPointsInArea(List<T> pointsInArea, QuadTree<T> qt, Rectangle2D area) {
         if (qt.getLowerLeft() != null) {
             if (area.intersects(qt.getUpperLeft().getBounds())) {
                 getPointsInArea(pointsInArea, qt.getUpperLeft(), area.createIntersection(qt.getUpperLeft().getBounds()));

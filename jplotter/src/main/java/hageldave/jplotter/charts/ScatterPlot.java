@@ -28,6 +28,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -374,11 +375,11 @@ public class ScatterPlot {
 			return quadTreePerChunk.get(chunkIdx);
 		}
     	
-    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D.Double area) {
-			QuadTree<Pair<double[], Integer>> qt = getQuadTree(chunkIdx);
-			LinkedList<Pair<double[], Integer>> containedPointIndices = new LinkedList<>();
-			QuadTree.getPointsInArea(containedPointIndices, qt, area);
-    		return containedPointIndices.stream().map(e->e.second).collect(Collectors.toCollection(TreeSet::new));
+    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area) {
+			QuadTree<Pair<double[], Integer>> quadTree = getQuadTree(chunkIdx);
+			List<Pair<double[], Integer>> containedPointIndices = new ArrayList<>(chunkSize(chunkIdx));
+			QuadTree.getPointsInArea(containedPointIndices, quadTree, area);
+    		return containedPointIndices.stream().map(e -> e.second).collect(Collectors.toCollection(TreeSet::new));
     	}
 
 		public void updateQuadTree(int chunkIndex, double[][] dataChunk) {
