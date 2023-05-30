@@ -1,90 +1,157 @@
 package hageldave.jplotter.util;
 
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 
-public class QuadTree {
+public class QuadTree<T> {
+    protected int maxCapacity;
     protected int level;
-    protected QuadTree lowerLeft;
-    protected QuadTree lowerRight;
-    protected QuadTree upperLeft;
-    protected QuadTree upperRight;
+    protected QuadTree<T> lowerLeft;
+    protected QuadTree<T> lowerRight;
+    protected QuadTree<T> upperLeft;
+    protected QuadTree<T> upperRight;
     protected Rectangle2D bounds;
-    protected static final int MAX_CAPACITY = 8;
-    protected List<Pair<double[], Integer>> nodes;
+    protected List<T> nodes;
+    protected Function<T, Point2D> xyAccessor;
 
-    public QuadTree(int level, Rectangle2D bounds) {
+    public QuadTree(int level, int maxCapacity, Rectangle2D bounds, Function<T, Point2D> xyAccessor) {
         this.level = level;
+        this.maxCapacity = maxCapacity;
         this.bounds = bounds;
+        this.xyAccessor = xyAccessor;
         this.nodes = new ArrayList<>();
     }
 
-    public static void insert(QuadTree qt, Pair<double[], Integer> coords) {
-        double x = coords.first[0];
-        double y = coords.first[1];
+    public QuadTree(int level, Rectangle2D bounds, Function<T, Point2D> xyAccessor) {
+        this(level, 4, bounds, xyAccessor);
+    }
 
-        if (!qt.bounds.contains(x, y)) {
+    public static <T> void insert(QuadTree<T> qt, T node) {
+        Point2D coords = qt.getXyAccessor().apply(node);
+        double x = coords.getX();
+        double y = coords.getY();
+
+        if (!qt.getBounds().contains(x, y)) {
             return;
         }
 
-        if (qt.nodes.size() < MAX_CAPACITY) {
-            qt.nodes.add(coords);
+        if (qt.getNodes().size() < qt.getMaxCapacity()) {
+            qt.getNodes().add(node);
         } else {
             // Exceeded the capacity so split it
-            if (qt.lowerLeft == null) {
+            if (qt.getLowerLeft() == null) {
                 split(qt);
             }
 
             // Check coordinates belongs to which partition
-            if (qt.upperLeft.bounds.getBounds2D().contains(x, y)) {
-                insert(qt.upperLeft, new Pair<>(coords.first, coords.second));
-            } else if (qt.upperRight.bounds.getBounds2D().contains(x, y)) {
-                insert(qt.upperRight, new Pair<>(coords.first, coords.second));
-            } else if (qt.lowerLeft.bounds.getBounds2D().contains(x, y)) {
-                insert(qt.lowerLeft, new Pair<>(coords.first, coords.second));
-            } else if (qt.lowerRight.bounds.getBounds2D().contains(x, y)) {
-                insert(qt.lowerRight, new Pair<>(coords.first, coords.second));
+            if (qt.getUpperLeft().getBounds().contains(x, y)) {
+                insert(qt.getUpperLeft(), node);
+            } else if (qt.getUpperRight().getBounds().contains(x, y)) {
+                insert(qt.getUpperRight(), node);
+            } else if (qt.getLowerLeft().getBounds().contains(x, y)) {
+                insert(qt.getLowerLeft(), node);
+            } else if (qt.getLowerRight().getBounds().contains(x, y)) {
+                insert(qt.getLowerRight(), node);
             }
         }
     }
 
-    protected static void split(QuadTree qt) {
-        double xOffset = qt.bounds.getMinX() + qt.bounds.getWidth() / 2.0;
-        double yOffset = qt.bounds.getMinY() + qt.bounds.getHeight() / 2.0;
+    protected static <T> void split(QuadTree<T> qt) {
+        Rectangle2D bounds = qt.getBounds();
+        int newLevel = qt.getLevel() + 1;
+        Function<T, Point2D> accessor = qt.getXyAccessor();
 
-        Rectangle2D UL = new Rectangle2D.Double(qt.bounds.getMinX(), yOffset, qt.bounds.getWidth()/2.0, qt.bounds.getHeight()/2.0);
-        Rectangle2D UR = new Rectangle2D.Double(xOffset, yOffset, qt.bounds.getWidth()/2.0, qt.bounds.getHeight()/2.0);
-        Rectangle2D LL = new Rectangle2D.Double(qt.bounds.getMinX(), qt.bounds.getMinY(), qt.bounds.getWidth()/2.0, qt.bounds.getHeight()/2.0);
-        Rectangle2D LR = new Rectangle2D.Double(xOffset, qt.bounds.getMinY(), qt.bounds.getWidth()/2.0, qt.bounds.getHeight()/2.0);
+        double xOffset = bounds.getMinX() + bounds.getWidth() / 2.0;
+        double yOffset = bounds.getMinY() + bounds.getHeight() / 2.0;
 
-        qt.upperLeft = new QuadTree(qt.level + 1, UL);
-        qt.upperRight = new QuadTree(qt.level + 1, UR);
-        qt.lowerLeft = new QuadTree(qt.level + 1, LL);
-        qt.lowerRight = new QuadTree(qt.level + 1, LR);
+        Rectangle2D UL = new Rectangle2D.Double(bounds.getMinX(), yOffset, bounds.getWidth()/2.0, bounds.getHeight()/2.0);
+        Rectangle2D UR = new Rectangle2D.Double(xOffset, yOffset, bounds.getWidth()/2.0, bounds.getHeight()/2.0);
+        Rectangle2D LL = new Rectangle2D.Double(bounds.getMinX(), bounds.getMinY(), bounds.getWidth()/2.0, bounds.getHeight()/2.0);
+        Rectangle2D LR = new Rectangle2D.Double(xOffset, bounds.getMinY(), bounds.getWidth()/2.0, bounds.getHeight()/2.0);
+
+        qt.setUpperLeft(new QuadTree<>(newLevel, UL, accessor));
+        qt.setUpperRight(new QuadTree<>(newLevel, UR, accessor));
+        qt.setLowerLeft(new QuadTree<>(newLevel, LL, accessor));
+        qt.setLowerRight(new QuadTree<>(newLevel, LR, accessor));
     }
 
-    public static void getPointsInArea(LinkedList<Pair<double[], Integer>> pointsInArea, QuadTree qt, Rectangle2D area) {
-        if (qt.lowerLeft != null) {
-            if (area.intersects(qt.lowerLeft.bounds)) {
-                getPointsInArea(pointsInArea, qt.lowerLeft, area.createIntersection(qt.lowerLeft.bounds.getBounds2D()));
+    public static <T> void getPointsInArea(LinkedList<T> pointsInArea, QuadTree<T> qt, Rectangle2D area) {
+        if (qt.getLowerLeft() != null) {
+            if (area.intersects(qt.getUpperLeft().getBounds())) {
+                getPointsInArea(pointsInArea, qt.getUpperLeft(), area.createIntersection(qt.getUpperLeft().getBounds()));
             }
-            if (area.intersects(qt.upperLeft.bounds)) {
-                getPointsInArea(pointsInArea, qt.upperLeft, area.createIntersection(qt.upperLeft.bounds.getBounds2D()));
+            if (area.intersects(qt.getLowerLeft().getBounds())) {
+                getPointsInArea(pointsInArea, qt.getLowerLeft(), area.createIntersection(qt.getLowerLeft().getBounds()));
             }
-            if (area.intersects(qt.lowerRight.bounds)) {
-                getPointsInArea(pointsInArea, qt.lowerRight, area.createIntersection(qt.lowerRight.bounds.getBounds2D()));
+            if (area.intersects(qt.getLowerRight().getBounds())) {
+                getPointsInArea(pointsInArea, qt.getLowerRight(), area.createIntersection(qt.getLowerRight().getBounds()));
             }
-            if (area.intersects(qt.upperRight.bounds)) {
-                getPointsInArea(pointsInArea, qt.upperRight, area.createIntersection(qt.upperRight.bounds.getBounds2D()));
+            if (area.intersects(qt.getUpperRight().getBounds())) {
+                getPointsInArea(pointsInArea, qt.getUpperRight(), area.createIntersection(qt.getUpperRight().getBounds()));
             }
         }
 
-        for (Pair<double[], Integer> node: qt.nodes) {
-            if (area.contains(node.first[0], node.first[1])) {
+        for (T node: qt.getNodes()) {
+            Point2D point = qt.getXyAccessor().apply(node);
+            if (area.contains(point.getX(), point.getY())) {
                 pointsInArea.add(node);
             }
         }
+    }
+
+    public int getMaxCapacity() {
+        return maxCapacity;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public QuadTree<T> getLowerLeft() {
+        return lowerLeft;
+    }
+
+    public QuadTree<T> getLowerRight() {
+        return lowerRight;
+    }
+
+    public QuadTree<T> getUpperLeft() {
+        return upperLeft;
+    }
+
+    public QuadTree<T> getUpperRight() {
+        return upperRight;
+    }
+
+    public Rectangle2D getBounds() {
+        return bounds;
+    }
+
+    public List<T> getNodes() {
+        return nodes;
+    }
+
+    public Function<T, Point2D> getXyAccessor() {
+        return xyAccessor;
+    }
+
+    public void setLowerLeft(QuadTree<T> lowerLeft) {
+        this.lowerLeft = lowerLeft;
+    }
+
+    public void setLowerRight(QuadTree<T> lowerRight) {
+        this.lowerRight = lowerRight;
+    }
+
+    public void setUpperLeft(QuadTree<T> upperLeft) {
+        this.upperLeft = upperLeft;
+    }
+
+    public void setUpperRight(QuadTree<T> upperRight) {
+        this.upperRight = upperRight;
     }
 }
