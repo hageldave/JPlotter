@@ -29,6 +29,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -377,12 +378,7 @@ public class ScatterPlot {
 			QuadTree<Pair<double[], Integer>> qt = getQuadTree(chunkIdx);
 			LinkedList<Pair<double[], Integer>> containedPointIndices = new LinkedList<>();
 			QuadTree.getPointsInArea(containedPointIndices, qt, area);
-			TreeSet<Integer> toReturn = new TreeSet<>();
-			for (Pair<double[], Integer> pointIndex : containedPointIndices) {
-				toReturn.add(pointIndex.second);
-			}
-
-    		return toReturn;
+    		return containedPointIndices.stream().map(e->e.second).collect(Collectors.toCollection(TreeSet::new));
     	}
 
 		public void updateQuadTree(int chunkIndex, double[][] dataChunk) {
@@ -393,12 +389,14 @@ public class ScatterPlot {
 			double maxX = Integer.MIN_VALUE;
 			double minY = Integer.MAX_VALUE;
 			double maxY = Integer.MIN_VALUE;
+
 			for (double[] coords: dataChunk) {
 				minX = Math.min(minX, coords[xIdx]);
 				maxX = Math.max(maxX, coords[xIdx]);
 				minY = Math.min(minY, coords[yIdx]);
 				maxY = Math.max(maxY, coords[yIdx]);
 			}
+
 			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, maxX-minX+0.01, maxY-minY+0.01);
 			QuadTree<Pair<double[], Integer>> qt = new QuadTree<>(0, boundingBox, ScatterPlot::accessCoordinates);
 			for (int j = 0; j < dataChunk.length; j++) {
