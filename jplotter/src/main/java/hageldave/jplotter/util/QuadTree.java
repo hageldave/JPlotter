@@ -3,6 +3,7 @@ package hageldave.jplotter.util;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 
 public class QuadTree<T> {
@@ -110,6 +111,41 @@ public class QuadTree<T> {
                 pointsInArea.add(node);
             }
         }
+    }
+
+    public static <T> void printTree(QuadTree<T> quadTree, Function<T, String> nodeFormatter) {
+        System.out.println("-----------------------------");
+        System.out.println("Level: " + quadTree.getLevel());
+        System.out.println("Nodes: ");
+        int i = 0;
+        for (T node: quadTree.getNodes()) {
+            System.out.println("Node " + i + ": " + nodeFormatter.apply(node));
+            i++;
+        }
+        System.out.println("Bounds: " + quadTree.getBounds());
+
+        if (quadTree.getLowerLeft() != null) {
+            printTree(quadTree.getLowerLeft(), nodeFormatter);
+            printTree(quadTree.getLowerRight(), nodeFormatter);
+            printTree(quadTree.getUpperLeft(), nodeFormatter);
+            printTree(quadTree.getUpperRight(), nodeFormatter);
+        }
+        System.out.println("-----------------------------");
+    }
+
+    public static <T> void printTree(QuadTree<T> quadTree) {
+        System.out.println("-----------------------------");
+        System.out.println("Level: " + quadTree.getLevel());
+        System.out.println("Nodes: " + quadTree.getNodes());
+        System.out.println("Bounds: " + quadTree.getBounds());
+
+        if (quadTree.getLowerLeft() != null) {
+            printTree(quadTree.getLowerLeft());
+            printTree(quadTree.getLowerRight());
+            printTree(quadTree.getUpperLeft());
+            printTree(quadTree.getUpperRight());
+        }
+        System.out.println("-----------------------------");
     }
 
     public int getMaxCapacity() {
