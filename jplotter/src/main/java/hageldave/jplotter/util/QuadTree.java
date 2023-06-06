@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.ToDoubleFunction;
 
 public class QuadTree<T> {
-    protected int maxCapacity;
+    protected final int maxCapacity;
     protected int level;
     protected QuadTree<T> lowerLeft;
     protected QuadTree<T> lowerRight;
@@ -27,8 +27,12 @@ public class QuadTree<T> {
         this.nodes = new ArrayList<>();
     }
 
-    public QuadTree(int level, Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
-        this(level, 4, bounds, xCoordAccessor, yCoordAccessor);
+    public QuadTree(int maxCapacity, Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
+        this(0, maxCapacity, bounds, xCoordAccessor, yCoordAccessor);
+    }
+
+    public QuadTree(Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
+        this(0, 4, bounds, xCoordAccessor, yCoordAccessor);
     }
 
     public static <T> void insert(QuadTree<T> qt, T node) {
@@ -63,6 +67,8 @@ public class QuadTree<T> {
     protected static <T> void split(QuadTree<T> qt) {
         Rectangle2D bounds = qt.getBounds();
         int newLevel = qt.getLevel() + 1;
+        int maxCapacity = qt.getMaxCapacity();
+
         ToDoubleFunction<T> xAccessor = qt.getxCoordAccessor();
         ToDoubleFunction<T> yAccessor = qt.getyCoordAccessor();
 
@@ -74,10 +80,10 @@ public class QuadTree<T> {
         Rectangle2D LL = new Rectangle2D.Double(bounds.getMinX(), bounds.getMinY(), bounds.getWidth()/2.0, bounds.getHeight()/2.0);
         Rectangle2D LR = new Rectangle2D.Double(xOffset, bounds.getMinY(), bounds.getWidth()/2.0, bounds.getHeight()/2.0);
 
-        qt.setUpperLeft(new QuadTree<>(newLevel, UL, xAccessor, yAccessor));
-        qt.setUpperRight(new QuadTree<>(newLevel, UR, xAccessor, yAccessor));
-        qt.setLowerLeft(new QuadTree<>(newLevel, LL, xAccessor, yAccessor));
-        qt.setLowerRight(new QuadTree<>(newLevel, LR, xAccessor, yAccessor));
+        qt.setUpperLeft(new QuadTree<>(newLevel, maxCapacity, UL, xAccessor, yAccessor));
+        qt.setUpperRight(new QuadTree<>(newLevel, maxCapacity, UR, xAccessor, yAccessor));
+        qt.setLowerLeft(new QuadTree<>(newLevel, maxCapacity, LL, xAccessor, yAccessor));
+        qt.setLowerRight(new QuadTree<>(newLevel, maxCapacity, LR, xAccessor, yAccessor));
     }
 
     public static <T> void getPointsInArea(List<T> pointsInArea, QuadTree<T> qt, Rectangle2D area) {
