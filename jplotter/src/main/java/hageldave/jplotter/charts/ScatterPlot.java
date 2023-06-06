@@ -399,7 +399,7 @@ public class ScatterPlot {
 			}
 
 			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, maxX-minX+0.01, maxY-minY+0.01);
-			QuadTree<Pair<double[], Integer>> qt = new QuadTree<>(0, boundingBox, ScatterPlot::accessCoordinates);
+			QuadTree<Pair<double[], Integer>> qt = new QuadTree<>(0, boundingBox, (Pair<double[], Integer> entry) -> entry.first[0], (Pair<double[], Integer> entry) -> entry.first[1]);
 			for (int j = 0; j < dataChunk.length; j++) {
 				double[] actualCoordinates = new double[]{dataChunk[j][xIdx], dataChunk[j][yIdx]};
 				QuadTree.insert(qt, new Pair<>(actualCoordinates, j));
@@ -496,11 +496,6 @@ public class ScatterPlot {
     			l.dataChanged(chunkIdx, getDataChunk(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
     	}
     }
-
-	public static Point2D accessCoordinates(Pair<double[], Integer> entry) {
-		double[] coords = entry.first;
-		return new Point2D.Double(coords[0], coords[1]);
-	}
 
 	/**
 	 * The ScatterPlotDataModelListener consists of multiple listener interfaces, which are called when the data model is manipulated.

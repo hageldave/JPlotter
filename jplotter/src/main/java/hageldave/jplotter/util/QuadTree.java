@@ -1,10 +1,9 @@
 package hageldave.jplotter.util;
 
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 
 public class QuadTree<T> {
     protected int maxCapacity;
@@ -15,24 +14,26 @@ public class QuadTree<T> {
     protected QuadTree<T> upperRight;
     protected Rectangle2D bounds;
     protected List<T> nodes;
-    protected Function<T, Point2D> xyAccessor;
+    protected ToDoubleFunction<T> xCoordAccessor;
+    protected ToDoubleFunction<T> yCoordAccessor;
 
-    public QuadTree(int level, int maxCapacity, Rectangle2D bounds, Function<T, Point2D> xyAccessor) {
+
+    public QuadTree(int level, int maxCapacity, Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
         this.level = level;
         this.maxCapacity = maxCapacity;
         this.bounds = bounds;
-        this.xyAccessor = xyAccessor;
+        this.xCoordAccessor = xCoordAccessor;
+        this.yCoordAccessor = yCoordAccessor;
         this.nodes = new ArrayList<>();
     }
 
-    public QuadTree(int level, Rectangle2D bounds, Function<T, Point2D> xyAccessor) {
-        this(level, 4, bounds, xyAccessor);
+    public QuadTree(int level, Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
+        this(level, 4, bounds, xCoordAccessor, yCoordAccessor);
     }
 
     public static <T> void insert(QuadTree<T> qt, T node) {
-        Point2D coords = qt.getXyAccessor().apply(node);
-        double x = coords.getX();
-        double y = coords.getY();
+        double x = qt.getxCoordAccessor().applyAsDouble(node);
+        double y = qt.getyCoordAccessor().applyAsDouble(node);
 
         if (!qt.getBounds().contains(x, y)) {
             return;
@@ -62,7 +63,8 @@ public class QuadTree<T> {
     protected static <T> void split(QuadTree<T> qt) {
         Rectangle2D bounds = qt.getBounds();
         int newLevel = qt.getLevel() + 1;
-        Function<T, Point2D> accessor = qt.getXyAccessor();
+        ToDoubleFunction<T> xAccessor = qt.getxCoordAccessor();
+        ToDoubleFunction<T> yAccessor = qt.getyCoordAccessor();
 
         double xOffset = bounds.getMinX() + bounds.getWidth() / 2.0;
         double yOffset = bounds.getMinY() + bounds.getHeight() / 2.0;
@@ -72,10 +74,10 @@ public class QuadTree<T> {
         Rectangle2D LL = new Rectangle2D.Double(bounds.getMinX(), bounds.getMinY(), bounds.getWidth()/2.0, bounds.getHeight()/2.0);
         Rectangle2D LR = new Rectangle2D.Double(xOffset, bounds.getMinY(), bounds.getWidth()/2.0, bounds.getHeight()/2.0);
 
-        qt.setUpperLeft(new QuadTree<>(newLevel, UL, accessor));
-        qt.setUpperRight(new QuadTree<>(newLevel, UR, accessor));
-        qt.setLowerLeft(new QuadTree<>(newLevel, LL, accessor));
-        qt.setLowerRight(new QuadTree<>(newLevel, LR, accessor));
+        qt.setUpperLeft(new QuadTree<>(newLevel, UL, xAccessor, yAccessor));
+        qt.setUpperRight(new QuadTree<>(newLevel, UR, xAccessor, yAccessor));
+        qt.setLowerLeft(new QuadTree<>(newLevel, LL, xAccessor, yAccessor));
+        qt.setLowerRight(new QuadTree<>(newLevel, LR, xAccessor, yAccessor));
     }
 
     public static <T> void getPointsInArea(List<T> pointsInArea, QuadTree<T> qt, Rectangle2D area) {
@@ -95,8 +97,10 @@ public class QuadTree<T> {
         }
 
         for (T node: qt.getNodes()) {
-            Point2D point = qt.getXyAccessor().apply(node);
-            if (area.contains(point.getX(), point.getY())) {
+            double xCoord = qt.getxCoordAccessor().applyAsDouble(node);
+            double yCoord = qt.getyCoordAccessor().applyAsDouble(node);
+
+            if (area.contains(xCoord, yCoord)) {
                 pointsInArea.add(node);
             }
         }
@@ -134,8 +138,12 @@ public class QuadTree<T> {
         return nodes;
     }
 
-    public Function<T, Point2D> getXyAccessor() {
-        return xyAccessor;
+    public ToDoubleFunction<T> getxCoordAccessor() {
+        return xCoordAccessor;
+    }
+
+    public ToDoubleFunction<T> getyCoordAccessor() {
+        return yCoordAccessor;
     }
 
     public void setLowerLeft(QuadTree<T> lowerLeft) {
