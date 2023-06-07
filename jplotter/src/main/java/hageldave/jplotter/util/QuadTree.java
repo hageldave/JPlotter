@@ -115,40 +115,40 @@ public class QuadTree<T> {
 
     public static <T> void printTree(QuadTree<T> quadTree, Function<T, String> nodeFormatter) {
         System.out.println("-----------------------------");
-        System.out.println("Level: " + quadTree.getLevel() + ", Role: None");
+        System.out.println("Level: " + quadTree.getLevel() + ", Rectangle position: None");
         System.out.println("Nodes: ");
         int i = 0;
         for (T node: quadTree.getNodes()) {
-            System.out.println("Node " + i + ": " + nodeFormatter.apply(node));
+            System.out.println(" - Node " + i + ": " + nodeFormatter.apply(node));
             i++;
         }
         System.out.println("Bounds: " + quadTree.getBounds());
 
         if (quadTree.getLowerLeft() != null) {
-            printTree(quadTree.getLowerLeft(), nodeFormatter, "LowerLeft");
-            printTree(quadTree.getLowerRight(), nodeFormatter, "LowerRight");
-            printTree(quadTree.getUpperLeft(), nodeFormatter, "UpperLeft");
-            printTree(quadTree.getUpperRight(), nodeFormatter, "UpperRight");
+            printTree(quadTree.getLowerLeft(), nodeFormatter, "Lower left");
+            printTree(quadTree.getLowerRight(), nodeFormatter, "Lower right");
+            printTree(quadTree.getUpperLeft(), nodeFormatter, "Upper left");
+            printTree(quadTree.getUpperRight(), nodeFormatter, "Upper right");
         }
         System.out.println("-----------------------------");
     }
 
     public static <T> void printTree(QuadTree<T> quadTree, Function<T, String> nodeFormatter, String role) {
         System.out.println("-----------------------------");
-        System.out.println("Level: " + quadTree.getLevel() + ", Role: " + role);
+        System.out.println("Level: " + quadTree.getLevel() + ", Rectangle position: " + role);
         System.out.println("Nodes: ");
         int i = 0;
         for (T node: quadTree.getNodes()) {
-            System.out.println("Node " + i + ": " + nodeFormatter.apply(node));
+            System.out.println(" - Node " + i + ": " + nodeFormatter.apply(node));
             i++;
         }
         System.out.println("Bounds: " + quadTree.getBounds());
 
         if (quadTree.getLowerLeft() != null) {
-            printTree(quadTree.getLowerLeft(), nodeFormatter, "LowerLeft");
-            printTree(quadTree.getLowerRight(), nodeFormatter, "LowerRight");
-            printTree(quadTree.getUpperLeft(), nodeFormatter, "UpperLeft");
-            printTree(quadTree.getUpperRight(), nodeFormatter, "UpperRight");
+            printTree(quadTree.getLowerLeft(), nodeFormatter, "Lower left");
+            printTree(quadTree.getLowerRight(), nodeFormatter, "Lower right");
+            printTree(quadTree.getUpperLeft(), nodeFormatter, "Upper left");
+            printTree(quadTree.getUpperRight(), nodeFormatter, "Upper right");
         }
         System.out.println("-----------------------------");
     }
