@@ -377,8 +377,7 @@ public class ScatterPlot {
     	
     	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area) {
 			QuadTree<Pair<double[], Integer>> quadTree = getQuadTree(chunkIdx);
-			List<Pair<double[], Integer>> containedPointIndices = new ArrayList<>(chunkSize(chunkIdx));
-			QuadTree.getPointsInArea(containedPointIndices, quadTree, area);
+			List<Pair<double[], Integer>> containedPointIndices = QuadTree.getPointsInArea(quadTree, area);
     		return containedPointIndices.stream().map(e -> e.second).collect(Collectors.toCollection(TreeSet::new));
     	}
 
@@ -399,7 +398,7 @@ public class ScatterPlot {
 			}
 
 			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, maxX-minX+0.01, maxY-minY+0.01);
-			QuadTree<Pair<double[], Integer>> qt = new QuadTree<>(0, boundingBox, (Pair<double[], Integer> entry) -> entry.first[0], (Pair<double[], Integer> entry) -> entry.first[1]);
+			QuadTree<Pair<double[], Integer>> qt = new QuadTree<>(4, boundingBox, (Pair<double[], Integer> entry) -> entry.first[0], (Pair<double[], Integer> entry) -> entry.first[1]);
 			for (int j = 0; j < dataChunk.length; j++) {
 				double[] actualCoordinates = new double[]{dataChunk[j][xIdx], dataChunk[j][yIdx]};
 				QuadTree.insert(qt, new Pair<>(actualCoordinates, j));

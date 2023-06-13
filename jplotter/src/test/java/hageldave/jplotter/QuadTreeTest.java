@@ -54,29 +54,25 @@ public class QuadTreeTest {
     // Test if points are found in subareas
     // Test edge cases with subareas / e.g. subareas that are overlapping
     public static void testIfPointsAreReturned(QuadTree<double[]> quadTree, List<double[]> allPoints) {
-        List<double[]> foundPointsInWholeArea = new LinkedList<>();
-        QuadTree.getPointsInArea(foundPointsInWholeArea, quadTree, new Rectangle2D.Double(0, 0, 100, 100));
+        List<double[]> foundPointsInWholeArea = QuadTree.getPointsInArea(quadTree, new Rectangle2D.Double(0, 0, 100, 100));
 
         if (!(allPoints.containsAll(foundPointsInWholeArea) && foundPointsInWholeArea.containsAll(allPoints))) {
             throw new RuntimeException();
         }
 
-        List<double[]> foundPointsInSubarea = new LinkedList<>();
-        QuadTree.getPointsInArea(foundPointsInSubarea, quadTree, new Rectangle2D.Double(25, 25, 25, 25));
+        List<double[]> foundPointsInSubarea = QuadTree.getPointsInArea(quadTree, new Rectangle2D.Double(25, 25, 25, 25));
 
         if (foundPointsInSubarea.size() != 4) {
             throw new RuntimeException();
         }
 
-        foundPointsInSubarea = new LinkedList<>();
-        QuadTree.getPointsInArea(foundPointsInSubarea, quadTree, new Rectangle2D.Double(0, 0, 50, 50));
+        foundPointsInSubarea = QuadTree.getPointsInArea(quadTree, new Rectangle2D.Double(0, 0, 50, 50));
 
         if (foundPointsInSubarea.size() != 7) {
             throw new RuntimeException();
         }
 
-        foundPointsInSubarea = new LinkedList<>();
-        QuadTree.getPointsInArea(foundPointsInSubarea, quadTree, new Rectangle2D.Double(10, 70, 80, 50));
+        foundPointsInSubarea = QuadTree.getPointsInArea(quadTree, new Rectangle2D.Double(10, 70, 80, 50));
 
         if (foundPointsInSubarea.size() != 2) {
             throw new RuntimeException();
