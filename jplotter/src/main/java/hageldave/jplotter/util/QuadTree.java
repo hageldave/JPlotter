@@ -23,16 +23,7 @@ public class QuadTree<T> {
     protected ToDoubleFunction<T> xCoordAccessor;
     protected ToDoubleFunction<T> yCoordAccessor;
 
-
-    /**
-     *
-     * @param level
-     * @param maxCapacity
-     * @param bounds
-     * @param xCoordAccessor
-     * @param yCoordAccessor
-     */
-    public QuadTree(int level, int maxCapacity, Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
+    protected QuadTree(int level, int maxCapacity, Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
         if (maxCapacity < 1) {
             throw new IllegalArgumentException("Capacity has to be larger than 0");
         }
@@ -44,12 +35,16 @@ public class QuadTree<T> {
         this.nodes = new ArrayList<>();
     }
 
+    /**
+     * Creates a new {@link QuadTree} object.
+     *
+     * @param maxCapacity maximal number of nodes that can be added to the QuadTree before it gets split into new sub-quadtrees.
+     * @param bounds all nodes stored in this QuadTree are inside this {@link Rectangle2D}
+     * @param xCoordAccessor Function that defines how to access the x coordinate of the node
+     * @param yCoordAccessor Function that defines how to access the x coordinate of the node
+     */
     public QuadTree(int maxCapacity, Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
         this(0, maxCapacity, bounds, xCoordAccessor, yCoordAccessor);
-    }
-
-    public QuadTree(Rectangle2D bounds, ToDoubleFunction<T> xCoordAccessor, ToDoubleFunction<T> yCoordAccessor) {
-        this(0, 4, bounds, xCoordAccessor, yCoordAccessor);
     }
 
     /**
