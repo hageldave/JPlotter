@@ -44,8 +44,8 @@ public class QuadTree<T> {
             return;
         }
 
-        if (qt.getNodes().size() < qt.getMaxCapacity()) {
-            qt.getNodes().add(node);
+        if (qt.nodes.size() < qt.getMaxCapacity()) {
+            qt.nodes.add(node);
         } else {
             // Exceeded the capacity so split it
             if (qt.getLowerLeft() == null) {
@@ -103,7 +103,7 @@ public class QuadTree<T> {
             }
         }
 
-        for (T node: qt.getNodes()) {
+        for (T node: qt.nodes) {
             double xCoord = qt.getxCoordAccessor().applyAsDouble(node);
             double yCoord = qt.getyCoordAccessor().applyAsDouble(node);
 
@@ -113,29 +113,13 @@ public class QuadTree<T> {
         }
     }
 
-    public static <T> void printTree(QuadTree<T> quadTree, Function<T, String> nodeFormatter) {
+    public static <T> void printTree(QuadTree<T> quadTree, Function<T, String> nodeFormatter, String rectanglePosition) {
         System.out.println("-----------------------------");
-        System.out.println("Level: " + quadTree.getLevel() + ", Rectangle position: None");
-        System.out.println("Nodes: ");
-        int i = 0;
-        for (T node: quadTree.getNodes()) {
-            System.out.println(" - Node " + i + ": " + nodeFormatter.apply(node));
-            i++;
+        if (rectanglePosition == null) {
+            System.out.println("Level: " + quadTree.getLevel() + ", Rectangle position: " + "None");
+        } else {
+            System.out.println("Level: " + quadTree.getLevel() + ", Rectangle position: " + rectanglePosition);
         }
-        System.out.println("Bounds: " + quadTree.getBounds());
-
-        if (quadTree.getLowerLeft() != null) {
-            printTree(quadTree.getLowerLeft(), nodeFormatter, "Lower left");
-            printTree(quadTree.getLowerRight(), nodeFormatter, "Lower right");
-            printTree(quadTree.getUpperLeft(), nodeFormatter, "Upper left");
-            printTree(quadTree.getUpperRight(), nodeFormatter, "Upper right");
-        }
-        System.out.println("-----------------------------");
-    }
-
-    public static <T> void printTree(QuadTree<T> quadTree, Function<T, String> nodeFormatter, String role) {
-        System.out.println("-----------------------------");
-        System.out.println("Level: " + quadTree.getLevel() + ", Rectangle position: " + role);
         System.out.println("Nodes: ");
         int i = 0;
         for (T node: quadTree.getNodes()) {
@@ -182,7 +166,7 @@ public class QuadTree<T> {
     }
 
     public List<T> getNodes() {
-        return nodes;
+        return new ArrayList<>(nodes);
     }
 
     public ToDoubleFunction<T> getxCoordAccessor() {
