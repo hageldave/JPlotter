@@ -25,7 +25,7 @@ public class QuadTreeTest {
         testCapacity(quadTree);
 
         // Print the tree
-        QuadTree.printTree(quadTree, Arrays::toString);
+        QuadTree.printTree(quadTree, Arrays::toString, "None");
     }
 
     public static List<double[]> insertPoints(QuadTree<double[]> quadTree) {
