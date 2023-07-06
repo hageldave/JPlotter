@@ -657,8 +657,15 @@ public class ScatterPlot {
 	/**
 	 * @see ScatterPlot#addScrollZoom(KeyMaskListener)
 	 */
-    public CoordSysScrollZoom addScrollZoom() {
-        return new CoordSysScrollZoom(this.canvas, this.coordsys).register();
+	public CoordSysScrollZoom addScrollZoom() {
+		return addScrollZoom(false);
+	}
+
+	/**
+	 * @see ScatterPlot#addScrollZoom(KeyMaskListener)
+	 */
+    public CoordSysScrollZoom addScrollZoom(boolean mouseFocused) {
+        return new CoordSysScrollZoom(this.canvas, this.coordsys, mouseFocused).register();
     }
 
 	/**
