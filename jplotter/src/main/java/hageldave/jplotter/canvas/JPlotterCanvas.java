@@ -1,7 +1,6 @@
 package hageldave.jplotter.canvas;
 
 import hageldave.imagingkit.core.Img;
-import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
@@ -10,8 +9,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.w3c.dom.CDATASection;
-import org.w3c.dom.Comment;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -21,9 +19,6 @@ import java.awt.event.WindowListener;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Arrays;
-
-import static hageldave.jplotter.font.FontProvider.getUbuntuMonoFontAsBaseString;
-import static java.awt.Font.*;
 
 /**
  * This interface defines the methods required by an implementation of a 

@@ -18,7 +18,6 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.ExportUtil;
 
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;

@@ -48,9 +48,7 @@ import hageldave.jplotter.renderables.Points.PointDetails;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-
 import hageldave.jplotter.util.ExportUtil;
-
 
 public class StatLogSPLOMViz {
 

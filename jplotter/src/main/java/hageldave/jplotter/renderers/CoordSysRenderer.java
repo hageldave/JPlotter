@@ -444,7 +444,7 @@ public class CoordSysRenderer implements Renderer {
 	}
 
 	/**
-	 * @return width of the width of the right hand side legend area.
+	 * @return width of the right hand side legend area.
 	 */
 	@DebugGetter(ID = "legendRightWidth")
 	public int getLegendRightWidth() {
