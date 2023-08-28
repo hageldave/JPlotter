@@ -1,5 +1,11 @@
 package hageldave.jplotter.renderables;
 
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.customPrinter.RenderableDetailsPrinter;
+import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
+import hageldave.jplotter.debugging.panelcreators.control.PercentageFloatSliderCreator;
+import hageldave.jplotter.debugging.panelcreators.display.RenderableDetailsCreator;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
@@ -222,6 +228,7 @@ public class Triangles implements Renderable {
 	 * @param globalAlphaMultiplier of the triangles in this collection
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "globalAlphaMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Triangles setGlobalAlphaMultiplier(DoubleSupplier globalAlphaMultiplier) {
 		this.globalAlphaMultiplier = globalAlphaMultiplier;
 		return this;
@@ -230,6 +237,7 @@ public class Triangles implements Renderable {
 	/**
 	 * @return the global alpha multiplier of the triangles in this collection
 	 */
+	@DebugGetter(ID = "globalAlphaMultiplier")
 	public float getGlobalAlphaMultiplier() {
 		return (float)globalAlphaMultiplier.getAsDouble();
 	}
@@ -253,16 +261,19 @@ public class Triangles implements Renderable {
 	 * @param saturation change of saturation, default is 1
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "globalSaturationMultiplier", creator = PercentageFloatSliderCreator.class)
 	public Triangles setGlobalSaturationMultiplier(double saturation) {
 		return setGlobalSaturationMultiplier(() -> saturation);
 	}
 
 	/** @return the saturation multiplier of this renderable */
+	@DebugGetter(ID = "globalSaturationMultiplier")
 	public float getGlobalSaturationMultiplier() {
 		return (float)globalSaturationMultiplier.getAsDouble();
 	}
 
 	@Override
+	@DebugGetter(ID = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -273,6 +284,7 @@ public class Triangles implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "hidden", creator = ButtonCreator.class)
 	public Triangles hide(boolean hide) {
 		this.hidden = hide;
 		return this;
@@ -629,6 +641,7 @@ public class Triangles implements Renderable {
 	 * @return the list of triangle details.<br>
 	 * Make sure to call {@link #setDirty()} when manipulating.
 	 */
+	@DebugGetter(ID = "triangles", creator = RenderableDetailsCreator.class, objectPrinter = RenderableDetailsPrinter.class)
 	public ArrayList<TriangleDetails> getTriangleDetails() {
 		return triangles;
 	}
@@ -674,6 +687,7 @@ public class Triangles implements Renderable {
 	 * the triangles in SVG.
 	 * @return true when enabled.
 	 */
+	@DebugGetter(ID ="useCrispEdgesForSVG")
 	public boolean isCrispEdgesForSVGEnabled() {
 		return useCrispEdgesForSVG;
 	}
@@ -684,6 +698,7 @@ public class Triangles implements Renderable {
 	 * @param enable true when enabling
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID ="useCrispEdgesForSVG", creator = ButtonCreator.class)
 	public Triangles enableCrispEdgesForSVG(boolean enable) {
 		this.useCrispEdgesForSVG = enable;
 		return this;
@@ -697,6 +712,7 @@ public class Triangles implements Renderable {
 	 * When triangles are not connected, this option can be enabled to get anti-aliased edges.
 	 * @return true when enabled
 	 */
+	@DebugGetter(ID ="useAAinFallback")
 	public boolean isAAinFallbackEnabled() {
 		return this.useAAinFallback;
 	}
@@ -707,6 +723,7 @@ public class Triangles implements Renderable {
 	 * @param enable true when enabling
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID ="useAAinFallback", creator = ButtonCreator.class)
 	public Triangles enableAAinFallback(boolean enable) {
 		this.useAAinFallback = enable;
 		return this;

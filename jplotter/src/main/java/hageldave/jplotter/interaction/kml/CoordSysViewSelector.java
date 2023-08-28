@@ -110,11 +110,15 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	}
 	
 	protected void createSelectionAreaBorder() {
-		Point start_ = Utils.swapYAxis(start, canvas.getHeight());
-		Point end_ = Utils.swapYAxis(end, canvas.getHeight());
+		Point2D start_ = start;
+		Point2D end_ = end;
 		Rectangle vp = coordsys.getCurrentViewPort();
 		start_.setLocation(start_.getX()-vp.x, start_.getY()-vp.y);
 		end_.setLocation(end_.getX()-vp.x, end_.getY()-vp.y);
+
+		start_ = coordsys.transformAWT2CoordSys(start_, canvas.getHeight());
+		end_ = coordsys.transformAWT2CoordSys(end_, canvas.getHeight());
+
 		areaBorder.removeAllSegments();
 		areaBorder.addSegment(start_.getX(), start_.getY(), start_.getX(), end_.getY()).setColor(0xff222222);
 		areaBorder.addSegment(end_.getX(), start_.getY(), end_.getX(), end_.getY()).setColor(0xff222222);

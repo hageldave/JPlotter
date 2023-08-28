@@ -87,6 +87,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
                 List<Point2D.Double> currentSelection = new LinkedList<>(selectionModel.getSelection().first());
                 currentSelection.add((Point2D.Double) pointInCoordsys);
                 selectionModel.setSelection(currentSelection);
+                System.out.println(pointInCoordsys + " " + e.getPoint());
             }
         }
     }
@@ -121,8 +122,8 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
 
     protected Path2D calculateSelectedArea() {
         Path2D selectedArea = new Path2D.Double();
-        selectedArea.moveTo(selectionModel.getSelection().first().get(0).getX(), selectionModel.getSelection().first().get(0).getY());
-        for (int i = 1; i < selectionModel.getSelection().size(); i++) {
+        selectedArea.moveTo(selectionModel.getFirstOrDefault(null).get(0).getX(), selectionModel.getSelection().first().get(0).getY());
+        for (int i = 1; i < selectionModel.getFirstOrDefault(null).size(); i++) {
             selectedArea.lineTo(selectionModel.getSelection().first().get(i).getX(), selectionModel.getSelection().first().get(i).getY());
         }
         selectedArea.closePath();

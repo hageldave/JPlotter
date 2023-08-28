@@ -1,11 +1,15 @@
 package hageldave.jplotter.font;
 
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.GraphicsEnvironment;
+import org.apache.commons.io.FileUtils;
+
+import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Base64;
+import java.util.Objects;
 
 /**
  * The FontProvider class provides the fonts JPlotter is using.
@@ -81,5 +85,51 @@ public final class FontProvider {
 					"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
 		}
 	}
-	
+
+	/**
+	 * Returns the base64 code of the Ubuntu Mono font as a string for the specified style.
+	 * @param style font style, {@link Font#PLAIN}, {@link Font#BOLD}, {@link Font#ITALIC}
+	 * or BOLD|ITALIC
+	 * @return base64 code of the Ubuntu Mono font of specified style
+	 */
+	public static String getUbuntuMonoFontAsBaseString(int style) {
+		String resource;
+		switch (style) {
+			case Font.PLAIN:
+				resource = UBUNTU_MONO_PLAIN_RESOURCE;
+				break;
+			case Font.BOLD:
+				resource = UBUNTU_MONO_BOLD_RESOURCE;
+				break;
+			case Font.ITALIC:
+				resource = UBUNTU_MONO_ITALIC_RESOURCE;
+				break;
+			case (Font.BOLD | Font.ITALIC):
+				resource = UBUNTU_MONO_BOLDITALIC_RESOURCE;
+				break;
+			default:
+				throw new IllegalArgumentException(
+						"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
+		}
+		try {
+			byte[] fontFileArray = FileUtils.readFileToByteArray(new File(
+					Objects.requireNonNull(FontProvider.class.getResource(resource)).toURI()));
+			return Base64.getEncoder().encodeToString(fontFileArray);
+		} catch (IOException | URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Returns the Ubuntu mono font licence as a string
+	 *
+	 * @return ubuntu mono font licence as a string
+	 */
+	public static String getUbuntuMonoFontLicence() {
+		try {
+			return FileUtils.readFileToString(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/LICENCE.txt")).toURI()));
+		} catch (IOException | URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

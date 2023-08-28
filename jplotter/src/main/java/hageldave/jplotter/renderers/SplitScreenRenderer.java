@@ -1,5 +1,9 @@
 package hageldave.jplotter.renderers;
 
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
+import hageldave.jplotter.debugging.panelcreators.control.PercentageDoubleSliderCreator;
 import hageldave.jplotter.svg.SVGUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -64,6 +68,7 @@ public class SplitScreenRenderer implements Renderer {
 	 * @param location value in [0.0 .. 1.0], 0.5 is equal, 0.75 uses 3/4 of the space for renderer 1.
 	 * @return this for chaining.
 	 */
+	@DebugSetter(ID = "dividerLocation", creator = PercentageDoubleSliderCreator.class)
 	public SplitScreenRenderer setDividerLocation(double location) {
 		this.dividerLocation = location;
 		return this;
@@ -75,6 +80,7 @@ public class SplitScreenRenderer implements Renderer {
 	 * when false they are put top and bottom.
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "verticalSplit", creator = ButtonCreator.class)
 	public SplitScreenRenderer setVerticalSplit(boolean verticalSplit) {
 		this.verticalSplit = verticalSplit;
 		return this;
@@ -117,6 +123,7 @@ public class SplitScreenRenderer implements Renderer {
 	/**
 	 * @return the relative location of the divider.
 	 */
+	@DebugGetter(ID = "dividerLocation")
 	public double getDividerLocation() {
 		return dividerLocation;
 	}
@@ -124,6 +131,7 @@ public class SplitScreenRenderer implements Renderer {
 	/**
 	 * @return whether the split orientation is vertical
 	 */
+	@DebugGetter(ID = "verticalSplit")
 	public boolean isVerticalSplit() {
 		return verticalSplit;
 	}

@@ -23,7 +23,7 @@ import java.util.Arrays;
  * panning is {@link InputEvent#CTRL_DOWN_MASK}.
  * If this is undesired the {@link #extModifierMask} has to be overridden.<br>
  * For example to not need to press any key:
- * <pre>new CoordSysPanning(canvas){{extModifierMask=0;}}.register();</pre>
+ * <pre>new CoordSysPanning(canvas, coordsys){{extModifierMask=0;}}.register();</pre>
  *
  * @author hageldave
  * @deprecated Replaced by {@link hageldave.jplotter.interaction.kml.CoordSysPanning}

@@ -1,24 +1,21 @@
 package hageldave.jplotter.font;
 
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Objects;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL15;
-
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.gl.VertexArray;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.GenericKey;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL15;
+
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Objects;
 
 /**
  * The CharacterAtlas class is a texture atlas for looking up character textures.
@@ -171,6 +168,18 @@ public class CharacterAtlas implements AutoCloseable {
 	public static Rectangle2D boundsForText(int textlength, int fontSize, int style){
 		Font font = FontProvider.getUbuntuMono(fontSize, style);
 		return boundsForText(textlength, font);
+	}
+
+	/**
+	 * Returns the font metrics of the Ubuntu Mono font with respect to the given size and style.
+	 * @param fontSize point size of the font
+	 * @param style of the font e.g. {@link Font#PLAIN}.
+	 * @return font metrics of the Ubuntu Mono font
+	 */
+	public static FontMetrics getFontMetrics(int fontSize, int style) {
+		Font font = FontProvider.getUbuntuMono(fontSize, style);
+		Graphics2D g2d = FONTMETRIC_IMG.createGraphics();
+		return g2d.getFontMetrics(font);
 	}
 	
 	/**

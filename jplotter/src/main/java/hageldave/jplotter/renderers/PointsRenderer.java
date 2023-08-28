@@ -2,6 +2,9 @@ package hageldave.jplotter.renderers;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.color.ColorOperations;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.DecimalSpinnerCreator;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
@@ -190,6 +193,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	 * @param glyphScaling scaling for the glyphs that are rendered
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "glyphScaling", creator = DecimalSpinnerCreator.class)
 	public PointsRenderer setGlyphScaling(double glyphScaling) {
 		this.glyphScaling = (float) glyphScaling;
 		return this;
@@ -198,6 +202,7 @@ public class PointsRenderer extends GenericRenderer<Points> {
 	/**
 	 * @return the renderers glyph scaling value
 	 */
+	@DebugGetter(ID = "glyphScaling")
 	public float getGlyphScaling() {
 		return glyphScaling;
 	}

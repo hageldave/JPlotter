@@ -15,6 +15,7 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
+import hageldave.jplotter.util.QuadTree;
 import hageldave.jplotter.util.Utils;
 
 import javax.swing.*;
@@ -25,7 +26,10 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -78,7 +82,7 @@ public class ScatterPlot {
 	 * Creates a new {@link ScatterPlot} object.
 	 *
 	 * The ScatterPlot consists of a {@link CoordSysRenderer} and multiple content layers.
-	 * It also has a data model (see {@link ScatterPlotDataModel}) and a listener (see {@link ScatterPlotDataModel.ScatterPlotDataModelListener})
+	 * It also has a data model (see {@link ScatterPlotDataModel}) and a listener (see {@link ScatterPlotDataModelListener})
 	 * linked to it, listening for data changes.
 	 *
 	 * There is also a mouse event handler created in the constructor,
@@ -102,13 +106,13 @@ public class ScatterPlot {
         this.coordsys.setxAxisLabel(xLabel);
         this.coordsys.setyAxisLabel(yLabel);
         
-        this.dataModel.addListener(new ScatterPlotDataModel.ScatterPlotDataModelListener() {
+        this.dataModel.addListener(new ScatterPlotDataModelListener() {
 			@Override
 			public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
 				onDataAdded(chunkIdx, chunkData, chunkDescription, xIdx, yIdx);
 			}
         	@Override
-			public void dataChanged(int chunkIdx, double[][] chunkData) {
+			public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx) {
 				onDataChanged(chunkIdx, chunkData);
 			}
 		});
@@ -266,36 +270,12 @@ public class ScatterPlot {
 	 * with the new or changed data.
 	 *
 	 */
-	public static class ScatterPlotDataModel {
+	public class ScatterPlotDataModel {
     	protected ArrayList<double[][]> dataChunks = new ArrayList<>();
     	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();;
     	protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
-    	
     	protected LinkedList<ScatterPlotDataModelListener> listeners = new LinkedList<>();
-
-		/**
-		 * The ScatterPlotDataModelListener consists of multiple listener interfaces, which are called when the data model is manipulated.
-		 */
-		public static interface ScatterPlotDataModelListener {
-			/**
-			 * Whenever data is added to the ScatterPlot, this interface will be called.
-			 *
-			 * @param chunkIdx index of the dataChunk in the array where all dataChunks are stored
-			 * @param chunkData 2D array containing the data that will be rendered in the ScatterPlot
-			 * @param chunkDescription label of the data chunk which will also be shown in the legend
-			 * @param xIdx location of the x coordinate in the chunkData array
-			 * @param yIdx location of the y coordinate in the chunkData array
-			 */
-    		public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx);
-
-			/**
-			 * Whenever data is updated in the ScatterPlot, this interface will be called.
-			 *
-			 * @param chunkIdx index of the data chunk that should be updated
-			 * @param chunkData 2D array containing the updated data
-			 */
-    		public void dataChanged(int chunkIdx, double[][] chunkData);
-    	}
+		protected ArrayList<QuadTree<Pair<double[], Integer>>> quadTreePerChunk = new ArrayList<>();
 
 		/**
 		 * Adds data to the data model of the scatter plot.
@@ -310,7 +290,7 @@ public class ScatterPlot {
     		this.dataChunks.add(dataChunk);
     		this.xyIndicesPerChunk.add(Pair.of(xIdx, yIdx));
     		this.descriptionPerChunk.add(chunkDescription);
-    		
+			updateQuadTree(chunkIdx, dataChunk);
     		notifyDataAdded(chunkIdx);
     	}
 
@@ -340,29 +320,62 @@ public class ScatterPlot {
     	public int chunkSize(int chunkIdx) {
     		return getDataChunk(chunkIdx).length;
     	}
-    	
+
+		/**
+		 * Update the data of the dataChunk with the given chunkIdx
+		 *
+		 * @param chunkIdx id of the chunk that should be updated
+		 * @param dataChunk updated data array
+		 */
     	public synchronized void setDataChunk(int chunkIdx, double[][] dataChunk){
     		if(chunkIdx >= numChunks())
     			throw new ArrayIndexOutOfBoundsException("specified chunkIdx out of bounds: " + chunkIdx);
     		this.dataChunks.set(chunkIdx, dataChunk);
+			updateQuadTree(chunkIdx, dataChunk);
     		this.notifyDataChanged(chunkIdx);
     	}
-    	
+
+		/**
+		 * Change the x/y coordinate lookup indices of the dataChunk with the given chunkIdx.
+		 * @param chunkIdx id of the dataChunk that should be changed
+		 * @param xIdx x coordinate lookup index
+		 * @param yIdx y coordinate lookup index
+		 */
+		public synchronized void setXYIndicesPerChunk(int chunkIdx, int xIdx, int yIdx) {
+			this.xyIndicesPerChunk.set(chunkIdx, Pair.of(xIdx, yIdx));
+			notifyDataChanged(chunkIdx);
+		}
+
+		/**
+		 * @param chunkIdx id of the dataChunk whose x coordinate lookup index should be returned
+		 * @return x coordinate lookup index
+		 */
     	public int getXIdx(int chunkIdx) {
     		return xyIndicesPerChunk.get(chunkIdx).first;
     	}
-    	
+
+		/**
+		 * @param chunkIdx id of the dataChunk whose y coordinate lookup index should be returned
+		 * @return y coordinate lookup index
+		 */
     	public int getYIdx(int chunkIdx) {
     		return xyIndicesPerChunk.get(chunkIdx).second;
     	}
-    	
+
+		/**
+		 * @param chunkIdx id of the dataChunk whose chunk description should be returned
+		 * @return chunk description of the dataChunk with the given chunkIdx
+		 */
     	public String getChunkDescription(int chunkIdx) {
     		return descriptionPerChunk.get(chunkIdx);
     	}
+
+		public QuadTree<Pair<double[], Integer>> getQuadTree(int chunkIdx) {
+			return quadTreePerChunk.get(chunkIdx);
+		}
     	
-    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Shape area){
+    	public TreeSet<Integer> getIndicesOfPointsInArea_naive(int chunkIdx, Shape area){
     		// naive search for contained points
-    		// TODO: quadtree supported search (quadtrees per chunk have to be kept up to date)
     		int xIdx = getXIdx(chunkIdx);
     		int yIdx = getYIdx(chunkIdx);
     		double[][] data = getDataChunk(chunkIdx);
@@ -374,6 +387,51 @@ public class ScatterPlot {
     		return containedPointIndices;
     	}
 
+    	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area) {
+			QuadTree<Pair<double[], Integer>> quadTree = getQuadTree(chunkIdx);
+			List<Pair<double[], Integer>> containedPointIndices = QuadTree.getPointsInArea(quadTree, area);
+    		return containedPointIndices.stream().map(e -> e.second).collect(Collectors.toCollection(TreeSet::new));
+    	}
+
+		public void updateQuadTree(int chunkIndex, double[][] dataChunk) {
+			int xIdx = getDataModel().getXIdx(chunkIndex);
+			int yIdx = getDataModel().getYIdx(chunkIndex);
+
+			double minX = Integer.MAX_VALUE;
+			double maxX = Integer.MIN_VALUE;
+			double minY = Integer.MAX_VALUE;
+			double maxY = Integer.MIN_VALUE;
+
+			for (double[] coords: dataChunk) {
+				minX = Math.min(minX, coords[xIdx]);
+				maxX = Math.max(maxX, coords[xIdx]);
+				minY = Math.min(minY, coords[yIdx]);
+				maxY = Math.max(maxY, coords[yIdx]);
+			}
+
+			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, maxX-minX+0.01, maxY-minY+0.01);
+			QuadTree<Pair<double[], Integer>> qt = new QuadTree<>(4, boundingBox, (Pair<double[], Integer> entry) -> entry.first[0], (Pair<double[], Integer> entry) -> entry.first[1]);
+			for (int j = 0; j < dataChunk.length; j++) {
+				double[] actualCoordinates = new double[]{dataChunk[j][xIdx], dataChunk[j][yIdx]};
+				QuadTree.insert(qt, new Pair<>(actualCoordinates, j));
+			}
+
+			if (this.quadTreePerChunk.size() > chunkIndex) {
+				this.quadTreePerChunk.set(chunkIndex, qt);
+			} else {
+				this.quadTreePerChunk.add(qt);
+			}
+		}
+
+		/**
+		 * The dataChunks can be seen as ordered one after the other.
+		 * Therefore, an index of a datapoint in a dataChunk can also have a global index.
+		 * To calculate the global index, the local index of a dataChunk is added to the sizes of each previous dataChunk.
+		 *
+		 * @param chunkIdx dataChunk whose local index (idx parameter) is given
+		 * @param idx local index of the dataChunk with the given chunkIdx
+		 * @return the global index of the idx in the dataChunk with the given chunkIdx
+		 */
     	public int getGlobalIndex(int chunkIdx, int idx) {
     		int globalIdx=0;
     		for(int i=0; i<chunkIdx; i++) {
@@ -440,19 +498,44 @@ public class ScatterPlot {
     	}
 
 		/**
-		 * Calls the {@link ScatterPlotDataModelListener#dataChanged(int, double[][])} interface of all registered {@link ScatterPlotDataModelListener}.
+		 * Calls the {@link ScatterPlotDataModelListener#dataChanged(int, double[][], int, int)} interface of all registered {@link ScatterPlotDataModelListener}.
 		 *
 		 * @param chunkIdx data chunk id of the changed data
 		 */
 		public synchronized void notifyDataChanged(int chunkIdx) {
     		for(ScatterPlotDataModelListener l:listeners)
-    			l.dataChanged(chunkIdx, getDataChunk(chunkIdx));
+    			l.dataChanged(chunkIdx, getDataChunk(chunkIdx), getXIdx(chunkIdx), getYIdx(chunkIdx));
     	}
     }
 
 	/**
+	 * The ScatterPlotDataModelListener consists of multiple listener interfaces, which are called when the data model is manipulated.
+	 */
+	public static interface ScatterPlotDataModelListener {
+		/**
+		 * Whenever data is added to the ScatterPlot, this interface will be called.
+		 *
+		 * @param chunkIdx index of the dataChunk in the array where all dataChunks are stored
+		 * @param chunkData 2D array containing the data that will be rendered in the ScatterPlot
+		 * @param chunkDescription label of the data chunk which will also be shown in the legend
+		 * @param xIdx location of the x coordinate in the chunkData array
+		 * @param yIdx location of the y coordinate in the chunkData array
+		 */
+		public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx);
+
+		/**
+		 * Whenever data is updated in the ScatterPlot, this interface will be called.
+		 *
+		 * @param chunkIdx index of the data chunk that should be updated
+		 * @param chunkData 2D array containing the updated data
+		 * @param xIdx index of the x coordinate in the chunkData
+		 * @param yIdx index of the y coordinate in the chunkData
+		 */
+		public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx);
+	}
+
+	/**
 	 * The ScatterPlotVisualMapping is responsible for mapping the chunks to a glyph and a color.
-	 *
 	 *
 	 */
 	public static interface ScatterPlotVisualMapping {
@@ -586,8 +669,15 @@ public class ScatterPlot {
 	/**
 	 * @see ScatterPlot#addScrollZoom(KeyMaskListener)
 	 */
-    public CoordSysScrollZoom addScrollZoom() {
-        return new CoordSysScrollZoom(this.canvas, this.coordsys).register();
+	public CoordSysScrollZoom addScrollZoom() {
+		return addScrollZoom(false);
+	}
+
+	/**
+	 * @see ScatterPlot#addScrollZoom(KeyMaskListener)
+	 */
+    public CoordSysScrollZoom addScrollZoom(boolean mouseFocused) {
+        return new CoordSysScrollZoom(this.canvas, this.coordsys, mouseFocused).register();
     }
 
 	/**
@@ -726,7 +816,6 @@ public class ScatterPlot {
 	/**
 	 * The ScatterPlotMouseEventListener interface contains multiple methods,
 	 * notifying if an element has been hit or not (inside and outside the coordsys).
-	 *
 	 */
 	public static interface ScatterPlotMouseEventListener {
     	static final String MOUSE_EVENT_TYPE_MOVED="moved";
@@ -803,7 +892,20 @@ public class ScatterPlot {
     public ArrayList<Pair<Integer, TreeSet<Integer>>> getIndicesOfPointsInArea(Shape area){
     	ArrayList<Pair<Integer, TreeSet<Integer>>> pointLocators = new ArrayList<>();
     	for(int chunkIdx=0; chunkIdx<dataModel.numChunks(); chunkIdx++) {
-    		TreeSet<Integer> containedPointIndices = getDataModel().getIndicesOfPointsInArea(chunkIdx, area);
+    		// get candidates that are in bounding rectangle of shape
+    		TreeSet<Integer> containedPointIndices = getDataModel().getIndicesOfPointsInArea(chunkIdx, area.getBounds2D());
+    		// check candidates against shape
+    		if(!(area instanceof Rectangle2D)) {
+    			int chnkidx = chunkIdx;
+    			containedPointIndices.removeIf(new Predicate<Integer>() {
+    				double[][] chunk = getDataModel().getDataChunk(chnkidx);
+    				int xidx = getDataModel().getXIdx(chnkidx);
+    				int yidx = getDataModel().getYIdx(chnkidx);
+    				public boolean test(Integer i) {
+    					return !area.contains(chunk[i][xidx], chunk[i][yidx]);
+    				};
+    			});
+    		}
     		if(!containedPointIndices.isEmpty())
     			pointLocators.add(Pair.of(chunkIdx, containedPointIndices));
     	}
@@ -853,6 +955,7 @@ public class ScatterPlot {
     		public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
     			if(pointSetSelectionOngoingListeners.isEmpty())
     				return;
+
     			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 				selectionMemory[0] = area;
     			selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(area));
@@ -862,6 +965,7 @@ public class ScatterPlot {
 			public void areaSelected(double minX, double minY, double maxX, double maxY) {
     			if(pointSetSelectionListeners.isEmpty())
     				return;
+
     			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 				selectionMemory[1] = area;
     			selectedPoints.setSelection(getIndicesOfPointsInArea(area));
@@ -893,9 +997,15 @@ public class ScatterPlot {
 	}
 
 	/**
-	 * TODO:
+	 * The PointSetSelectionListener interface is responsible for notifying of point set changes.
 	 */
     public static interface PointSetSelectionListener {
+    	/**
+    	 * This method is called whenever the selection of points has changed.
+    	 *
+    	 * @param selectedPoints a list of pairs which map chunk indices to the set of points which have been selected of the corresponding chunk
+    	 * @param selectionArea the area of the selection
+    	 */
     	public void onPointSetSelectionChanged(ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints, Shape selectionArea);
     }
     

@@ -1,5 +1,8 @@
 package hageldave.jplotter.renderers;
 
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.RenderOrderCreator;
 import hageldave.jplotter.renderables.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -43,7 +46,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 	public final TextRenderer text = new TextRenderer();
 	public final TrianglesRenderer triangles = new TrianglesRenderer();
 	public final CurvesRenderer curves = new CurvesRenderer();
-	
+
 	private final Renderer[] rendererLUT = {triangles,lines,curves,points,text};
 	public static final int TRI = 0, LIN = 1, PNT = 2, TXT = 3, CRV = 4;
 	private final int[] renderOrder = {TRI,LIN,CRV,PNT,TXT};
@@ -66,6 +69,7 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 	 * @param fifth one of {0,1,2,3,4} or {TRI,LIN,PNT,TXT,CRV}
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "renderOrder", creator = RenderOrderCreator.class)
 	public CompleteRenderer setRenderOrder(int first, int second, int third, int fourth, int fifth){
 		renderOrder[0] = first;
 		renderOrder[1] = second;
@@ -73,6 +77,11 @@ public class CompleteRenderer implements Renderer, AdaptableView, GLDoublePrecis
 		renderOrder[3] = fourth;
 		renderOrder[4] = fifth;
 		return this;
+	}
+
+	@DebugGetter(ID = "renderOrder")
+	public int[] getRenderOrder() {
+		return renderOrder;
 	}
 
 	/**

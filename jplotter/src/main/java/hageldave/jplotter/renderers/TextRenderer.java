@@ -1,10 +1,10 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.gl.Shader;
 import hageldave.jplotter.gl.VertexArray;
+import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.pdf.PDFUtils;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderables.Text;
@@ -15,6 +15,7 @@ import hageldave.jplotter.util.Utils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.lwjgl.opengl.GL11;
@@ -30,6 +31,8 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Objects;
+
+import static hageldave.jplotter.pdf.PDFUtils.createPDFont;
 
 /**
  * The TrianglesRenderer is an implementation of the {@link GenericRenderer}
@@ -414,7 +417,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 				x1*=scaleX;
 				y1*=scaleY;
 				
-				y1+=1;
+				y1+=3;
 				
 				// test if inside of view port
 				Rectangle2D bounds = txt.getBoundsWithRotation();
@@ -429,25 +432,62 @@ public class TextRenderer extends GenericRenderer<Text> {
 				
 				Element textGroup = SVGUtils.createSVGElement(doc, "g");
 				mainGroup.appendChild(textGroup);
-				
+
+				String fontfamily = "Ubuntu Mono, monospace";
+
 				if(txt.getBackground().getRGB() != 0){
-					Element backgroundRect = SVGUtils.createSVGRect(doc, 0, 0, txt.getTextSize().width,txt.getTextSize().height);
-					textGroup.appendChild(backgroundRect);
-					backgroundRect.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
-					backgroundRect.setAttributeNS(null, "fill-opacity", ""+SVGUtils.svgNumber(Pixel.a_normalized(txt.getBackground().getRGB())));
-					if(txt.getAngle() != 0){
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+")");
-					} else {
-						backgroundRect.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+")");
-					}
+					String defID = SVGUtils.newDefId();
+					Element defs = SVGUtils.createSVGElement(doc, "defs");
+					Element filter = SVGUtils.createSVGElement(doc, "filter");
+					filter.setAttributeNS(null, "x", ""+0);
+					filter.setAttributeNS(null, "y", ""+0);
+					filter.setAttributeNS(null, "width", ""+1);
+					filter.setAttributeNS(null, "height", ""+1);
+					filter.setAttributeNS(null, "id", defID);
+					Element feFlood = SVGUtils.createSVGElement(doc, "feFlood");
+					feFlood.setAttributeNS(null, "flood-color", SVGUtils.svgRGBhex(txt.getBackground().getRGB()));
+					feFlood.setAttributeNS(null, "flood-opacity", SVGUtils.svgNumber(txt.getBackground().getAlpha() / 255.0));
+					feFlood.setAttributeNS(null, "result", "bg");
+
+					Element feMerge = SVGUtils.createSVGElement(doc, "feMerge");
+					Element backgroundFeMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+					backgroundFeMergeNode.setAttributeNS(null, "in", "bg");
+					Element sgFeMergeNode = SVGUtils.createSVGElement(doc, "feMergeNode");
+					sgFeMergeNode.setAttributeNS(null, "in", "SourceGraphic");
+
+					feMerge.appendChild(backgroundFeMergeNode);
+					feMerge.appendChild(sgFeMergeNode);
+					filter.appendChild(feFlood);
+					filter.appendChild(feMerge);
+					defs.appendChild(filter);
+					textGroup.appendChild(defs);
+
+					// dummy text element
+					Element backgroundText = SVGUtils.createSVGElement(doc, "text");
+					textGroup.appendChild(backgroundText);
+
+					backgroundText.setAttributeNS(null, "filter", "url(#" + defID + ")");
+					backgroundText.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
+					backgroundText.setTextContent(txt.getTextString());
+					backgroundText.setAttributeNS(null, "style",
+							"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
+					backgroundText.setAttributeNS(null, "fill-opacity", "0");
 				}
-				
+
+				// transform text group
+				textGroup.setAttributeNS(null, "x", ""+0);
+				textGroup.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
+				if(txt.getAngle() != 0){
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
+				} else {
+					textGroup.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
+				}
+
+				// actual text element
 				Element text = SVGUtils.createSVGElement(doc, "text");
 				textGroup.appendChild(text);
-				
 				text.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
 				text.setTextContent(txt.getTextString());
-				String fontfamily = "'Ubuntu Mono', monospace";
 				text.setAttributeNS(null, "style",
 						"font-family:"+fontfamily+";font-size:"+txt.fontsize+"px;"+SVGUtils.fontStyleAndWeightCSS(txt.style));
 				text.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(txt.getColor().getRGB()));
@@ -456,11 +496,6 @@ public class TextRenderer extends GenericRenderer<Text> {
 				}
 				text.setAttributeNS(null, "x", ""+0);
 				text.setAttributeNS(null, "y", "-"+(txt.getTextSize().height-txt.fontsize));
-				if(txt.getAngle() != 0){
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") rotate("+SVGUtils.svgNumber(txt.getAngle()*180/Math.PI)+") scale(1,-1)");
-				} else {
-					text.setAttributeNS(null, "transform", "translate("+SVGUtils.svgNumber(x1)+","+SVGUtils.svgNumber(y1)+") scale(1,-1)");
-				}
 			}
 		}
 	}
@@ -489,8 +524,7 @@ public class TextRenderer extends GenericRenderer<Text> {
 					y1 -= translateY;
 					x1 *= scaleX;
 					y1 *= scaleY;
-					y1 += 2;
-					x1 += 1;
+					y1 += 3;
 					
 					// test if inside of view port
 					Rectangle2D bounds = txt.getBoundsWithRotation();
@@ -502,9 +536,17 @@ public class TextRenderer extends GenericRenderer<Text> {
 					if(!viewportRect.intersects(bounds)) {
 						continue;
 					}
-					
-					float rightPadding = 0.3f*((float)txt.getBounds().getWidth()/txt.getTextString().length());
-					float topPadding = 0.6f*((float)txt.getBounds().getHeight()/2);
+
+					PDType0Font font = (doc instanceof FontCachedPDDocument) ? ((FontCachedPDDocument)doc).getFont(txt.style) : createPDFont(doc, txt.style);
+					float textWidth = font.getStringWidth(txt.getTextString()) / 1000 * txt.fontsize;
+					float fontDescent = -font.getFontDescriptor().getDescent() / 1000 * txt.fontsize;
+
+
+					// clipping area
+					contentStream.saveGraphicsState();
+					contentStream.addRect(x, y, w, h);
+					contentStream.clip();
+
 					if(txt.getBackground().getRGB() != 0){
 						contentStream.saveGraphicsState();
 						contentStream.transform(new Matrix(1, 0, 0, 1, ((float) x1+x), ((float) y1+y)));
@@ -516,18 +558,13 @@ public class TextRenderer extends GenericRenderer<Text> {
 						contentStream.setGraphicsStateParameters(graphicsState);
 
 						PDFUtils.createPDFPolygon(contentStream,
-								new double[]{-rightPadding, txt.getBounds().getWidth()+rightPadding, txt.getBounds().getWidth()+rightPadding, -rightPadding},
-								new double[]{-topPadding, -topPadding, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
+								new double[]{0, textWidth, textWidth, 0},
+								new double[]{-fontDescent, -fontDescent, txt.getBounds().getHeight(), txt.getBounds().getHeight()});
 
 						contentStream.setNonStrokingColor(new Color(txt.getBackground().getRGB()));
 						contentStream.fill();
 						contentStream.restoreGraphicsState();
 					}
-
-					// clipping area
-					contentStream.saveGraphicsState();
-					contentStream.addRect(x, y, w, h);
-					contentStream.clip();
 
 					PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
 					graphicsState.setNonStrokingAlphaConstant(txt.getColorA());

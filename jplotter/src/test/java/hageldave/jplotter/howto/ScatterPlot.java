@@ -28,7 +28,7 @@ public class ScatterPlot {
 		return d;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, NoSuchMethodException {
 		// generate or get data
 		double[][] dataA = randomData(50);
 		double[][] dataB = randomData(100);
@@ -57,7 +57,7 @@ public class ScatterPlot {
 
 		// display within a JFrame
 		JFrame frame = new JFrame();
-		boolean useOpenGL = true;
+		boolean useOpenGL = false;
 		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		canvas.setRenderer(coordsys);
 		canvas.asComponent().setPreferredSize(new Dimension(400, 400));
@@ -83,5 +83,4 @@ public class ScatterPlot {
 			ImageSaver.saveImage(img.getRemoteBufferedImage(), "scatterplot.png");
 		});
 	}
-	
 }

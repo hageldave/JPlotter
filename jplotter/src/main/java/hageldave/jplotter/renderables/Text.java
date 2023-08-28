@@ -2,6 +2,9 @@ package hageldave.jplotter.renderables;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.jplotter.canvas.FBOCanvas;
+import hageldave.jplotter.debugging.annotations.DebugGetter;
+import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.*;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.gl.FBO;
 import hageldave.jplotter.gl.VertexArray;
@@ -33,7 +36,7 @@ import java.util.Objects;
  * @author hageldave
  */
 public class Text implements Renderable {
-	public final int fontsize; 
+	public final int fontsize;
 	public final int style;
 	protected Dimension textSize;
 	protected Color color;
@@ -91,6 +94,7 @@ public class Text implements Renderable {
 	 * @param color to set
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "color", creator = ColorPicker.class)
 	public Text setColor(Color color) {
 		this.color = color;
 		return this;
@@ -109,6 +113,7 @@ public class Text implements Renderable {
 	/**
 	 * @return this text's color
 	 */
+	@DebugGetter(ID = "color")
 	public Color getColor() {
 		return color;
 	}
@@ -118,6 +123,7 @@ public class Text implements Renderable {
 	 * transparent black (0x00000000) which wont be visible.
 	 * @param background color
 	 */
+	@DebugSetter(ID = "background", creator = ColorPicker.class)
 	public void setBackground(Color background) {
 		this.background = background;
 	}
@@ -130,7 +136,8 @@ public class Text implements Renderable {
 	public void setBackground(int argb) {
 		this.background = new Color(argb, true);
 	}
-	
+
+	@DebugGetter(ID = "background")
 	public Color getBackground() {
 		return background;
 	}
@@ -245,6 +252,7 @@ public class Text implements Renderable {
 	 * @return the origin of this text object, i.e. the bottom left corner of the rectangle enclosing the text,
 	 * the text's location so to say
 	 */
+	@DebugGetter(ID = "origin")
 	public Point2D getOrigin() {
 		return origin;
 	}
@@ -267,6 +275,7 @@ public class Text implements Renderable {
 	 * @param y coordinate of origin
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "origin", creator = Coord2DCreator.class)
 	public Text setOrigin(int x, int y) {
 		return this.setOrigin(new Point(x, y));
 	}
@@ -274,6 +283,7 @@ public class Text implements Renderable {
 	/**
 	 * @return the rotation angle in radian by which this text object is rotated around its origin.
 	 */
+	@DebugGetter(ID = "angle")
 	public float getAngle() {
 		return angle;
 	}
@@ -283,12 +293,14 @@ public class Text implements Renderable {
 	 * @param angle rotation angle
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "angle", creator = AngleSliderCreator.class)
 	public Text setAngle(double angle) {
 		this.angle = (float)angle;
 		return this;
 	}
 	
 	@Override
+	@DebugGetter(ID = "hidden")
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -299,6 +311,7 @@ public class Text implements Renderable {
 	 * @param hide true when hiding
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID = "hidden", creator = ButtonCreator.class)
 	public Text hide(boolean hide) {
 		this.hidden = hide;
 		return this;
@@ -379,6 +392,7 @@ public class Text implements Renderable {
 	/**
 	 * @return the String this text object displays
 	 */
+	@DebugGetter(ID ="txtStr")
 	public String getTextString(){
 		return txtStr;
 	}
@@ -392,6 +406,7 @@ public class Text implements Renderable {
 	 * @param txtStr the text string this object should display.
 	 * @return this for chaining
 	 */
+	@DebugSetter(ID ="txtStr", creator = TextfieldCreator.class)
 	public Text setTextString(String txtStr) {
 		this.txtStr = txtStr;
 		this.textSize = CharacterAtlas.boundsForText(txtStr.length(), fontsize, style).getBounds().getSize();

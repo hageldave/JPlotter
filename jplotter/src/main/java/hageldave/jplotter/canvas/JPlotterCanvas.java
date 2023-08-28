@@ -1,13 +1,17 @@
 package hageldave.jplotter.canvas;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.jplotter.font.FontProvider;
 import hageldave.jplotter.pdf.FontCachedPDDocument;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.svg.SVGUtils;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -17,6 +21,9 @@ import java.awt.event.WindowListener;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Arrays;
+
+import static hageldave.jplotter.font.FontProvider.getUbuntuMonoFontAsBaseString;
+import static java.awt.Font.*;
 
 /**
  * This interface defines the methods required by an implementation of a 
@@ -160,13 +167,15 @@ public interface JPlotterCanvas {
 				defs.setAttributeNS(null, "id", "JPlotterDefs");
 				document.getDocumentElement().appendChild(defs);
 			}
-			
 			Element rootGroup = SVGUtils.createSVGElement(document, "g");
 			parent.appendChild(rootGroup);
 			rootGroup.setAttributeNS(null, "transform", "scale(1,-1) translate(0,-"+h+")");
 			
 			// define the clipping rectangle for the content (rect of vieport size)
 			Node defs = SVGUtils.getDefs(document);
+
+			SVGUtils.createFontDefinitionStyleElement(document);
+
 			Element clip = SVGUtils.createSVGElement(document, "clipPath");
 			String clipDefID = SVGUtils.newDefId();
 			clip.setAttributeNS(null, "id", clipDefID);
@@ -174,15 +183,14 @@ public interface JPlotterCanvas {
 			defs.appendChild(clip);
 			// clip the root group
 			rootGroup.setAttributeNS(null, "clip-path", "url(#"+clipDefID+")");
-			
-			
+
 			Element background = SVGUtils.createSVGElement(document, "rect");
 			rootGroup.appendChild(background);
 			background.setAttributeNS(null, "id", "background"+"@"+hashCode());
 			background.setAttributeNS(null, "width", ""+w);
 			background.setAttributeNS(null, "height", ""+h);
 			background.setAttributeNS(null, "fill", SVGUtils.svgRGBhex(asComponent().getBackground().getRGB()));
-			
+
 			paintToSVG(document, rootGroup, w,h);
 		}
 	}
@@ -233,22 +241,22 @@ public interface JPlotterCanvas {
 	public default void paintPDF(PDDocument document, PDPage page) throws IOException {
 		int w,h;
 		if ((w=asComponent().getWidth()) > 0 && (h=asComponent().getHeight()) > 0) {
+			// setup mediabox (page size)
 			page.setMediaBox(new PDRectangle(w, h));
-			PDPageContentStream contentStream = new PDPageContentStream(document, page,
-					PDPageContentStream.AppendMode.APPEND, false);
-			contentStream.addRect(0, 0, w, h);
-			contentStream.setNonStrokingColor(asComponent().getBackground());
-			contentStream.fill();
-			contentStream.close();
-			paintToPDF(document, page, w, h);
+			paintPDF(document, page, new Rectangle2D.Float(0, 0, w, h));
 		}
 	}
 
-
-	public default void paintPDF(PDDocument document, PDPage page, PDPageContentStream contentStream, Rectangle2D renderLoc) throws IOException {
-		contentStream.addRect(0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
+	/** This method assumes that the documents page size (mediabox) is already set up.*/ // TDDO: write rest of javadoc
+	public default void paintPDF(PDDocument document, PDPage page, Rectangle2D renderLoc) throws IOException {
+		PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, false);
+		// drawing the background color of the canvas in the given render location
+		contentStream.addRect((float) renderLoc.getBounds2D().getX(), (float) (page.getMediaBox().getHeight()-renderLoc.getBounds2D().getY()-renderLoc.getBounds2D().getHeight()),
+				(float) renderLoc.getBounds2D().getWidth(), (float) renderLoc.getBounds2D().getHeight());
 		contentStream.setNonStrokingColor(asComponent().getBackground());
 		contentStream.fill();
+		contentStream.close();
+		// draw the rest (render to pdf)
 		paintToPDF(document, page, renderLoc);
 	}
 

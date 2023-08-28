@@ -3,8 +3,9 @@ package hageldave.jplotter.howto;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.charts.ScatterPlot;
+import hageldave.jplotter.charts.ScatterPlot.PointSetSelectionListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel;
-import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel.ScatterPlotDataModelListener;
+import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModelListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotVisualMapping;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
@@ -94,12 +95,24 @@ public class ReadyScatterPlot {
         // basic coordinate system interaction schemes
         plot.addPanning();
         plot.addRectangleSelectionZoom();
+        plot.addPointSetSelectionListener(new PointSetSelectionListener() {
+			@Override
+			public void onPointSetSelectionChanged(
+					ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints,
+					Shape selectionArea) 
+			{
+				List<Pair<Integer, Integer>> toAccentuate = selectedPoints.stream()
+						.flatMap(pair -> pair.second.stream().map(i->Pair.of(pair.first, i))).toList();
+				plot.accentuate(toAccentuate);
+			}
+		});
         plot.addScrollZoom();
         plot.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
         	@Override /* get focus for key events whenever mouse enters this component */
         	public void mouseEntered(MouseEvent e) {plot.getCanvas().asComponent().requestFocus();}
 		});
-        
+
+
         // create a table that uses the plot's data model 
         JTable datasetTable = new JTable(new TableModel() {
         	private ScatterPlotDataModel spdm = plot.getDataModel();
@@ -171,11 +184,12 @@ public class ReadyScatterPlot {
 				TableModel self = this;
 				ScatterPlotDataModelListener proxyListener = new ScatterPlotDataModelListener() {
 					@Override
-					public void dataChanged(int chunkIdx, double[][] chunkData) {
+					public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
 						l.tableChanged(new TableModelEvent(self));
 					}
+
 					@Override
-					public void dataAdded(int chunkIdx, double[][] chunkData, String chunkDescription, int xIdx, int yIdx) {
+					public void dataChanged(int chunkIdx, double[][] chunkData, int xIdx, int yIdx) {
 						l.tableChanged(new TableModelEvent(self));
 					}
 				};
@@ -229,11 +243,11 @@ public class ReadyScatterPlot {
         	@Override
         	public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
         		/* mouse interacting with point in the coordinate system */
-        		
+
         		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
         			// on click: select data point
         			selectedDataPoints.setSelection(Pair.of(chunkIdx, pointIdx));
-        		}
+				}
         		
         		if(mouseEventType==MOUSE_EVENT_TYPE_MOVED) {
         			// on mouse over: highlight point under cursor
