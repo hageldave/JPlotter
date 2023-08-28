@@ -87,7 +87,6 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
                 List<Point2D.Double> currentSelection = new LinkedList<>(selectionModel.getSelection().first());
                 currentSelection.add((Point2D.Double) pointInCoordsys);
                 selectionModel.setSelection(currentSelection);
-                System.out.println(pointInCoordsys + " " + e.getPoint());
             }
         }
     }
@@ -189,7 +188,6 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
                     // call selected interface
                     areaSelected(calculateSelectedArea());
                     selectionModel.getSelection().first().clear();
-                    System.out.println("Selection is done.");
                     break;
                 } else {
                     // call ongoing interface

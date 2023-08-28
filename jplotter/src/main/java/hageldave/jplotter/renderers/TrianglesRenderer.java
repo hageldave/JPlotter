@@ -607,8 +607,7 @@ public class TrianglesRenderer extends GenericRenderer<Triangles> {
 			contentStream.restoreGraphicsState();
 			contentStream.close();
 		} catch (IOException e) {
-			System.out.println(e);
-			throw new RuntimeException("Error occurred!");
+			throw new RuntimeException(e);
 		}
 	}
 }

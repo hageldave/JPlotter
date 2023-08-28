@@ -846,9 +846,5 @@ public class CurvesRenderer extends GenericRenderer<Curves> {
             throw new RuntimeException("Error occurred!");
         }
     }
-
-//	public static void main(String[] args) {
-//		System.out.println(strokePattern2dashArray((short)0x0f0f, 16));
-//	}
-
+	
 }
