@@ -138,7 +138,7 @@ SwingUtilities.invokeLater(()->{
    frame.setVisible(true);
 });
 ```
-We can also add a pop up menu for exporting to SVG or PNG.
+We can also add a pop up menu for exporting to SVG, PDF or PNG.
 ```java
 PopupMenu menu = new PopupMenu();
 canvas.asComponent().add(menu);
@@ -148,6 +148,8 @@ canvas.asComponent().addMouseListener(new MouseAdapter() {
          menu.show(canvas.asComponent(), e.getX(), e.getY());
    }
 });
+
+// Exporting SVG
 MenuItem svgExport = new MenuItem("SVG export");
 svgExport.addActionListener(e->{
    Document svg = SVGUtils.containerToSVG(frame.getContentPane());
@@ -155,6 +157,17 @@ svgExport.addActionListener(e->{
    System.out.println("exported SVG.");
 });
 menu.add(svgExport);
+
+// Exporting PDF
+MenuItem pdfExport = new MenuItem("PDF export");
+pdfExport.addActionListener(e->{
+    PDDocument doc = PDFUtils.containerToPDF(frame.getContentPane());
+    doc.save("example_export.pdf");
+    doc.close();
+});
+menu.add(pdfExport);
+
+// Exporting PNG
 MenuItem pngExport = new MenuItem("PNG export");
 pngExport.addActionListener(e->{
    Img img = new Img(frame.getContentPane().getSize());
