@@ -28,7 +28,7 @@ public class ReadyBarChart {
         BarChart meanChart = new BarChart(true, 2);
         BarChart histogramChart = new BarChart(true, 1);
         histogramChart.getCanvas().asComponent().setPreferredSize(new Dimension(900, 400));
-        ColorMap classcolors = DefaultColorMap.S_VIRIDIS;
+        ColorMap classcolors = DefaultColorMap.Q_8_SET2;
 
         String[] plantLabels = new String[]{
                 "Iris Setosa",
