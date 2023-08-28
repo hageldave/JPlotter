@@ -15,7 +15,6 @@ import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.renderers.PointsRenderer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import javax.swing.*;
@@ -81,8 +80,6 @@ public class ContourPlot {
 		coordsys.setContent(content);
 
 		Points p = new Points();
-		PointsRenderer pr = new PointsRenderer();
-		pr.addItemToRender(p);
 		content.addItemToRender(p);
 
 		// display within a JFrame
