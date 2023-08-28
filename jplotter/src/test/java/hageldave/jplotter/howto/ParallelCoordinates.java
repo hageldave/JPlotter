@@ -6,15 +6,14 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.LinesRenderer;
+import hageldave.jplotter.util.ExportUtil;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
-import org.apache.pdfbox.pdmodel.PDDocument;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -83,7 +82,7 @@ public class ParallelCoordinates {
 			return Pair.of(ticks,labels);
 		});
 		
-		boolean useOpenGL = true;
+		boolean useOpenGL = false;
 		JPlotterCanvas canvas = useOpenGL ? new BlankCanvas() : new BlankCanvasFallback();
 		canvas.setRenderer(coordsys);
 		canvas.asComponent().setPreferredSize(new Dimension(700, 400));
@@ -131,22 +130,6 @@ public class ParallelCoordinates {
 			frame.setVisible(true);
 		});
 
-		canvas.asComponent().addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isRightMouseButton(e)){
-					try {
-						PDDocument doc = canvas.paintPDF();
-						doc.save("parallel_coords.pdf");
-						doc.close();
-						System.out.println("exported parallel_coords.pdf");
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					}
-				}
-			}
-		});
-
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "parallel_coords"));
 	}
-
 }

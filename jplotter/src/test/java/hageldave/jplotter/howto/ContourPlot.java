@@ -1,7 +1,5 @@
 package hageldave.jplotter.howto;
 
-import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -16,12 +14,10 @@ import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
-import org.apache.pdfbox.pdmodel.PDDocument;
+import hageldave.jplotter.util.ExportUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
@@ -126,25 +122,6 @@ public class ContourPlot {
 		contourbands.getTriangleDetails().addAll(tris);
 		canvas.scheduleRepaint();
 
-
-		long t=System.currentTimeMillis()+2000;
-		while(t>System.currentTimeMillis());
-		if("true".equals("true")) {
-			SwingUtilities.invokeAndWait(()->{
-				Img img = new Img(frame.getSize());
-				img.paint(g2d->frame.paintAll(g2d));
-				ImageSaver.saveImage(img.getRemoteBufferedImage(), "howto_contourplot.png");
-			});
-			SwingUtilities.invokeLater(()->{
-				try (PDDocument doc = canvas.paintPDF())
-				{
-					doc.save(new File("howto_contourplot.pdf"));
-					doc.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				System.out.println("exported pdf");
-			});
-		}
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "contour_plot"));
 	}
 }
