@@ -1129,9 +1129,16 @@ public class ScatterPlot {
 		selectionModel.setSelection(toHighlight);
 	}
 	
+	protected SortedSet<Pair<Integer, Integer>> sanitizeCueSet(SortedSet<Pair<Integer, Integer>> cueset) {
+		return cueset.stream()
+		.filter(p->p.first >= 0 && p.second >= 0 && p.first < dataModel.numChunks())
+		.filter(p->p.second < dataModel.chunkSize(p.first))
+		.collect(Collectors.toCollection(TreeSet::new));
+	}
+	
 	protected void createCue(final String cueType) {
 		SimpleSelectionModel<Pair<Integer, Integer>> selectionModel = this.cueSelectionModels.get(cueType);
-		SortedSet<Pair<Integer, Integer>> instancesToCue = selectionModel.getSelection();
+		SortedSet<Pair<Integer, Integer>> instancesToCue = sanitizeCueSet(selectionModel.getSelection());
 		
 		clearCue(cueType);
 		
