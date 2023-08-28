@@ -9,18 +9,13 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.ExportUtil;
 import hageldave.jplotter.util.Utils;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.w3c.dom.Document;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.function.DoubleBinaryOperator;
@@ -129,37 +124,7 @@ public class VectorFieldViz {
 		frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
 		frame.getContentPane().add(canvas.asComponent(), BorderLayout.CENTER);
 		canvas.addCleanupOnWindowClosingListener(frame);
-		
-		// add a pop up menu (on right click) for exporting to SVG
-		PopupMenu menu = new PopupMenu();
-		canvas.asComponent().add(menu);
-		MenuItem svgExport = new MenuItem("SVG export");
-		menu.add(svgExport);
-		svgExport.addActionListener(e->{
-			Document svg = SVGUtils.containerToSVG(frame.getContentPane());
-			SVGUtils.documentToXMLFile(svg, new File("vectorfield_export.svg"));
-			System.out.println("exported vectorfield_export.svg");
-		});
-		MenuItem pdfExport = new MenuItem("PDF export");
-		menu.add(pdfExport);
-		pdfExport.addActionListener(e->{
-			try {
-				PDDocument doc = canvas.paintPDF();
-				doc.save("pdf_vectorfield.pdf");
-				doc.close();
-				System.out.println("pdf exported.");
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		});
-
-		canvas.asComponent().addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isRightMouseButton(e))
-					menu.show(canvas.asComponent(), e.getX(), e.getY());
-			}
-		});
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "vectorfield_export"));
 
 		SwingUtilities.invokeLater(()->{
 			frame.pack();

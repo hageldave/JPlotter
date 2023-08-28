@@ -1,7 +1,5 @@
 package hageldave.jplotter;
 
-import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
@@ -14,14 +12,10 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.svg.SVGUtils;
-import org.w3c.dom.Document;
+import hageldave.jplotter.util.ExportUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
 import java.util.function.DoubleUnaryOperator;
 
 public class Example {
@@ -128,31 +122,6 @@ public class Example {
 			frame.setVisible(true);
 		});
 		
-		// add a pop up menu (on right click) for exporting to SVG or PNG
-		PopupMenu menu = new PopupMenu();
-		canvas.asComponent().add(menu);
-		canvas.asComponent().addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isRightMouseButton(e))
-					menu.show(canvas.asComponent(), e.getX(), e.getY());
-			}
-		});
-		MenuItem svgExport = new MenuItem("SVG export");
-		svgExport.addActionListener(e->{
-			Document svg = SVGUtils.containerToSVG(frame.getContentPane());
-			SVGUtils.documentToXMLFile(svg, new File("example_export.svg"));
-			System.out.println("exported SVG.");
-		});
-		menu.add(svgExport);
-		MenuItem pngExport = new MenuItem("PNG export");
-		pngExport.addActionListener(e->{
-			Img img = new Img(frame.getContentPane().getSize());
-			img.paint(g -> frame.getContentPane().paintAll(g));
-			ImageSaver.saveImage(img.getRemoteBufferedImage(), "example_export.png");
-			System.out.println("exported PNG.");
-		});
-		menu.add(pngExport);
-		
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "example_export"));
 	}
 }
