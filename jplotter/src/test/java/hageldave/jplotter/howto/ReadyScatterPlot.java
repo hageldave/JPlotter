@@ -3,6 +3,7 @@ package hageldave.jplotter.howto;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.charts.ScatterPlot;
+import hageldave.jplotter.charts.ScatterPlot.PointSetSelectionListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModelListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
@@ -12,7 +13,6 @@ import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.util.Pair;
-import org.apache.batik.css.engine.value.svg.ColorInterpolationManager;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -65,7 +65,7 @@ public class ReadyScatterPlot {
         }
 
         // create scatter plot of dataset
-        ScatterPlot plot = new ScatterPlot(false);
+        ScatterPlot plot = new ScatterPlot(true);
         plot.setVisualMapping(new ScatterPlotVisualMapping() {
         	// standard scatter plot glyphs excluding CROSS because we can't easily draw an outline for CROSS
         	Glyph[] glyphs = new Glyph[] {
@@ -95,20 +95,17 @@ public class ReadyScatterPlot {
         // basic coordinate system interaction schemes
         plot.addPanning();
         plot.addRectangleSelectionZoom();
-//		new CoordSysViewSelector(plot.getCanvas(), plot.getCoordsys()) {
-//			@Override
-//			public void areaSelected(double minX, double minY, double maxX, double maxY) {
-//				ArrayList<Pair<Integer, TreeSet<Integer>>> pointsInArea = plot.getIndicesOfPointsInArea(new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY));
-//
-//				List<Pair<Integer, Integer>> toAccentuate = new LinkedList<>();
-//				for (Pair<Integer, TreeSet<Integer>> entry: pointsInArea) {
-//					for (Integer t2: entry.second) {
-//						toAccentuate.add(new Pair<>(entry.first, t2));
-//					}
-//				}
-//				plot.accentuate(toAccentuate);
-//			}
-//		}.register();
+        plot.addPointSetSelectionListener(new PointSetSelectionListener() {
+			@Override
+			public void onPointSetSelectionChanged(
+					ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints,
+					Shape selectionArea) 
+			{
+				List<Pair<Integer, Integer>> toAccentuate = selectedPoints.stream()
+						.flatMap(pair -> pair.second.stream().map(i->Pair.of(pair.first, i))).toList();
+				plot.accentuate(toAccentuate);
+			}
+		});
         plot.addScrollZoom();
         plot.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
         	@Override /* get focus for key events whenever mouse enters this component */
@@ -246,8 +243,6 @@ public class ReadyScatterPlot {
         	@Override
         	public void onInsideMouseEventPoint(String mouseEventType, MouseEvent e, Point2D coordsysPoint, int chunkIdx, int pointIdx) {
         		/* mouse interacting with point in the coordinate system */
-
-				ColorInterpolationManager cc = new ColorInterpolationManager();
 
         		if(mouseEventType==MOUSE_EVENT_TYPE_CLICKED) {
         			// on click: select data point
