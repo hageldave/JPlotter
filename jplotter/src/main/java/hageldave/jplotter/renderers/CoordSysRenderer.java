@@ -6,6 +6,7 @@ import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.debugging.annotations.DebugGetter;
 import hageldave.jplotter.debugging.annotations.DebugSetter;
+import hageldave.jplotter.debugging.panelcreators.control.ColorSchemeCreator;
 import hageldave.jplotter.debugging.panelcreators.control.IntegerSpinnerCreator;
 import hageldave.jplotter.debugging.panelcreators.control.Rectangle2DCreator;
 import hageldave.jplotter.font.CharacterAtlas;
@@ -287,6 +288,7 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * @return the {@link ColorScheme} of the CoordSysRenderer.
 	 */
+	@DebugGetter(ID = "colorScheme")
 	public ColorScheme getColorScheme() {
 		return colorScheme;
 	}
@@ -297,6 +299,7 @@ public class CoordSysRenderer implements Renderer {
 	 * @param colorScheme new {@link ColorScheme} used by the CoordSysRenderer.
 	 * @return new CoordSysRenderer
 	 */
+	@DebugSetter(ID = "colorScheme", creator = ColorSchemeCreator.class)
 	public CoordSysRenderer setColorScheme(final ColorScheme colorScheme) {
 		this.colorScheme = colorScheme;
 		updateColors();
