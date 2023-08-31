@@ -1,7 +1,5 @@
 package hageldave.jplotter.debugging.ui;
 
-import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.debugging.annotations.DebugGetter;
 import hageldave.jplotter.debugging.annotations.DebugSetter;
@@ -11,10 +9,7 @@ import hageldave.jplotter.debugging.panelcreators.display.DisplayPanelCreator;
 import hageldave.jplotter.debugging.treemodel.TreeConstructor;
 import hageldave.jplotter.renderables.Renderable;
 import hageldave.jplotter.renderers.Renderer;
-import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.Utils;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.w3c.dom.Document;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,17 +17,15 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static hageldave.jplotter.util.ExportUtil.*;
 
 /**
  * The DebuggerPanel class is responsible for displaying and constructing the "creator" GUI elements of the debugger.
@@ -280,53 +273,14 @@ class DebuggerPanel extends JPanel {
         JButton exportAllBtn = new JButton("Export All");
         exportAllBtn.setToolTipText("Exports the canvas as .svg, .pdf and .png files to the root of the project.");
 
-        exportSvgBtn.addActionListener(e -> {
-            String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
-            String fileName = "export-" + timeSubstring + ".svg";
-            Document doc = canvas.paintSVG();
-            SVGUtils.documentToXMLFile(doc, new File(fileName));
-            System.out.println("Successfully exported as .svg file.");
-        });
-
-        exportPdfBtn.addActionListener(e -> {
-            try {
-                String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
-                String fileName = "export-" + timeSubstring + ".pdf";
-                PDDocument doc = canvas.paintPDF();
-                doc.save(fileName);
-                doc.close();
-                System.out.println("Successfully exported as .pdf file.");
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
-
-        exportPngBtn.addActionListener(e -> {
-            String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
-            Img img = new Img(canvas.asComponent().getSize());
-            img.paint(g -> canvas.asComponent().paintAll(g));
-            ImageSaver.saveImage(img.getRemoteBufferedImage(), "export-" + timeSubstring + ".png");
-            System.out.println("Successfully exported as .png file.");
-        });
+        exportSvgBtn.addActionListener(e -> canvasToSVG(canvas));
+        exportPdfBtn.addActionListener(e -> canvasToPDF(canvas));
+        exportPngBtn.addActionListener(e -> canvasToPNG(canvas));
 
         exportAllBtn.addActionListener(e -> {
-            String timeSubstring = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString().replace(':', '-');
-            Document svgDoc = canvas.paintSVG();
-            SVGUtils.documentToXMLFile(svgDoc, new File("export-" + timeSubstring + ".svg"));
-
-            try {
-                PDDocument pdfDoc = canvas.paintPDF();
-                pdfDoc.save("export-" + timeSubstring + ".pdf");
-                pdfDoc.close();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-
-            Img img = new Img(canvas.asComponent().getSize());
-            img.paint(g -> canvas.asComponent().paintAll(g));
-            ImageSaver.saveImage(img.getRemoteBufferedImage(), "export-" + timeSubstring + ".png");
-
-            System.out.println("Successfully exported as .svg, .pdf and .png files.");
+            canvasToSVG(canvas);
+            canvasToPDF(canvas);
+            canvasToPNG(canvas);
         });
 
         title.setText(canvas.getClass().getSimpleName());
