@@ -19,6 +19,7 @@ import org.lwjgl.opengl.awt.PlatformGLCanvas;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -148,6 +149,8 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected boolean isRenderSvgAsImage = false;
 	protected boolean isRenderPDFAsImage = false;
 	protected boolean disposeOnRemove = true;
+	private int framebufferWidth;
+	private int framebufferHeight;
 
 	
 	/**
@@ -177,9 +180,35 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
+				// get actual framebuffer size (e.g. when system uses HiDPI scaling)
+				AffineTransform t = FBOCanvas.this.getGraphicsConfiguration().getDefaultTransform();
+	            float sx = (float) t.getScaleX(), sy = (float) t.getScaleY();
+	            FBOCanvas.this.framebufferWidth = (int) (getWidth() * sx);
+	            FBOCanvas.this.framebufferHeight = (int) (getHeight() * sy);
+				// trigger repaint of the component
 				repaint();
 			}
 		});
+	}
+	
+	/**
+	 * The actual framebuffer (on-screen) height.
+	 * This size can be different from the component's size {@link #getHeight()}
+	 * e.g. when the system uses HiDPI scaling.
+	 * @return on-screen framebuffer height
+	 */
+	public int getFramebufferHeight() {
+		return framebufferHeight;
+	}
+	
+	/**
+	 * The actual framebuffer (on-screen) width.
+	 * This size can be different from the component's size {@link #getWidth()}
+	 * e.g. when the system uses HiDPI scaling.
+	 * @return on-screen framebuffer width
+	 */
+	public int getFramebufferWidth() {
+		return framebufferWidth;
 	}
 	
 	/**
@@ -356,8 +385,8 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				}
 			}
 			// offscreen
-			GL11.glClearColor(0, 0, 0, 0);
 			setRenderTargetsColorAndPicking(w, h);
+			GL11.glClearColor(0, 0, 0, 0);
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			/* we need to first draw a viewport filling quad that fills the buffer with the clear color
 			 * in order to resolve issue #4 (https://github.com/hageldave/JPlotter/issues/4)
@@ -416,14 +445,15 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				}
 			}
 
-			// onscreen
-			setRenderTargets(0, w, h, GL11.GL_BACK);
+			// onscreen (not using  w,h but framebufferwidth, framebufferheight because of possible HiDPI scaling)
+			int fbW = getFramebufferWidth(), fbH = getFramebufferHeight();
+			setRenderTargets(0, fbW, fbH, GL11.GL_BACK);
 			GL11.glClearColor( screenClearColor.getRed()/255f, screenClearColor.getGreen()/255f, screenClearColor.getBlue()/255f, screenClearColor.getAlpha()/255f );
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			{
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fbo.getFBOid());
 				GL30.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
-				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, fbW, fbH, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 			}
 			// to image
