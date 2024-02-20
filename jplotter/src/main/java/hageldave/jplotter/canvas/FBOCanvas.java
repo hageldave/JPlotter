@@ -254,6 +254,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			parentCanvas.runInContext(()->{/* initialize */});
 		}
 		CURRENTLY_ACTIVE_CANVAS = this.canvasID;
+		CanvasTracker.getInstance().registerCurrentlyRenderingCanvas(this);
 		super.beforeRender();
 	}
 	
@@ -266,6 +267,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected void afterRender() {
 		super.afterRender();
 		CURRENTLY_ACTIVE_CANVAS = 0;
+		CanvasTracker.getInstance().signoffCurrentlyRenderingCanvas(this);
 	}
 
 
