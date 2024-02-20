@@ -5,6 +5,8 @@ import hageldave.jplotter.debugging.annotations.DebugSetter;
 import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.panelcreators.control.PercentageDoubleSliderCreator;
 import hageldave.jplotter.svg.SVGUtils;
+import hageldave.jplotter.util.GLUtils;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.lwjgl.opengl.GL11;
@@ -161,14 +163,14 @@ public class SplitScreenRenderer implements Renderer {
 		int y2 = 0;
 
 		if(r1 != null) {
-			GL11.glViewport( x1+vpx, y1+vpy, w1, h1 );
-			r1.render(       x1+vpx, y1+vpy, w1, h1 );
+			GLUtils.glViewportAutoscale(x1+vpx, y1+vpy, w1, h1 );
+			r1.render(                  x1+vpx, y1+vpy, w1, h1 );
 		}
 		if(r2 != null) {
-			GL11.glViewport( x2+vpx, y2+vpy, w2, h2 );
-			r2.render(       x2+vpx, y2+vpy, w2, h2 );
+			GLUtils.glViewportAutoscale(x2+vpx, y2+vpy, w2, h2 );
+			r2.render(                  x2+vpx, y2+vpy, w2, h2 );
 		}
-		GL11.glViewport(vpx, vpy, w, h);
+		GLUtils.glViewportAutoscale(vpx, vpy, w, h);
 	}
 
 	@Override

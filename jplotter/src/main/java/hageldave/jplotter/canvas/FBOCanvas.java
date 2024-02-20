@@ -151,6 +151,8 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected boolean disposeOnRemove = true;
 	private int framebufferWidth;
 	private int framebufferHeight;
+	private double dpiScalingX=1f;
+	private double dpiScalingY=1f;
 
 	
 	/**
@@ -182,9 +184,12 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			public void componentResized(ComponentEvent e) {
 				// get actual framebuffer size (e.g. when system uses HiDPI scaling)
 				AffineTransform t = FBOCanvas.this.getGraphicsConfiguration().getDefaultTransform();
-	            float sx = (float) t.getScaleX(), sy = (float) t.getScaleY();
+	            double sx = t.getScaleX(), sy = t.getScaleY();
+	            FBOCanvas.this.dpiScalingX = sx;
+	            FBOCanvas.this.dpiScalingY = sy;
 	            FBOCanvas.this.framebufferWidth = (int) (getWidth() * sx);
 	            FBOCanvas.this.framebufferHeight = (int) (getHeight() * sy);
+	            System.out.printf("dpi scaling: %.2f : %.2f%n", sx, sy);
 				// trigger repaint of the component
 				repaint();
 			}
@@ -379,15 +384,19 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	@GLContextRequired
 	public void paintGL(){
 		int w,h;
+		/* in case of hi DPI scaling, we use the next integer valued scaling factor for the resolution of the FBOs */
+		int sx = getDpiScalingXceil();
+		int sy = getDpiScalingYceil();
+		
 		if((w=getWidth()) >0 && (h=getHeight()) >0){
-			if(fbo == null || w!=fbo.width || h!=fbo.height){
-				setFBO(new FBO(w, h, false));
+			if(fbo == null || w*sx!=fbo.width || h*sy!=fbo.height){
+				setFBO(new FBO(w*sx, h*sy, false));
 				if(useMSAA && GLUtils.canMultisample2X()){
-					setFBO_MS(new FBO(w, h, true));
+					setFBO_MS(new FBO(w*sx, h*sy, true));
 				}
 			}
 			// offscreen
-			setRenderTargetsColorAndPicking(w, h);
+			setRenderTargetsColorAndPicking(w*sx, h*sy);
 			GL11.glClearColor(0, 0, 0, 0);
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			/* we need to first draw a viewport filling quad that fills the buffer with the clear color
@@ -414,7 +423,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			 * we need to do this manually because the picking colors are not to be anti aliased
 			 */
 			if(Objects.nonNull(fboMS)){
-				setRenderTargets(fbo.getFBOid(), w,h, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
+				setRenderTargets(fbo.getFBOid(), w*sx, h*sy, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
 				GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 				{
 					blitShader.bind();
@@ -432,7 +441,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 					GL20.glUniform1i(loc, 1);
 
 					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "screensize");
-					GL20.glUniform2f(loc, w, h);
+					GL20.glUniform2f(loc, w*sx, h*sy);
 
 					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "numSamples");
 					GL20.glUniform1i(loc, fboMS.numMultisamples);
@@ -455,19 +464,19 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			{
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fbo.getFBOid());
 				GL30.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
-				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, fbW, fbH, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				GL30.glBlitFramebuffer(0, 0, w*sx, h*sy, 0, 0, fbW, fbH, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 			}
 			// to image
 			if(Objects.nonNull(frontBufferBackup)){
-				if(frontBufferBackup.getWidth() != w || frontBufferBackup.getHeight() != h){
-					frontBufferBackup = new Img(w, h);
+				if(frontBufferBackup.getWidth() != w*sx || frontBufferBackup.getHeight() != h*sy){
+					frontBufferBackup = new Img(w*sx, h*sy);
 				}
 				GLUtils.fetchPixels(
 						fbo.getFBOid(), 
 						GL30.GL_COLOR_ATTACHMENT0, 
 						0, 0, 
-						w, h, 
+						w*sx, h*sy, 
 						frontBufferBackup.getData()
 				);
 			}
@@ -664,13 +673,15 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			if (g instanceof PdfBoxGraphics2D && !isPDFAsImageRenderingEnabled()) {
 				return;
 			}
-			int w = frontBufferBackup.getWidth();
-			int h = frontBufferBackup.getHeight();
+			int wBuffer = frontBufferBackup.getWidth();
+			int hBuffer = frontBufferBackup.getHeight();
+			int w = getWidth();
+			int h = getHeight();
 			g.drawImage(Utils.remoteRGBImage(frontBufferBackup), 
 					0, 0, 
 					w, h,
-					0, h, 
-					w, 0,
+					0, hBuffer, 
+					wBuffer, 0,
 					null,
 					null);
 		}
@@ -718,6 +729,22 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				FBOCanvas.this.runInContext(()->FBOCanvas.this.close());
 			}
 		};
+	}
+	
+	public double getDpiScalingX() {
+		return dpiScalingX;
+	}
+	
+	public double getDpiScalingY() {
+		return dpiScalingY;
+	}
+	
+	public int getDpiScalingXceil() {
+		return (int)Math.ceil(dpiScalingX);
+	}
+	
+	public int getDpiScalingYceil() {
+		return (int)Math.ceil(dpiScalingY);
 	}
 	
 }

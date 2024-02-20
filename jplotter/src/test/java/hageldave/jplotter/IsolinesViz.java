@@ -42,7 +42,7 @@ public class IsolinesViz {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().setPreferredSize(new Dimension(500, 450));
-		JPlotterCanvas canvas = mkCanvas(true);
+		JPlotterCanvas canvas = mkCanvas(false);
 		CoordSysRenderer coordsys = new CoordSysRenderer();
 		canvas.setRenderer(coordsys);
 		CompleteRenderer content = new CompleteRenderer();
