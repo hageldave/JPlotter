@@ -102,7 +102,7 @@ public class ReadyScatterPlot {
 					Shape selectionArea) 
 			{
 				List<Pair<Integer, Integer>> toAccentuate = selectedPoints.stream()
-						.flatMap(pair -> pair.second.stream().map(i->Pair.of(pair.first, i))).toList();
+						.flatMap(pair -> pair.second.stream().map(i->Pair.of(pair.first, i))).collect(Collectors.toList());
 				plot.accentuate(toAccentuate);
 			}
 		});
