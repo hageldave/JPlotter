@@ -64,6 +64,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * GL context is currently active.
  * <br><b> For this to work properly it is essential that all GL calls are happening on the AWT event dispatch
  * thread </b>(see https://docs.oracle.com/javase/tutorial/uiswing/concurrency/dispatch.html).
+ * <p>
+ * <b>A note on hiDPI scaling:</b><br>
+ * TODO
+ * 
  * 
  * @author hageldave
  */
@@ -189,7 +193,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	            FBOCanvas.this.dpiScalingY = sy;
 	            FBOCanvas.this.framebufferWidth = (int) (getWidth() * sx);
 	            FBOCanvas.this.framebufferHeight = (int) (getHeight() * sy);
-	            System.out.printf("dpi scaling: %.2f : %.2f%n", sx, sy);
 				// trigger repaint of the component
 				repaint();
 			}
@@ -357,23 +360,26 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		if(fbo == null){
 			return 0;
 		}
+		
+		int sx = getDpiScalingXceil();
+		int sy = getDpiScalingYceil();
 		int attachment = picking ? GL30.GL_COLOR_ATTACHMENT1:GL30.GL_COLOR_ATTACHMENT0;
-		int[] colors = new int[areaSize*areaSize];
+		int[] colors = new int[areaSize*sx*areaSize*sy];
 		
 		Utils.execOnAWTEventDispatch(()->{
 			runInContext(()->{
 				GLUtils.fetchPixels(
 						fbo.getFBOid(), 
 						attachment, 
-						x-areaSize/2, 
-						fbo.height-1-y-areaSize/2, 
-						areaSize, 
-						areaSize, 
+						(x-areaSize/2)*sx, 
+						fbo.height-1-(y-areaSize/2)*sy, 
+						areaSize*sx, 
+						areaSize*sy, 
 						colors
 				);
 			});
 		});
-		return JPlotterCanvas.mostProminentColor(colors, areaSize);
+		return JPlotterCanvas.mostProminentColor(colors, areaSize*sx, areaSize*sy);
 	}
 
 	/**
@@ -464,7 +470,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			{
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fbo.getFBOid());
 				GL30.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
-				GL30.glBlitFramebuffer(0, 0, w*sx, h*sy, 0, 0, fbW, fbH, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				GL30.glBlitFramebuffer(0, 0, w*sx, h*sy, 0, 0, fbW, fbH, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_LINEAR);
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 			}
 			// to image
@@ -673,6 +679,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			if (g instanceof PdfBoxGraphics2D && !isPDFAsImageRenderingEnabled()) {
 				return;
 			}
+			((Graphics2D)g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 			int wBuffer = frontBufferBackup.getWidth();
 			int hBuffer = frontBufferBackup.getHeight();
 			int w = getWidth();

@@ -307,14 +307,26 @@ public interface JPlotterCanvas {
 	 * Determines the most prominent value in a square shaped area.
 	 * This method should be used by {@link #getPixel(int, int, boolean, int)} implementations.
 	 * @param colors of the square shaped area
-	 * @param areaSize widht or height of the area
+	 * @param areaSize width or height of the area
 	 * @return mode of colors, with +1 count for the center color
 	 */
 	public static int mostProminentColor(int[] colors, int areaSize) {
-		if(areaSize == 1){
+		return mostProminentColor(colors, areaSize, areaSize);
+	}
+	
+	/**
+	 * Determines the most prominent value in a square shaped area.
+	 * This method should be used by {@link #getPixel(int, int, boolean, int)} implementations.
+	 * @param colors of the square shaped area
+	 * @param areaW width of the area
+	 * @param areaH height of the area
+	 * @return mode of colors, with +1 count for the center color
+	 */
+	public static int mostProminentColor(int[] colors, int areaW, int areaH) {
+		if(areaW == 1 && areaH == 1){
 			return colors[0];
 		}
-		int center = areaSize*(areaSize/2)+(areaSize/2);
+		int center = areaW*(areaH/2)+(areaW/2);
 		int centerValue = colors[center];
 		int centerBonus = centerValue == 0 ? 0:1;
 		// calculate most prominent color (mode)
