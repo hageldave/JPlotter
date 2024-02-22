@@ -281,11 +281,13 @@ public class GLUtils {
 	}
 	
 	/**
-	 * Calls {@link GL11#glViewport(int, int, int, int)}, accounting for hidpi scaling of the current {@link FBOCanvas}. 
-	 * @param x
-	 * @param y
-	 * @param w
-	 * @param h
+	 * Calls {@link GL11#glViewport(int, int, int, int)}, accounting for hidpi scaling of the current {@link FBOCanvas}.
+	 * In case there is such a screen scaling in place, the provided coordinates will be multiplied by the respective
+	 * scaling factor of the FBO.
+	 * @param x the left viewport coordinate
+	 * @param y the bottom viewport coordinate
+	 * @param w the viewport width
+	 * @param h the viewport height
 	 */
 	public static void glViewportAutoscale(int x, int y, int w, int h) {
 		// for the glViewport call we need to know the actual (not logical) resolution of the viewport (possible hidpi)

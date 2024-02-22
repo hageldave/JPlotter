@@ -66,7 +66,23 @@ import java.util.concurrent.atomic.AtomicInteger;
  * thread </b>(see https://docs.oracle.com/javase/tutorial/uiswing/concurrency/dispatch.html).
  * <p>
  * <b>A note on hiDPI scaling:</b><br>
- * TODO
+ * When the OS uses some kind of screen scaling, such as 150% fractional scaling, e.g. when user has 
+ * a high DPI screen, the logical canvas resolution is the same as without such scaling factors.
+ * But the actual frame buffer resolution that OpenGL uses is that of the actual pixels available on
+ * the device.
+ * In case such a screen scaling is active, the FBOCanvas will use the next integer valued scaling factor
+ * (e.g. for 150% we get a factor of 2) to scale the resolution of its frame buffer object.
+ * The FBO will be blit to the on-screen frame buffer with linear interpolation after rendering.
+ * This is done to achieve high detail graphics on high DPI devices.
+ * The reason to use integer valued scaling for the FBO is that calls to 
+ * {@link GL11#glViewport(int, int, int, int)} expect integer valued coordinates.
+ * This whole mechanic is mainly happening behind the curtains and it is rarely need to take it into account.
+ * However, there are a few methods that could be useful when needed:
+ * <ul>
+ * <li> {@link #getDpiScalingX()} </li><li> {@link #getDpiScalingY()} </li><li> {@link #getDpiScalingXceil()} </li>
+ * <li> {@link #getDpiScalingYceil()} </li><li> {@link GLUtils#glViewportAutoscale(int, int, int, int)} </li>
+ * <li> {@link CanvasTracker#getCurrentlyRenderingCanvas()} </li>
+ * </ul>
  * 
  * 
  * @author hageldave
