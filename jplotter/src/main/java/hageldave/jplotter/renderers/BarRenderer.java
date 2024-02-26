@@ -1,5 +1,7 @@
 package hageldave.jplotter.renderers;
 
+import hageldave.jplotter.canvas.CanvasTracker;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
@@ -1127,7 +1129,7 @@ public class BarRenderer implements Renderer {
             int viewPortY = (int) coordsysAreaLB.getY() + vpy;
             int viewPortW = (int) coordsysAreaLB.distance(coordsysAreaRB);
             int viewPortH = (int) coordsysAreaLB.distance(coordsysAreaLT);
-            GL11.glViewport(viewPortX, viewPortY, viewPortW, viewPortH);
+            GLUtils.glViewportAutoscale(viewPortX,viewPortY,viewPortW,viewPortH);
             if (content instanceof AdaptableView) {
                 ((AdaptableView) content).setView(coordinateView);
             }
@@ -1139,7 +1141,7 @@ public class BarRenderer implements Renderer {
                 xyCondBoundsTextR.render(vpx, viewPortY, w, viewPortH);
                 xyCondBoundsLinesR.render(vpx, viewPortY, w, viewPortH);
             }
-            GL11.glViewport(vpx, vpy, w, h);
+            GLUtils.glViewportAutoscale(vpx, vpy, w, h);
         }
         postContentLinesR.render(vpx, vpy, w, h);
         postContentTextR.render(vpx, vpy, w, h);
@@ -1147,15 +1149,15 @@ public class BarRenderer implements Renderer {
         // draw legends
         if (Objects.nonNull(legendRight)) {
             legendRight.glInit();
-            GL11.glViewport(vpx + legendRightViewPort.x, vpy + legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
+            GLUtils.glViewportAutoscale(vpx + legendRightViewPort.x, vpy + legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
             legendRight.render(vpx + legendRightViewPort.x, vpy + legendRightViewPort.y, legendRightViewPort.width, legendRightViewPort.height);
-            GL11.glViewport(vpx, vpy, w, h);
+            GLUtils.glViewportAutoscale(vpx, vpy, w, h);
         }
         if (Objects.nonNull(legendBottom)) {
             legendBottom.glInit();
-            GL11.glViewport(vpx + legendBottomViewPort.x, vpy + legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
+            GLUtils.glViewportAutoscale(vpx + legendBottomViewPort.x, vpy + legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
             legendBottom.render(vpx + legendBottomViewPort.x, vpy + legendBottomViewPort.y, legendBottomViewPort.width, legendBottomViewPort.height);
-            GL11.glViewport(vpx, vpy, w, h);
+            GLUtils.glViewportAutoscale(vpx, vpy, w, h);
         }
 
         // draw overlay

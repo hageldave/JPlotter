@@ -64,6 +64,26 @@ import java.util.concurrent.atomic.AtomicInteger;
  * GL context is currently active.
  * <br><b> For this to work properly it is essential that all GL calls are happening on the AWT event dispatch
  * thread </b>(see https://docs.oracle.com/javase/tutorial/uiswing/concurrency/dispatch.html).
+ * <p>
+ * <b>A note on hiDPI scaling:</b><br>
+ * When the OS uses some kind of screen scaling, such as 150% fractional scaling, e.g. when user has 
+ * a high DPI screen, the logical canvas resolution is the same as without such scaling factors.
+ * But the actual frame buffer resolution that OpenGL uses is that of the actual pixels available on
+ * the device.
+ * In case such a screen scaling is active, the FBOCanvas will use the next integer valued scaling factor
+ * (e.g. for 150% we get a factor of 2) to scale the resolution of its frame buffer object.
+ * The FBO will be blit to the on-screen frame buffer with linear interpolation after rendering.
+ * This is done to achieve high detail graphics on high DPI devices.
+ * The reason to use integer valued scaling for the FBO is that calls to 
+ * {@link GL11#glViewport(int, int, int, int)} expect integer valued coordinates.
+ * This whole mechanic is mainly happening behind the curtains and it is rarely need to take it into account.
+ * However, there are a few methods that could be useful when needed:
+ * <ul>
+ * <li> {@link #getDpiScalingX()} </li><li> {@link #getDpiScalingY()} </li><li> {@link #getDpiScalingXceil()} </li>
+ * <li> {@link #getDpiScalingYceil()} </li><li> {@link GLUtils#glViewportAutoscale(int, int, int, int)} </li>
+ * <li> {@link CanvasTracker#getCurrentlyRenderingCanvas()} </li>
+ * </ul>
+ * 
  * 
  * @author hageldave
  */
@@ -151,6 +171,8 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected boolean disposeOnRemove = true;
 	private int framebufferWidth;
 	private int framebufferHeight;
+	private double dpiScalingX=1f;
+	private double dpiScalingY=1f;
 
 	
 	/**
@@ -182,7 +204,9 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			public void componentResized(ComponentEvent e) {
 				// get actual framebuffer size (e.g. when system uses HiDPI scaling)
 				AffineTransform t = FBOCanvas.this.getGraphicsConfiguration().getDefaultTransform();
-	            float sx = (float) t.getScaleX(), sy = (float) t.getScaleY();
+	            double sx = t.getScaleX(), sy = t.getScaleY();
+	            FBOCanvas.this.dpiScalingX = sx;
+	            FBOCanvas.this.dpiScalingY = sy;
 	            FBOCanvas.this.framebufferWidth = (int) (getWidth() * sx);
 	            FBOCanvas.this.framebufferHeight = (int) (getHeight() * sy);
 				// trigger repaint of the component
@@ -254,6 +278,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			parentCanvas.runInContext(()->{/* initialize */});
 		}
 		CURRENTLY_ACTIVE_CANVAS = this.canvasID;
+		CanvasTracker.getInstance().registerCurrentlyRenderingCanvas(this);
 		super.beforeRender();
 	}
 	
@@ -266,6 +291,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	protected void afterRender() {
 		super.afterRender();
 		CURRENTLY_ACTIVE_CANVAS = 0;
+		CanvasTracker.getInstance().signoffCurrentlyRenderingCanvas(this);
 	}
 
 
@@ -350,23 +376,26 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 		if(fbo == null){
 			return 0;
 		}
+		
+		int sx = getDpiScalingXceil();
+		int sy = getDpiScalingYceil();
 		int attachment = picking ? GL30.GL_COLOR_ATTACHMENT1:GL30.GL_COLOR_ATTACHMENT0;
-		int[] colors = new int[areaSize*areaSize];
+		int[] colors = new int[areaSize*sx*areaSize*sy];
 		
 		Utils.execOnAWTEventDispatch(()->{
 			runInContext(()->{
 				GLUtils.fetchPixels(
 						fbo.getFBOid(), 
 						attachment, 
-						x-areaSize/2, 
-						fbo.height-1-y-areaSize/2, 
-						areaSize, 
-						areaSize, 
+						(x-areaSize/2)*sx, 
+						fbo.height-1-(y-areaSize/2)*sy, 
+						areaSize*sx, 
+						areaSize*sy, 
 						colors
 				);
 			});
 		});
-		return JPlotterCanvas.mostProminentColor(colors, areaSize);
+		return JPlotterCanvas.mostProminentColor(colors, areaSize*sx, areaSize*sy);
 	}
 
 	/**
@@ -377,15 +406,19 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	@GLContextRequired
 	public void paintGL(){
 		int w,h;
+		/* in case of hi DPI scaling, we use the next integer valued scaling factor for the resolution of the FBOs */
+		int sx = getDpiScalingXceil();
+		int sy = getDpiScalingYceil();
+		
 		if((w=getWidth()) >0 && (h=getHeight()) >0){
-			if(fbo == null || w!=fbo.width || h!=fbo.height){
-				setFBO(new FBO(w, h, false));
+			if(fbo == null || w*sx!=fbo.width || h*sy!=fbo.height){
+				setFBO(new FBO(w*sx, h*sy, false));
 				if(useMSAA && GLUtils.canMultisample2X()){
-					setFBO_MS(new FBO(w, h, true));
+					setFBO_MS(new FBO(w*sx, h*sy, true));
 				}
 			}
 			// offscreen
-			setRenderTargetsColorAndPicking(w, h);
+			setRenderTargetsColorAndPicking(w*sx, h*sy);
 			GL11.glClearColor(0, 0, 0, 0);
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			/* we need to first draw a viewport filling quad that fills the buffer with the clear color
@@ -412,7 +445,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			 * we need to do this manually because the picking colors are not to be anti aliased
 			 */
 			if(Objects.nonNull(fboMS)){
-				setRenderTargets(fbo.getFBOid(), w,h, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
+				setRenderTargets(fbo.getFBOid(), w*sx, h*sy, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
 				GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 				{
 					blitShader.bind();
@@ -430,7 +463,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 					GL20.glUniform1i(loc, 1);
 
 					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "screensize");
-					GL20.glUniform2f(loc, w, h);
+					GL20.glUniform2f(loc, w*sx, h*sy);
 
 					loc = GL20.glGetUniformLocation(blitShader.getShaderProgID(), "numSamples");
 					GL20.glUniform1i(loc, fboMS.numMultisamples);
@@ -453,19 +486,19 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			{
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fbo.getFBOid());
 				GL30.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
-				GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, fbW, fbH, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				GL30.glBlitFramebuffer(0, 0, w*sx, h*sy, 0, 0, fbW, fbH, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_LINEAR);
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 			}
 			// to image
 			if(Objects.nonNull(frontBufferBackup)){
-				if(frontBufferBackup.getWidth() != w || frontBufferBackup.getHeight() != h){
-					frontBufferBackup = new Img(w, h);
+				if(frontBufferBackup.getWidth() != w*sx || frontBufferBackup.getHeight() != h*sy){
+					frontBufferBackup = new Img(w*sx, h*sy);
 				}
 				GLUtils.fetchPixels(
 						fbo.getFBOid(), 
 						GL30.GL_COLOR_ATTACHMENT0, 
 						0, 0, 
-						w, h, 
+						w*sx, h*sy, 
 						frontBufferBackup.getData()
 				);
 			}
@@ -662,13 +695,16 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			if (g instanceof PdfBoxGraphics2D && !isPDFAsImageRenderingEnabled()) {
 				return;
 			}
-			int w = frontBufferBackup.getWidth();
-			int h = frontBufferBackup.getHeight();
+			((Graphics2D)g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			int wBuffer = frontBufferBackup.getWidth();
+			int hBuffer = frontBufferBackup.getHeight();
+			int w = getWidth();
+			int h = getHeight();
 			g.drawImage(Utils.remoteRGBImage(frontBufferBackup), 
 					0, 0, 
 					w, h,
-					0, h, 
-					w, 0,
+					0, hBuffer, 
+					wBuffer, 0,
 					null,
 					null);
 		}
@@ -716,6 +752,22 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				FBOCanvas.this.runInContext(()->FBOCanvas.this.close());
 			}
 		};
+	}
+	
+	public double getDpiScalingX() {
+		return dpiScalingX;
+	}
+	
+	public double getDpiScalingY() {
+		return dpiScalingY;
+	}
+	
+	public int getDpiScalingXceil() {
+		return (int)Math.ceil(dpiScalingX);
+	}
+	
+	public int getDpiScalingYceil() {
+		return (int)Math.ceil(dpiScalingY);
 	}
 	
 }

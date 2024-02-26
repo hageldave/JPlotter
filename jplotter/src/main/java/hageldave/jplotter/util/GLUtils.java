@@ -9,6 +9,8 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.jplotter.canvas.CanvasTracker;
+import hageldave.jplotter.canvas.FBOCanvas;
 import hageldave.jplotter.util.Annotations.GLContextRequired;
 
 /**
@@ -276,6 +278,23 @@ public class GLUtils {
 		int[] p = new int[4];
 		GL11.glGetIntegerv(GL11.GL_VIEWPORT, p);
 		return new Rectangle(p[0], p[1], p[2], p[3]);
+	}
+	
+	/**
+	 * Calls {@link GL11#glViewport(int, int, int, int)}, accounting for hidpi scaling of the current {@link FBOCanvas}.
+	 * In case there is such a screen scaling in place, the provided coordinates will be multiplied by the respective
+	 * scaling factor of the FBO.
+	 * @param x the left viewport coordinate
+	 * @param y the bottom viewport coordinate
+	 * @param w the viewport width
+	 * @param h the viewport height
+	 */
+	public static void glViewportAutoscale(int x, int y, int w, int h) {
+		// for the glViewport call we need to know the actual (not logical) resolution of the viewport (possible hidpi)
+		FBOCanvas fboc = CanvasTracker.getInstance().getCurrentlyRenderingCanvas();
+		int sx = fboc != null ? fboc.getDpiScalingXceil():1;
+		int sy = fboc != null ? fboc.getDpiScalingYceil():1;
+		GL11.glViewport(x*sx, y*sy, w*sx, h*sy);
 	}
 	
 }
