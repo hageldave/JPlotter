@@ -99,17 +99,23 @@ public class BarChartDemo {
 			int red=0xff_e41a1c, blue=0xff_377eb8;
 			return val < 0.5 ? new Color(red):new Color(blue);
 		};
+		
 		// make the barchart
-		BarChart barchart = new BarChart(true, AlignmentConstants.HORIZONTAL);
+		BarChart barchart = new BarChart(false, AlignmentConstants.HORIZONTAL);
 		for(int i=0; i<cases.length; i++) {
 			BarGroup group = new BarGroup();
 			group.addBarStack(0, scores[i], colormap.apply(scores[i]), cases[i]);
 			barchart.addData(group);
 		}
-		barchart.getBarRenderer().setBargroupGap(0); // only single bar per group, no need for gap
+		// only single bar per group, no need for gap
+		barchart.getBarRenderer().setBargroupGap(0);
+		// select view automatically to fit all bars
 		barchart.alignBarRenderer();
+		barchart.getBarRenderer().setxAxisLabel("Score");
+		
 		// boilerplate code to put the component in a frame and show it
 		JFrame frame = new JFrame();
+		barchart.getCanvas().asComponent().setPreferredSize(new Dimension(500, 300));
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(barchart.getCanvas().asComponent());
 		SwingUtilities.invokeLater(()->{
@@ -117,6 +123,7 @@ public class BarChartDemo {
 			frame.setVisible(true);
 		});
 		
+		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "howto_barchart"));
 	}
 
 
