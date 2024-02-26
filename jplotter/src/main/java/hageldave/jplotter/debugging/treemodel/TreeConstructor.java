@@ -12,7 +12,7 @@ import java.util.Collections;
 
 /**
  * The Debugger class contains the static internal methods for creating
- * the tree model of the renderers & renderables shown on the canvas.
+ * the tree model of the renderers &amp; renderables shown on the canvas.
  */
 public class TreeConstructor {
 
@@ -21,7 +21,7 @@ public class TreeConstructor {
      * the tree model of the rendering structure.
      *
      * @param canvas where renderables are rendered in: root of the tree structure
-     * @return tree node of canvas with renderer & renderable nodes appended
+     * @return tree node of canvas with renderer &amp; renderable nodes appended
      */
     public static TreeNode getAllRenderersOnCanvas(JPlotterCanvas canvas) {
         Renderer rootRenderer = canvas.getRenderer();

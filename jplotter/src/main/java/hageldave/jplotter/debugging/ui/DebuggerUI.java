@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * The DebuggerUI class is responsible for displaying and constructing all the GUI elements of the debugger.
  * The goal of the Debugger is to provide an easy way to view and control the properties
- * of the elements (renderables & renderers) in a canvas.
+ * of the elements (renderables &amp; renderers) in a canvas.
  * An instance of the DebuggerUI can hold multiple {@link DebuggerPanel} which each correspond to a specific {@link JPlotterCanvas}.
  * As there is only one panel shown at the same time, these panels can be switched in the GUI.
  */

@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * in the debugger which uses the information provided by the getter.
  * The ID property is used for identification of the property, as it can be coupled with the
  * setter of the corresponding property (see {@link DebugSetter}).
- * A custom {@link DisplayPanelCreator} & {@link CustomPrinterInterface} also can be passed.
+ * A custom {@link DisplayPanelCreator} &amp; {@link CustomPrinterInterface} also can be passed.
  * If a {@link DebugGetter} is used in combination with a DebugSetter (they share the same ID), the {@link DisplayPanelCreator} of the DebugGetter will be ignored.
  */
 @Retention(RetentionPolicy.RUNTIME)

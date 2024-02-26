@@ -1,20 +1,19 @@
 package hageldave.jplotter.renderers;
 
+import java.awt.Graphics2D;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
 import hageldave.jplotter.debugging.annotations.DebugGetter;
 import hageldave.jplotter.debugging.annotations.DebugSetter;
 import hageldave.jplotter.debugging.panelcreators.control.ButtonCreator;
 import hageldave.jplotter.debugging.panelcreators.control.PercentageDoubleSliderCreator;
 import hageldave.jplotter.svg.SVGUtils;
 import hageldave.jplotter.util.GLUtils;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.lwjgl.opengl.GL11;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
-import java.awt.*;
 
 /**
  * The SplitScreenRenderer is a space dividing renderer which defines two separate

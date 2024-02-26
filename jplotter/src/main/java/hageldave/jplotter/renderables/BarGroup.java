@@ -52,7 +52,7 @@ public class BarGroup {
      * Based on the ID, a BarStack or a BarStruct will be created.
      *
      * If the ID is new and hasn't been added to the BarGroup, a new BarStack will be instantiated and
-     * a {@link BarStruct} will be added with the length & color of the corresponding data & color array entry to it.
+     * a {@link BarStruct} will be added with the length &amp; color of the corresponding data  color array entry to it.
      * If the ID already exists, a BarStruct will be added to the BarStack with the given ID.
      *
      * All arrays have to be of equal length so that for each ID entry a new BarStruct can be created.

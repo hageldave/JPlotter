@@ -24,7 +24,7 @@ import java.util.TreeSet;
 
 /**
  * The BarChart class is a convenience class to quickly create barcharts.
- * Therefore, a new class of renderable and a new renderer are introduced: {@link BarGroup} & {@link BarRenderer},
+ * Therefore, a new class of renderable and a new renderer are introduced: {@link BarGroup} &amp; {@link BarRenderer},
  * which are connected through this class.
  *
  * Optionally a {@link Renderer} for drawing a legend (such as the {@link Legend} class)
@@ -62,9 +62,8 @@ public class BarChart {
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
         this.barRenderer = new BarRenderer(alignment, DefaultColorScheme.LIGHT.get());
-        this.content = new TrianglesRenderer();
+        this.content = this.barRenderer.getContent();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
-        this.barRenderer.setContent(content);
         this.canvas.setRenderer(barRenderer);
         this.barRenderer.setxAxisLabel(xLabel);
         this.barRenderer.setyAxisLabel(yLabel);

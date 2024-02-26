@@ -1,36 +1,51 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.jplotter.canvas.CanvasTracker;
-import hageldave.jplotter.canvas.FBOCanvas;
+import java.awt.AWTEventMulticaster;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.IntSupplier;
+import java.util.stream.Collectors;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
 import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordinateViewListener;
-import hageldave.jplotter.renderables.*;
+import hageldave.jplotter.renderables.BarGroup;
 import hageldave.jplotter.renderables.BarGroup.BarStack;
+import hageldave.jplotter.renderables.BarGroup.BarStruct;
+import hageldave.jplotter.renderables.Legend;
+import hageldave.jplotter.renderables.Lines;
+import hageldave.jplotter.renderables.Text;
+import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.*;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.lwjgl.opengl.GL11;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
-import java.util.List;
-import java.util.*;
-import java.util.function.IntSupplier;
-import java.util.stream.Collectors;
-
-import static hageldave.jplotter.renderables.BarGroup.BarStruct;
+import hageldave.jplotter.util.AlignmentConstants;
+import hageldave.jplotter.util.Annotations;
+import hageldave.jplotter.util.GLUtils;
+import hageldave.jplotter.util.Pair;
+import hageldave.jplotter.util.PointeredPoint2D;
+import hageldave.jplotter.util.TranslatedPoint2D;
+import hageldave.jplotter.util.Utils;
 
 /**
  * The BarRenderer is a {@link Renderer} that displays a Barchart in a coordinate system.
@@ -81,7 +96,7 @@ public class BarRenderer implements Renderer {
 
     // overlay necessary?!
     protected Renderer overlay;
-    protected TrianglesRenderer content = null;
+    protected TrianglesRenderer content = new TrianglesRenderer();
     protected Renderer legendRight = null;
     protected Renderer legendBottom = null;
 
@@ -210,18 +225,6 @@ public class BarRenderer implements Renderer {
         this.isDirty = true;
     }
 
-    /**
-     * Sets the content renderer that will draw into the area of the coordinate system.
-     *
-     * @param content the content renderer
-     * @return the previous content renderer (which may need to be closed to free GL resources),
-     * null if none was set
-     */
-    public Renderer setContent(TrianglesRenderer content) {
-        Renderer old = this.content;
-        this.content = content;
-        return old;
-    }
 
     /**
      * Sets the renderer that will draw the legend to the right of the coordinate system.
@@ -384,9 +387,9 @@ public class BarRenderer implements Renderer {
     }
 
     /**
-     * @return content. see {@link #setContent(Renderer)}
+     * @return the content renderer (triangles)
      */
-    public Renderer getContent() {
+    public TrianglesRenderer getContent() {
         return content;
     }
 

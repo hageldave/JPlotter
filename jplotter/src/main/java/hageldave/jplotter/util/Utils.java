@@ -378,7 +378,7 @@ public class Utils {
 	}
 
 	/**
-	 * Searches for a specific method in a class (and its superclass & interfaces) using reflections.
+	 * Searches for a specific method in a class (and its superclass &amp; interfaces) using reflections.
 	 * It's also possible to search for the variant with the correct parameters (in case that the method is overloaded)
 	 *
 	 * @param toSearch the class where the method is located
@@ -414,7 +414,7 @@ public class Utils {
 	}
 
 	/**
-	 * Searches for multiple methods that match the return type and parameters in a class (and its superclass & interfaces) using reflections.
+	 * Searches for multiple methods that match the return type and parameters in a class (and its superclass &amp; interfaces) using reflections.
 	 *
 	 * @param toSearch the class where the method(s) are located
 	 * @param returnType return type of the method(s) that should be returned

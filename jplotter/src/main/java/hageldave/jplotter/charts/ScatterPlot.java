@@ -184,7 +184,7 @@ public class ScatterPlot {
 	}
 
 	/**
-	 * @return the third content layer, which will overlay contentLayer0 & contentLayer1
+	 * @return the third content layer, which will overlay contentLayer0 &amp; contentLayer1
 	 */
 	public CompleteRenderer getContentLayer2() {
 		return contentLayer2;

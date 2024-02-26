@@ -1,7 +1,25 @@
 package hageldave.jplotter.renderers;
 
-import hageldave.jplotter.canvas.CanvasTracker;
-import hageldave.jplotter.canvas.FBOCanvas;
+import java.awt.AWTEventMulticaster;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.function.IntSupplier;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
 import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.coordsys.ExtendedWilkinson;
@@ -12,6 +30,8 @@ import hageldave.jplotter.debugging.panelcreators.control.IntegerSpinnerCreator;
 import hageldave.jplotter.debugging.panelcreators.control.Rectangle2DCreator;
 import hageldave.jplotter.font.CharacterAtlas;
 import hageldave.jplotter.interaction.CoordinateViewListener;
+import hageldave.jplotter.interaction.kml.CoordSysPanning;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Renderable;
@@ -24,22 +44,6 @@ import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PointeredPoint2D;
 import hageldave.jplotter.util.TranslatedPoint2D;
 import hageldave.jplotter.util.Utils;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.lwjgl.opengl.GL11;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.Objects;
-import java.util.function.IntSupplier;
 
 /**
  * The CoordSysRenderer is a {@link Renderer} that displays a coordinate system.

@@ -20,13 +20,14 @@ import java.awt.event.InputEvent;
  * You may also want to not trigger selection when other modifiers are present. E.g.
  * when CTRL {@link InputEvent#CTRL_DOWN_MASK} is pressed, don't select because CTRL
  * is already meant for panning.
+ * 
+ * @deprecated Replaced by {@link hageldave.jplotter.interaction.kml.CoordSysRectangleZoom}
  */
+@Deprecated
 public class CoordSysRectangleZoom extends CoordSysViewSelector {
-    protected CoordSysRenderer coordsys;
 
     public CoordSysRectangleZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
         super(canvas, coordsys);
-        this.coordsys = coordsys;
     }
 
     @Override
