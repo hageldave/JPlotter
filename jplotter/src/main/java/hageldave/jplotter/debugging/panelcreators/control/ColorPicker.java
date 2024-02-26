@@ -78,7 +78,9 @@ public class ColorPicker implements ControlPanelCreator {
     }
 
     private static class ColoredRectangle extends JComponent {
-        protected Color c;
+		private static final long serialVersionUID = 1L;
+		
+		protected Color c;
         protected int size = 17;
         public ColoredRectangle(Color c) {
             this.c = c;

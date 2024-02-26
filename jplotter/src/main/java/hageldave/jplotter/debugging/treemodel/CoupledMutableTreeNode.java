@@ -7,7 +7,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * It is modified to store two entries instead of just one. The hiddenObject won't be shown in a JTree.
  */
 public class CoupledMutableTreeNode extends DefaultMutableTreeNode {
-    protected Object hiddenObject;
+	private static final long serialVersionUID = 1L;
+	
+	protected Object hiddenObject;
 
     /**
      * Creates a DebuggerMutableTreeNode instance.

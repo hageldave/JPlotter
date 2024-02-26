@@ -48,7 +48,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * See the documentation of the corresponding creator interfaces ({@link ControlPanelCreator} and {@link DisplayPanelCreator}) for more information.
  */
 class DebuggerPanel extends JPanel {
-    final protected JTree tree = new JTree();
+	private static final long serialVersionUID = 1L;
+	
+	final protected JTree tree = new JTree();
     final protected Color bgColor = new Color(246, 246, 246);
     final protected JPanel controlBorderWrap = new JPanel(new BorderLayout());
     final protected JPanel controlArea = new JPanel(new BorderLayout());

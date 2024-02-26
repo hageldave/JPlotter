@@ -3,10 +3,13 @@ package hageldave.jplotter.howto;
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.charts.BarChart;
 import hageldave.jplotter.coordsys.TickMarkGenerator;
+import hageldave.jplotter.renderables.BarGroup;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
+import hageldave.jplotter.util.AlignmentConstants;
 import hageldave.jplotter.util.ExportUtil;
 import hageldave.jplotter.util.Pair;
 
@@ -14,11 +17,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.function.BiFunction;
+import java.util.function.DoubleFunction;
 import java.util.stream.IntStream;
 
-public class BarChart {
-
+public class BarChartDemo {
+	
 	public static void main(String[] args) {
+		newWay();
+	}
+
+	public static void oldWay() {
 		// have some data
 		String[] cases = {"A","B","C","D1","D2*"};
 		double[] scores = IntStream.range(0, cases.length)
@@ -81,4 +89,38 @@ public class BarChart {
 
 		frame.setJMenuBar(ExportUtil.createSaveMenu(frame, "howto_barchart"));
 	}
+	
+	public static void newWay() {
+		// have some data
+		String[] cases = {"A","B","C","D1","D2*"};
+		double[] scores = IntStream.range(0, cases.length)
+			.mapToDouble(i->Math.random()).toArray();
+		DoubleFunction<Color> colormap =  (val) -> {
+			int red=0xff_e41a1c, blue=0xff_377eb8;
+			return val < 0.5 ? new Color(red):new Color(blue);
+		};
+		// make the barchart
+		BarChart barchart = new BarChart(true, AlignmentConstants.HORIZONTAL);
+		for(int i=0; i<cases.length; i++) {
+			BarGroup group = new BarGroup();
+			group.addBarStack(0, scores[i], colormap.apply(scores[i]), cases[i]);
+			barchart.addData(group);
+		}
+		barchart.getBarRenderer().setBargroupGap(0); // only single bar per group, no need for gap
+		barchart.alignBarRenderer();
+		// boilerplate code to put the component in a frame and show it
+		JFrame frame = new JFrame();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().add(barchart.getCanvas().asComponent());
+		SwingUtilities.invokeLater(()->{
+			frame.pack();
+			frame.setVisible(true);
+		});
+		
+	}
+
+
 }
+
+
+

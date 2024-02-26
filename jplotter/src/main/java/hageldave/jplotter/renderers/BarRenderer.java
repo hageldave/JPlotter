@@ -1137,12 +1137,15 @@ public class BarRenderer implements Renderer {
                 ((AdaptableView) content).setView(coordinateView);
             }
             content.render(viewPortX, viewPortY, viewPortW, viewPortH);
+            
             if (this.alignment == AlignmentConstants.VERTICAL) {
-                xyCondBoundsTextR.render(viewPortX, vpy, viewPortW, h);
-                xyCondBoundsLinesR.render(viewPortX, vpy, viewPortW, h);
+            	GLUtils.glViewportAutoscale(viewPortX, 0, viewPortW, h);
+                xyCondBoundsLinesR.render(viewPortX, 0, viewPortW, h);
+                xyCondBoundsTextR.render(viewPortX, 0, viewPortW, h);
             } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
-                xyCondBoundsTextR.render(vpx, viewPortY, w, viewPortH);
-                xyCondBoundsLinesR.render(vpx, viewPortY, w, viewPortH);
+            	GLUtils.glViewportAutoscale(0, viewPortY, w, viewPortH);
+                xyCondBoundsTextR.render(0, viewPortY, w, viewPortH);
+                xyCondBoundsLinesR.render(0, viewPortY, w, viewPortH);
             }
             GLUtils.glViewportAutoscale(vpx, vpy, w, h);
         }
