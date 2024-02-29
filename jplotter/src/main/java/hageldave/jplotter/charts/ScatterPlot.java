@@ -275,7 +275,7 @@ public class ScatterPlot {
     	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();;
     	protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
     	protected LinkedList<ScatterPlotDataModelListener> listeners = new LinkedList<>();
-		protected ArrayList<QuadTree<Pair<double[], Integer>>> quadTreePerChunk = new ArrayList<>();
+		protected ArrayList<QuadTree<Integer>> quadTreePerChunk = new ArrayList<>();
 
 		/**
 		 * Adds data to the data model of the scatter plot.
@@ -370,7 +370,7 @@ public class ScatterPlot {
     		return descriptionPerChunk.get(chunkIdx);
     	}
 
-		public QuadTree<Pair<double[], Integer>> getQuadTree(int chunkIdx) {
+		public QuadTree<Integer> getQuadTree(int chunkIdx) {
 			return quadTreePerChunk.get(chunkIdx);
 		}
     	
@@ -388,9 +388,9 @@ public class ScatterPlot {
     	}
 
     	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area) {
-			QuadTree<Pair<double[], Integer>> quadTree = getQuadTree(chunkIdx);
-			List<Pair<double[], Integer>> containedPointIndices = QuadTree.getPointsInArea(quadTree, area);
-    		return containedPointIndices.stream().map(e -> e.second).collect(Collectors.toCollection(TreeSet::new));
+			QuadTree<Integer> quadTree = getQuadTree(chunkIdx);
+			List<Integer> containedPointIndices = QuadTree.getPointsInArea(quadTree, area);
+    		return containedPointIndices.stream().collect(Collectors.toCollection(TreeSet::new));
     	}
 
 		public void updateQuadTree(int chunkIndex, double[][] dataChunk) {
@@ -410,10 +410,10 @@ public class ScatterPlot {
 			}
 
 			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, maxX-minX+0.01, maxY-minY+0.01);
-			QuadTree<Pair<double[], Integer>> qt = new QuadTree<>(4, boundingBox, (Pair<double[], Integer> entry) -> entry.first[0], (Pair<double[], Integer> entry) -> entry.first[1]);
-			for (int j = 0; j < dataChunk.length; j++) {
-				double[] actualCoordinates = new double[]{dataChunk[j][xIdx], dataChunk[j][yIdx]};
-				QuadTree.insert(qt, new Pair<>(actualCoordinates, j));
+			// TODO: make QuadTree<Integer> and have the functions access the data chunks directly through the index
+			QuadTree<Integer> qt = new QuadTree<>(4, boundingBox, (i)->dataChunk[i][xIdx], (i)->dataChunk[i][yIdx]);
+			for (int i = 0; i < dataChunk.length; i++) {
+				QuadTree.insert(qt, i);
 			}
 
 			if (this.quadTreePerChunk.size() > chunkIndex) {

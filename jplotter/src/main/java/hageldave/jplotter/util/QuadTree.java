@@ -7,9 +7,20 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 
+
 /**
+ * A quad tree implementation.
+ * Can be used to speed up point selection for large sets of points.
+ * <p>
+ * The elements of the quadtree need to have some kind of associated position attribute.
+ * To not impose any specific requirements on how to access this attribute,
+ * the QuadTree uses function objects ({@link ToDoubleFunction}) that have to be 
+ * provided to query x and y coordinates of an element.
+ * </p>
+ * 
+ * @author lvcarx
  *
- * @param <T>
+ * @param <T> element type
  */
 public class QuadTree<T> {
     protected final int maxCapacity;
@@ -227,7 +238,6 @@ public class QuadTree<T> {
     }
 
     /**
-     *
      * @return the bounds / dimensions of this {@link QuadTree}
      */
     public Rectangle2D getBounds() {

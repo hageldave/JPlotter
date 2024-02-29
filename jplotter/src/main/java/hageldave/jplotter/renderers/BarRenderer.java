@@ -56,32 +56,32 @@ import hageldave.jplotter.util.Utils;
  * <p>
  * Depending on the BarRenderers orientation ({@link AlignmentConstants}), there is a label on the top or right.
  * The label helps to define and visualize the meaning of the value axis.
- * <p>
+ * </p><p>
  * The positioning and labeling of the tick marks on the value axis is done by a {@link TickMarkGenerator}
  * which is per default an instance of {@link ExtendedWilkinson}.
  * The positioning and labeling of the tick marks on the category axis is defined by the bar groups
  * (and their respective BarStructs (see {@link BarStack})) that will be rendered by the BarRenderer.
  * There are 2 types of labels for the category axis: Group labels/struct labels which are defined by the BarGroups/BarStructs description property.
  * They will be displayed simultaneously.
- * <p>
+ * </p><p>
  * What coordinate range the coordinate system area corresponds to is controlled by
  * the coordinate view (see {@link #setCoordinateView(double, double, double, double)})
  * and defaults to [-1,1] for both axes.
  * The contents that are drawn inside the coordinate area are rendered by the TriangleRenderer
- * (see {@link #setContent(Renderer)}).
+ * (see {@link #getContent(Renderer)}).
  * The TriangleRenderer will be able to draw within the viewport defined by the coordinate
  * system area of this BarRenderer.
- * <p>
+ * </p><p>
  * Optionally a {@link Renderer} for drawing a legend (such as the {@link Legend} class)
  * can be set to either the bottom or right hand side of the coordinate system (can also
  * use both areas at once).
  * Use {@link #setLegendBottom(Renderer)} or {@link #setLegendRight(Renderer)} to do so.
  * The legend area size can be partially controlled by {@link #setLegendBottomHeight(int)}
  * and {@link #setLegendRightWidth(int)} if this is needed.
- * <p>
+ * </p><p>
  * The overlay renderer ({@link #setOverlay(Renderer)}) can be used to finally draw over all
  * of the renderer viewport.
- * <p>
+ * </p>
  */
 public class BarRenderer implements Renderer {
 

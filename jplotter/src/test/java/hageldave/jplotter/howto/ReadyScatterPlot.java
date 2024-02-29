@@ -95,17 +95,6 @@ public class ReadyScatterPlot {
         // basic coordinate system interaction schemes
         plot.addPanning();
         plot.addRectangleSelectionZoom();
-        plot.addPointSetSelectionListener(new PointSetSelectionListener() {
-			@Override
-			public void onPointSetSelectionChanged(
-					ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints,
-					Shape selectionArea) 
-			{
-				List<Pair<Integer, Integer>> toAccentuate = selectedPoints.stream()
-						.flatMap(pair -> pair.second.stream().map(i->Pair.of(pair.first, i))).collect(Collectors.toList());
-				plot.accentuate(toAccentuate);
-			}
-		});
         plot.addScrollZoom();
         plot.getCanvas().asComponent().addMouseListener(new MouseAdapter() {
         	@Override /* get focus for key events whenever mouse enters this component */
@@ -222,6 +211,18 @@ public class ReadyScatterPlot {
         	List<Pair<Integer, Integer>> selectedInstances = Arrays.stream(selectedRows).mapToObj(i->plot.getDataModel().locateGlobalIndex(i)).collect(Collectors.toList());
         	selectedDataPoints.setSelection(selectedInstances);
         });
+        // couple scatterplots selection model with general selection model
+        plot.addPointSetSelectionListener(new PointSetSelectionListener() {
+			@Override
+			public void onPointSetSelectionChanged(
+					ArrayList<Pair<Integer, TreeSet<Integer>>> selectedPoints,
+					Shape selectionArea) 
+			{
+				List<Pair<Integer, Integer>> toAccentuate = selectedPoints.stream()
+						.flatMap(pair -> pair.second.stream().map(i->Pair.of(pair.first, i))).collect(Collectors.toList());
+				selectedDataPoints.setSelection(toAccentuate);
+			}
+		});
         
         // on data point selection change: highlight in scatter plot
         selectedDataPoints.addSelectionListener(plot::accentuate);
