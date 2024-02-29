@@ -429,20 +429,13 @@ public class ScatterPlot {
 			int xIdx = getDataModel().getXIdx(chunkIndex);
 			int yIdx = getDataModel().getYIdx(chunkIndex);
 
-			double minX = Integer.MAX_VALUE;
-			double maxX = Integer.MIN_VALUE;
-			double minY = Integer.MAX_VALUE;
-			double maxY = Integer.MIN_VALUE;
+			double minX,minY,maxX,maxY;
+			minX = Arrays.stream(dataChunk).mapToDouble(row->row[xIdx]).min().orElseGet(()->0.0);
+			minY = Arrays.stream(dataChunk).mapToDouble(row->row[yIdx]).min().orElseGet(()->0.0);
+			maxX = Arrays.stream(dataChunk).mapToDouble(row->row[xIdx]).max().orElseGet(()->0.0);
+			maxY = Arrays.stream(dataChunk).mapToDouble(row->row[yIdx]).max().orElseGet(()->0.0);
 
-			for (double[] coords: dataChunk) {
-				minX = Math.min(minX, coords[xIdx]);
-				maxX = Math.max(maxX, coords[xIdx]);
-				minY = Math.min(minY, coords[yIdx]);
-				maxY = Math.max(maxY, coords[yIdx]);
-			}
-
-			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, maxX-minX+0.01, maxY-minY+0.01);
-			// TODO: make QuadTree<Integer> and have the functions access the data chunks directly through the index
+			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, Math.nextUp(maxX-minX), Math.nextUp(maxY-minY));
 			QuadTree<Integer> qt = new QuadTree<>(4, boundingBox, (i)->dataChunk[i][xIdx], (i)->dataChunk[i][yIdx]);
 			for (int i = 0; i < dataChunk.length; i++) {
 				QuadTree.insert(qt, i);

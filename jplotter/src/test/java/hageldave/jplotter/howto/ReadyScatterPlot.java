@@ -37,7 +37,8 @@ public class ReadyScatterPlot {
 	
 
     public static void main(String[] args) throws IOException {
-    	minimal();
+//    	minimal();
+    	sophisticated();
     }
     
     public static void minimal() {
@@ -156,14 +157,14 @@ public class ReadyScatterPlot {
 			@Override
 			public Object getValueAt(int rowIndex, int columnIndex) {
 				Pair<Integer, Integer> locator = spdm.locateGlobalIndex(rowIndex);
-				if(columnIndex==0) {
+				if(columnIndex==0)
+					return rowIndex;
+				if(columnIndex==1)
 					// class label
 					return spdm.getChunkDescription(locator.first);
-				} else {
-					double[] dataPoint = spdm.getDataChunk(locator.first)[locator.second];
-					return (dataPoint.length < columnIndex ? null:dataPoint[columnIndex-1]);
-				}
-				
+				// data
+				double[] dataPoint = spdm.getDataChunk(locator.first)[locator.second];
+				return (columnIndex-2 >= dataPoint.length ? null:dataPoint[columnIndex-2]);	
 			}
 			
 			@Override
@@ -174,9 +175,10 @@ public class ReadyScatterPlot {
 			@Override
 			public String getColumnName(int columnIndex) {
 				if(columnIndex==0)
+					return "idx";
+				if(columnIndex==1)
 					return "class";
-				else
-					return "val " + columnIndex; 
+				return "val " + (columnIndex-1); 
 			}
 			
 			@Override
@@ -185,15 +187,16 @@ public class ReadyScatterPlot {
 				for(int i=0; i<spdm.numChunks(); i++)
 					if(spdm.getDataChunk(i).length > 0)
 						maxColCount = Math.max(maxColCount, spdm.getDataChunk(i)[0].length);
-				return maxColCount+1; // plus 1 for class label
+				return maxColCount+2; // plus 2 for index and class label
 			}
 			
 			@Override
 			public Class<?> getColumnClass(int columnIndex) {
 				if(columnIndex==0)
+					return Integer.class;
+				if(columnIndex==1)
 					return String.class;
-				else
-					return Double.class;
+				return Double.class;
 			}
 			
 			@Override
