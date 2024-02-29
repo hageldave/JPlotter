@@ -1,11 +1,39 @@
 package hageldave.jplotter.charts;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Shape;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
-import hageldave.jplotter.interaction.kml.*;
+import hageldave.jplotter.interaction.kml.CoordSysPanning;
+import hageldave.jplotter.interaction.kml.CoordSysRopeSelector;
+import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
+import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Legend;
@@ -18,30 +46,35 @@ import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.QuadTree;
 import hageldave.jplotter.util.Utils;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.*;
-import java.util.stream.Collectors;
-
 /**
- *
  * The ScatterPlot class provides an easy way to quickly create a ScatterPlot.
  * It includes a JPlotterCanvas, CoordSysRenderer and a PointsRenderer,
  * which are all set up automatically.
- * To edit those, they can be returned with their respective getter methods.
- * When data points are added to the ScatterPlot, they are stored in the pointMap.
  * <p>
- * To add a Dataset to the pointMap, an ID has to be defined as a key.
- * With this ID the Dataset can be removed later on.
- * <p>
+ * The scatter plot uses a data model that contains the coordinates of the data points.
+ * This {@link ScatterPlotDataModel} consists of chunks where each chunk is a set of data points.
+ * By default, the points of a chunk are all using the same glyph to display,
+ * and each chunk uses a different glyph (e.g. circle, square, ...).
+ * This way data sets with differently classified points can be easily represented in the scatter plot.
+ * The model can be accessed with {@link #getDataModel()}.
+ * </p><p>
+ * The coloring and glyphs are determined through a {@link ScatterPlotVisualMapping} object, which
+ * defines the glyph per chunk, and color per chunk and point.
+ * The default behavior can be changed with {@link #setVisualMapping(ScatterPlotVisualMapping)}.
+ * </p><p>
+ * The scatter plot also features inbuilt interaction and highlighting capabilities.
+ * Basic navigation (panning, zooming) can be set up with methods like
+ * {@link #addPanning()}, {@link #addScrollZoom()}, {@link #addRectangleSelectionZoom()}.
+ * Interaction with the data, i.e. the points in the scatter plot, can be set up with
+ * {@link #addScatterPlotMouseEventListener(ScatterPlotMouseEventListener)} which registers events like hovering over
+ * a point or clicking a point.
+ * A rectangular or rope selection capability can be added with {@link #addRectangularPointSetSelector(KeyMaskListener)}
+ * and {@link #addRopePointSetSelector(KeyMaskListener)}.
+ * Their selection can be listened to via {@link #addPointSetSelectionListener(PointSetSelectionListener)} and
+ * {@link #addPointSetSelectionOngoingListener(PointSetSelectionListener)}.
+ * To finally reflect any point selections visually, different kinds of highlighting for points can be set with
+ * {@link #accentuate(Pair...)}, {@link #highlight(Pair...)}, and {@link #emphasize(Pair...)}.
+ * </p>
  */
 public class ScatterPlot {
     protected JPlotterCanvas canvas;
@@ -118,7 +151,6 @@ public class ScatterPlot {
 		});
         
         createMouseEventHandler();
-        createSelectionCapabilities();
 
         for(String cueType : Arrays.asList(CUE_EMPHASIZE, CUE_ACCENTUATE, CUE_HIGHLIGHT)){
         	this.glyph2pointMaps.put(cueType, new HashMap<>());
@@ -142,7 +174,7 @@ public class ScatterPlot {
 	}
 
 	/**
-	 * @return the data model (see {@link ScatterPlotVisualMapping}) linked to the scatter plot
+	 * @return the data model (see {@link ScatterPlotDataModel}) linked to the scatter plot
 	 */
 	public ScatterPlotDataModel getDataModel() {
 		return dataModel;
@@ -912,8 +944,8 @@ public class ScatterPlot {
     	return pointLocators;
     }
 
-	protected void createSelectionCapabilities() {
-		Comparator<Pair<Integer, TreeSet<Integer>>> comparator = (o1, o2) -> {
+    protected SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> createSelectionModel(){
+    	Comparator<Pair<Integer, TreeSet<Integer>>> comparator = (o1, o2) -> {
 			int chunkIdxComp = o1.first.compareTo(o2.first);
 			if(chunkIdxComp != 0)
 				return chunkIdxComp;
@@ -930,13 +962,23 @@ public class ScatterPlot {
 			return elementComp;
 		};
 
-		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = new SimpleSelectionModel<>(comparator);
-		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = new SimpleSelectionModel<>(comparator);
+		return new SimpleSelectionModel<>(comparator);
+    }
+    
+    /**
+     * Registers a {@link CoordSysViewSelector} that will trigger a selection of the points
+     * contained in the rectangle.
+     * This selection will be reported to the listeners added with {@link #addPointSetSelectionListener(PointSetSelectionListener)}
+     * and {@link #addPointSetSelectionOngoingListener(PointSetSelectionListener)}.
+     * 
+     * @param keyMask the {@link KeyMaskListener} defining which keys will trigger the selection functionality
+     * @return the selector
+     */
+	public CoordSysViewSelector addRectangularPointSetSelector(KeyMaskListener keyMask) {
+		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = createSelectionModel();
+		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = createSelectionModel();
 		Shape[] selectionMemory = {null,null};
-
-		createRectangularPointSetSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory);
-		createRopeSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory);
-
+		CoordSysViewSelector selector = createRectangularPointSetSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory, keyMask);
 		selectedPointsOngoing.addSelectionListener(s->{
 			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
 			notifyPointSetSelectionChangeOngoing(list, selectionMemory[0]);
@@ -945,11 +987,42 @@ public class ScatterPlot {
 			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
 			notifyPointSetSelectionChange(list, selectionMemory[1]);
 		});
+		return selector;
+	}
+	
+	/**
+     * Registers a {@link CoordSysRopeSelector} that will trigger a selection of the points
+     * contained in the polygon.
+     * This selection will be reported to the listeners added with {@link #addPointSetSelectionListener(PointSetSelectionListener)}
+     * and {@link #addPointSetSelectionOngoingListener(PointSetSelectionListener)}.
+     * 
+     * @param keyMask the {@link KeyMaskListener} defining which keys will trigger the selection functionality
+     * @return the selector
+     */
+	public CoordSysRopeSelector addRopePointSetSelector(KeyMaskListener keyMask) {
+		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = createSelectionModel();
+		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = createSelectionModel();
+		Shape[] selectionMemory = {null,null};
+		CoordSysRopeSelector selector = createRopeSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory, keyMask);
+		selectedPointsOngoing.addSelectionListener(s->{
+			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+			notifyPointSetSelectionChangeOngoing(list, selectionMemory[0]);
+		});
+		selectedPoints.addSelectionListener(s->{
+			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+			notifyPointSetSelectionChange(list, selectionMemory[1]);
+		});
+		return selector;
 	}
 
-    protected void createRectangularPointSetSelectionCapabilities(SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing,
-																  SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints, Shape[] selectionMemory) {
-    	KeyMaskListener keyMask = new KeyMaskListener(KeyEvent.VK_S);
+    protected CoordSysViewSelector createRectangularPointSetSelectionCapabilities(
+    		SimpleSelectionModel<Pair<Integer, 
+    		TreeSet<Integer>>> selectedPointsOngoing,
+			SimpleSelectionModel<Pair<Integer, 
+			TreeSet<Integer>>> selectedPoints, 
+			Shape[] selectionMemory,
+			KeyMaskListener keyMask
+	){
     	CoordSysViewSelector selector = new CoordSysViewSelector(this.canvas, this.coordsys, keyMask) {
     		@Override
     		public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
@@ -971,12 +1044,17 @@ public class ScatterPlot {
     			selectedPoints.setSelection(getIndicesOfPointsInArea(area));
 			}
 		};
-		selector.register();
+		return selector.register();
     }
 
-	protected void createRopeSelectionCapabilities(SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing,
-												   SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints, Shape[] selectionMemory) {
-		CoordSysRopeSelection selector = new CoordSysRopeSelection(this.canvas, this.coordsys) {
+	protected CoordSysRopeSelector createRopeSelectionCapabilities(
+			SimpleSelectionModel<Pair<Integer, 
+			TreeSet<Integer>>> selectedPointsOngoing,
+			SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints,
+			Shape[] selectionMemory,
+			KeyMaskListener keyMask
+	) {
+		CoordSysRopeSelector selector = new CoordSysRopeSelector(this.canvas, this.coordsys, keyMask) {
 			@Override
 			public void areaSelected(Path2D selectedArea) {
 				if(pointSetSelectionListeners.isEmpty())
@@ -993,7 +1071,7 @@ public class ScatterPlot {
 				selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(selectedArea));
 			}
 		};
-		selector.register();
+		return selector.register();
 	}
 
 	/**
@@ -1228,7 +1306,7 @@ public class ScatterPlot {
 		glyph2points.values().forEach(p->p.removeAllPoints());
 	}
 	
-	// TODO: convenience methods to create listeners for cues (e.g. hovering does highlighting)
+	// TODO: convenience methods to create scatterplotmouselisteners to trigger cues (e.g. hovering does highlighting)
     
     
 }

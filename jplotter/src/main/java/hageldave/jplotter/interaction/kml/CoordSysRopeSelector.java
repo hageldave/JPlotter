@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.*;
 
 /**
- * The CoordSysRopeSelection class implements a {@link MouseListener}
+ * The CoordSysRopeSelector class implements a {@link MouseListener}
  * and {@link MouseMotionListener} that realize rope selection functionality
  * for the coordinate view of the {@link CoordSysRenderer}.
  * So it provides a way to select an area in a coordsys by selecting multiple points.
@@ -34,9 +34,9 @@ import java.util.*;
  *    }
  * }.register();
  * </pre>
- * <p>
+ * </p>
  */
-public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyListener {
+public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyListener {
     protected Component canvas;
     protected CoordSysRenderer coordSys;
     protected ColorScheme colorScheme;
@@ -56,7 +56,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
      * @param coordSys        the coordinate system to apply the panning in
      * @param keyMaskListener defines the set of keys that have to pressed during the selection
      */
-    public CoordSysRopeSelection(JPlotterCanvas canvas, CoordSysRenderer coordSys, KeyMaskListener keyMaskListener) {
+    public CoordSysRopeSelector(JPlotterCanvas canvas, CoordSysRenderer coordSys, KeyMaskListener keyMaskListener) {
         this.canvas = canvas.asComponent();
         this.coordSys = coordSys;
         this.colorScheme = coordSys.getColorScheme();
@@ -73,7 +73,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
         });
     }
 
-    public CoordSysRopeSelection(JPlotterCanvas canvas, CoordSysRenderer coordSys) {
+    public CoordSysRopeSelector(JPlotterCanvas canvas, CoordSysRenderer coordSys) {
         this(canvas, coordSys, new KeyMaskListener(KeyEvent.VK_R));
     }
 
@@ -237,7 +237,7 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
      *
      * @param keyMaskListener defines the set of keys that have to pressed during the panning
      */
-    public CoordSysRopeSelection setKeyMaskListener(KeyMaskListener keyMaskListener) {
+    public CoordSysRopeSelector setKeyMaskListener(KeyMaskListener keyMaskListener) {
         canvas.removeKeyListener(this.keyMaskListener);
         this.keyMaskListener = keyMaskListener;
         if (!Arrays.asList(canvas.getKeyListeners()).contains(this.keyMaskListener))
@@ -246,12 +246,12 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
     }
 
     /**
-     * Adds this {@link CoordSysRopeSelection} as {@link MouseListener} and
+     * Adds this {@link CoordSysRopeSelector} as {@link MouseListener} and
      * {@link MouseMotionListener} to the associated canvas.
      *
      * @return this for chaining
      */
-    public CoordSysRopeSelection register() {
+    public CoordSysRopeSelector register() {
         if (!Arrays.asList(canvas.getMouseListeners()).contains(this))
             canvas.addMouseListener(this);
         if (!Arrays.asList(canvas.getMouseMotionListeners()).contains(this))
@@ -264,12 +264,12 @@ public abstract class CoordSysRopeSelection extends MouseAdapter implements KeyL
     }
 
     /**
-     * Removes this {@link CoordSysRopeSelection} from the associated canvas'
+     * Removes this {@link CoordSysRopeSelector} from the associated canvas'
      * mouse and mouse motion listeners.
      *
      * @return this for chaining
      */
-    public CoordSysRopeSelection deRegister() {
+    public CoordSysRopeSelector deRegister() {
         canvas.removeMouseListener(this);
         canvas.removeMouseMotionListener(this);
         canvas.removeKeyListener(this.keyMaskListener);

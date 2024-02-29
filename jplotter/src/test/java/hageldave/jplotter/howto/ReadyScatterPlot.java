@@ -2,6 +2,7 @@ package hageldave.jplotter.howto;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.io.ImageSaver;
+import hageldave.jplotter.IrisDataset;
 import hageldave.jplotter.charts.ScatterPlot;
 import hageldave.jplotter.charts.ScatterPlot.PointSetSelectionListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModel;
@@ -9,6 +10,7 @@ import hageldave.jplotter.charts.ScatterPlot.ScatterPlotDataModelListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotMouseEventListener;
 import hageldave.jplotter.charts.ScatterPlot.ScatterPlotVisualMapping;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
+import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
 import hageldave.jplotter.renderables.Points;
@@ -19,6 +21,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
@@ -31,8 +34,33 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ReadyScatterPlot {
+	
 
     public static void main(String[] args) throws IOException {
+    	minimal();
+    }
+    
+    public static void minimal() {
+    	IrisDataset dataset = new IrisDataset();
+    	ScatterPlot plot = new ScatterPlot(false);
+    	int xAttrib = 0;
+    	int yAttrib = 1;
+    	for(int label: new int[]{0,1,2}) {
+    		double[][] chunk = IntStream.range(0, dataset.getNumPoints())
+    				.filter(i->dataset.getLabels()[i]==label)
+    				.mapToObj(i->dataset.getData()[i])
+    				.toArray(double[][]::new);
+    		plot.getDataModel().addData(chunk, xAttrib, yAttrib, dataset.getLabelNames()[label]);
+    	}
+    	plot.getCoordsys().setxAxisLabel(dataset.getFeatureNames()[xAttrib]);
+    	plot.getCoordsys().setyAxisLabel(dataset.getFeatureNames()[yAttrib]);
+    	plot.placeLegendOnBottom();
+    	plot.getCoordsys().setLegendBottomHeight(10);
+    	plot.alignCoordsys(1.1);
+    	plot.display("Iris data set");
+    }
+    	
+    public static void sophisticated() throws IOException {
         // generate or load data
         LinkedList<LinkedList<double[]>> data = new LinkedList<>();
         String[] classLabels = new String[]{
@@ -100,7 +128,8 @@ public class ReadyScatterPlot {
         	@Override /* get focus for key events whenever mouse enters this component */
         	public void mouseEntered(MouseEvent e) {plot.getCanvas().asComponent().requestFocus();}
 		});
-
+        plot.addRectangularPointSetSelector(new KeyMaskListener(KeyEvent.VK_S));
+        plot.addRopePointSetSelector(new KeyMaskListener(KeyEvent.VK_R));
 
         // create a table that uses the plot's data model 
         JTable datasetTable = new JTable(new TableModel() {
