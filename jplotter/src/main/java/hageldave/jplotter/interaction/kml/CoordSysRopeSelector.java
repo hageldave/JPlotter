@@ -34,7 +34,6 @@ import java.util.*;
  *    }
  * }.register();
  * </pre>
- * </p>
  */
 public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyListener {
     protected Component canvas;

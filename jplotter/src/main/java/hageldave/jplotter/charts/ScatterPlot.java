@@ -602,7 +602,8 @@ public class ScatterPlot {
     	}
 
 		/**
-		 * Adds a glyph label element to the legend of the ScatterPlot for a data chunk, using the {@link ScatterPlotVisualMapping#getGlyphForChunk(int, java.lang.String)} &
+		 * Adds a glyph label element to the legend of the ScatterPlot for a data chunk, using the 
+		 * {@link ScatterPlotVisualMapping#getGlyphForChunk(int, java.lang.String)} and
 		 * {@link ScatterPlotVisualMapping#getColorForDataPoint(int, String, double[][], int)} methods.
 		 *
 		 * @param legend where the new element will be added
