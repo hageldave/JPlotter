@@ -22,7 +22,7 @@ JPlotter is available as Maven artifact at the Central Maven Repository.
 <dependency>
   <groupId>com.github.hageldave.jplotter</groupId>
   <artifactId>jplotter</artifactId>
-  <version>0.6.1</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
