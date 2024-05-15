@@ -9,7 +9,6 @@ import hageldave.jplotter.renderables.BarGroup;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
-import hageldave.jplotter.util.AlignmentConstants;
 import hageldave.jplotter.util.ExportUtil;
 import hageldave.jplotter.util.Pair;
 
@@ -101,7 +100,7 @@ public class BarChartDemo {
 		};
 		
 		// make the barchart
-		BarChart barchart = new BarChart(false, AlignmentConstants.HORIZONTAL);
+		BarChart barchart = new BarChart(false, true);
 		for(int i=0; i<cases.length; i++) {
 			BarGroup group = new BarGroup();
 			group.addBarStack(0, scores[i], colormap.apply(scores[i]), cases[i]);

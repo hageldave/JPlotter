@@ -1,7 +1,6 @@
 package hageldave.jplotter.renderables;
 
 import hageldave.jplotter.renderers.BarRenderer;
-import hageldave.jplotter.util.AlignmentConstants;
 import hageldave.jplotter.util.Pair;
 
 import java.awt.*;
@@ -115,10 +114,10 @@ public class BarGroup {
 
     /**
      * Returns the bounds of the BarGroup. Based on the alignment they will be computed differently.
-     * @param alignment of the BarChart (see {@link AlignmentConstants}).
+     * @param horizontal, whether barchart is in horizontal or vertical layout
      * @return the rectangle enclosing the BarGroup.
      */
-    public Rectangle2D getBounds(final int alignment) {
+    public Rectangle2D getBounds(final boolean horizontal) {
         double minValueBar = groupedBars.values().parallelStream()
                         .map(BarStack::getBounds)
                         .mapToDouble(e->e.first)
@@ -129,12 +128,11 @@ public class BarGroup {
                 .max().orElse(0);
         double start = 0;
         double end = groupedBars.size();
-        if (alignment == AlignmentConstants.VERTICAL) {
+        if (!horizontal) {
             return new Rectangle2D.Double(start, minValueBar, end, maxValueBar);
-        } else if (alignment == AlignmentConstants.HORIZONTAL) {
+        } else {
             return new Rectangle2D.Double(minValueBar, start, maxValueBar, end);
         }
-        return null;
     }
 
     /**

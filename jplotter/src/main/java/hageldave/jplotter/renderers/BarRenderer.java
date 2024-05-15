@@ -39,7 +39,6 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Text;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.svg.SVGUtils;
-import hageldave.jplotter.util.AlignmentConstants;
 import hageldave.jplotter.util.Annotations;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Pair;
@@ -54,7 +53,7 @@ import hageldave.jplotter.util.Utils;
  * The groups in the barchart are separated from each other by guides. The stacks of a struct are (like the name implies) stacked onto each other.
  * Therefore every BarStruct is always a set of BarStacks (with a minimum of one stack).
  * <p>
- * Depending on the BarRenderers orientation ({@link AlignmentConstants}), there is a label on the top or right.
+ * Depending on the BarRenderers orientation, there is a label on the top or right.
  * The label helps to define and visualize the meaning of the value axis.
  * </p><p>
  * The positioning and labeling of the tick marks on the value axis is done by a {@link TickMarkGenerator}
@@ -68,7 +67,7 @@ import hageldave.jplotter.util.Utils;
  * the coordinate view (see {@link #setCoordinateView(double, double, double, double)})
  * and defaults to [-1,1] for both axes.
  * The contents that are drawn inside the coordinate area are rendered by the TriangleRenderer
- * (see {@link #getContent(Renderer)}).
+ * (see {@link #getContent()}).
  * The TriangleRenderer will be able to draw within the viewport defined by the coordinate
  * system area of this BarRenderer.
  * </p><p>
@@ -85,7 +84,7 @@ import hageldave.jplotter.util.Utils;
  */
 public class BarRenderer implements Renderer {
 
-    protected int alignment;
+    protected boolean horizontal;
 
     protected LinesRenderer preContentLinesR = new LinesRenderer();
     protected TextRenderer preContentTextR = new TextRenderer();
@@ -94,7 +93,7 @@ public class BarRenderer implements Renderer {
     protected LinesRenderer postContentLinesR = new LinesRenderer();
     protected TextRenderer postContentTextR = new TextRenderer();
 
-    // overlay necessary?!
+    // TODO: check if overlay necessary
     protected Renderer overlay;
     protected TrianglesRenderer content = new TrianglesRenderer();
     protected Renderer legendRight = null;
@@ -173,14 +172,14 @@ public class BarRenderer implements Renderer {
     protected ActionListener coordviewListener;
     protected boolean isEnabled = true;
 
-    public BarRenderer(final int alignment, final ColorScheme cs) {
-        this.alignment = alignment;
+    public BarRenderer(final boolean horizontal, final ColorScheme cs) {
+        this.horizontal = horizontal;
         this.colorScheme = cs;
         setupBarRenderer();
     }
 
-    public BarRenderer(final int alignment) {
-        this(alignment, DefaultColorScheme.LIGHT.get());
+    public BarRenderer(final boolean horizontal) {
+        this(horizontal, DefaultColorScheme.LIGHT.get());
     }
 
     protected void setupBarRenderer() {
@@ -483,21 +482,21 @@ public class BarRenderer implements Renderer {
     }
 
     /**
-     * @return Alignment (see {@link AlignmentConstants}) of the BarRenderer.
+     * @return true if barchart is horizontal.
      */
-    public int getAlignment() {
-        return alignment;
+    public boolean isHorizontal() {
+        return horizontal;
     }
 
     /**
      * The BarRenderer supports vertical and horizontal bar charts.
      * This method sets the orientation of the bar chart.
      *
-     * @param alignment sets the alignment (vertical or horizontal) of the BarRenderer (see {@link AlignmentConstants}
+     * @param horizontal sets the alignment (vertical=false or horizontal=true) of the BarRenderer
      * @return this for chaining
      */
-    public BarRenderer setAlignment(int alignment) {
-        this.alignment = alignment;
+    public BarRenderer setHorizontal(boolean horizontal) {
+        this.horizontal=horizontal;
         setupAndLayout();
         setDirty();
         return this;
@@ -515,9 +514,9 @@ public class BarRenderer implements Renderer {
      * </ul>
      */
     protected void setupAndLayout() {
-        if (this.alignment == AlignmentConstants.VERTICAL)
+        if (!this.horizontal)
             setupLayoutVertical();
-        else if (this.alignment == AlignmentConstants.HORIZONTAL)
+        else
             setupLayoutHorizontal();
     }
 
@@ -1020,9 +1019,9 @@ public class BarRenderer implements Renderer {
     // creates a bar at startPosition, in row "row", with length, color and the specified pickColor
     protected Triangles makeBar(final double startPosition, final double row, final BarStack struct, final BarStruct stack) {
         Triangles bar = new Triangles();
-        if (this.alignment == AlignmentConstants.HORIZONTAL) {
+        if (this.horizontal) {
             bar.addQuad(new Rectangle2D.Double(startPosition, row - (barSize / 2), stack.length, barSize));
-        } else if (this.alignment == AlignmentConstants.VERTICAL) {
+        } else {
             bar.addQuad(new Rectangle2D.Double(row - (barSize / 2), startPosition, barSize, stack.length));
         }
         bar.setGlobalAlphaMultiplier(struct.getGlobalAlphaMultiplier());
@@ -1138,11 +1137,11 @@ public class BarRenderer implements Renderer {
             }
             content.render(viewPortX, viewPortY, viewPortW, viewPortH);
             
-            if (this.alignment == AlignmentConstants.VERTICAL) {
+            if (!this.horizontal) {
             	GLUtils.glViewportAutoscale(viewPortX, 0, viewPortW, h);
                 xyCondBoundsLinesR.render(viewPortX, 0, viewPortW, h);
                 xyCondBoundsTextR.render(viewPortX, 0, viewPortW, h);
-            } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
+            } else {
             	GLUtils.glViewportAutoscale(0, viewPortY, w, viewPortH);
                 xyCondBoundsTextR.render(0, viewPortY, w, viewPortH);
                 xyCondBoundsLinesR.render(0, viewPortY, w, viewPortH);
@@ -1202,12 +1201,12 @@ public class BarRenderer implements Renderer {
             Graphics2D g_ = (Graphics2D) g.create(viewPortX, viewPortY, viewPortW, viewPortH);
             Graphics2D p_ = (Graphics2D) p.create(viewPortX, viewPortY, viewPortW, viewPortH);
             content.renderFallback(g_, p_, viewPortW, viewPortH);
-            if (this.alignment == AlignmentConstants.VERTICAL) {
+            if (!this.horizontal) {
                 Graphics2D g__ = (Graphics2D) g.create(viewPortX, 0, viewPortW, h);
                 Graphics2D p__ = (Graphics2D) p.create(viewPortX, 0, viewPortW, h);
                 xyCondBoundsLinesR.renderFallback(g__, p__, viewPortW, h);
                 xyCondBoundsTextR.renderFallback(g__, p__, viewPortW, h);
-            } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
+            } else {
                 Graphics2D g__ = (Graphics2D) g.create(0, viewPortY, w, viewPortH);
                 Graphics2D p__ = (Graphics2D) p.create(0, viewPortY, w, viewPortH);
                 xyCondBoundsLinesR.renderFallback(g__, p__, w, viewPortH);
@@ -1278,13 +1277,13 @@ public class BarRenderer implements Renderer {
             xyCondClip.appendChild(SVGUtils.createSVGRect(doc, 0, 0, viewPortW, viewPortH));
             xyCondDefs.appendChild(xyCondClip);
 
-            if (this.alignment == AlignmentConstants.VERTICAL) {
+            if (!this.horizontal) {
                 // transform the group according to the viewport position and clip it
                 xyCondContentGroup.setAttributeNS(null, "transform", "translate(" + (viewPortX) + "," + (0) + ")");
                 xyCondContentGroup.setAttributeNS(null, "clip-path", "url(#" + xyCondClipDefID + ")");
                 xyCondBoundsTextR.renderSVG(doc, xyCondContentGroup, viewPortW, h);
                 xyCondBoundsLinesR.renderSVG(doc, xyCondContentGroup, viewPortW, h);
-            } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
+            } else {
                 // transform the group according to the viewport position and clip it
                 xyCondContentGroup.setAttributeNS(null, "transform", "translate(" + (0) + "," + (viewPortY) + ")");
                 xyCondContentGroup.setAttributeNS(null, "clip-path", "url(#" + xyCondClipDefID + ")");
@@ -1349,10 +1348,10 @@ public class BarRenderer implements Renderer {
             // render the content into the group
             content.renderPDF(doc, page, viewPortX, viewPortY, viewPortW, viewPortH);
             // render conditional content: e.g. bar identifier
-            if (this.alignment == AlignmentConstants.VERTICAL) {
+            if (!this.horizontal) {
                 xyCondBoundsTextR.renderPDF(doc, page, viewPortX, y, viewPortW, h);
                 xyCondBoundsLinesR.renderPDF(doc, page, viewPortX, y, viewPortW, h);
-            } else if (this.alignment == AlignmentConstants.HORIZONTAL) {
+            } else {
                 xyCondBoundsTextR.renderPDF(doc, page, x, viewPortY, w, viewPortH);
                 xyCondBoundsLinesR.renderPDF(doc, page, x, viewPortY, w, viewPortH);
             }
@@ -1625,33 +1624,33 @@ public class BarRenderer implements Renderer {
         double minY = 0;
         double maxX = 1;
         double maxY = 1;
-        if (this.alignment == AlignmentConstants.HORIZONTAL) {
+        if (this.horizontal) {
             minX = groupedBars.parallelStream()
-                    .map(e -> e.getBounds(this.alignment))
+                    .map(e -> e.getBounds(this.horizontal))
                     .mapToDouble(RectangularShape::getMinX)
                     .min().orElse(0);
             maxY = groupedBars.parallelStream()
-                    .map(e -> e.getBounds(this.alignment))
+                    .map(e -> e.getBounds(this.horizontal))
                     .mapToDouble(e -> e.getHeight() * barSize + e.getHeight() * barGap)
                     .sum();
             maxX = groupedBars.parallelStream()
-                    .map(e -> e.getBounds(this.alignment))
+                    .map(e -> e.getBounds(this.horizontal))
                     .mapToDouble(RectangularShape::getWidth)
                     .max().orElse(0);
             maxY += groupedBars.size() * (this.bargroupGap*2);
             maxY += 0.05; // some extra padding so that the last group separator is visible
             return new Rectangle2D.Double(minX, - ((barSize / 2) + (barGap / 2)), maxX - minX, maxY);
-        } else if (this.alignment == AlignmentConstants.VERTICAL) {
+        } else if (!this.horizontal) {
             minY = groupedBars.parallelStream()
-                    .map(e -> e.getBounds(AlignmentConstants.VERTICAL))
+                    .map(e -> e.getBounds(this.horizontal))
                     .mapToDouble(RectangularShape::getMinY)
                     .min().orElse(0);
             maxX = groupedBars.parallelStream()
-                    .map(e -> e.getBounds(AlignmentConstants.VERTICAL))
+                    .map(e -> e.getBounds(this.horizontal))
                     .mapToDouble(e -> e.getWidth() * barSize + e.getWidth() * barGap)
                     .sum();
             maxY = groupedBars.parallelStream()
-                    .map(e -> e.getBounds(AlignmentConstants.VERTICAL))
+                    .map(e -> e.getBounds(this.horizontal))
                     .mapToDouble(RectangularShape::getHeight)
                     .max().orElse(0);
             maxX += groupedBars.size() * (this.bargroupGap * 2);

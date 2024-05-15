@@ -9,7 +9,6 @@ import hageldave.jplotter.renderables.Legend;
 import hageldave.jplotter.renderers.BarRenderer;
 import hageldave.jplotter.renderers.Renderer;
 import hageldave.jplotter.renderers.TrianglesRenderer;
-import hageldave.jplotter.util.AlignmentConstants;
 import hageldave.jplotter.util.PickingRegistry;
 import hageldave.jplotter.util.Utils;
 
@@ -53,15 +52,15 @@ public class BarChart {
     private int legendRightWidth = 100;
     private int legendBottomHeight = 60;
 
-    public BarChart(final boolean useFallback, final int alignment) {
-        this(useFallback ? new BlankCanvasFallback() : new BlankCanvas(), "X", "Y", alignment);
+    public BarChart(final boolean useFallback, final boolean horizontal) {
+        this(useFallback ? new BlankCanvasFallback() : new BlankCanvas(), "X", "Y", horizontal);
     }
 
-    public BarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel, final int alignment) {
+    public BarChart(final JPlotterCanvas canvas, final String xLabel, final String yLabel, final boolean horizontal) {
         this.canvas = canvas;
         this.canvas.asComponent().setPreferredSize(new Dimension(400, 400));
         this.canvas.asComponent().setBackground(Color.WHITE);
-        this.barRenderer = new BarRenderer(alignment, DefaultColorScheme.LIGHT.get());
+        this.barRenderer = new BarRenderer(horizontal, DefaultColorScheme.LIGHT.get());
         this.content = this.barRenderer.getContent();
         this.barRenderer.setCoordinateView(-1, -1, 1, 1);
         this.canvas.setRenderer(barRenderer);
@@ -238,18 +237,17 @@ public class BarChart {
     /**
      * @return current alignment of the BarChart.
      */
-    public int getAlignment() {
-        return this.barRenderer.getAlignment();
+    public boolean isHorizontal() {
+        return this.barRenderer.isHorizontal();
     }
 
     /**
      * Changes the orientation of the BarChart.
-     * Two orientations are possible: vertical (alignment=1) and horizontal (alignment=2)
-     * @param alignment orientation of the BarChart (see {@link AlignmentConstants})
+     * @param horizontal orientation of the BarChart
      * @return this for chaining
      */
-    public BarChart setAlignment(int alignment) {
-        this.barRenderer.setAlignment(alignment);
+    public BarChart setAlignment(boolean horizontal) {
+        this.barRenderer.setHorizontal(horizontal);
         return this;
     }
 

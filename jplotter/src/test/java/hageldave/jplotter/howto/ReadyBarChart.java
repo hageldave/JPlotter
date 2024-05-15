@@ -40,8 +40,8 @@ import hageldave.jplotter.svg.SVGUtils;
 
 public class ReadyBarChart {
 	public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
-		BarChart meanChart = new BarChart(true, 2);
-		BarChart histogramChart = new BarChart(true, 1);
+		BarChart meanChart = new BarChart(true, true);
+		BarChart histogramChart = new BarChart(true, false);
 		histogramChart.getCanvas().asComponent().setPreferredSize(new Dimension(900, 400));
 		ColorMap classcolors = DefaultColorMap.Q_8_SET2;
 		ColorMap featurecolors = DefaultColorMap.Q_12_PAIRED;
