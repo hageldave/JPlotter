@@ -108,7 +108,8 @@ public class CoordSysRenderer implements Renderer {
 
 	protected Rectangle2D coordinateView = new Rectangle2D.Double(-1,-1,2,2);
 
-	protected TickMarkGenerator tickMarkGenerator = new ExtendedWilkinson();
+	protected TickMarkGenerator tickMarkGeneratorX = new ExtendedWilkinson();
+	protected TickMarkGenerator tickMarkGeneratorY = tickMarkGeneratorX;
 
 	protected Lines axes = new Lines().setVertexRoundingEnabled(true);
 	protected Lines ticks = new Lines().setVertexRoundingEnabled(true);
@@ -477,12 +478,12 @@ public class CoordSysRenderer implements Renderer {
 	 * </ul>
 	 */
 	protected void setupAndLayout() {
-		Pair<double[],String[]> xticksAndLabels = tickMarkGenerator.genTicksAndLabels(
+		Pair<double[],String[]> xticksAndLabels = tickMarkGeneratorX.genTicksAndLabels(
 				coordinateView.getMinX(), 
 				coordinateView.getMaxX(), 
 				5, 
 				false);
-		Pair<double[],String[]> yticksAndLabels = tickMarkGenerator.genTicksAndLabels(
+		Pair<double[],String[]> yticksAndLabels = tickMarkGeneratorY.genTicksAndLabels(
 				coordinateView.getMinY(), 
 				coordinateView.getMaxY(), 
 				5, 
@@ -656,22 +657,60 @@ public class CoordSysRenderer implements Renderer {
 	/**
 	 * @return the current {@link TickMarkGenerator} which is {@link ExtendedWilkinson} by default.
 	 */
-	public TickMarkGenerator getTickMarkGenerator() {
-		return tickMarkGenerator;
+	public TickMarkGenerator getTickMarkGeneratorX() {
+		return tickMarkGeneratorX;
+	}
+	
+	/**
+	 * @return the current {@link TickMarkGenerator} which is {@link ExtendedWilkinson} by default.
+	 */
+	public TickMarkGenerator getTickMarkGeneratorY() {
+		return tickMarkGeneratorX;
 	}
 
 	/**
 	 * Sets the specified {@link TickMarkGenerator} for this {@link CoordSysRenderer}.
+	 * This sets the same generator for x- and y-axis.
 	 * Sets the {@link #isDirty} state of this {@link CoordSysRenderer} to true.
 	 * @param tickMarkGenerator to be used for determining tick locations 
 	 * and corresponding labels
 	 * @return this for chaining
 	 */
 	public CoordSysRenderer setTickMarkGenerator(TickMarkGenerator tickMarkGenerator) {
-		this.tickMarkGenerator = tickMarkGenerator;
+		this.tickMarkGeneratorX = this.tickMarkGeneratorY = tickMarkGenerator;
 		setDirty();
 		return this;
 	}
+	
+	/**
+	 * Sets the specified {@link TickMarkGenerator} for the x-axis of this {@link CoordSysRenderer}.
+	 * Sets the {@link #isDirty} state of this {@link CoordSysRenderer} to true.
+	 * @param tickMarkGenerator to be used for determining tick locations 
+	 * and corresponding labels
+	 * @return this for chaining
+	 */
+	public CoordSysRenderer setTickMarkGeneratorX(TickMarkGenerator tickMarkGenerator) {
+		this.tickMarkGeneratorX = tickMarkGenerator;
+		setDirty();
+		return this;
+	}
+	
+	/**
+	 * Sets the specified {@link TickMarkGenerator} for the y-axis of this {@link CoordSysRenderer}.
+	 * Sets the {@link #isDirty} state of this {@link CoordSysRenderer} to true.
+	 * @param tickMarkGenerator to be used for determining tick locations 
+	 * and corresponding labels
+	 * @return this for chaining
+	 */
+	public CoordSysRenderer setTickMarkGeneratorY(TickMarkGenerator tickMarkGenerator) {
+		this.tickMarkGeneratorY = tickMarkGenerator;
+		setDirty();
+		return this;
+	}
+	
+	
+	
+	
 	
 	@Override
 	public void glInit() {

@@ -53,11 +53,7 @@ public class BarChartDemo {
 		// set the content renderer of the coordinate system 
 		coordsys.setContent(barRenderer);
 		// we need to change the tick marks labeling for the y axis
-		TickMarkGenerator oldTickGen = coordsys.getTickMarkGenerator();
-		coordsys.setTickMarkGenerator((min,max,desired,vert)->{
-			if(!vert){
-				return oldTickGen.genTicksAndLabels(min,max,desired,vert);
-			}
+		coordsys.setTickMarkGeneratorY((min,max,desired,vert)->{
 			// make ticks at integer values (0,1,2,...)
 			double[] ticks = IntStream.range(0, cases.length)
 					.mapToDouble(i -> (double)i)
