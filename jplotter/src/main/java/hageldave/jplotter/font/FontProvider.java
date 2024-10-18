@@ -3,15 +3,11 @@ package hageldave.jplotter.font;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Base64;
-import java.util.Objects;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -128,9 +124,9 @@ public final class FontProvider {
 	 * @return ubuntu mono font licence as a string
 	 */
 	public static String getUbuntuMonoFontLicence() {
-		try {
-			return FileUtils.readFileToString(new File(Objects.requireNonNull(FontProvider.class.getResource("/font/LICENCE.txt")).toURI()));
-		} catch (IOException | URISyntaxException e) {
+		try(InputStream in = FontProvider.class.getResource("/font/LICENCE.txt").openStream()) {
+			return IOUtils.toString(in);
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
