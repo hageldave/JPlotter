@@ -17,6 +17,7 @@ import hageldave.jplotter.renderables.Triangles.TriangleDetails;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.ExportUtil;
+import hageldave.jplotter.util.SegmentSorter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -100,6 +101,7 @@ public class IsolinesViz {
 		coordsys.setCoordinateView(-2.5, -1.5, 0.5, 1.5);
 		
 		Lines userContour = new Lines();
+		userContour.setStrokePattern(0xf0ff);
 		Text userIsoLabel = new Text("", 10, Font.ITALIC);
 		content.addItemToRender(userContour);
 		content.addItemToRender(userIsoLabel);
@@ -123,6 +125,9 @@ public class IsolinesViz {
 					.setOrigin(p)
 					.setBackground(0xaaffffff);
 				List<SegmentDetails> contourSegments = Contours.computeContourLines(X, Y, Z, isoValue, 0xff8844bb);
+				/* need to sort the segments so neighboring segments have matching coordinates,
+				 * otherwise stroke pattern cannot be applied correctly */
+				contourSegments = SegmentSorter.sortSegments(contourSegments);
 				userContour.removeAllSegments().getSegments().addAll(contourSegments);
 				canvas.scheduleRepaint();
 			}
