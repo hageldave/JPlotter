@@ -1,8 +1,8 @@
 package hageldave.jplotter.font;
 
-import org.apache.commons.io.FileUtils;
-
-import java.awt.*;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +10,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Base64;
 import java.util.Objects;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 /**
  * The FontProvider class provides the fonts JPlotter is using.
@@ -111,11 +114,10 @@ public final class FontProvider {
 				throw new IllegalArgumentException(
 						"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
 		}
-		try {
-			byte[] fontFileArray = FileUtils.readFileToByteArray(new File(
-					Objects.requireNonNull(FontProvider.class.getResource(resource)).toURI()));
+		try(InputStream in = FontProvider.class.getResource(resource).openStream()) {
+			byte[] fontFileArray = IOUtils.toByteArray(in);
 			return Base64.getEncoder().encodeToString(fontFileArray);
-		} catch (IOException | URISyntaxException e) {
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
