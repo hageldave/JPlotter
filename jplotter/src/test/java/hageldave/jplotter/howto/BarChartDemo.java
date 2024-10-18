@@ -4,7 +4,6 @@ import hageldave.jplotter.canvas.BlankCanvas;
 import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.charts.BarChart;
-import hageldave.jplotter.coordsys.TickMarkGenerator;
 import hageldave.jplotter.renderables.BarGroup;
 import hageldave.jplotter.renderables.Triangles;
 import hageldave.jplotter.renderers.CoordSysRenderer;

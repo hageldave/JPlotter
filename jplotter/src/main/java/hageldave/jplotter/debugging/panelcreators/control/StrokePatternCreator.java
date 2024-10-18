@@ -50,13 +50,15 @@ public class StrokePatternCreator implements ControlPanelCreator {
         container16bit.add(submitButton);
 
         editButton.addActionListener(new AbstractAction() {
-            @Override
+			private static final long serialVersionUID = 1L;
+			@Override
             public void actionPerformed(ActionEvent e) {
                 switchPanels(panelContainer, binaryWrapper, container16bit);
             }
         });
 
         submitButton.addActionListener(new AbstractAction() {
+        	private static final long serialVersionUID = 1L;
             @Override
             public void actionPerformed(ActionEvent e) {
                 int textfieldValueAsInt = Integer.parseUnsignedInt(textField16bit.getText(), 16);
