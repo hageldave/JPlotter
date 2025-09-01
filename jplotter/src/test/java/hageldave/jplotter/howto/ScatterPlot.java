@@ -12,7 +12,9 @@ import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.renderers.PointsRenderer;
 import hageldave.jplotter.util.ExportUtil;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 import java.awt.*;
 
 public class ScatterPlot {

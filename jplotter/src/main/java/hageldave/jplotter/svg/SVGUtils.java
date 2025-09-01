@@ -17,13 +17,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
+
+import javax.swing.JLabel;
 
 import static hageldave.jplotter.font.FontProvider.getUbuntuMonoFontAsBaseString;
 import static java.awt.Font.BOLD;

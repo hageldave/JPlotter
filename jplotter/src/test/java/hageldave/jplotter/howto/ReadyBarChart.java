@@ -28,7 +28,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.w3c.dom.Document;
 
 import hageldave.jplotter.IrisViz;
 import hageldave.jplotter.charts.BarChart;
@@ -268,7 +267,7 @@ public class ReadyBarChart {
 		MenuItem svgExport = new MenuItem("SVG export");
 		menu.add(svgExport);
 		svgExport.addActionListener(e->{
-			Document doc2 = meanChart.getCanvas().paintSVG();
+			var doc2 = meanChart.getCanvas().paintSVG();
 			SVGUtils.documentToXMLFile(doc2, new File("barchart_demo.svg"));
 			System.out.println("exported barchart_demo.svg");
 		});
@@ -299,7 +298,7 @@ public class ReadyBarChart {
 		MenuItem combinedSvgExport = new MenuItem("SVG export");
 		combinedMenu.add(combinedSvgExport);
 		combinedSvgExport.addActionListener(e->{
-			Document doc2 = histogramChart.getCanvas().paintSVG();
+			var doc2 = histogramChart.getCanvas().paintSVG();
 			SVGUtils.documentToXMLFile(doc2, new File("barchart_demo.svg"));
 			System.out.println("exported barchart_demo.svg");
 		});

@@ -3,12 +3,13 @@ package hageldave.jplotter.font;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Base64;
-
-import org.apache.commons.io.IOUtils;
 
 /**
  * The FontProvider class provides the fonts JPlotter is using.
@@ -110,8 +111,11 @@ public final class FontProvider {
 				throw new IllegalArgumentException(
 						"Style argument is malformed. Only PLAIN, BOLD, ITALIC or BOLD|ITALIC are accepted.");
 		}
-		try(InputStream in = FontProvider.class.getResource(resource).openStream()) {
-			byte[] fontFileArray = IOUtils.toByteArray(in);
+		try(
+				InputStream in = FontProvider.class.getResource(resource).openStream();
+				BufferedInputStream bis = new BufferedInputStream(in);
+		) {
+			byte[] fontFileArray = bis.readAllBytes();
 			return Base64.getEncoder().encodeToString(fontFileArray);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -124,8 +128,15 @@ public final class FontProvider {
 	 * @return ubuntu mono font licence as a string
 	 */
 	public static String getUbuntuMonoFontLicence() {
-		try(InputStream in = FontProvider.class.getResource("/font/LICENCE.txt").openStream()) {
-			return IOUtils.toString(in);
+		try(
+				InputStream in = FontProvider.class.getResource("/font/LICENCE.txt").openStream();
+				BufferedReader br = new BufferedReader(new InputStreamReader(in));
+		) {
+			StringBuilder sb = new StringBuilder();
+			String line;
+			while((line=br.readLine()) != null)
+				sb.append(line).append("\n");
+			return sb.toString();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
