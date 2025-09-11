@@ -11,6 +11,8 @@ import hageldave.jplotter.util.CapabilitiesCreator;
 import hageldave.jplotter.util.GLUtils;
 import hageldave.jplotter.util.Utils;
 import org.apache.batik.svggen.SVGGraphics2D;
+import org.lwjgl.awthacks.NonClearGraphics;
+import org.lwjgl.awthacks.NonClearGraphics2D;
 import org.lwjgl.opengl.*;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.lwjgl.opengl.awt.GLData;
@@ -252,7 +254,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 * Calls {@link #FBOCanvas(GLData)} with default {@link GLData}. 
 	 */
 	protected FBOCanvas() {
-		this(new GLData());
+		this(GLUtils.mkGLData((gld)->gld.doubleBuffer=false));
 	}
 	
 	/** 
@@ -263,7 +265,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	 * @param parent the parent canvas to share GL context with
 	 */
 	protected FBOCanvas(FBOCanvas parent) {
-		this(new GLData(), parent);
+		this(GLUtils.mkGLData((gld)->gld.doubleBuffer=false), parent);
 	}
 	
 	/**
@@ -480,7 +482,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 
 			// onscreen (not using  w,h but framebufferwidth, framebufferheight because of possible HiDPI scaling)
 			int fbW = getFramebufferWidth(), fbH = getFramebufferHeight();
-			setRenderTargets(0, fbW, fbH, GL11.GL_BACK);
+			setRenderTargets(0, fbW, fbH, GL11.GL_FRONT);
 			GL11.glClearColor( screenClearColor.getRed()/255f, screenClearColor.getGreen()/255f, screenClearColor.getBlue()/255f, screenClearColor.getAlpha()/255f );
 			GL11.glClear( GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT );
 			{
@@ -489,21 +491,7 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 				GL30.glBlitFramebuffer(0, 0, w*sx, h*sy, 0, 0, fbW, fbH, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_LINEAR);
 				GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 			}
-			// to image
-			if(Objects.nonNull(frontBufferBackup)){
-				if(frontBufferBackup.getWidth() != w*sx || frontBufferBackup.getHeight() != h*sy){
-					frontBufferBackup = new Img(w*sx, h*sy);
-				}
-				GLUtils.fetchPixels(
-						fbo.getFBOid(), 
-						GL30.GL_COLOR_ATTACHMENT0, 
-						0, 0, 
-						w*sx, h*sy, 
-						frontBufferBackup.getData()
-				);
-			}
 		}
-		this.swapBuffers();
 	}
 
 	/**
@@ -687,14 +675,43 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 	
 	@Override
 	public void paint(Graphics g) {
+		if(g instanceof NonClearGraphics || g instanceof NonClearGraphics2D) {
+			/* g is the graphics object of AWTGLCanvas, which means that a render pass
+			 * is ongoing (or rather has just finished) and we do not need to paint anything
+			 * via AWT/Swing. Therefore we return immediately.
+			 */
+			return;
+		}
+		// test if this is SVG painting
+		if(g instanceof SVGGraphics2D && !isSvgAsImageRenderingEnabled()){
+			return;
+		}
+		// test if this is PDF painting
+		if (g instanceof PdfBoxGraphics2D && !isPDFAsImageRenderingEnabled()) {
+			return;
+		}
 		if(Objects.nonNull(frontBufferBackup)){
-			// test if this is SVG painting
-			if(g instanceof SVGGraphics2D && !isSvgAsImageRenderingEnabled()){
-				return;
-			}
-			if (g instanceof PdfBoxGraphics2D && !isPDFAsImageRenderingEnabled()) {
-				return;
-			}
+			System.out.println("doin it " + g.getClass().getSimpleName());
+			/* now we need to fetch the framebuffer content from GPU first */
+			Utils.execOnAWTEventDispatch(()->{
+				runInContext(()->{
+					int w = getWidth();
+					int h = getHeight();
+					int sx = getDpiScalingXceil();
+					int sy = getDpiScalingYceil();
+					if(frontBufferBackup.getWidth() != w*sx || frontBufferBackup.getHeight() != h*sy){
+						frontBufferBackup = new Img(w*sx, h*sy);
+					}
+					GLUtils.fetchPixels(
+							fbo.getFBOid(), 
+							GL30.GL_COLOR_ATTACHMENT0, 
+							0, 0, 
+							w*sx, h*sy, 
+							frontBufferBackup.getData()
+					);
+				});
+			});
+			/* now we can draw the fetched image */
 			((Graphics2D)g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 			int wBuffer = frontBufferBackup.getWidth();
 			int hBuffer = frontBufferBackup.getHeight();

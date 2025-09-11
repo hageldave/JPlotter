@@ -2,11 +2,13 @@ package hageldave.jplotter.util;
 
 import java.awt.Rectangle;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.awt.GLData;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.jplotter.canvas.CanvasTracker;
@@ -297,4 +299,14 @@ public class GLUtils {
 		GL11.glViewport(x*sx, y*sy, w*sx, h*sy);
 	}
 	
+	/**
+	 * Utility method to create GLData with specific settings.
+	 * @param edit Consumer that edits the GLData config.
+	 * @return GLData object
+	 */
+	public static GLData mkGLData(Consumer<GLData> edit) {
+		GLData gld = new GLData();
+		edit.accept(gld);
+		return gld;
+	}
 }
