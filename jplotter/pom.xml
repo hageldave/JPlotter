@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -52,6 +53,18 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.4.2</version>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Automatic-Module-Name>hageldave.jplotter</Automatic-Module-Name>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -74,13 +87,13 @@
 			<artifactId>batik-all</artifactId>
 			<version>1.19</version>
 			<exclusions>
-        		<exclusion>
-        			<!-- excluding due to clash with module 'java.xml' and 'jdk.xml.dom' 
-        			(org.w3c.dom ... accesible from more than on module) -->
-            		<groupId>xml-apis</groupId>
-            		<artifactId>xml-apis</artifactId>
-        		</exclusion>
-    		</exclusions>
+				<exclusion>
+					<!-- excluding due to clash with module 'java.xml' and 'jdk.xml.dom' 
+        			(org.w3c.dom ... accesible from more than one module) -->
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!-- Render PDFs -->
 		<dependency>
