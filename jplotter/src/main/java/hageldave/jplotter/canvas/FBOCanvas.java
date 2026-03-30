@@ -691,7 +691,6 @@ public abstract class FBOCanvas extends AWTGLCanvas implements AutoCloseable {
 			return;
 		}
 		if(Objects.nonNull(frontBufferBackup)){
-			System.out.println("doin it " + g.getClass().getSimpleName());
 			/* now we need to fetch the framebuffer content from GPU first */
 			Utils.execOnAWTEventDispatch(()->{
 				runInContext(()->{

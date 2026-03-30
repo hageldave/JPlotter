@@ -1,6 +1,7 @@
 package hageldave.jplotter.util;
 
 import java.awt.geom.Rectangle2D;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -161,28 +162,27 @@ public class QuadTree<T> {
      * @param rectanglePosition describes in which position (upper left, lower left, upper right, lower right) the QuadTree is located (only relevant for QuadTrees on lower levels)
      * @param <T> generic type of the nodes in this QuadTree
      */
-    public static <T> void printTree(QuadTree<T> quadTree, Function<T, String> nodeFormatter, String rectanglePosition) {
-        System.out.println("-----------------------------");
+    public static <T> void printTree(PrintStream stream, QuadTree<T> quadTree, Function<T, String> nodeFormatter, String rectanglePosition) {
         if (rectanglePosition == null) {
-            System.out.println("Level: " + quadTree.getLevel() + ", Rectangle position: " + "None");
+            stream.println("Level: " + quadTree.getLevel() + ", Rectangle position: " + "None");
         } else {
-            System.out.println("Level: " + quadTree.getLevel() + ", Rectangle position: " + rectanglePosition);
+            stream.println("Level: " + quadTree.getLevel() + ", Rectangle position: " + rectanglePosition);
         }
-        System.out.println("Nodes: ");
+        stream.println("Nodes: ");
         int i = 0;
         for (T node: quadTree.getNodes()) {
-            System.out.println(" - Node " + i + ": " + nodeFormatter.apply(node));
+        	stream.println(" - Node " + i + ": " + nodeFormatter.apply(node));
             i++;
         }
-        System.out.println("Bounds: " + quadTree.getBounds());
+        stream.println("Bounds: " + quadTree.getBounds());
 
         if (quadTree.getLowerLeft() != null) {
-            printTree(quadTree.getLowerLeft(), nodeFormatter, "Lower left");
-            printTree(quadTree.getLowerRight(), nodeFormatter, "Lower right");
-            printTree(quadTree.getUpperLeft(), nodeFormatter, "Upper left");
-            printTree(quadTree.getUpperRight(), nodeFormatter, "Upper right");
+            printTree(stream, quadTree.getLowerLeft(), nodeFormatter, "Lower left");
+            printTree(stream, quadTree.getLowerRight(), nodeFormatter, "Lower right");
+            printTree(stream, quadTree.getUpperLeft(), nodeFormatter, "Upper left");
+            printTree(stream, quadTree.getUpperRight(), nodeFormatter, "Upper right");
         }
-        System.out.println("-----------------------------");
+        stream.println("-----------------------------");
     }
 
     /**
