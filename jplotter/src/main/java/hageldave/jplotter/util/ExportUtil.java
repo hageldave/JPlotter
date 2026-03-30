@@ -26,18 +26,16 @@ public class ExportUtil {
      * Exports {@link JPlotterCanvas} to PDF file.
      * It uses the given path as the export location.
      * The path has to include the .pdf as an ending.
-     * <br/>
-     * Prints to console, when exporting has been successful.
      *
      * @param canvas to export
      * @param path location where the file will be exported to
+     * @throws RuntimeException if an error occurs during exporting
      */
     public static void canvasToPDF(JPlotterCanvas canvas, String path) {
         try {
             PDDocument doc = canvas.paintPDF();
             doc.save(path);
             doc.close();
-            System.out.println("Exported as " + path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -51,18 +49,16 @@ public class ExportUtil {
      * Exports {@link JFrame} to PDF file.
      * It uses the given path as the export location.
      * The path has to include the .pdf as an ending.
-     * <br/>
-     * Prints to console, when exporting has been successful.
      *
      * @param frame to export
      * @param path location where the file will be exported to
+     * @throws RuntimeException if an error occurs during exporting
      */
     public static void frameToPDF(JFrame frame, String path) {
         try {
             PDDocument doc = PDFUtils.containerToPDF(frame.getContentPane());
             doc.save(path);
             doc.close();
-            System.out.println("Exported as " + path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -76,16 +72,14 @@ public class ExportUtil {
      * Exports {@link JPlotterCanvas} to SVG file.
      * It uses the given path as the export location.
      * The path has to include the .svg as an ending.
-     * <br/>
-     * Prints to console, when exporting has been successful.
      *
      * @param canvas to export
      * @param path location where the file will be exported to
+     * @throws RuntimeException if an error occurs during exporting
      */
     public static void canvasToSVG(JPlotterCanvas canvas, String path) {
         Document doc = canvas.paintSVG();
         SVGUtils.documentToXMLFile(doc, new File(path));
-        System.out.println("Exported as " + path);
     }
 
     public static void canvasToSVG(JPlotterCanvas canvas) {
@@ -96,16 +90,14 @@ public class ExportUtil {
      * Exports {@link JFrame} to SVG file.
      * It uses the given path as the export location.
      * The path has to include the .svg as an ending.
-     * <br/>
-     * Prints to console, when exporting has been successful.
      *
      * @param frame to export
      * @param path location where the file will be exported to
+     * @throws RuntimeException if an error occurs during exporting
      */
     public static void frameToSVG(JFrame frame, String path) {
         Document svg = SVGUtils.containerToSVG(frame.getContentPane());
         SVGUtils.documentToXMLFile(svg, new File(path));
-        System.out.println("Exported to " + path);
     }
 
     public static void frameToSVG(JFrame frame) {
@@ -116,17 +108,15 @@ public class ExportUtil {
      * Exports {@link JFrame} to PNG file.
      * It uses the given path as the export location.
      * The path has to include the .png as an ending.
-     * <br/>
-     * Prints to console, when exporting has been successful.
      *
      * @param canvas to export
      * @param path location where the file will be exported to
+     * @throws RuntimeException if an error occurs during exporting
      */
     public static void canvasToPNG(JPlotterCanvas canvas, String path) {
         Img img = new Img(canvas.asComponent().getSize());
         img.paint(g -> canvas.asComponent().paintAll(g));
         ImageSaver.saveImage(img.getRemoteBufferedImage(), path);
-        System.out.println("Exported to " + path);
     }
 
     public static void canvasToPNG(JPlotterCanvas canvas) {
@@ -137,17 +127,15 @@ public class ExportUtil {
      * Exports {@link JFrame} to PNG file.
      * It uses the given path as the export location.
      * The path has to include the .png as an ending.
-     * <br/>
-     * Prints to console, when exporting has been successful.
      *
      * @param frame to export
      * @param path location where the file will be exported to
+     * @throws RuntimeException if an error occurs during exporting
      */
     public static void frameToPNG(JFrame frame, String path) {
         Img img = new Img(frame.getContentPane().getSize());
         img.paint(g -> frame.getContentPane().paintAll(g));
         ImageSaver.saveImage(img.getRemoteBufferedImage(), path);
-        System.out.println("Exported to " + path);
     }
 
     public static void frameToPNG(JFrame frame) {
@@ -163,7 +151,6 @@ public class ExportUtil {
      * @return the created JMenuBar
      */
     public static JMenuBar createSaveMenu(JPlotterCanvas canvas, String path) {
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
         JMenuBar menuBar = new JMenuBar();
         JMenu exportMenu = new JMenu("Export canvas");
         menuBar.add(exportMenu);
@@ -201,7 +188,6 @@ public class ExportUtil {
      * @return the created JMenuBar
      */
     public static JMenuBar createSaveMenu(JFrame frame, String path) {
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
         JMenuBar menuBar = new JMenuBar();
         JMenu exportMenu = new JMenu("Export frame");
         menuBar.add(exportMenu);
@@ -237,7 +223,6 @@ public class ExportUtil {
      * @return the created JMenuBar
      */
     public static JMenuBar createSaveFileChooserMenu(JPlotterCanvas canvas) {
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
         JMenuBar menuBar = new JMenuBar();
         JMenu exportMenu = new JMenu("Export to");
         menuBar.add(exportMenu);
@@ -294,7 +279,6 @@ public class ExportUtil {
      * @return the created JMenuBar
      */
     public static JMenuBar createSaveFileChooserMenu(JFrame frame) {
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
         JMenuBar menuBar = new JMenuBar();
         JMenu exportMenu = new JMenu("Export to");
         menuBar.add(exportMenu);
