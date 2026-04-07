@@ -22,6 +22,8 @@ import java.util.function.ToDoubleFunction;
  * @author lvcarx
  *
  * @param <T> element type
+ * 
+ * @deprecated This class is deprecated due to bugs that are hard to resolve. Use {@link QTree} instead.
  */
 public class QuadTree<T> {
     protected final int maxCapacity;

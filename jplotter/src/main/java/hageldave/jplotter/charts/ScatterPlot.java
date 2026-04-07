@@ -43,7 +43,7 @@ import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Pair;
 import hageldave.jplotter.util.PickingRegistry;
-import hageldave.jplotter.util.QuadTree;
+import hageldave.jplotter.util.QTree;
 import hageldave.jplotter.util.Utils;
 
 /**
@@ -307,7 +307,7 @@ public class ScatterPlot {
     	protected ArrayList<Pair<Integer, Integer>> xyIndicesPerChunk = new ArrayList<>();;
     	protected ArrayList<String> descriptionPerChunk = new ArrayList<>();
     	protected LinkedList<ScatterPlotDataModelListener> listeners = new LinkedList<>();
-		protected ArrayList<QuadTree<Integer>> quadTreePerChunk = new ArrayList<>();
+		protected ArrayList<QTree<Integer>> quadTreePerChunk = new ArrayList<>();
 
 		/**
 		 * Adds data to the data model of the scatter plot.
@@ -402,7 +402,7 @@ public class ScatterPlot {
     		return descriptionPerChunk.get(chunkIdx);
     	}
 
-		public QuadTree<Integer> getQuadTree(int chunkIdx) {
+		public QTree<Integer> getQuadTree(int chunkIdx) {
 			return quadTreePerChunk.get(chunkIdx);
 		}
     	
@@ -420,8 +420,9 @@ public class ScatterPlot {
     	}
 
     	public TreeSet<Integer> getIndicesOfPointsInArea(int chunkIdx, Rectangle2D area) {
-			QuadTree<Integer> quadTree = getQuadTree(chunkIdx);
-			List<Integer> containedPointIndices = QuadTree.getPointsInArea(quadTree, area);
+			QTree<Integer> quadTree = getQuadTree(chunkIdx);
+//			List<Integer> containedPointIndices = QuadTree.getPointsInArea(quadTree, area);
+			List<Integer> containedPointIndices = quadTree.getEntriesInBounds(area.getMinX(), area.getMaxX(), area.getMinY(), area.getMaxY());
     		return containedPointIndices.stream().collect(Collectors.toCollection(TreeSet::new));
     	}
 
@@ -436,9 +437,15 @@ public class ScatterPlot {
 			maxY = Arrays.stream(dataChunk).mapToDouble(row->row[yIdx]).max().orElseGet(()->0.0);
 
 			Rectangle2D boundingBox = new Rectangle2D.Double(minX, minY, Math.nextUp(maxX-minX), Math.nextUp(maxY-minY));
-			QuadTree<Integer> qt = new QuadTree<>(4, boundingBox, (i)->dataChunk[i][xIdx], (i)->dataChunk[i][yIdx]);
+//			QuadTree<Integer> qt = new QuadTree<>(4, boundingBox, (i)->dataChunk[i][xIdx], (i)->dataChunk[i][yIdx]);
+			QTree<Integer> qt = new QTree<>(
+					(i)->dataChunk[i][xIdx], 
+					(i)->dataChunk[i][yIdx],
+					boundingBox.getMinX(), boundingBox.getMaxX(), boundingBox.getMinY(), boundingBox.getMaxY()
+			);
 			for (int i = 0; i < dataChunk.length; i++) {
-				QuadTree.insert(qt, i);
+//				QuadTree.insert(qt, i);
+				qt.insert(i);
 			}
 
 			if (this.quadTreePerChunk.size() > chunkIndex) {
@@ -1022,7 +1029,7 @@ public class ScatterPlot {
     		public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
     			if(pointSetSelectionOngoingListeners.isEmpty())
     				return;
-
+    			System.out.println("areaSelectedOnGoing: "+minX+" "+minY+" "+maxX+" "+maxY);
     			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 				selectionMemory[0] = area;
     			selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(area));
