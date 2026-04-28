@@ -4,7 +4,7 @@
 
 	<groupId>com.github.hageldave.jplotter</groupId>
 	<artifactId>jplotter</artifactId>
-	<version>1.0.7</version>
+	<version>1.0.8</version>
 
 	<name>JPlotter</name>
 	<url>https://github.com/hageldave/JPlotter</url>
