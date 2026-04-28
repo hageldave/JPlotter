@@ -26,7 +26,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<lwjgl.version>3.3.4</lwjgl.version>
+		<lwjgl.version>3.4.1</lwjgl.version>
 	</properties>
 
 	<build>
@@ -63,12 +63,7 @@
 			<artifactId>lwjgl3-awt</artifactId>
 			<version>0.2.4</version>
 		</dependency>
-		<!-- lwjgl3-awt 0.2.x no longer bundles LWJGL transitively -->
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-			<version>${lwjgl.version}</version>
-		</dependency>
+		<!-- explicit lwjgl (lwjgl3-awt 0.2.x no longer bundles LWJGL transitively) -->
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opengl</artifactId>
@@ -77,23 +72,9 @@
 		<!-- LWJGL natives -->
 		<dependency>
 			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-			<version>${lwjgl.version}</version>
-			<classifier>natives-linux</classifier>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opengl</artifactId>
 			<version>${lwjgl.version}</version>
 			<classifier>natives-linux</classifier>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-			<version>${lwjgl.version}</version>
-			<classifier>natives-windows</classifier>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -105,23 +86,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-			<version>${lwjgl.version}</version>
-			<classifier>natives-macos</classifier>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opengl</artifactId>
 			<version>${lwjgl.version}</version>
 			<classifier>natives-macos</classifier>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-			<version>${lwjgl.version}</version>
-			<classifier>natives-macos-arm64</classifier>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
