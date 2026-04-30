@@ -467,7 +467,7 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
      * Also registers the ESC key listener so pressing ESC calls {@link #clearSelection()}.
      */
     @Override
-    public CoordSysViewSelector register() {
+    public CoordSysPersistentSelector register() {
         super.register();
         if (!Arrays.asList(canvas.getKeyListeners()).contains(escListener)) {
             canvas.addKeyListener(escListener);
@@ -480,7 +480,7 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
      * Also removes the ESC key listener.
      */
     @Override
-    public CoordSysViewSelector deRegister() {
+    public CoordSysPersistentSelector deRegister() {
         super.deRegister();
         canvas.removeKeyListener(escListener);
         return this;
