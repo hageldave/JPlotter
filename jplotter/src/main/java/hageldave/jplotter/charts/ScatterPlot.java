@@ -30,6 +30,7 @@ import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
+import hageldave.jplotter.interaction.kml.CoordSysPersistentSelector;
 import hageldave.jplotter.interaction.kml.CoordSysRopeSelector;
 import hageldave.jplotter.interaction.kml.CoordSysScrollZoom;
 import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
@@ -975,11 +976,11 @@ public class ScatterPlot {
      * @param keyMask the {@link KeyMaskListener} defining which keys will trigger the selection functionality
      * @return the selector
      */
-	public CoordSysViewSelector addRectangularPointSetSelector(KeyMaskListener keyMask) {
+	public CoordSysPersistentSelector addRectangularPointSetSelector(KeyMaskListener keyMask) {
 		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = createSelectionModel();
 		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = createSelectionModel();
 		Shape[] selectionMemory = {null,null};
-		CoordSysViewSelector selector = createRectangularPointSetSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory, keyMask);
+		CoordSysPersistentSelector selector = createRectangularPointSetSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory, keyMask);
 		selectedPointsOngoing.addSelectionListener(s->{
 			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
 			notifyPointSetSelectionChangeOngoing(list, selectionMemory[0]);
@@ -1016,7 +1017,7 @@ public class ScatterPlot {
 		return selector;
 	}
 
-    protected CoordSysViewSelector createRectangularPointSetSelectionCapabilities(
+    protected CoordSysPersistentSelector createRectangularPointSetSelectionCapabilities(
     		SimpleSelectionModel<Pair<Integer, 
     		TreeSet<Integer>>> selectedPointsOngoing,
 			SimpleSelectionModel<Pair<Integer, 
@@ -1024,12 +1025,11 @@ public class ScatterPlot {
 			Shape[] selectionMemory,
 			KeyMaskListener keyMask
 	){
-    	CoordSysViewSelector selector = new CoordSysViewSelector(this.canvas, this.coordsys, keyMask) {
+    	CoordSysPersistentSelector selector = new CoordSysPersistentSelector(this.canvas, this.coordsys, keyMask) {
     		@Override
     		public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
     			if(pointSetSelectionOngoingListeners.isEmpty())
     				return;
-    			System.out.println("areaSelectedOnGoing: "+minX+" "+minY+" "+maxX+" "+maxY);
     			Rectangle2D area = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 				selectionMemory[0] = area;
     			selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(area));
@@ -1044,6 +1044,14 @@ public class ScatterPlot {
 				selectionMemory[1] = area;
     			selectedPoints.setSelection(getIndicesOfPointsInArea(area));
 			}
+    		
+    		@Override
+    		public void areaCleared() {
+    			if(pointSetSelectionListeners.isEmpty())
+    				return;
+    			selectionMemory[0] = selectionMemory[1] = null;
+    			selectedPoints.setSelection();
+    		}
 		};
 		return selector.register();
     }

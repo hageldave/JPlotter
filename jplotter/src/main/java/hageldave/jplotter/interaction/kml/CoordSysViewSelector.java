@@ -43,6 +43,7 @@ import java.util.Arrays;
 public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	protected Component canvas;
+	protected JPlotterCanvas jPlotterCanvas;
 	protected CoordSysRenderer coordsys;
 	protected CompleteRenderer overlay;
 	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
@@ -57,6 +58,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	 */
 	public CoordSysViewSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
 		this.canvas = canvas.asComponent();
+		this.jPlotterCanvas = canvas;
 		this.coordsys = coordsys;
 		this.keyMaskListener = keyMaskListener;
 		Renderer presentRenderer;
@@ -106,12 +108,12 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 				Math.max(p1.getX(), p2.getX()),
 				Math.max(p1.getY(), p2.getY())
 		);
-		canvas.repaint();
+		jPlotterCanvas.scheduleRepaint();
 	}
 	
 	protected void createSelectionAreaBorder() {
-		Point2D start_ = start;
-		Point2D end_ = end;
+		Point2D start_ = start.getLocation();
+		Point2D end_ = end.getLocation();
 		Rectangle vp = coordsys.getCurrentViewPort();
 		start_.setLocation(start_.getX()-vp.x, start_.getY()-vp.y);
 		end_.setLocation(end_.getX()-vp.x, end_.getY()-vp.y);
@@ -140,7 +142,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 					Math.max(p1.getY(), p2.getY())
 			);
 		}
-		canvas.repaint();
+		jPlotterCanvas.scheduleRepaint();
 		start = null;
 		end = null;
 	}

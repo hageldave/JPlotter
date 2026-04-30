@@ -9,7 +9,7 @@ import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.font.FontProvider;
-import hageldave.jplotter.interaction.kml.CoordSysViewSelector;
+import hageldave.jplotter.interaction.kml.CoordSysPersistentSelector;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
 import hageldave.jplotter.misc.Glyph;
@@ -117,6 +117,34 @@ public class IrisViz {
 		ArrayList<Points[]> allPoints = new ArrayList<>();
 		ArrayList<Triangles[]> allTris = new ArrayList<>();
 		ArrayList<Lines[]> allLines = new ArrayList<>();
+		
+		Runnable recolorAll = new Runnable() {
+			
+			public void run() {
+				for(Points[] points:allPoints){
+					for(int c=0; c<3; c++){
+						int color = perClassColors.getColor(c);
+						points[c].getPointDetails().forEach(p->p
+								.setColor(color)
+								.setScaling(1));
+						points[c].setGlobalAlphaMultiplier(0.6).setDirty();
+					}
+				}
+				for(Triangles[] tris:allTris){
+					for(int c=0; c<3; c++){
+						int color = perClassColors.getColor(c);
+						tris[c].setDirty().getTriangleDetails().forEach(tri->tri.setColor(color));
+					}
+				}
+				for(Lines[] lines:allLines){
+					for(int c=0; c<3; c++){
+						int color = perClassColors.getColor(c);
+						lines[c].setDirty().getSegments().forEach(seg->seg.setColor(color));
+					}
+				}
+				canvasCollection.forEach(cnvs->cnvs.scheduleRepaint());
+			}
+		};
  		
 		// make scatter plot matrix
 		for(int j = 0; j < 4; j++){
@@ -201,7 +229,7 @@ public class IrisViz {
 							Point2D location = coordsys.transformAWT2CoordSys(e.getPoint(),canvas.asComponent().getHeight());
 							if(!coordsys.getCoordinateView().contains(location)){
 								pointInfo.setText("");
-								recolorAll();
+								recolorAll.run();
 								return;
 							}
 							int pixel = canvas.getPixel(e.getX(), e.getY(), true, 1);
@@ -210,7 +238,7 @@ public class IrisViz {
 							}
 							if((pixel&0x00ffffff)==0){
 								pointInfo.setText("");
-								recolorAll();
+								recolorAll.run();
 								return;
 							}
 							int dataSetinstanceIDX = (pixel & 0x00ffffff)-1;
@@ -224,31 +252,6 @@ public class IrisViz {
 									+ "  p.w=" + instance[3]
 							);
 							desaturateExcept(pixel|0xff000000);
-						}
-						
-						void recolorAll() {
-							for(Points[] points:allPoints){
-								for(int c=0; c<3; c++){
-									int color = perClassColors.getColor(c);
-									points[c].getPointDetails().forEach(p->p
-											.setColor(color)
-											.setScaling(1));
-									points[c].setGlobalAlphaMultiplier(0.6).setDirty();
-								}
-							}
-							for(Triangles[] tris:allTris){
-								for(int c=0; c<3; c++){
-									int color = perClassColors.getColor(c);
-									tris[c].setDirty().getTriangleDetails().forEach(tri->tri.setColor(color));
-								}
-							}
-							for(Lines[] lines:allLines){
-								for(int c=0; c<3; c++){
-									int color = perClassColors.getColor(c);
-									lines[c].setDirty().getSegments().forEach(seg->seg.setColor(color));
-								}
-							}
-							canvasCollection.forEach(cnvs->cnvs.scheduleRepaint());
 						}
 						
 						void desaturateExcept(int pick){
@@ -284,7 +287,7 @@ public class IrisViz {
 						}
 					});
 					// selecting points (brush & link)
-					new CoordSysViewSelector(canvas,coordsys, new KeyMaskListener(0)) {
+					new CoordSysPersistentSelector(canvas,coordsys, new KeyMaskListener(0)) {
 						// deprecated {extModifierMask=0;/* no shift needed */}
 						public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
 							pointInfo.setText("");
@@ -294,6 +297,11 @@ public class IrisViz {
 							pointInfo.setText("");
 							desaturateExcept(minX, minY, maxX, maxY);
 						}
+						public void areaCleared() {
+							pointInfo.setText("");
+							recolorAll.run();
+						}
+						
 						void desaturateExcept(double minX, double minY, double maxX, double maxY){
 							Rectangle2D r = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 							Predicate<Point2D> isinselection = r::contains;

@@ -7,6 +7,7 @@ import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
+import hageldave.jplotter.util.CursorManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,6 +38,7 @@ import java.util.*;
  */
 public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyListener {
     protected Component canvas;
+    protected JPlotterCanvas jPlotterCanvas;
     protected CoordSysRenderer coordSys;
     protected ColorScheme colorScheme;
     protected KeyMaskListener keyMaskListener;
@@ -57,6 +59,7 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
      */
     public CoordSysRopeSelector(JPlotterCanvas canvas, CoordSysRenderer coordSys, KeyMaskListener keyMaskListener) {
         this.canvas = canvas.asComponent();
+        this.jPlotterCanvas = canvas;
         this.coordSys = coordSys;
         this.colorScheme = coordSys.getColorScheme();
         this.keyMaskListener = keyMaskListener;
@@ -106,12 +109,13 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
             }
             Point2D.Double lastPoint = selectionModel.getSelection().first().get(selectionModel.getSelection().first().size()-1);
             hoverIndicator = this.lines.addSegment(lastPoint, coordSys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight())).setColor(colorScheme.getColor2());
-            canvas.repaint();
-            canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            jPlotterCanvas.scheduleRepaint();
+            //canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            CursorManager.get(canvas).requestCursor(null,this);
         } else if (!selectionModel.getSelection().isEmpty() && !isDone) {
             this.lines.getSegments().remove(hoverIndicator);
             hoverIndicator = null;
-            canvas.repaint();
+            jPlotterCanvas.scheduleRepaint();
         }
 
         changeCursor();
@@ -143,11 +147,12 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
 
     private void changeCursor() {
         if (keyMaskListener.areKeysPressed() && isDone) {
-            canvas.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        	CursorManager.get(canvas).requestCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR), this);
         } else {
-            canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            //canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        	CursorManager.get(canvas).requestCursor(null, this);
         }
-        canvas.repaint();
+        jPlotterCanvas.scheduleRepaint();
     }
 
     /**
@@ -182,7 +187,7 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
                         pd.setColor(colorScheme.getColorText());
                     }
                     this.lines.setGlobalAlphaMultiplier(0.5);
-                    canvas.repaint();
+                    jPlotterCanvas.scheduleRepaint();
 
                     // call selected interface
                     areaSelected(calculateSelectedArea());
@@ -194,7 +199,7 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
                 }
             }
         }
-        canvas.repaint();
+        jPlotterCanvas.scheduleRepaint();
     }
 
     /**
