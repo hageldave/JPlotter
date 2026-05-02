@@ -2,7 +2,7 @@ package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.renderers.CoordSysRenderer;
-import hageldave.jplotter.util.CursorManager;
+import hageldave.jplotter.util.CursorCoordinator;
 import hageldave.jplotter.util.Utils;
 
 import java.awt.*;
@@ -332,7 +332,7 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		if (!keyMaskListener.areKeysPressed() || !hasSelection) {
-			CursorManager.get(canvas).requestCursor(null, CoordSysPersistentSelector.this);
+			CursorCoordinator.get(canvas).requestCursor(null, CoordSysPersistentSelector.this);
 			return;
 		}
 		DragMode zone = hitTest(e.getPoint());
@@ -369,7 +369,7 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 			cursor = Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
 			break;
 		}
-		CursorManager.get(canvas).requestCursor(cursor, CoordSysPersistentSelector.this);
+		CursorCoordinator.get(canvas).requestCursor(cursor, CoordSysPersistentSelector.this);
 	}
 
 	/**
