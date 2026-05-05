@@ -28,6 +28,7 @@ import java.util.Arrays;
  * new one.</li>
  * <li>Pressing {@code ESC} clears the selection at any time.</li>
  * </ul>
+ * Note: the key mask (SHIFT in the above example) can be customized via the constructor.
  * <p>
  * The callback contract is identical to the parent:
  * <ul>
