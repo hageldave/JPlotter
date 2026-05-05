@@ -140,14 +140,6 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 		super(canvas, coordsys);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * If keys are not pressed, returns immediately. When a selection exists,
-	 * performs a hit test to decide between MOVING, RESIZING, or clearing (when
-	 * clicked outside the selection) then starting a new DRAWING. When no selection
-	 * exists, starts a new DRAWING.
-	 */
 	@Override
 	public void mousePressed(MouseEvent e) {
 		if (!keyMaskListener.areKeysPressed()) {
@@ -182,15 +174,6 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * DRAWING: clamps the end point to the coordsys area, redraws the border, and
-	 * fires {@link #areaSelectedOnGoing}. MOVING/RESIZING: computes the coord-space
-	 * delta from the anchor, updates the relevant selection bounds (always from
-	 * anchor to avoid floating-point drift), redraws the border, and fires
-	 * {@link #areaSelectedOnGoing}.
-	 */
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		if (dragMode == DragMode.NONE) {
@@ -267,14 +250,7 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * DRAWING: if the resulting area is zero, calls {@link #clearSelection()};
-	 * otherwise persists the selection bounds and fires {@link #areaSelected}.
-	 * MOVING/RESIZING: normalizes the bounds (in case a resize inverted min/max),
-	 * persists the result, and fires {@link #areaSelected}.
-	 */
+
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		if (dragMode == DragMode.DRAWING) {
@@ -443,8 +419,8 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 	}
 
 	/**
-	 * Overrides the parent implementation to fix the aliasing mutation bug and to
-	 * write border segments directly from coordinate-space bounds.
+	 * Overrides the parent implementation to write border segments directly 
+	 * from coordinate-space bounds.
 	 * <p>
 	 * During {@link DragMode#DRAWING} the bounds are derived from the current
 	 * {@link #start} and {@link #end} pixel points (via
@@ -459,9 +435,9 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 		if (dragMode == DragMode.DRAWING) {
 			// Compute coord-space bounds from the current AWT start/end points.
 			// Use fresh Point2D instances to avoid mutating the original start/end fields.
-			Point2D p1 = coordsys.transformAWT2CoordSys(new Point2D.Double(start.getX(), start.getY()),
+			Point2D p1 = coordsys.transformAWT2CoordSys(start.getLocation(),
 					canvas.getHeight());
-			Point2D p2 = coordsys.transformAWT2CoordSys(new Point2D.Double(end.getX(), end.getY()), canvas.getHeight());
+			Point2D p2 = coordsys.transformAWT2CoordSys(end.getLocation(), canvas.getHeight());
 			minX = Math.min(p1.getX(), p2.getX());
 			maxX = Math.max(p1.getX(), p2.getX());
 			minY = Math.min(p1.getY(), p2.getY());
