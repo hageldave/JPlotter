@@ -46,7 +46,9 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	protected JPlotterCanvas jPlotterCanvas;
 	protected CoordSysRenderer coordsys;
 	protected CompleteRenderer overlay;
-	protected Lines areaBorder = new Lines().setVertexRoundingEnabled(true);
+	protected Lines areaBorder = new Lines()
+			.setVertexRoundingEnabled(true)
+			.setStrokePattern(0xcccc);
 	protected Point start,end;
 	protected KeyMaskListener keyMaskListener;
 
@@ -184,6 +186,16 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 		canvas.removeMouseListener(this);
 		canvas.removeMouseMotionListener(this);
 		canvas.removeKeyListener(this.keyMaskListener);
+		return this;
+	}
+	
+	/**
+	 * Sets the stroke pattern for the area border.
+	 * @param strokePattern stroke pattern as defined in {@link Lines#setStrokePattern(int)}
+	 * @return this for chaining
+	 */
+	public CoordSysViewSelector setAreaStrokePattern(int strokePattern){
+		this.areaBorder.setStrokePattern(strokePattern);
 		return this;
 	}
 	
