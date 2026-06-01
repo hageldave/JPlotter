@@ -16,7 +16,6 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
-import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.CursorCoordinator;
@@ -61,13 +60,13 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 
 	protected static final double POINT_DECIMATION_THRESHOLD_PX = 2.0;
 
-	protected final ColorScheme colorScheme;
 	protected boolean isDragging = false;
 	protected boolean hasSelection = false;
 	protected final List<Point2D.Double> lassoPoints = new ArrayList<>();
-	protected final Lines lassoLines = new Lines()
-			.setVertexRoundingEnabled(true)
-			.setStrokePattern(0xfcccc);
+	protected final Lines lassoLines = super.areaBorder;
+//			new Lines()
+//			.setVertexRoundingEnabled(true)
+//			.setStrokePattern(0xcccc);
 	protected boolean isLassoInOverlay = false;
 
 	/**
@@ -92,7 +91,6 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 	 */
 	public CoordSysLassoSelector(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
 		super(canvas, coordsys, keyMaskListener);
-		this.colorScheme = coordsys.getColorScheme();
 		this.lassoLines.setVertexRoundingEnabled(true);
 	}
 
@@ -149,7 +147,7 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 			lassoPoints.add(new Point2D.Double(point.getX(), point.getY()));
 		}
 
-		rebuildLassoLines(true);
+		rebuildLassoLines();
 		if (lassoPoints.size() >= 2) {
 			areaSelectedOnGoing(calculatePath(false));
 		}
@@ -168,7 +166,7 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 			clearLasso();
 			return;
 		}
-		rebuildLassoLines(false);
+		rebuildLassoLines();
 		hasSelection = true;
 		areaSelected(calculateSelectedArea());
 		jPlotterCanvas.scheduleRepaint();
@@ -204,18 +202,18 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 		}
 	}
 
-	protected void rebuildLassoLines(boolean withPreviewClose) {
+	protected void rebuildLassoLines() {
 		lassoLines.removeAllSegments();
 		for (int i = 1; i < lassoPoints.size(); i++) {
 			Point2D.Double p0 = lassoPoints.get(i - 1);
 			Point2D.Double p1 = lassoPoints.get(i);
-			lassoLines.addSegment(p0, p1).setColor(colorScheme.getColor2());
+			lassoLines.addSegment(p0, p1).setColor(0xff222222);
 		}
 		if (lassoPoints.size() > 1) {
 			Point2D.Double first = lassoPoints.get(0);
 			Point2D.Double last = lassoPoints.get(lassoPoints.size() - 1);
 			lassoLines.addSegment(last, first)
-					.setColor(withPreviewClose ? colorScheme.getColor1() : colorScheme.getColor2());
+					.setColor(0xff222222);
 		}
 	}
 
