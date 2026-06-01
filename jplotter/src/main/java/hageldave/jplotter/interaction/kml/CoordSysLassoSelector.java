@@ -52,6 +52,8 @@ import java.util.List;
  */
 public abstract class CoordSysLassoSelector extends CoordSysViewSelector implements KeyListener {
 
+protected static final double POINT_DECIMATION_THRESHOLD_PX = 2.0;
+
 protected final ColorScheme colorScheme;
 protected boolean isDragging = false;
 protected boolean hasSelection = false;
@@ -108,7 +110,8 @@ return;
 isDragging = true;
 lassoPoints.clear();
 lassoLines.removeAllSegments();
-lassoPoints.add((Point2D.Double) coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight()));
+Point2D point = coordsys.transformAWT2CoordSys(e.getPoint(), canvas.getHeight());
+lassoPoints.add(new Point2D.Double(point.getX(), point.getY()));
 if (!isLassoInOverlay) {
 overlay.addItemToRender(lassoLines);
 isLassoInOverlay = true;
@@ -130,13 +133,15 @@ double clampedY = Utils.clamp(coordSysArea.getMinY(), p.getY(), coordSysArea.get
 Point clampedPoint = new Point((int) clampedX, (int) clampedY);
 
 Point2D.Double lastPoint = lassoPoints.isEmpty() ? null : lassoPoints.get(lassoPoints.size() - 1);
-if (lastPoint == null || coordsys.transformCoordSys2AWT(lastPoint, canvas.getHeight()).distance(clampedPoint) > 2.0) {
-lassoPoints.add((Point2D.Double) coordsys.transformAWT2CoordSys(clampedPoint, canvas.getHeight()));
+if (lastPoint == null || coordsys.transformCoordSys2AWT(lastPoint, canvas.getHeight())
+	.distance(clampedPoint) > POINT_DECIMATION_THRESHOLD_PX) {
+Point2D point = coordsys.transformAWT2CoordSys(clampedPoint, canvas.getHeight());
+lassoPoints.add(new Point2D.Double(point.getX(), point.getY()));
 }
 
 rebuildLassoLines(true);
 if (lassoPoints.size() >= 2) {
-areaSelectedOnGoing(calculateCurrentPath());
+areaSelectedOnGoing(calculatePath(false));
 }
 jPlotterCanvas.scheduleRepaint();
 updateCursor();
@@ -203,23 +208,23 @@ lassoLines.addSegment(last, first).setColor(withPreviewClose ? colorScheme.getCo
 }
 }
 
-private Path2D calculateCurrentPath() {
+private Path2D calculatePath(boolean closePath) {
 Path2D path = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+if (lassoPoints.isEmpty()) {
+return path;
+}
 path.moveTo(lassoPoints.get(0).x, lassoPoints.get(0).y);
 for (int i = 1; i < lassoPoints.size(); i++) {
 path.lineTo(lassoPoints.get(i).x, lassoPoints.get(i).y);
+}
+if (closePath) {
+path.closePath();
 }
 return path;
 }
 
 private Path2D calculateSelectedArea() {
-Path2D path = new Path2D.Double(Path2D.WIND_EVEN_ODD);
-path.moveTo(lassoPoints.get(0).x, lassoPoints.get(0).y);
-for (int i = 1; i < lassoPoints.size(); i++) {
-path.lineTo(lassoPoints.get(i).x, lassoPoints.get(i).y);
-}
-path.closePath();
-return path;
+return calculatePath(true);
 }
 
 /**
