@@ -111,9 +111,13 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 			updateCursor();
 			return;
 		}
-		if (SwingUtilities.isRightMouseButton(e) || hasSelection) {
+		if (SwingUtilities.isRightMouseButton(e)) {
 			clearLasso();
 			return;
+		}
+		if(hasSelection) {
+			clearLasso();
+			// continue with new lasso after clearing
 		}
 		isDragging = true;
 		lassoPoints.clear();

@@ -131,6 +131,7 @@ public class ReadyScatterPlot {
 		});
         plot.addRectangularPointSetSelector(new KeyMaskListener(KeyEvent.VK_S));
         plot.addRopePointSetSelector(new KeyMaskListener(KeyEvent.VK_R));
+        plot.addLassoPointSetSelector(new KeyMaskListener(KeyEvent.VK_L));
 
         // create a table that uses the plot's data model 
         JTable datasetTable = new JTable(new TableModel() {

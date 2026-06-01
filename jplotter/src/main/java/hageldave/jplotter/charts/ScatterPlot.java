@@ -29,6 +29,7 @@ import hageldave.jplotter.canvas.BlankCanvasFallback;
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
+import hageldave.jplotter.interaction.kml.CoordSysLassoSelector;
 import hageldave.jplotter.interaction.kml.CoordSysPanning;
 import hageldave.jplotter.interaction.kml.CoordSysPersistentSelector;
 import hageldave.jplotter.interaction.kml.CoordSysRopeSelector;
@@ -1016,6 +1017,22 @@ public class ScatterPlot {
 		});
 		return selector;
 	}
+	
+	public CoordSysLassoSelector addLassoPointSetSelector(KeyMaskListener keyMask) {
+		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = createSelectionModel();
+		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = createSelectionModel();
+		Shape[] selectionMemory = {null,null};
+		CoordSysLassoSelector selector = createLassoSelectionCapabilities(selectedPointsOngoing, selectedPoints, selectionMemory, keyMask);
+		selectedPointsOngoing.addSelectionListener(s->{
+			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+			notifyPointSetSelectionChangeOngoing(list, selectionMemory[0]);
+		});
+		selectedPoints.addSelectionListener(s->{
+			ArrayList<Pair<Integer, TreeSet<Integer>>> list = new ArrayList<>(s);
+			notifyPointSetSelectionChange(list, selectionMemory[1]);
+		});
+		return selector;
+	}
 
     protected CoordSysPersistentSelector createRectangularPointSetSelectionCapabilities(
     		SimpleSelectionModel<Pair<Integer, 
@@ -1064,6 +1081,33 @@ public class ScatterPlot {
 			KeyMaskListener keyMask
 	) {
 		CoordSysRopeSelector selector = new CoordSysRopeSelector(this.canvas, this.coordsys, keyMask) {
+			@Override
+			public void areaSelected(Path2D selectedArea) {
+				if(pointSetSelectionListeners.isEmpty())
+					return;
+				selectionMemory[1] = selectedArea;
+				selectedPoints.setSelection(getIndicesOfPointsInArea(selectedArea));
+			}
+
+			@Override
+			public void areaSelectedOnGoing(Path2D selectedArea) {
+				if(pointSetSelectionOngoingListeners.isEmpty())
+					return;
+				selectionMemory[0] = selectedArea;
+				selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(selectedArea));
+			}
+		};
+		return selector.register();
+	}
+	
+	protected CoordSysLassoSelector createLassoSelectionCapabilities(
+			SimpleSelectionModel<Pair<Integer, 
+			TreeSet<Integer>>> selectedPointsOngoing,
+			SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints,
+			Shape[] selectionMemory,
+			KeyMaskListener keyMask
+	) {
+		CoordSysLassoSelector selector = new CoordSysLassoSelector(this.canvas, this.coordsys, keyMask) {
 			@Override
 			public void areaSelected(Path2D selectedArea) {
 				if(pointSetSelectionListeners.isEmpty())
