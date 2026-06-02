@@ -1,0 +1,42 @@
+# This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
+# For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
+
+name: Publish to maven central
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to use'
+        type: environment
+        required: true
+      commitsha:
+        description: Commit SHA to use
+        type: string
+        required: true
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions: read-all
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ inputs.commitsha }}
+    - name: Set up JDK 11
+      uses: actions/setup-java@v5
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        server-id: 'central'
+        server-username: ${{ secrets.SONATYPE_USER }}
+        server-password: ${{ secrets.SONATYPE_PASS }}
+        gpg-private-key: $(echo  ${{secrets.GPG_SECRET_KEY64 }} | base64 -d -)
+        gpg-passphrase: ${{ secrets.GPG_PASS }}
+        settings-path: ${{ github.workspace }}
+        
+    - name: Build and Publish
+      run: mvn -B -e clean deploy -P release -s $GITHUB_WORKSPACE/settings.xml
+        
