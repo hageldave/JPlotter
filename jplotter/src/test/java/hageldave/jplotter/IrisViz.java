@@ -9,6 +9,7 @@ import hageldave.jplotter.color.ColorScheme;
 import hageldave.jplotter.color.DefaultColorMap;
 import hageldave.jplotter.color.DefaultColorScheme;
 import hageldave.jplotter.font.FontProvider;
+import hageldave.jplotter.interaction.kml.CoordSysLassoSelector;
 import hageldave.jplotter.interaction.kml.CoordSysPersistentSelector;
 import hageldave.jplotter.interaction.kml.KeyMaskListener;
 import hageldave.jplotter.misc.DefaultGlyph;
@@ -23,10 +24,12 @@ import hageldave.jplotter.util.ExportUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
@@ -286,6 +289,7 @@ public class IrisViz {
 							canvasCollection.forEach(cnvs->cnvs.scheduleRepaint());
 						}
 					});
+					
 					// selecting points (brush & link)
 					new CoordSysPersistentSelector(canvas,coordsys, new KeyMaskListener(0)) {
 						// deprecated {extModifierMask=0;/* no shift needed */}
@@ -342,6 +346,67 @@ public class IrisViz {
 							}
 							canvasCollection.forEach(cnvs->cnvs.scheduleRepaint());
 						}
+					}.register();
+					
+					// alternative brushing with lasso on SHIFT press
+					new CoordSysLassoSelector(canvas,coordsys, new KeyMaskListener(KeyEvent.VK_SHIFT)) {
+
+						@Override
+						public void areaSelected(Path2D selectedArea) {
+							pointInfo.setText("");
+							desaturateExcept(selectedArea);
+						}
+						
+						public void areaSelectedOnGoing(Path2D currentPath) {
+							pointInfo.setText("");
+							desaturateExcept(currentPath);
+						};
+						
+						public void areaCleared() {
+							pointInfo.setText("");
+							recolorAll.run();
+						};
+						
+						void desaturateExcept(Path2D selectedArea){
+							Predicate<Point2D> isinselection = selectedArea::contains;
+							TreeSet<Integer> pickIDs = Arrays.stream(perClassPoints)
+									.flatMap(points->points.getPointDetails().stream())
+									.filter(p->isinselection.test(p.location))
+									.map(p->p.pickColor)
+									.collect(Collectors.toCollection(TreeSet::new));
+							Set<Integer> clazzes = pickIDs.stream()
+									.map(id->(id&0x00ffffff)-1)
+									.map(dataset::get)
+									.map(inst->(int)inst[4])
+									.collect(Collectors.toSet());
+							for(Points[] points:allPoints){
+								for(int c=0; c<3; c++){
+									int color = perClassColors.getColor(c);
+									int desat = 0x33aaaaaa;
+									points[c].getPointDetails().forEach(p->p.setColor(pickIDs.contains(p.pickColor) ? color:desat));
+									// bring picked point to front by sorting
+									points[c].getPointDetails().sort((p1,p2)->{
+										if(pickIDs.contains(p1.pickColor)==pickIDs.contains(p2.pickColor)) return 0;
+										return pickIDs.contains(p1.pickColor) ? 1:-1;
+									});
+									points[c].setGlobalAlphaMultiplier(1).setDirty();
+								}
+							}
+							for(Triangles[] tris:allTris){
+								for(int c=0; c<3; c++){
+									int color = clazzes.contains(c) ? perClassColors.getColor(c):0xff777777;
+									tris[c].setDirty().getTriangleDetails().forEach(t->t.setColor(color));
+								}
+							}
+							for(Lines[] lines:allLines){
+								for(int c=0; c<3; c++){
+									int color = clazzes.contains(c) ? perClassColors.getColor(c):0xff777777;
+									lines[c].setDirty().getSegments().forEach(s->s.setColor(color));
+								}
+							}
+							canvasCollection.forEach(cnvs->cnvs.scheduleRepaint());
+						}
+						
 					}.register();
 				}
 				coordsys.setContent(content);
