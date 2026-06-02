@@ -39,7 +39,7 @@ import hageldave.jplotter.util.Utils;
  * <li>Drag to append points to the lasso path.</li>
  * <li>Release the mouse button to finalize the lasso and call
  * {@link #areaSelected(Path2D)}.</li>
- * <li>Right-click or press {@code ESC} to clear the lasso via
+ * <li>Left-click or press {@code ESC} to clear the lasso via
  * {@link #clearLasso()}.</li>
  * </ul>
  * <p>
@@ -107,12 +107,11 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (!keyMaskListener.areKeysPressed() || !coordsys.getCoordSysArea().contains(e.getPoint())) {
+		if (!keyMaskListener.areKeysPressed() || !coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight()))) {
 			updateCursor();
 			return;
 		}
 		if (SwingUtilities.isRightMouseButton(e)) {
-			clearLasso();
 			return;
 		}
 		if(hasSelection) {

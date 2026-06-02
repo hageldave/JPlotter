@@ -8,6 +8,7 @@ import hageldave.jplotter.renderables.Points;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.CursorCoordinator;
+import hageldave.jplotter.util.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -81,7 +82,7 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (keyMaskListener.areKeysPressed() && coordSys.getCoordSysArea().contains(e.getPoint())) {
+        if (keyMaskListener.areKeysPressed() && coordSys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight()))) {
             if (isDone || SwingUtilities.isRightMouseButton(e)) {
                 clearSelectionResources();
             } else if (!isDone) {

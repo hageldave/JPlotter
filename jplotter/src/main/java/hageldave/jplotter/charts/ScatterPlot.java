@@ -1123,6 +1123,14 @@ public class ScatterPlot {
 				selectionMemory[0] = selectedArea;
 				selectedPointsOngoing.setSelection(getIndicesOfPointsInArea(selectedArea));
 			}
+			
+			@Override
+			public void areaCleared() {
+				if(pointSetSelectionListeners.isEmpty())
+    				return;
+    			selectionMemory[0] = selectionMemory[1] = null;
+    			selectedPoints.setSelection();
+			}
 		};
 		return selector.register();
 	}
