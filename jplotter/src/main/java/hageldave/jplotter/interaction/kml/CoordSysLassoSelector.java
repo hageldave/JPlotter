@@ -283,13 +283,19 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 		return this;
 	}
 	
+	/**
+	 * @deprecated This method signature does not apply to free form shape. Use {@link #areaSelected(Path2D)} instead.
+	 */
 	@Deprecated
-	public void areaSelected(double minX, double minY, double maxX, double maxY) {
+	public final void areaSelected(double minX, double minY, double maxX, double maxY) {
 		throw new UnsupportedOperationException("areaSelected with bounding box is not supported in CoordSysLassoSelector. Call areaSelected(Path2D) instead.");
 	}
 	
+	/**
+	 * @deprecated This method signature does not apply to free form shape. Use {@link #areaSelectedOnGoing(Path2D)} instead.
+	 */
 	@Deprecated
-	public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
+	public final void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
 		throw new UnsupportedOperationException("areaSelectedOnGoing with bounding box is not supported in CoordSysLassoSelector. Call areaSelectedOnGoing(Path2D) instead.");
 	}
 
