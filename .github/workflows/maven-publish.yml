@@ -42,9 +42,11 @@ jobs:
         server-username: ${{ secrets.SONATYPE_USER }}
         server-password: ${{ secrets.SONATYPE_PASS }}
         gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-        gpg-passphrase: ${{ secrets.GPG_PASS }}
+        # gpg-passphrase: ${{ secrets.GPG_PASS }}
         settings-path: ${{ github.workspace }}
         
     - name: Build and Publish
-      run: mvn -B -e clean deploy -P release -s $GITHUB_WORKSPACE/settings.xml -Dgpg.keyname=${{ secrets.GPG_KEY_ID }}  ${{ inputs.mavenoptions }}
+      run: | 
+        export MAVEN_GPG_PASSPHRASE = ${{ secrets.GPG_PASS }}
+        mvn -B -e clean deploy -P release -s $GITHUB_WORKSPACE/settings.xml -Dgpg.keyname=${{ secrets.GPG_KEY_ID }}  ${{ inputs.mavenoptions }}
         
