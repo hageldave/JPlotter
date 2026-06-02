@@ -39,14 +39,17 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         server-id: 'central'
-        server-username: ${{ secrets.SONATYPE_USER }}
-        server-password: ${{ secrets.SONATYPE_PASS }}
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_CENTRAL_TOKEN
         gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-        # gpg-passphrase: ${{ secrets.GPG_PASS }}
+        gpg-passphrase: ${{ secrets.GPG_PASS }}
         settings-path: ${{ github.workspace }}
         
     - name: Build and Publish
       run: | 
         export MAVEN_GPG_PASSPHRASE=${{ secrets.GPG_PASS }}
         mvn -B -e clean deploy -P release -s $GITHUB_WORKSPACE/settings.xml -Dgpg.keyname=${{ secrets.GPG_KEY_ID }}  ${{ inputs.mavenoptions }}
+      env:
+        MAVEN_USERNAME: ${{ secrets.SONATYPE_USER }}
+        MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASS }}
         
