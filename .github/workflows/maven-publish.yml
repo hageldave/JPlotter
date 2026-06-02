@@ -46,5 +46,5 @@ jobs:
         settings-path: ${{ github.workspace }}
         
     - name: Build and Publish
-      run: mvn -B -e clean deploy -P release -s $GITHUB_WORKSPACE/settings.xml ${{ inputs.mavenoptions }}
+      run: mvn -B -e clean deploy -P release -s $GITHUB_WORKSPACE/settings.xml -Dgpg.keyname=${{ secrets.GPG_KEY_ID }}  ${{ inputs.mavenoptions }}
         
