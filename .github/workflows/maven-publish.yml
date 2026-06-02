@@ -36,7 +36,7 @@ jobs:
         server-id: 'central'
         server-username: ${{ secrets.SONATYPE_USER }}
         server-password: ${{ secrets.SONATYPE_PASS }}
-        gpg-private-key: ${{ secrets.GPG_SECRET_KEY64 }}
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
         gpg-passphrase: ${{ secrets.GPG_PASS }}
         settings-path: ${{ github.workspace }}
         
