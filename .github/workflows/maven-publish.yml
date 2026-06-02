@@ -20,6 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     permissions: read-all
+    defaults:
+      run:
+        working-directory: jplotter
 
     steps:
     - uses: actions/checkout@v6
