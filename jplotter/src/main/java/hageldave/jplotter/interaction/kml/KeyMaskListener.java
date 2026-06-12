@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 
 /**
  * The KeyMaskListener class provides a way to check if a predefined set of keys on the keyboard/mouse/... is pressed.
@@ -25,11 +27,11 @@ import java.util.Map;
  * All the interaction interfaces JPlotter offers ({@link CoordSysScrollZoom}, {@link CoordSysPanning}, ...), support the use of the KeyMaskListener.
  *
  */
-public class KeyMaskListener extends KeyAdapter {
+public class KeyMaskListener extends KeyAdapter implements BooleanSupplier {
     protected boolean areKeysPressed = false;
-    protected boolean noMasking = false;
     final protected HashMap<Integer, Boolean> keyPressedMap = new HashMap<>();
     final protected ArrayList<Integer> keysToPress = new ArrayList<>();
+    final protected ArrayList<BiConsumer<KeyMaskListener, Boolean>> stateChangedCallbacks = new ArrayList<>();
 
     /**
      * Creates a new {@link KeyMaskListener} object which can be used to check if the
@@ -38,26 +40,33 @@ public class KeyMaskListener extends KeyAdapter {
      * @param keys which have to be pressed
      */
     public KeyMaskListener(final int... keys) {
-        // checks if either 0 arguments are passed or the number 0 as the only argument
-        if (keys.length == 0 || (keys.length == 1 && keys[0] == 0)) {
-            this.noMasking = true;
-        }
         for (int j : keys) {
-            this.keysToPress.add(j);
+        	if (j != KeyEvent.VK_UNDEFINED) // if the key is not 0, add it to the list of keys to press
+        		this.keysToPress.add(j);
         }
         Collections.sort(this.keysToPress);
+        if (this.keysToPress.isEmpty()) // if no keys to press, set areKeysPressed to true
+			this.areKeysPressed = true;
     }
+    
+    protected void setAreKeysPressed(boolean areKeysPressed) {
+    	boolean old = this.areKeysPressed;
+		this.areKeysPressed = areKeysPressed;
+		if(old != areKeysPressed)
+			for (BiConsumer<KeyMaskListener, Boolean> c : stateChangedCallbacks)
+				c.accept(this, areKeysPressed);
+	}
 
     @Override
     public void keyPressed(KeyEvent e) {
         keyPressedMap.put(e.getKeyCode(), true);
-        areKeysPressed = this.keysToPress.equals(getPressedKeys());
+        setAreKeysPressed(this.keysToPress.equals(getPressedKeys()));
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         keyPressedMap.put(e.getKeyCode(), false);
-        areKeysPressed = this.keysToPress.equals(getPressedKeys());
+        setAreKeysPressed(this.keysToPress.equals(getPressedKeys()));
     }
 
     /**
@@ -65,8 +74,6 @@ public class KeyMaskListener extends KeyAdapter {
      *         false if there are more, less or wrong keys currently pressed.
      */
     public boolean areKeysPressed() {
-        if (noMasking)
-            return getPressedKeys().size() <= 0;
         return areKeysPressed;
     }
 
@@ -78,5 +85,29 @@ public class KeyMaskListener extends KeyAdapter {
 
         Collections.sort(pressedKeys);
         return pressedKeys;
+    }
+    
+    @Override
+    public boolean getAsBoolean() {
+    	return areKeysPressed();
+    }
+    
+    /**
+     * Adds a callback which is called whenever the state of the KeyMaskListener changes 
+     * (i.e. when the areKeysPressed() value changes).
+     * @param callback the callback to add, which takes the KeyMaskListener and the new state 
+     * (true if the keys are now pressed, false otherwise) as parameters.
+     * 
+     * @return this for chaining
+     */
+    public KeyMaskListener addStateChangedCallback(BiConsumer<KeyMaskListener, Boolean> callback) {
+		this.stateChangedCallbacks.add(callback);
+		return this;
+	}
+    
+    
+    public KeyMaskListener removeStateChangedCallback(BiConsumer<KeyMaskListener, Boolean> callback) {
+    	this.stateChangedCallbacks.remove(callback);
+    	return this;
     }
 }

@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -718,29 +719,52 @@ public class ScatterPlot {
 	/**
 	 * Adds a scroll zoom to the Scatterplot
 	 *
-	 * @param keyMaskListener defines which keys have to pressed during scrolling to initiate the zoom.
+	 * @param isActiveChecker defines which keys have to pressed during scrolling to initiate the zoom.
 	 * @return the {@link CoordSysScrollZoom} so that it can be further customized
 	 */
-    public CoordSysScrollZoom addScrollZoom(final KeyMaskListener keyMaskListener) {
-        return new CoordSysScrollZoom(this.canvas, this.coordsys, keyMaskListener).register();
+    public CoordSysScrollZoom addScrollZoom(final BooleanSupplier isActiveChecker) {
+    	return addScrollZoom(isActiveChecker, false);
+    }
+    
+    /**
+	 * Adds a scroll zoom to the Scatterplot
+	 *
+	 * @param isActiveChecker defines which keys have to pressed during scrolling to initiate the zoom.
+	 * @return the {@link CoordSysScrollZoom} so that it can be further customized
+	 */
+    public CoordSysScrollZoom addScrollZoom(final BooleanSupplier isActiveChecker, boolean mouseFocused) {
+    	if(isActiveChecker == null || isActiveChecker instanceof KeyMaskListener)
+    		return new CoordSysScrollZoom(this.canvas, this.coordsys, (KeyMaskListener)isActiveChecker, mouseFocused)
+    				.register();
+    	else
+    		return new CoordSysScrollZoom(this.canvas, this.coordsys, null, mouseFocused) {
+    			public boolean isInteractionActive() {return isActiveChecker.getAsBoolean();}
+    		}.register();
     }
 
 	/**
 	 * @see ScatterPlot#addPanning(KeyMaskListener)
 	 */
     public CoordSysPanning addPanning() {
-        return new CoordSysPanning(this.canvas, this.coordsys).register();
+        return new CoordSysPanning(this.canvas, this.coordsys, new KeyMaskListener()).register();
     }
 
 	/**
 	 * Adds panning functionality to the Scatterplot.
 	 *
-	 * @param keyMaskListener defines which keys have to pressed to initiate the panning.
+	 * @param isActiveChecker defines which keys have to pressed to initiate the panning.
 	 * @return the {@link CoordSysPanning} so that it can be further customized
 	 */
-    public CoordSysPanning addPanning(final KeyMaskListener keyMaskListener) {
-        return new CoordSysPanning(this.canvas, this.coordsys, keyMaskListener).register();
+    public CoordSysPanning addPanning(final BooleanSupplier isActiveChecker) {
+    	if(isActiveChecker == null || isActiveChecker instanceof KeyMaskListener)
+    		return new CoordSysPanning(this.canvas, this.coordsys, (KeyMaskListener)isActiveChecker).register();
+    	else
+			return new CoordSysPanning(this.canvas, this.coordsys, null) {
+    			public boolean isInteractionActive() {return isActiveChecker.getAsBoolean();}
+    		}.register();
     }
+    
+    
 
     /**
      * @see ScatterPlot#addRectangleSelectionZoom(KeyMaskListener)
@@ -757,16 +781,25 @@ public class ScatterPlot {
 	/**
 	 * Adds a zoom functionality by selecting a rectangle.
 	 *
-	 * @param keyMaskListener defines which keys have to pressed during the selection to initiate the zoom.
+	 * @param isActiveChecker defines which keys have to pressed during the selection to initiate the zoom.
 	 * @return the {@link CoordSysViewSelector} so that it can be further customized
 	 */
-    public CoordSysViewSelector addRectangleSelectionZoom(final KeyMaskListener keyMaskListener) {
-        return new CoordSysViewSelector(this.canvas, this.coordsys, keyMaskListener) {
-            @Override
-            public void areaSelected(double minX, double minY, double maxX, double maxY) {
-                coordsys.setCoordinateView(minX, minY, maxX, maxY);
-            }
-        }.register();
+    public CoordSysViewSelector addRectangleSelectionZoom(final BooleanSupplier isActiveChecker) {
+    	if(isActiveChecker == null || isActiveChecker instanceof KeyMaskListener)
+	        return new CoordSysViewSelector(this.canvas, this.coordsys, (KeyMaskListener)isActiveChecker) {
+	            @Override
+	            public void areaSelected(double minX, double minY, double maxX, double maxY) {
+	                coordsys.setCoordinateView(minX, minY, maxX, maxY);
+	            }
+	        }.register();
+	    else
+	    	return new CoordSysViewSelector(this.canvas, this.coordsys, null) {
+	    		@Override
+	    		public void areaSelected(double minX, double minY, double maxX, double maxY) {
+	    			coordsys.setCoordinateView(minX, minY, maxX, maxY);
+	    		}
+	    		public boolean isInteractionActive() {return isActiveChecker.getAsBoolean();}
+	    	}.register();
     }
 
     protected void createMouseEventHandler() {
@@ -791,6 +824,8 @@ public class ScatterPlot {
     			/* TODO: check key mask listeners of panning, zooming, and rectangular point selection
     			 * to figure out if the mouse event is being handled by them. If not handled by any of them
     			 * then go on with the following.
+    			 * 
+    			 * On second thought, lets move this responsibility to the listeners, it's not very expensive.
     			 */
     			if(Utils.swapYAxis(coordsys.getCoordSysArea(),canvas.asComponent().getHeight()).contains(e.getPoint())) {
     				/* mouse inside coordinate area */
@@ -977,7 +1012,7 @@ public class ScatterPlot {
      * @param keyMask the {@link KeyMaskListener} defining which keys will trigger the selection functionality
      * @return the selector
      */
-	public CoordSysPersistentSelector addRectangularPointSetSelector(KeyMaskListener keyMask) {
+	public CoordSysPersistentSelector addRectangularPointSetSelector(BooleanSupplier keyMask) {
 		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = createSelectionModel();
 		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = createSelectionModel();
 		Shape[] selectionMemory = {null,null};
@@ -1002,7 +1037,7 @@ public class ScatterPlot {
      * @param keyMask the {@link KeyMaskListener} defining which keys will trigger the selection functionality
      * @return the selector
      */
-	public CoordSysRopeSelector addRopePointSetSelector(KeyMaskListener keyMask) {
+	public CoordSysRopeSelector addRopePointSetSelector(BooleanSupplier keyMask) {
 		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = createSelectionModel();
 		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = createSelectionModel();
 		Shape[] selectionMemory = {null,null};
@@ -1018,7 +1053,7 @@ public class ScatterPlot {
 		return selector;
 	}
 	
-	public CoordSysLassoSelector addLassoPointSetSelector(KeyMaskListener keyMask) {
+	public CoordSysLassoSelector addLassoPointSetSelector(BooleanSupplier keyMask) {
 		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPointsOngoing = createSelectionModel();
 		SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints = createSelectionModel();
 		Shape[] selectionMemory = {null,null};
@@ -1040,9 +1075,16 @@ public class ScatterPlot {
 			SimpleSelectionModel<Pair<Integer, 
 			TreeSet<Integer>>> selectedPoints, 
 			Shape[] selectionMemory,
-			KeyMaskListener keyMask
+			BooleanSupplier isActiveChecker
 	){
-    	CoordSysPersistentSelector selector = new CoordSysPersistentSelector(this.canvas, this.coordsys, keyMask) {
+    	KeyMaskListener kml = isActiveChecker instanceof KeyMaskListener ? (KeyMaskListener)isActiveChecker : null;
+    	CoordSysPersistentSelector selector = new CoordSysPersistentSelector(this.canvas, this.coordsys, kml) {
+    		
+    		@Override
+    		public boolean isInteractionActive() {
+    			return kml != null ? super.isInteractionActive():isActiveChecker.getAsBoolean();
+    		}
+    		
     		@Override
     		public void areaSelectedOnGoing(double minX, double minY, double maxX, double maxY) {
     			if(pointSetSelectionOngoingListeners.isEmpty())
@@ -1078,9 +1120,16 @@ public class ScatterPlot {
 			TreeSet<Integer>>> selectedPointsOngoing,
 			SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints,
 			Shape[] selectionMemory,
-			KeyMaskListener keyMask
-	) {
-		CoordSysRopeSelector selector = new CoordSysRopeSelector(this.canvas, this.coordsys, keyMask) {
+			BooleanSupplier isActiveChecker
+	){
+		KeyMaskListener kml = isActiveChecker instanceof KeyMaskListener ? (KeyMaskListener)isActiveChecker : null;
+		CoordSysRopeSelector selector = new CoordSysRopeSelector(this.canvas, this.coordsys, kml) {
+			
+			@Override
+    		public boolean isInteractionActive() {
+    			return kml != null ? super.isInteractionActive():isActiveChecker.getAsBoolean();
+    		}
+			
 			@Override
 			public void areaSelected(Path2D selectedArea) {
 				if(pointSetSelectionListeners.isEmpty())
@@ -1105,9 +1154,16 @@ public class ScatterPlot {
 			TreeSet<Integer>>> selectedPointsOngoing,
 			SimpleSelectionModel<Pair<Integer, TreeSet<Integer>>> selectedPoints,
 			Shape[] selectionMemory,
-			KeyMaskListener keyMask
-	) {
-		CoordSysLassoSelector selector = new CoordSysLassoSelector(this.canvas, this.coordsys, keyMask) {
+			BooleanSupplier isActiveChecker
+	){
+    	KeyMaskListener kml = isActiveChecker instanceof KeyMaskListener ? (KeyMaskListener)isActiveChecker : null;
+		CoordSysLassoSelector selector = new CoordSysLassoSelector(this.canvas, this.coordsys, kml) {
+			
+			@Override
+    		public boolean isInteractionActive() {
+    			return kml != null ? super.isInteractionActive():isActiveChecker.getAsBoolean();
+    		}
+			
 			@Override
 			public void areaSelected(Path2D selectedArea) {
 				if(pointSetSelectionListeners.isEmpty())
