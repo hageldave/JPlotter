@@ -1,6 +1,7 @@
 package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.interaction.ActivatableInteraction;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderers.CompleteRenderer;
 import hageldave.jplotter.renderers.CoordSysRenderer;
@@ -40,7 +41,7 @@ import java.util.Arrays;
  *
  * @author hageldave
  */
-public abstract class CoordSysViewSelector extends MouseAdapter {
+public abstract class CoordSysViewSelector extends MouseAdapter implements ActivatableInteraction {
 	
 	protected Component canvas;
 	protected JPlotterCanvas jPlotterCanvas;
@@ -51,6 +52,11 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 			.setStrokePattern(0xcccc);
 	protected Point start,end;
 	protected KeyMaskListener keyMaskListener;
+	
+	@Override
+	public boolean isInteractionActive() {
+		return keyMaskListener == null || keyMaskListener.areKeysPressed();
+	}
 
 	/**
 	 * Creates a new {@link CoordSysViewSelector} for the specified canvas and corresponding coordinate system.
@@ -81,7 +87,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (this.keyMaskListener.areKeysPressed()) {
+		if (isInteractionActive()) {
 			start = e.getPoint();
 			overlay.addItemToRender(areaBorder);
 		}
@@ -89,7 +95,7 @@ public abstract class CoordSysViewSelector extends MouseAdapter {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(start == null || !this.keyMaskListener.areKeysPressed()){
+		if(start == null || !isInteractionActive()){
 			return;
 		}
 		{

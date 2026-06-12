@@ -2,6 +2,7 @@ package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
 import hageldave.jplotter.color.ColorScheme;
+import hageldave.jplotter.interaction.ActivatableInteraction;
 import hageldave.jplotter.interaction.SimpleSelectionModel;
 import hageldave.jplotter.renderables.Lines;
 import hageldave.jplotter.renderables.Points;
@@ -37,7 +38,7 @@ import java.util.*;
  * }.register();
  * </pre>
  */
-public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyListener {
+public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyListener, ActivatableInteraction {
     protected Component canvas;
     protected JPlotterCanvas jPlotterCanvas;
     protected CoordSysRenderer coordSys;
@@ -79,10 +80,15 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
     public CoordSysRopeSelector(JPlotterCanvas canvas, CoordSysRenderer coordSys) {
         this(canvas, coordSys, new KeyMaskListener(KeyEvent.VK_R));
     }
+    
+    @Override
+	public boolean isInteractionActive() {
+		return keyMaskListener == null || keyMaskListener.areKeysPressed();
+	}
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (keyMaskListener.areKeysPressed() && coordSys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight()))) {
+        if (isInteractionActive() && coordSys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight()))) {
             if (isDone || SwingUtilities.isRightMouseButton(e)) {
                 clearSelectionResources();
             } else if (!isDone) {
@@ -96,7 +102,7 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (!selectionModel.getSelection().isEmpty() && !selectionModel.getSelection().first().isEmpty() && keyMaskListener.areKeysPressed() && !isDone) {
+        if (!selectionModel.getSelection().isEmpty() && !selectionModel.getSelection().first().isEmpty() && isInteractionActive() && !isDone) {
             Point2D.Double firstPoint = selectionModel.getSelection().first().get(0);
             Point2D pointInAWT = coordSys.transformCoordSys2AWT(firstPoint, canvas.getHeight());
             if (e.getPoint().distanceSq(pointInAWT) < radius) {
@@ -147,7 +153,7 @@ public abstract class CoordSysRopeSelector extends MouseAdapter implements KeyLi
     }
 
     private void changeCursor() {
-        if (keyMaskListener.areKeysPressed() && isDone) {
+        if (isInteractionActive() && isDone) {
         	CursorCoordinator.get(canvas).requestCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR), this);
         } else {
             //canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

@@ -1,6 +1,7 @@
 package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.interaction.ActivatableInteraction;
 import hageldave.jplotter.interaction.InteractionConstants;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 
@@ -26,7 +27,7 @@ import java.util.Arrays;
  * 
  * @author hageldave
  */
-public class CoordSysPanning extends MouseAdapter implements InteractionConstants {
+public class CoordSysPanning extends MouseAdapter implements InteractionConstants, ActivatableInteraction {
 	
 	protected Point startPoint;
 	protected Component canvas;
@@ -49,16 +50,21 @@ public class CoordSysPanning extends MouseAdapter implements InteractionConstant
 	public CoordSysPanning(JPlotterCanvas canvas, CoordSysRenderer coordsys) {
 		this(canvas, coordsys, new KeyMaskListener(KeyEvent.VK_CONTROL));
 	}
+	
+	@Override
+	public boolean isInteractionActive() {
+		return keyMaskListener == null || keyMaskListener.areKeysPressed();
+	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (keyMaskListener.areKeysPressed())
+		if (isInteractionActive())
 			this.startPoint = e.getPoint();
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(startPoint!= null && keyMaskListener.areKeysPressed()){
+		if(startPoint!= null && isInteractionActive()){
 			Point dragPoint = e.getPoint();
 			double mouseTx = 0;
 			double mouseTy = 0;

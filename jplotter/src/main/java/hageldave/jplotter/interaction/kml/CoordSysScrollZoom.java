@@ -1,6 +1,7 @@
 package hageldave.jplotter.interaction.kml;
 
 import hageldave.jplotter.canvas.JPlotterCanvas;
+import hageldave.jplotter.interaction.ActivatableInteraction;
 import hageldave.jplotter.interaction.InteractionConstants;
 import hageldave.jplotter.renderers.CoordSysRenderer;
 import hageldave.jplotter.util.Utils;
@@ -35,7 +36,7 @@ import java.util.Arrays;
  * @author hageldave
  *
  */
-public class CoordSysScrollZoom implements MouseWheelListener, InteractionConstants {
+public class CoordSysScrollZoom implements MouseWheelListener, InteractionConstants, ActivatableInteraction {
     protected Component canvas;
     protected CoordSysRenderer coordsys;
     protected double zoomFactor = 1.7;
@@ -68,10 +69,15 @@ public class CoordSysScrollZoom implements MouseWheelListener, InteractionConsta
     public CoordSysScrollZoom(JPlotterCanvas canvas, CoordSysRenderer coordsys, KeyMaskListener keyMaskListener) {
         this(canvas, coordsys, keyMaskListener, false);
     }
+    
+    @Override
+	public boolean isInteractionActive() {
+		return keyMaskListener == null || keyMaskListener.areKeysPressed();
+	}
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if (keyMaskListener.areKeysPressed()) {
+        if (isInteractionActive()) {
             if (!coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight())))
                 return;
 

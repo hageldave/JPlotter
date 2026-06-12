@@ -107,7 +107,7 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (!keyMaskListener.areKeysPressed() || !coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight()))) {
+		if (!isInteractionActive() || !coordsys.getCoordSysArea().contains(Utils.swapYAxis(e.getPoint(), canvas.getHeight()))) {
 			updateCursor();
 			return;
 		}
@@ -196,9 +196,9 @@ public abstract class CoordSysLassoSelector extends CoordSysViewSelector impleme
 	}
 
 	protected void updateCursor() {
-		if (keyMaskListener.areKeysPressed() && hasSelection) {
+		if (isInteractionActive() && hasSelection) {
 			CursorCoordinator.get(canvas).requestCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR), this);
-		} else if (keyMaskListener.areKeysPressed()) {
+		} else if (isInteractionActive()) {
 			CursorCoordinator.get(canvas).requestCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR), this);
 		} else {
 			CursorCoordinator.get(canvas).requestCursor(null, this);

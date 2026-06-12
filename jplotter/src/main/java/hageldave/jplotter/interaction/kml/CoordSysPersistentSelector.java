@@ -142,7 +142,7 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (!keyMaskListener.areKeysPressed()) {
+		if (!isInteractionActive()) {
 			return;
 		}
 		if (hasSelection) {
@@ -308,7 +308,7 @@ public abstract class CoordSysPersistentSelector extends CoordSysViewSelector {
 	 */
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		if (!keyMaskListener.areKeysPressed() || !hasSelection) {
+		if (!isInteractionActive() || !hasSelection) {
 			CursorCoordinator.get(canvas).requestCursor(null, CoordSysPersistentSelector.this);
 			return;
 		}
